@@ -30,7 +30,7 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
 
 
 # simple plot function for hyperbolic tiling with colors
-def plot_tiling(polygon_list, colors, symmetric_colors=False, plot_colorbar=True, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
+def plot_tiling(polygon_list, colors, symmetric_colors=False, plot_colorbar=False, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
     fig, ax = plt.subplots(figsize=(8,8), dpi=120)
     patches = []
 
