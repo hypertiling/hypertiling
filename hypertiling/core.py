@@ -39,6 +39,9 @@ class VertexTilingClass:
         else:
             raise StopIteration
 
+    def __len__(self):
+        return len(self.polygons)
+
     # constructs the vertices of the fundamental hyperbolic {p,q} polygon
     def create_fundamental_polygon(self):
         r = fund_radius(self.p, self.q)
@@ -139,6 +142,9 @@ class HyperbolicTiling:
             return retval
         else:
             raise StopIteration
+
+    def __len__(self):
+        return len(self.polygons)
 
     def create_fundamental_polygon(self):  # constructs the vertices of the fundamental hyperbolic {p,q} polygon
         r = fund_radius(self.p, self.q)
