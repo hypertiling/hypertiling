@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 
+# imports
 from .hyperpolygon import HyperPolygon
 from .transformation import *
 from .util import fund_radius, remove_duplicates, find_num_of_pgons_73
