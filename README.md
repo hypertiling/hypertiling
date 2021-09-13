@@ -20,7 +20,7 @@ For developer mode use
 $ python setup.py develop
 ```
 
-## Usage
+# Usage
 
 Import tiling object from *hypertiling* library
 
@@ -40,7 +40,7 @@ T.generate()
 
 Further information can be found in our Jupyter notebooks in /examples subfolder. 
 
-## Authors
+# Authors
 * Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
 * Felix Dusel
 
@@ -48,6 +48,6 @@ This project is developed at the Institute for Theoretical Physics and Astrophys
 
 
 
-## License
+# License
 Every part of hypertiling is available under the MIT license.
 
