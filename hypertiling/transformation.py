@@ -15,13 +15,15 @@ def w2p(point):
     return z
 
 
-def moeb_origin_trafo(z0, z):  # maps all points z such that z0 -> 0, leaves bounding |z|=1 circle invariant
+# maps all points z such that z0 -> 0, leaves bounding |z|=1 circle invariant
+def moeb_origin_trafo(z0, z):  
     num = z - z0
     denom = 1 - z * np.conjugate(z0)
     return num / denom  # return coordinates of new point z'
 
 
-def moeb_rotate_trafo(z, phi):  # rotates z by phi counter-clockwise about the origin
+ # rotates z by phi counter-clockwise about the origin
+def moeb_rotate_trafo(z, phi): 
     return z * np.exp(complex(0, phi))
 
 
@@ -30,8 +32,8 @@ def moeb_translate_trafo(z, s):
     denom = 1-z*s
     return num/denom
 
-
-def moeb_inverse_trafo(z, z0, phi, s):  # reverses the previous three transformations at once
+# reverses the previous three transformations at once
+def moeb_inverse_trafo(z, z0, phi, s):  
     exp = np.exp(complex(0, phi))
     z0c = np.conjugate(z0)
     num = s+z+exp*z0*(1+s*z)
