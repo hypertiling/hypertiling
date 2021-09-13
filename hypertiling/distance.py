@@ -7,8 +7,8 @@ def weierstrass_distance(a, b):
     if arg < 1:
         return 0
     else:
-        return math.acosh(arg) # math.acosh is faster for scalars
-    #return np.arccosh(arg)
+        return math.acosh(arg) 
+        # for scalars math.acosh is usually faster than np.arccosh
 
 
 def disk_distance(z1, z2):

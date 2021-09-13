@@ -6,7 +6,7 @@ from .hyperpolygon import HyperPolygon
 from .transformation import p2w
 
 
-# radius of the fundamental (and every other) polygon - taken from Kollars Paper Appendix A
+# radius of the fundamental (and every other) polygon
 def fund_radius(p, q):
     num = np.cos(np.pi / p + np.pi / q)
     denom = np.cos(np.pi / p - np.pi / q)
@@ -69,8 +69,8 @@ def border_variance(tiling):
     return var/len(border)
 
 
-# the following functions find the total number of polygons for some {p, q}-l
-# all taken from Baek et al., DOI 10.1103/PhysRevE.79.011124
+# the following functions find the total number of polygons for some {p, q} tessellation of l layers
+# reference: Baek et al., Phys. Rev.E. 79.011124
 def find_num_of_pgons_73(l):
     sum = 0
     s = np.sqrt(5)/2
@@ -113,15 +113,14 @@ def find_num_of_pgons_37(l):
 
 # the centers (stored in cleanlist) are used to distinguish between polygons
 # removing duplicates instantly after their initialization slightly decreases the performance
-def remove_duplicates(duplicates):
-    dgts = 10  # this was found empirically
+def remove_duplicates(duplicates, digits=10):
     l = len(duplicates)
     pgonnum = 1
     polygons = []
     centerlist = []
     mid = []
     for pgon in duplicates:
-        z = np.round(pgon.centerP, dgts)
+        z = np.round(pgon.centerP, digits)
         if z not in centerlist:
             centerlist.append(z)
             pgon.number = pgonnum

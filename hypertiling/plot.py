@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection, PolyCollection
 

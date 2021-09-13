@@ -1,27 +1,41 @@
 import numpy as np
 from .distance import weierstrass_distance
-import time
+
+# wrapper to provide a nicer interface
+def find(tiling, nn_dist, which="optimized_slice"):
+    if which == "optimized_slice":
+        return find_nn_optimized_slice(tiling, nn_dist) # fastest
+    elif which == "optimized":
+        return find_nn_optimized(tiling, nn_dist)
+    elif which == "brute_force":
+        return find_nn_brute_force(tiling, nn_dist) # use for debug
+    elif which == "slice":
+        return find_nn_slice(tiling, nn_dist)
+    else:
+        print("[Hypertiling] Error:", which, " is not a valid algorithm!")
 
 
-# find nearest neighbours by brute force comparison of all-to-all distances.
-# Scales quadratically in the number of vertices and may thus become prohibitively expensive
-def find_nn_brute_force(tiling, nn_dist):
-    increment = 0.001  # add something to nn_dist to avoid rounding problems. Has to be smaller than the fund_rad
+
+# find nearest neighbours by brute force comparison of all-to-all distances
+# scales quadratically in the number of vertices and may thus become prohibitively expensive
+# might be used for debugging purposes though
+def find_nn_brute_force(tiling, nn_dist, eps=1e-5):
     retlist = []  # prepare list
     for i, poly1 in enumerate(tiling.polygons):  # loop over polygons
-        sublist = []  # dummy
+        sublist = []
         for j, poly2 in enumerate(tiling.polygons):
             dist = weierstrass_distance(poly1.centerW, poly2.centerW) # compare distances
-            if dist < nn_dist+increment:
+            if dist < nn_dist + eps: # add something to nn_dist to avoid rounding problems
                 if i is not j:  # avoiding finding A as neighbor of A
                     sublist.append(j)
         retlist.append(sublist)
     return retlist
 
 
+
 # finds nearest neighbours by comparing all-to-all distances
 # however, making sure everything can be fully vectorized by numpy we gain a significant speed-up
-def find_nn_optimized(tiling, nn_dist):
+def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     # prepare
     v0 = np.zeros(len(tiling.polygons))
     v1 = np.zeros(len(tiling.polygons))
@@ -31,8 +45,7 @@ def find_nn_optimized(tiling, nn_dist):
         v1[i] = poly.centerW[1]  # y and
         v2[i] = poly.centerW[2]  # z coordinate in weierstrass representation
 
-    increment = 0.001  # add something to nn_dist to avoid rounding problems
-    searchdist = nn_dist + increment
+    searchdist = nn_dist + eps # add something to nn_dist to avoid rounding problems
     retlist = []  # prepare list
     for i, poly1 in enumerate(tiling):  # loop over polygons
         vA = poly1.centerW  # distance step 1
@@ -42,19 +55,15 @@ def find_nn_optimized(tiling, nn_dist):
         indxs = np.where(dists < searchdist)[0]  # radius search
         self = np.argwhere(indxs == i)  # find self
         indxs = np.delete(indxs, self)  # delete self
-        nums = [tiling[ind].number for ind in indxs]  # replacing indices by actual polygon number
+        nums = [tiling[ind].idx for ind in indxs]  # replacing indices by actual polygon number
         retlist.append(nums)
     return retlist
 
 
-# finds nearest neighbors by capitalizing on the fact that the neighbors of a polygon in some sector s can be found
-# by adding the number of polygons in that sector to the corresponding number of each neighbor of the polygon at the
-# same position in sector-s. Thus, only in sector one has to find neighbors (done with find_nn_optimized), the neighbors
-# of every other polygon can be calculated.
-# exploits rotational symmetry
-# since find_nn_optimized scales exponentially(?), this boosts performance drastically. For {7,3}-10 with 29261
-# polygons, this function was 14x faster than find_nn_optimized (29.7s vs 2.1s)
-def find_nn_optimized_slice(tiling, nn_dist):
+# combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
+# applying the neighbour search only to a p-sector of the tiling (done in "find_nn_slice")
+# currently this is our fastest algorithm for large tessellations
+def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     pgons = []
     for pgon in tiling.polygons:  # pick those polygons that are in sector 0, 1 or last (3 adjacent sectors)
         pgon.find_angle(1)
@@ -69,8 +78,7 @@ def find_nn_optimized_slice(tiling, nn_dist):
         v1[i] = poly.centerW[1]  # y and
         v2[i] = poly.centerW[2]  # z coordinate in weierstrass representation
 
-    increment = 0.001  # add something to nn_dist to avoid rounding problems. Has to be less than fund_radius
-    searchdist = nn_dist + increment
+    searchdist = nn_dist + eps # add something to nn_dist to avoid rounding problems
     retlist = []  # prepare list
     for i, poly1 in enumerate(pgons):  # loop over polygons
         if poly1.sector == 0:
@@ -81,7 +89,7 @@ def find_nn_optimized_slice(tiling, nn_dist):
             indxs = np.where(dists < searchdist)[0]  # radius search
             self = np.argwhere(indxs == i)  # find self
             indxs = np.delete(indxs, self)  # delete self
-            nums = [pgons[ind].number for ind in indxs]  # replacing indices by actual polygon number
+            nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
             retlist.append(nums)
 
     pps = int((len(pgons)-1)/3)  # polygons per sector, excl. center polygon
@@ -111,6 +119,11 @@ def find_nn_optimized_slice(tiling, nn_dist):
     return neighbors
 
 
+
+# finds nearest neighbors by exploiting the discrete rotational symmetry of the lattice
+# the neighbors of a polygon in some sector s can be found by adding the number of polygons 
+# in that sector to the corresponding number of each neighbor of the polygon at the same position 
+# in sector-s. Thus, only in sector one has to find neighbors, the neighbors of every other polygon can be calculated
 def find_nn_slice(slices, nn_distance):  # slices contains polygons of two adjacent slices
     pps = int((len(slices) - 1) / 3) + 1  # polygons per sector, incl. center polygon
     p = slices[0].p
@@ -123,7 +136,7 @@ def find_nn_slice(slices, nn_distance):  # slices contains polygons of two adjac
             for pgon in slices:
                 dist = weierstrass_distance(pgon.centerW, polygon.centerW)
                 if polygon.centerP != pgon.centerP and round(dist, 9) <= round(nn_distance, 9):
-                    nn_sector[row, col] = pgon.number
+                    nn_sector[row, col] = pgon.idx
                     col += 1
             col = 1
 

@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '0.7'
+version = '0.8'
 
 
 try:
@@ -20,7 +20,7 @@ setup(
     long_description = long_desc,
     long_description_content_type = 'text/markdown',
     author='Manuel Schrauth, Felix Dusel',
-   # author_email='manuel.schrauth@uni-wuerzburg.de',
+    author_email='manuel.schrauth@uni-wuerzburg.de',
     license='MIT',
     keywords='hyperbolic tessellation tiling curvature poincare',
     packages=[package_name],
