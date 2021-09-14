@@ -3,7 +3,7 @@ import copy
 
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import *
+from .transformation import p2w
 from .util import fund_radius
 
 # the main object of this library
@@ -94,7 +94,7 @@ class HyperbolicTiling:
     def angular_replicate(self, polygons, k):
         polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
         for p in range(1, k):
-            for ind, polygon in enumerate(polygons):
+            for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.rotate(p*self.phi)
                 pgon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
@@ -153,10 +153,10 @@ class HyperbolicTilingDunham:
         if self.nlayers == 1:
             return
 
-        for i in range(self.p):
+        for _ in range(self.p):
             RotVertex = self.RotCenterG @ self.RotQ
             self.replicate(self.polygons, RotVertex, self.nlayers - 2, "Edge")
-            for j in range(self.q - 3):
+            for _ in range(self.q - 3):
                 RotVertex = RotVertex @ self.RotQ
                 self.replicate(self.polygons, RotVertex, self.nlayers - 2, "Vertex")
 
@@ -185,7 +185,7 @@ class HyperbolicTilingDunham:
                 elif j == ExposedEdges:
                     VertexPgons = self.q - 2  # and -4 in Dunhams paper
 
-                for k in range(VertexPgons):
+                for _ in range(VertexPgons):
                     RotVertex = RotVertex @ self.RotQ
                     self.replicate(Polygons, RotVertex, LayersToDo - 1, "Vertex")
 
