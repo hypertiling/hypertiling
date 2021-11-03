@@ -2,7 +2,7 @@ import numpy as np
 from .distance import weierstrass_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
+def find(tiling, nn_dist=None, which="optimized_slice", output_type="array", verbose=False):
 
     if nn_dist == None:
         if verbose:
@@ -10,15 +10,32 @@ def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
         nn_dist = weierstrass_distance(tiling[0].centerW, tiling[1].centerW)
 
     if which == "optimized_slice":
-        return find_nn_optimized_slice(tiling, nn_dist) # fastest
+        retval = find_nn_optimized_slice(tiling, nn_dist) # fastest
     elif which == "optimized":
-        return find_nn_optimized(tiling, nn_dist)
+        retval = find_nn_optimized(tiling, nn_dist)
     elif which == "brute_force":
-        return find_nn_brute_force(tiling, nn_dist) # use for debug
+        retval = find_nn_brute_force(tiling, nn_dist) # use for debug
     elif which == "slice":
-        return find_nn_slice(tiling, nn_dist)
+        retval = find_nn_slice(tiling, nn_dist)
     else:
         print("[Hypertiling] Error:", which, " is not a valid algorithm!")
+
+
+    # raw output; includes the search point
+    if output_type == "array":
+        return retval
+    # nicer output as a list; search point is removed; also indices start from 0
+    elif output_type == "list":
+        nbrs = []
+        for i, nb in enumerate(retval):
+            arr = np.array(nb)
+            arr = list(arr[(arr>0)]-1)
+            arr.remove(i)
+            nbrs.append(arr)
+        return nbrs
+    else:
+        print("[hypertiling] Error: Invalid output format specified.")
+    
 
 
 
