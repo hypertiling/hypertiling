@@ -2,7 +2,13 @@ import numpy as np
 from .distance import weierstrass_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist, which="optimized_slice"):
+def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
+
+    if nn_dist == None:
+        if verbose:
+            print("No search radius given; using distance between first and second vertex in the tessellation!")
+        nn_dist = weierstrass_distance(tiling[0].centerW, tiling[1].centerW)
+
     if which == "optimized_slice":
         return find_nn_optimized_slice(tiling, nn_dist) # fastest
     elif which == "optimized":
