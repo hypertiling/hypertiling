@@ -31,13 +31,13 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
     plt.show()
 
 
-# simple plot function for hyperbolic tiling with colors
-def plot_tiling(polygon_list, colors, symmetric_colors=False, plot_colorbar=False, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
-    fig, ax = plt.subplots(figsize=(8,8), dpi=120)
+
+# convert list of HyperPolygon objects to matplotlib PatchCollection
+def poly2patch(polygons, colors=None, **kwargs):
     patches = []
 
     # loop over polygons
-    for poly in polygon_list:
+    for poly in polygons:
         # extract vertex coordinates
         u = poly.verticesP
         # transform to matplotlib Polygon format
@@ -46,10 +46,22 @@ def plot_tiling(polygon_list, colors, symmetric_colors=False, plot_colorbar=Fals
         patches.append(polygon)
 
     # the polygon list has now become a PatchCollection
-    pgons = PatchCollection(patches, **kwargs)
+    pgonpatches = PatchCollection(patches, **kwargs)
+    # add colors
+    if colors is not None:
+        pgonpatches.set_array(np.array(colors))
 
-    # set colors and draw patches
-    pgons.set_array(np.array(colors))
+    return pgonpatches    
+
+
+# simple plot function for hyperbolic tiling with colors
+def plot_tiling(polygons, colors, symmetric_colors=False, plot_colorbar=False, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
+    fig, ax = plt.subplots(figsize=(10,7), dpi=120)
+
+    # convert to matplotlib format
+    pgons = poly2patch(polygons, colors, **kwargs)
+
+    # draw patches
     ax.add_collection(pgons)
     
     # symmetric colorbar    
