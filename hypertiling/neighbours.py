@@ -2,7 +2,7 @@ import numpy as np
 from .distance import weierstrass_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
+def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, verbose=False):
 
     if nn_dist == None:
         if verbose:
@@ -20,6 +20,16 @@ def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
     else:
         print("[Hypertiling] Error:", which, " is not a valid algorithm!")
     
+
+    nbrs = []
+    if index_from_zero:
+        for sublist in retval:
+            new_sublist = [x-1 for x in sublist]
+            nbrs.append(new_sublist)
+                
+        return nbrs
+    else:
+        return retval
 
 
 
