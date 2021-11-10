@@ -102,7 +102,7 @@ class HyperbolicTiling:
 
         # assign each polygon a unique number
         for num, poly in enumerate(self.polygons):
-            poly.idx = num
+            poly.idx = num + 1
 
 
 

@@ -2,7 +2,7 @@ import numpy as np
 from .distance import weierstrass_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized_slice", output_type="array", verbose=False):
+def find(tiling, nn_dist=None, which="optimized_slice", verbose=False):
 
     if nn_dist == None:
         if verbose:
@@ -19,22 +19,6 @@ def find(tiling, nn_dist=None, which="optimized_slice", output_type="array", ver
         retval = find_nn_slice(tiling, nn_dist)
     else:
         print("[Hypertiling] Error:", which, " is not a valid algorithm!")
-
-
-    # raw output; includes the search point
-    if output_type == "array":
-        return retval
-    # nicer output as a list; search point is removed; also indices start from 0
-    elif output_type == "list":
-        nbrs = []
-        for i, nb in enumerate(retval):
-            arr = np.array(nb)
-            arr = list(arr[(arr>0)]-1)
-            arr.remove(i)
-            nbrs.append(arr)
-        return nbrs
-    else:
-        print("[hypertiling] Error: Invalid output format specified.")
     
 
 
@@ -42,15 +26,15 @@ def find(tiling, nn_dist=None, which="optimized_slice", output_type="array", ver
 # find nearest neighbours by brute force comparison of all-to-all distances
 # scales quadratically in the number of vertices and may thus become prohibitively expensive
 # might be used for debugging purposes though
-def find_nn_brute_force(tiling, nn_dist, eps=1e-5):
+def find_nn_brute_force(tiling, nn_dist, eps=1e-8):
     retlist = []  # prepare list
-    for i, poly1 in enumerate(tiling.polygons):  # loop over polygons
+    for poly1 in tiling.polygons:  # loop over polygons
         sublist = []
-        for j, poly2 in enumerate(tiling.polygons):
+        for poly2 in tiling.polygons:
             dist = weierstrass_distance(poly1.centerW, poly2.centerW) # compare distances
             if dist < nn_dist + eps: # add something to nn_dist to avoid rounding problems
-                if i is not j:  # avoiding finding A as neighbor of A
-                    sublist.append(j)
+                if poly1.idx is not poly2.idx   :  # avoiding finding A as neighbor of A
+                    sublist.append(poly2.idx)
         retlist.append(sublist)
     return retlist
 
@@ -139,7 +123,16 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
             neighbors[1+ind+n*pps] = row  # fill the corresponding row in the neighbors matrix
 
     neighbors[0, 1:] = nn_of_first  # finally store the neighbors of center polygon
-    return neighbors
+
+    # transform to list and remove self
+    nbrs = []
+    for i, nb in enumerate(neighbors):
+        arr = np.array(nb)
+        arr = list(arr[(arr>0)])
+        arr.remove(i+1)
+        nbrs.append(arr)
+
+    return nbrs
 
 
 
