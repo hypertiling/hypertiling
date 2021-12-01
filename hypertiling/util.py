@@ -36,7 +36,7 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
         child.verticesP = np.array(ref_vertices)
         child.centerP = pgon.centerP  # the center triangle shares its center with its mother
         child.centerW = p2w(child.centerP)
-        child.number = 4*num+1  # assigning a unique number
+        child.idx = 4*num+1  # assigning a unique number
         ref_lattice.append(child)
 
         for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
@@ -47,7 +47,7 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
             center_y = sum(np.imag(child.verticesP))/p  # ... an approximate value for centerP
             child.centerP = complex(center_x, center_y)
             child.centerW = p2w(child.centerP)
-            child.number = (4*num+1)+1+vrtx  # unique number
+            child.idx = (4*num+1)+1+vrtx  # unique number
             ref_lattice.append(child)
 
     # print("right length after refinement:", 4 * len(tiling.polygons) == len(ref_lattice))  # optional check
