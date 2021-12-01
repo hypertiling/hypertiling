@@ -33,7 +33,7 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
         # one "mother" triangle bears 4 "children" triangles, one in its mid
         # and three that each share one vertex with their mother
         child = HyperPolygon(p, q)  # the center triangle whose vertices are the newly found refined ones
-        child.verticesP = ref_vertices
+        child.verticesP = np.array(ref_vertices)
         child.centerP = pgon.centerP  # the center triangle shares its center with its mother
         child.centerW = p2w(child.centerP)
         child.number = 4*num+1  # assigning a unique number
