@@ -26,9 +26,9 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
     for num, pgon in enumerate(tiling.polygons):  # find the new vertices of each polygon
         ref_vertices = []  # stores newly found vertices through refinement
         for vrtx in range(p):
-            x_avg = sum(np.real([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/p  # avg x of vert-th edge
-            y_avg = sum(np.imag([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/p  # avg y ...
-            ref_vertices.append(1.5*complex(x_avg, y_avg))  # 1.5 had to be found by trial and error...
+            x_avg = np.sum(np.real([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/2  # midpoint x of vert-th edge
+            y_avg = np.sum(np.imag([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/2  # midpoint y ...
+            ref_vertices.append(complex(x_avg, y_avg))
 
         # one "mother" triangle bears 4 "children" triangles, one in its mid
         # and three that each share one vertex with their mother
@@ -43,8 +43,8 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
             child = HyperPolygon(p, q)  # these are the non-center children
             vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
             child.verticesP = np.array(vP)
-            center_x = sum(np.real(child.verticesP))/p  # trick: average over the xs and ys of the vertices to get
-            center_y = sum(np.imag(child.verticesP))/p  # ... an approximate value for centerP
+            center_x = np.sum(np.real(child.verticesP))/p  # trick: average over the xs and ys of the vertices to get
+            center_y = np.sum(np.imag(child.verticesP))/p  # ... an approximate value for centerP
             child.centerP = complex(center_x, center_y)
             child.centerW = p2w(child.centerP)
             child.idx = (4*num+1)+1+vrtx  # unique number
