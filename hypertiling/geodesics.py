@@ -1,17 +1,28 @@
 import numpy as np
 
+# returns the "minor" of a matrix
 def minor(M, i, j):
     M = np.delete(M, i, 0)
     M = np.delete(M, j, 1)
     return M
 
 
+# perform inversion of "z" w.r.t. the unit circle
 def unit_circle_inversion(z):
     denom = z.real**2 + z.imag**2
     return complex(z.real/denom, z.imag/denom)
 
 
-def circle_through_three_points(z1,z2,z3, verbose=True):
+# constructs a circle through three points
+# input: three points represented as complex numbers
+# output: center of the circle and radius
+# if the points are collinear within a certain precision
+# the functions returns a radius of -1
+
+# formulas from here: 
+# http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
+
+def circle_through_three_points(z1, z2, z3, verbose=True):
     x1 = z1.real
     y1 = z1.imag
     x2 = z2.real
@@ -24,18 +35,20 @@ def circle_through_three_points(z1,z2,z3, verbose=True):
     a3 = np.array([x2*x2+y2*y2, x2, y2, 1])
     a4 = np.array([x3*x3+y3*y3, x3, y3, 1])
     
-    A = np.stack([a1,a2,a3,a4])
+    A = np.stack([a1,a2,a3,a4]) 
     
     M00 = np.linalg.det(minor(A,0,0))
     M01 = np.linalg.det(minor(A,0,1))
     M02 = np.linalg.det(minor(A,0,2))
     M03 = np.linalg.det(minor(A,0,3))
     
+    # M00 being close to zero indicates collinearity
     if np.abs(M00) < 1e-10:
         if verbose:
-            print("Error: Points are collinar!")
+            print("Error: Points are collinear!")
         return complex(0,0), -1
 
+    # compute center and radius
     x0 = 0.5 * M01 / M00
     y0 = - 0.5 * M02 / M00
     radius = np.sqrt(x0*x0 + y0*y0 + M03 / M00)
@@ -43,27 +56,39 @@ def circle_through_three_points(z1,z2,z3, verbose=True):
     return complex(x0,y0), radius
 
 
+# helper function to be used in "geodesic_midpoint"
+# using the parametric form of the circle which centers 
+# in zc and goes through both z1 and z2, this can be done
+# quite conveniently; 
 def compute_midpoint(z1,z2,zc):
     ax = z1.real-zc.real
     ay = z1.imag-zc.imag
     bx = z2.real-zc.real
     by = z2.imag-zc.imag
 
+    # arctan2 takes care of correct quadrants
     angle = np.arctan2(by,bx) - np.arctan2(ay,ax)
 
+    # avoid negative angles
     if angle < 0:
         angle = 2*np.pi + angle
 
+    # rotate z1 by half the angle difference between z1 and z2
     xm = zc.real + ax*np.cos(angle/2) - ay*np.sin(angle/2)
     ym = zc.imag + ax*np.sin(angle/2) + ay*np.cos(angle/2)
     
     return complex(xm,ym)
 
 
+# return the midpoint betwen z1 and z2 along the geodesic arc
+# which connects the two points
 def geodesic_midpoint(z1,z2):
     z3 = unit_circle_inversion(z1)
     zc, radius = circle_through_three_points(z1,z2,z3)
     
+    # there are always two solutions
+    # we are only interested in the midpoint which
+    # lies inside the unit circle
     zm = compute_midpoint(z1,z2,zc)
     if np.abs(zm) > 1:
         zm = compute_midpoint(z2,z1,zc)
@@ -71,10 +96,12 @@ def geodesic_midpoint(z1,z2):
     return zm
 
 
+# helper function for "geodesic_arc"
 def geodesic_angles(z1,z2):
     z3 = unit_circle_inversion(z1)
     zc, radius = circle_through_three_points(z1,z2,z3)    
     
+    # in case points are collinear, return a radius of -1
     if radius == -1:
         return 0,0,0,-1
 
@@ -89,28 +116,33 @@ def geodesic_angles(z1,z2):
     return angle1, angle2, zc, radius
 
 
+
 import matplotlib.patches as mpatches
 
+# draw hyperbolic line segment connecting z1 and z2
 def geodesic_arc(z1,z2,**kwargs):
     t1, t2, zc, r = geodesic_angles(z1,z2)
     
+    # in case the points are collinear, we use matplotlib.patch.Arrow to draw a straight line
     if r == -1:
         return mpatches.Arrow(z1.real, z1.imag, (z2-z1).real, (z2-z1).imag, width=0, **kwargs)
     
+    # avoid negative angles
     if t1 < 0:
         t1 = 2*np.pi + t1
             
     if t2 < 0:
         t2 = 2*np.pi + t2
-        
-    t = np.sort([t1,t2])
     
+    # some gymnastics to always draw the "inner" arc
+    # i.e. the one fully inside the unit circle
+    t = np.sort([t1,t2])
     t1 = t[0]
     t2 = t[1]
-    
     dt1 = t2-t1
     dt2 = t1-t2+2*np.pi
     
+    # draw hyperbolic arc connection z1 and z2 as a matplotlib.patch.Arc
     if dt1<dt2:
         return mpatches.Arc([zc.real,zc.imag], 2*r, 2*r, 0, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
     else:
