@@ -22,7 +22,7 @@ def unit_circle_inversion(z):
 # formulas from here: 
 # http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
 
-def circle_through_three_points(z1, z2, z3, verbose=True):
+def circle_through_three_points(z1, z2, z3, verbose=False):
     x1 = z1.real
     y1 = z1.imag
     x2 = z2.real
