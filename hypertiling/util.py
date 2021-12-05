@@ -4,6 +4,7 @@ import numpy as np
 from .distance import weierstrass_distance
 from .hyperpolygon import HyperPolygon
 from .transformation import p2w
+from .geodesics import geodesic_midpoint
 
 
 # radius of the fundamental (and every other) polygon
@@ -13,10 +14,13 @@ def fund_radius(p, q):
     return np.sqrt(num / denom)
 
 
-# returns the polygons of the refined lattice for a given {3, 7} tiling with N polygons
+# returns the polygons of the refined lattice for a given triangular (!) tiling with N polygons
 # thus, it returns 4*N polygons
 # this can be done faster by once again using symmetry, e.g. with angular_replicate() in core
 def refine_lattice(tilingobj, n):  # n is the number of refinements
+
+    if tilingobj.p is not 3:
+        print("Refinements only work for triangular tilings!")
     if n == 0:  # recursive function terminates for n==0
         return tilingobj  # and returns an instance of the chosen TilingClass
 
@@ -25,10 +29,12 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
     ref_lattice = []  # stores the new polygons
     for num, pgon in enumerate(tiling.polygons):  # find the new vertices of each polygon
         ref_vertices = []  # stores newly found vertices through refinement
+        # loop through polygon edges
         for vrtx in range(p):
-            x_avg = np.sum(np.real([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/2  # midpoint x of vert-th edge
-            y_avg = np.sum(np.imag([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/2  # midpoint y ...
-            ref_vertices.append(complex(x_avg, y_avg))
+            # find geodesic midpoint
+            zm = geodesic_midpoint( pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p] )
+            ref_vertices.append(zm)
+
 
         # one "mother" triangle bears 4 "children" triangles, one in its mid
         # and three that each share one vertex with their mother

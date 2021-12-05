@@ -85,6 +85,9 @@ def compute_midpoint(z1,z2,zc):
 def geodesic_midpoint(z1,z2):
     z3 = unit_circle_inversion(z1)
     zc, radius = circle_through_three_points(z1,z2,z3)
+
+    if radius == -1:
+        return (z1+z2) / 2
     
     # there are always two solutions
     # we are only interested in the midpoint which
@@ -92,7 +95,7 @@ def geodesic_midpoint(z1,z2):
     zm = compute_midpoint(z1,z2,zc)
     if np.abs(zm) > 1:
         zm = compute_midpoint(z2,z1,zc)
-    
+
     return zm
 
 
