@@ -12,6 +12,6 @@ def weierstrass_distance(a, b):
 
 
 def disk_distance(z1, z2):
-    num = abs(z1-z2)
-    denom = abs(1-z1*np.conj(z2))
+    num = np.abs(z1-z2)
+    denom = np.abs(1-z1*np.conj(z2))
     return 2*np.arctanh(num/denom)
