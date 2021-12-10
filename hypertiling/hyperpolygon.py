@@ -1,6 +1,7 @@
 from math import floor
 from .transformation import *
 
+
 # defines a hyperbolic polygon
 class HyperPolygon:
     def __init__(self, p, q):
@@ -22,6 +23,8 @@ class HyperPolygon:
         self.sector = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
         self.angle  = 0  # angle between self.centerP and the positive x-axis
         self.val    = 0  # assign a value (useful in any application)
+
+        self.edges = []  # compare self.populate_edge_list
 
 
     # checks whether two polygons are equal (within given numerical precision)
@@ -129,3 +132,5 @@ class HyperPolygon:
         for i in range(self.p):
             self.verticesP[i] = complex(self.verticesP[i].real, (-1)*self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
+
+

@@ -17,6 +17,11 @@ def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, ve
         retval = find_nn_brute_force(tiling, nn_dist) # use for debug
     elif which == "slice":
         retval = find_nn_slice(tiling, nn_dist)
+    elif which == "edge_map":
+        retval = find_nn_edge_map_optimized(tiling)
+    elif which == "edge_map_brute_force":
+        retval = find_nn_edge_map_brute_force(tiling)
+
     else:
         print("[Hypertiling] Error:", which, " is not a valid algorithm!")
     
@@ -30,6 +35,101 @@ def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, ve
         return nbrs
     else:
         return retval
+
+
+
+# find neighbours by identifying corresponding edges among polygons
+# this is a coordinate-free algorithm, it uses only the graph structure
+# can probably be further improved
+def find_nn_edge_map_optimized(tiling):
+
+    tiling.populate_edge_list()
+
+    # we create a kind of "dictionary" where keys are the
+    # edges and values are the corresponding polygon indices
+    edges, vals = [], []
+    for poly in tiling:
+        for edge in poly.edges:
+            edges.append(edge)
+            vals.append(poly.idx)
+
+    # reshape "edges" into its components in order to 
+    # make use of numpy vectorization later
+    edge0 = np.zeros(len(edges)).astype(complex)
+    edge1 = np.zeros(len(edges)).astype(complex)
+    for i, edge in enumerate(edges):
+        edge0[i] = edge[0]
+        edge1[i] = edge[1]
+    
+    # create empty neighbour array
+    nbrs = []
+    for i in range(len(tiling)):
+        nbrs.append([])
+
+    # an edge that is share by two polygons appears twice
+    # in the "edges" list; we find the corresponding polygon
+    # indices by looping over that list
+    for i, edge in enumerate(edges):
+        # compare against full edges arrays
+        # this avoids a double loop which is slow ...
+        # check edge
+        bool_array1 = (edge[0] == edge0)
+        bool_array2 = (edge[1] == edge1)
+        # check also reverse orientation
+        bool_array3 = (edge[0] == edge1)
+        bool_array4 = (edge[1] == edge0)
+        
+        # put everything together; we require 
+        # (True and True) or (True and True)
+        b = bool_array1*bool_array2 + bool_array3*bool_array4
+        
+        # find indices where resulting boolean array is true
+        w = np.where(b)
+        
+        # these indices are neighbours of each other
+        for x in w[0]:
+            if vals[i] is not vals[x]:
+                nbrs[vals[i]-1].append(vals[x])    
+    
+    return nbrs
+
+
+# find neighbours by identifying corresponding edges among polygons
+# there is an equivalent method available that is much faster: find_nn_edge_map_optimized
+# use this method only for debugging purposes
+def find_nn_edge_map_brute_force(tiling):
+
+    tiling.populate_edge_list()
+
+    # we create a kind of "dictionary" where keys are the
+    # edges and values are the corresponding polygon indices
+    edges, vals = [], []
+    for poly in tiling:
+        for edge in poly.edges:
+            edges.append(edge)
+            vals.append(poly.idx)
+
+    # create empty neighbour array       
+    nbrs = []
+    for i in range(len(tiling)):
+        nbrs.append([])
+
+    # an edge that is share by two polygons appears twice
+    # in the "edges" list; we find the corresponding polygon
+    # indices by looping over that list twice
+    for i, k1 in enumerate(edges):
+        for j, k2 in enumerate(edges):
+            if k1[0] == k2[0] and k1[1] == k2[1]:  
+            # check edge      
+                if vals[i] is not vals[j]:
+                    nbrs[vals[i]-1].append(vals[j])
+            # check also reverse orientation    
+            elif k1[1] == k2[0] and k1[0] == k2[1]: 
+                if vals[i] is not vals[j]:
+                    nbrs[vals[i]-1].append(vals[j])
+
+    
+    return nbrs
 
 
 
