@@ -82,6 +82,7 @@ class HyperbolicTiling:
         # uses symmetry to fill the disk by rotating the slice
         self.angular_replicate(copy.deepcopy(self.polygons), self.p)
 
+
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
         z0 = polygon.verticesP[ind]
@@ -89,6 +90,7 @@ class HyperbolicTiling:
         polygon.moeb_rotate(k*2*np.pi/self.q)  # rotate the whole polygon k times by 2*pi/q
         polygon.moeb_inverse(z0)  # map polygon back to former location
         return polygon
+
 
     # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
     def angular_replicate(self, polygons, k):
@@ -104,6 +106,21 @@ class HyperbolicTiling:
         for num, poly in enumerate(self.polygons):
             poly.idx = num + 1
 
+
+    # populate the "edges" list of all polygons in the tiling
+    def populate_edge_list(self, digits=12):
+        # note: same neighbour search methods employ the fact that adjacent polygons share an edge
+        # hence these will later be identified via floating point comparison and we need to round
+        # note: this procedure fails for Weierstrass coordinates, as these
+        # are not unique, meaning that the same coordinate can have different representations
+        for poly in self.polygons:
+            poly.edges = []
+            verts = np.round(poly.verticesP, digits)
+        
+            # append edges as tuples
+            for i, vert in enumerate(verts[:-1]):
+                poly.edges.append((verts[i], verts[i+1]))
+            poly.edges.append((verts[-1], verts[0]))
 
 
 

@@ -56,46 +56,17 @@ def circle_through_three_points(z1, z2, z3, verbose=False):
     return complex(x0,y0), radius
 
 
-# helper function to be used in "geodesic_midpoint"
-# using the parametric form of the circle which centers 
-# in zc and goes through both z1 and z2, this can be done
-# quite conveniently; 
-def compute_midpoint(z1,z2,zc):
-    ax = z1.real-zc.real
-    ay = z1.imag-zc.imag
-    bx = z2.real-zc.real
-    by = z2.imag-zc.imag
 
-    # arctan2 takes care of correct quadrants
-    angle = np.arctan2(by,bx) - np.arctan2(ay,ax)
+from .transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
+from .distance import disk_distance
 
-    # avoid negative angles
-    if angle < 0:
-        angle = 2*np.pi + angle
-
-    # rotate z1 by half the angle difference between z1 and z2
-    xm = zc.real + ax*np.cos(angle/2) - ay*np.sin(angle/2)
-    ym = zc.imag + ax*np.sin(angle/2) + ay*np.cos(angle/2)
-    
-    return complex(xm,ym)
-
-
-# return the midpoint betwen z1 and z2 along the geodesic arc
-# which connects the two points
+# return the geodesic midpoint betwen z1 and z2
 def geodesic_midpoint(z1,z2):
-    z3 = unit_circle_inversion(z1)
-    zc, radius = circle_through_three_points(z1,z2,z3)
-
-    if radius == -1:
-        return (z1+z2) / 2
-    
-    # there are always two solutions
-    # we are only interested in the midpoint which
-    # lies inside the unit circle
-    zm = compute_midpoint(z1,z2,zc)
-    if np.abs(zm) > 1:
-        zm = compute_midpoint(z2,z1,zc)
-
+    z2n = moeb_origin_trafo(z1,z2) # move z1, z2 such that z0=0
+    d = disk_distance(0,z2n) # distance betwen 0 and z2new
+    r = np.tanh(d/4) # compute corresponding Cartesian radius
+    zm = r*np.exp(1j*np.angle(z2n)) # add angle
+    zm = moeb_origin_trafo_inverse(z1,zm) # and transform back
     return zm
 
 

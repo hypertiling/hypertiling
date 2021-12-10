@@ -15,11 +15,12 @@ def w2p(point):
     return z
 
 
-# maps all points z such that z0 -> 0, leaves bounding |z|=1 circle invariant
-def moeb_origin_trafo(z0, z):  
-    num = z - z0
-    denom = 1 - z * np.conjugate(z0)
-    return num / denom  # return coordinates of new point z'
+# maps all points z such that z0 -> 0, respecting the Poincare projection
+def moeb_origin_trafo(z0, z):
+    return (z-z0) / (1-z*np.conjugate(z0)) 
+
+def moeb_origin_trafo_inverse(z0, z):
+    return (z+z0) / (1+z*np.conjugate(z0))
 
 
  # rotates z by phi counter-clockwise about the origin
