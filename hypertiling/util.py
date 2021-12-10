@@ -4,6 +4,7 @@ import numpy as np
 from .distance import weierstrass_distance
 from .hyperpolygon import HyperPolygon
 from .transformation import p2w
+from .geodesics import geodesic_midpoint
 
 
 # radius of the fundamental (and every other) polygon
@@ -13,10 +14,13 @@ def fund_radius(p, q):
     return np.sqrt(num / denom)
 
 
-# returns the polygons of the refined lattice for a given {3, 7} tiling with N polygons
+# returns the polygons of the refined lattice for a given triangular (!) tiling with N polygons
 # thus, it returns 4*N polygons
 # this can be done faster by once again using symmetry, e.g. with angular_replicate() in core
 def refine_lattice(tilingobj, n):  # n is the number of refinements
+
+    if tilingobj.p is not 3:
+        print("Refinements only work for triangular tilings!")
     if n == 0:  # recursive function terminates for n==0
         return tilingobj  # and returns an instance of the chosen TilingClass
 
@@ -25,10 +29,12 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
     ref_lattice = []  # stores the new polygons
     for num, pgon in enumerate(tiling.polygons):  # find the new vertices of each polygon
         ref_vertices = []  # stores newly found vertices through refinement
+        # loop through polygon edges
         for vrtx in range(p):
-            x_avg = sum(np.real([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/p  # avg x of vert-th edge
-            y_avg = sum(np.imag([pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p]]))/p  # avg y ...
-            ref_vertices.append(1.5*complex(x_avg, y_avg))  # 1.5 had to be found by trial and error...
+            # find geodesic midpoint
+            zm = geodesic_midpoint( pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p] )
+            ref_vertices.append(zm)
+
 
         # one "mother" triangle bears 4 "children" triangles, one in its mid
         # and three that each share one vertex with their mother
@@ -36,18 +42,18 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
         child.verticesP = np.array(ref_vertices)
         child.centerP = pgon.centerP  # the center triangle shares its center with its mother
         child.centerW = p2w(child.centerP)
-        child.number = 4*num+1  # assigning a unique number
+        child.idx = 4*num+1  # assigning a unique number
         ref_lattice.append(child)
 
         for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
             child = HyperPolygon(p, q)  # these are the non-center children
             vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
             child.verticesP = np.array(vP)
-            center_x = sum(np.real(child.verticesP))/p  # trick: average over the xs and ys of the vertices to get
-            center_y = sum(np.imag(child.verticesP))/p  # ... an approximate value for centerP
+            center_x = np.sum(np.real(child.verticesP))/p  # trick: average over the xs and ys of the vertices to get
+            center_y = np.sum(np.imag(child.verticesP))/p  # ... an approximate value for centerP
             child.centerP = complex(center_x, center_y)
             child.centerW = p2w(child.centerP)
-            child.number = (4*num+1)+1+vrtx  # unique number
+            child.idx = (4*num+1)+1+vrtx  # unique number
             ref_lattice.append(child)
 
     # print("right length after refinement:", 4 * len(tiling.polygons) == len(ref_lattice))  # optional check
