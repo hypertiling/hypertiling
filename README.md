@@ -53,7 +53,7 @@ University of Wuerzburg
 
 # Examples
 
-Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling shows magnetic domains (red and blue areas) at low temperature
+Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling at low temperature. One readily recognizes a number of magnetic domains of opposite spin orientation (red/blue areas). The domain walls are approximately given by arcs of Euclidean circles contained within the disk and orthogonal to its boundary. These arcs represent straight lines in the Poincare disk representation of the hyperbolic plane.
 
 <p align="center">
   <img src="assets/hyp6.svg" width="300" />
