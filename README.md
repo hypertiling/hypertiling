@@ -1,12 +1,16 @@
-# Hypertiling
+<table  align="center"><td align="center" width="9999">
 
-This is a Python 3 libary for the fast generation of regular hyperbolic tilings, embedded in the Poincare disk model.
+<img src="assets/logo_frameless_font.svg" align="center" width="300" alt="project icon">
+
+</td>
+<tr>
+<td align="left" width="9999" >
+
+
+
+**hypertiling** is a Python 3 libary for the fast generation of regular hyperbolic tilings, embedded in the Poincare disk model.
 
 Using efficient algorithms and the power of numpy, hyperbolic graphs with millions of polygons can be created in a matter of minutes on a single CPU. We also provide optimized search algorithms for finding adjacent vertices, which allows to use the graph for all sorts of scientific purposes.
-
-<p align="center">
-  <img src="assets/hyp6.svg" width="500" />
-</p>
 
 # Installation
 
@@ -44,7 +48,14 @@ Further information can be found in our Jupyter notebooks in /examples subfolder
 * Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
 * Felix Dusel
 
-This project is developed at the Institute for Theoretical Physics and Astrophysics, University of Wuerzburg
+This project is developed at: <br>
+Institute for Theoretical Physics and Astrophysics<br>
+University of Wuerzburg
+
+
+<p align="center">
+  <img src="assets/hyp6.svg" width="400" />
+</p>
 
 
 
