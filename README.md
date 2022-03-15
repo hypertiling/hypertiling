@@ -1,6 +1,6 @@
 <table  align="center"><td align="center" width="9999">
 
-<img src="assets/logo_frameless_font.svg" align="center" width="300" alt="project icon">
+<img src="assets/logo_frameless_font.svg" align="center" width="250" alt="project icon">
 
 </td>
 <tr>
@@ -54,7 +54,7 @@ University of Wuerzburg
 
 
 <p align="center">
-  <img src="assets/hyp6.svg" width="400" />
+  <img src="assets/hyp6.svg" width="300" />
 </p>
 
 
