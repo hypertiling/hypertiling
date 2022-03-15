@@ -1,6 +1,6 @@
 <table  align="center"><td align="center" width="9999">
 
-<img src="assets/logo_frameless_font.svg" align="center" width="250" alt="project icon">
+<img src="assets/logo/logo73.svg" align="center" width="380" alt="project icon">
 
 </td>
 <tr>
