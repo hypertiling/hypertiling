@@ -42,7 +42,6 @@ T = HyperbolicTiling(p,q,nlayers)
 T.generate()
 ```
 
-Further information can be found in our Jupyter notebooks in /examples subfolder. 
 
 # Authors
 * Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
@@ -52,11 +51,15 @@ This project is developed at: <br>
 Institute for Theoretical Physics and Astrophysics<br>
 University of Wuerzburg
 
+# Examples
+
+Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling shows magnetic domains (red and blue areas) at low temperature
 
 <p align="center">
   <img src="assets/hyp6.svg" width="300" />
 </p>
 
+Further information and examples can be found in our Jupyter notebooks in /examples subfolder. 
 
 
 # License
