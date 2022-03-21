@@ -46,6 +46,8 @@ T.generate()
 # Authors
 * Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
 * Felix Dusel
+* Florian Goth
+* Dietmar Herdt
 
 This project is developed at: <br>
 Institute for Theoretical Physics and Astrophysics<br>
