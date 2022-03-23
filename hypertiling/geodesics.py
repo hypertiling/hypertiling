@@ -92,14 +92,16 @@ def geodesic_angles(z1,z2):
 
 
 import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
+
 
 # draw hyperbolic line segment connecting z1 and z2
 def geodesic_arc(z1,z2,**kwargs):
     t1, t2, zc, r = geodesic_angles(z1,z2)
-    
+
     # in case the points are collinear, we use matplotlib.patch.Arrow to draw a straight line
     if r == -1:
-        return mpatches.Arrow(z1.real, z1.imag, (z2-z1).real, (z2-z1).imag, width=0, **kwargs)
+        return mlines.Line2D(np.array([z1.real,z2.real]), np.array([z1.imag,z2.imag]), **kwargs)
     
     # avoid negative angles
     if t1 < 0:
