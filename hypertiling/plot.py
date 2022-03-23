@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection, PolyCollection
+from .geodesics import geodesic_arc
 
 
 # taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
@@ -52,6 +53,37 @@ def poly2patch(polygons, colors=None, **kwargs):
         pgonpatches.set_array(np.array(colors))
 
     return pgonpatches    
+
+
+# transform all edges in the tiling to either matplotlib Arc or Line2D
+# depending on whether they came out straight or curved
+# the respective type is encoded in the array "types"
+def edges2matplotlib(T, **kwargs):
+    
+    edges = []
+    types = []
+
+    for poly in T: # loop over polygons
+        for i in range(T.p): # loop over vertices
+            z1 = poly.verticesP[i] # extract edges
+            z2 = poly.verticesP[(i+1)%T.p]
+            edge = geodesic_arc(z1,z2,**kwargs) # compute arc
+            edges.append(edge)
+
+            edgetype = type(edge).__name__
+            
+            if edgetype == "Line2D":
+                types.append(1)
+            elif edgetype == "Arc":
+                types.append(0)
+            else:
+                types.append(-1)
+                                        
+    return edges, types
+                
+
+
+
 
 
 # simple plot function for hyperbolic tiling with colors
