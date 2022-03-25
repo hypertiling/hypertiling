@@ -35,6 +35,7 @@ install_slim:
 install_stretch:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
   script:
+    - apt-get update && apt-get install python
     - python setup.py install
 
 #install_buster:
