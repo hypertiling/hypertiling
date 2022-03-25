@@ -36,18 +36,18 @@ install_slim:
     - pip install .
 
 install_stretch:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack-fftw-hdf5-scipy3
   script:
     - python setup.py check
     - pip install .
 
-#install_buster:
-#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
-#  script:
-#    - python setup.py install
+install_buster:
+ image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
+ script:
+   - python setup.py install
 
-#install_bullseye:
-#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
-#  script:
-#    - python setup.py install
+install_bullseye:
+ image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+ script:
+   - python setup.py install
 
