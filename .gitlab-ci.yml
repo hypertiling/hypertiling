@@ -14,6 +14,8 @@ cache:
     - venv/
 
 before_script:
+  - apt-get update && apt-get install python
+  - python --version
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
@@ -21,7 +23,6 @@ before_script:
 install_latest:
   image: python:latest
   script:
-    - python --version
     - python setup.py install
 #    - pip install tox flake8  # you can also use tox
 #    - tox -e py36,flake8
@@ -30,14 +31,11 @@ install_latest:
 install_slim:
   image: python:slim
   script:
-    - python --version
     - python setup.py install
 
 install_stretch:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
   script:
-    - apt-get update && apt-get install python
-    - python --version
     - python setup.py install
 
 #install_buster:
