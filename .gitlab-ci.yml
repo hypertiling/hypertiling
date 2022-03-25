@@ -14,7 +14,7 @@ cache:
     - venv/
 
 before_script:
-  - apt-get update && apt-get install --assume-yes python3
+  - apt-get update && apt-get install --assume-yes python3 python3-pip python3-virtualenv
   - python3 --version
   - pip install virtualenv
   - virtualenv venv
