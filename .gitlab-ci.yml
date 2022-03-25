@@ -23,7 +23,8 @@ before_script:
 install_latest:
   image: python:latest
   script:
-    - python setup.py install
+    - python setup.py check
+    - pip install .
 #    - pip install tox flake8  # you can also use tox
 #    - tox -e py36,flake8
 
