@@ -25,19 +25,21 @@ install_latest:
   script:
     - python setup.py check
     - pip install .
-#    - pip install tox flake8  # you can also use tox
+#    - pip install tox flake8 
 #    - tox -e py36,flake8
 
 
 install_slim:
   image: python:slim
   script:
-    - python setup.py install
+    - python setup.py check
+    - pip install .
 
 install_stretch:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
   script:
-    - python setup.py install
+    - python setup.py check
+    - pip install .
 
 #install_buster:
 #  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
