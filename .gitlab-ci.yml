@@ -15,9 +15,9 @@ cache:
 
 before_script:
   - python --version  # For debugging
-  #- pip install virtualenv
-  #- virtualenv venv
-  #- source venv/bin/activate
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
 
 install_latest:
   image: python:latest
@@ -37,13 +37,13 @@ install_stretch:
   script:
     - python setup.py install
 
-install_buster:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
-  script:
-    - python setup.py install
+#install_buster:
+#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
+#  script:
+#    - python setup.py install
 
-install_bullseye:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
-  script:
-    - python setup.py install
+#install_bullseye:
+#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+#  script:
+#    - python setup.py install
 
