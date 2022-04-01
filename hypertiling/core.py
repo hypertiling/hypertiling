@@ -16,7 +16,7 @@ class HyperbolicTiling:
         self.nsectors = 360
 
         self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
-        self.dgts = 10  # numerical precision
+        self.dgts = 8  # numerical precision
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
