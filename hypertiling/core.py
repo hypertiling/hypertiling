@@ -57,9 +57,15 @@ class HyperbolicTiling:
     # generates the whole lattice by first constructing one 1/p sector, then uses symmetry to construct
     # the other p-1 sectors
     def generate(self):
+        # prepare list to store polygons 
         self.lpolygons[0].append(self.fund_poly)
-        self.centerlist.append(np.round(self.fund_poly.centerP, self.dgts))
-        dqe = deque([], self.q*5)  # maintain a short FIFO container, which contains newly created cells
+
+        # prepare set which will contain the center coordinates
+        # this is being used for uniqueness checks
+        centerset = set()
+        centerset.add(np.round(self.fund_poly.centerP, self.dgts))
+
+        # loop over layers to be constructed
         sectors = np.arange(0, self.nsectors + 1)  # include one extra sector as "buffer"
         for l in range(1, self.nlayers):
             for pgon in self.lpolygons[l-1]:  # computes all neighbor polygons of layer l
@@ -68,20 +74,17 @@ class HyperbolicTiling:
                         polycopy = copy.deepcopy(pgon)
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                         center = np.round(adj_pgon.centerP, self.dgts)
+                        adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
 
-                        if center in dqe: # compare new polygon against lately created ones
-                            continue
-
-                        elif center in self.centerlist:  # compare against the full list
-                            continue
-
-                        else: # new polygon is unique
-                            adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
-                            if adj_pgon.sector in sectors:  # if the drawn polygon is in an allowed sector (equal to "Is in sector 0")
-                                adj_pgon.layer = l + 1  # has to be in the next layer since otherwise it already exists
-                                self.centerlist.append(center)
-                                dqe.append(center)
+                        if adj_pgon.sector in sectors:  # if the drawn polygon is in an allowed sector (equal to "Is in sector 0")
+                            lenA = len(centerset)
+                            centerset.add(center)
+                            lenB = len(centerset)
+                            # this little trick tells us whether an element has actually been added 
+                            if lenB>lenA:
+                                adj_pgon.layer = l+1  # has to be in the next layer since otherwise it already exists
                                 self.lpolygons[l].append(adj_pgon)
+
 
 
         for lst in self.lpolygons:  # flattening the list, only including the right sector polygons
