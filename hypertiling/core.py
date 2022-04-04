@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+from collections import deque
 
 # relative imports
 from .hyperpolygon import HyperPolygon
@@ -58,6 +59,7 @@ class HyperbolicTiling:
     def generate(self):
         self.lpolygons[0].append(self.fund_poly)
         self.centerlist.append(np.round(self.fund_poly.centerP, self.dgts))
+        dqe = deque([], self.q*5)  # maintain a short FIFO container, which contains newly created cells
         sectors = np.arange(0, self.nsectors + 1)  # include one extra sector as "buffer"
         for l in range(1, self.nlayers):
             for pgon in self.lpolygons[l-1]:  # computes all neighbor polygons of layer l
@@ -66,12 +68,21 @@ class HyperbolicTiling:
                         polycopy = copy.deepcopy(pgon)
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        if center not in self.centerlist:  # if the polygon has not already been drawn
+
+                        if center in dqe: # compare new polygon against lately created ones
+                            continue
+
+                        elif center in self.centerlist:  # compare against the full list
+                            continue
+
+                        else: # new polygon is unique
                             adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
                             if adj_pgon.sector in sectors:  # if the drawn polygon is in an allowed sector (equal to "Is in sector 0")
                                 adj_pgon.layer = l + 1  # has to be in the next layer since otherwise it already exists
                                 self.centerlist.append(center)
+                                dqe.append(center)
                                 self.lpolygons[l].append(adj_pgon)
+
 
         for lst in self.lpolygons:  # flattening the list, only including the right sector polygons
             for polygon in lst:
