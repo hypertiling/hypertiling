@@ -1,6 +1,5 @@
 import numpy as np
 import copy
-from collections import deque
 
 # relative imports
 from .hyperpolygon import HyperPolygon
