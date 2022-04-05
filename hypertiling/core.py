@@ -70,13 +70,14 @@ class HyperbolicTiling:
         for l in range(1, self.nlayers):
 
             # computes all neighbor polygons of layer l
-            for pgon in lpolygons[l-1]:
+            delidx = []
+            for k, pgon in enumerate(lpolygons[l-1]):
 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
 
                     # iterate over all polygons touching this very vertex
-                    for rot_ind in range(1, self.q):
+                    for rot_ind in range(1,self.q):
 
                         # create copy
                         polycopy = copy.deepcopy(pgon)
@@ -84,24 +85,32 @@ class HyperbolicTiling:
                         # generate adjacent polygon
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
 
-                        # compute center and angle
+                        adj_pgon.find_angle()
+                        adj_pgon.find_sector(self.p)
+
+                        if adj_pgon.sector == 1:
+                            adj_pgon.moeb_rotate(+2*np.pi/self.p)  # rotate the whole polygon k times by 2*pi/q
+                        
+                        elif adj_pgon.sector == self.p-1:
+                            adj_pgon.moeb_rotate(-2*np.pi/self.p)  # rotate the whole polygon k times by 2*pi/q
+
+                        elif adj_pgon.sector > 1:
+                            continue
+
                         center = np.round(adj_pgon.centerP, self.dgts)
                         adj_pgon.find_angle()
-
-                        if adj_pgon.is_in_zero_sector(self.p):
-
-                            lenA = len(centerset)
-                            centerset.add(center)
-                            lenB = len(centerset)
-                            # this little trick tells us whether an element has actually been added 
-                            if lenB>lenA:
-                                adj_pgon.layer = l+1
-                                lpolygons[l].append(adj_pgon)
+                        adj_pgon.find_sector(self.p)
+                        lenA = len(centerset)
+                        centerset.add(center)
+                        lenB = len(centerset)
+                        if lenB>lenA:
+                            adj_pgon.layer = l+1
+                            lpolygons[l].append(adj_pgon)
 
 
 
         # loop over polygon list and remove duplicates at the sector boundary
-        for lst in lpolygons:
+        for j, lst in enumerate(lpolygons):
             # collect polygon angles
             angles = np.zeros(len(lst))
             for i, pgon in enumerate(lst):
@@ -114,7 +123,7 @@ class HyperbolicTiling:
             # by design this happens more often than not, since the function
             # adj_pgon.is_in_zero_sector comes with a small tolerance
             angle_difference = np.max(angles)-self.dalpha-np.min(angles)
-            if len(lst) > 1 and np.abs(angle_difference) < 1e-10:
+            if len(lst) > 1 and  np.abs(angle_difference) < 1e-10:
                 del lst[np.argmax(angles)]
 
             for i, pgon in enumerate(lst):
@@ -145,8 +154,8 @@ class HyperbolicTiling:
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.rotate(p*self.phi)
-                pgon.find_angle()  # set polygon.sector such that the disk is divided into 1*p sectors
-                pgon.find_sector(self.p)
+                pgon.angle += p*self.dalpha
+                pgon.sector += p
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number

@@ -135,7 +135,7 @@ class HyperPolygon:
     # determine whether the polygon is in the zero-th
     # of k sectors; the sector boundary is "soft"
     # in order to not loose polygons due to rounding!
-    def is_in_zero_sector(self, k, tol=1e-10):
+    def is_in_zero_sector(self, k, tol):
         if -tol < self.angle <= (360/k)+tol:
             return True
         else:
