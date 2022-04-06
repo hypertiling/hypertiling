@@ -118,28 +118,11 @@ class HyperPolygon:
         return [xedges, yedges]
 
 
-    # update angle attribute of polygon
-    # make sure you call this after transformations
-    def find_angle(self):
-        self.angle = np.angle(self.centerP, deg=True)
-        self.angle = np.round(self.angle, 14)
+    def find_angle(self, k, offset=0):   # has to be called after the inverse trafo...
+        self.angle = np.arctan2(self.centerP.imag, self.centerP.real)*180/np.pi-offset  # requires y first
+        self.angle = np.round(self.angle, 10)
         self.angle += 360 if self.angle < 0 else 0
-
-
-    # update sector attribute of polygon
-    # identify in which of the k sectors the polygon resides
-    def find_sector(self, k):
-        self.sector = floor(self.angle/(360/k))
-
-
-    # determine whether the polygon is in the zero-th
-    # of k sectors; the sector boundary is "soft"
-    # in order to not loose polygons due to rounding!
-    def is_in_zero_sector(self, k, tol):
-        if -tol < self.angle <= (360/k)+tol:
-            return True
-        else:
-            return False
+        self.sector = floor(self.angle/(360/(k*self.p)))  # k*p sectors; insert offset +0.1 here?!
 
 
     def mirror(self):
