@@ -1,5 +1,5 @@
 import numpy as np
-from .distance import weierstrass_distance
+from .distance import weierstrass_distance, lorentzian_distance
 
 # wrapper to provide a nicer interface
 def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, verbose=False):
@@ -186,28 +186,31 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
         pgon.find_angle(1)
         if pgon.sector in [0, 1, tiling.polygons[0].p-1]:
             pgons.append(pgon)
-    # prepare
-    v0 = np.zeros(len(pgons))
-    v1 = np.zeros(len(pgons))
-    v2 = np.zeros(len(pgons))
-    for i, poly in enumerate(pgons):
-        v0[i] = poly.centerW[0]  # x
-        v1[i] = poly.centerW[1]  # y and
-        v2[i] = poly.centerW[2]  # z coordinate in weierstrass representation
 
-    searchdist = nn_dist + eps # add something to nn_dist to avoid rounding problems
-    retlist = []  # prepare list
-    for i, poly1 in enumerate(pgons):  # loop over polygons
-        if poly1.sector == 0:
-            vA = poly1.centerW  # distance step 1
-            args = vA[2] * v2 - vA[1] * v1 - vA[0] * v0
-            args[(args < 1)] = 1  # this costs some %, but reduces warnings
-            dists = np.arccosh(args)  # distance step 2; this uses the vectorization of numpy functions
+    # prepare matrix containing all center coordiantes
+    v = np.zeros((len(pgons), 3))
+    for i, poly in enumerate(pgons):
+        v[i] = poly.centerW
+
+    # add something to nn_dist to avoid rounding problems
+    # does not need to be particularly small
+    searchdist = nn_dist + eps
+    searchdist = np.cosh(searchdist)
+
+    # prepare list
+    retlist = []
+    # loop over polygons
+    for i, poly in enumerate(pgons):
+        if poly.sector == 0:
+            w = poly.centerW
+            dists = lorentzian_distance(v, w)
+            dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
             indxs = np.where(dists < searchdist)[0]  # radius search
             self = np.argwhere(indxs == i)  # find self
             indxs = np.delete(indxs, self)  # delete self
             nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
             retlist.append(nums)
+
 
     pps = int((len(pgons)-1)/3)  # polygons per sector, excl. center polygon
     p = pgons[0].p  # number of edges of each polygon
