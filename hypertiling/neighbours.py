@@ -153,26 +153,28 @@ def find_nn_brute_force(tiling, nn_dist, eps=1e-8):
 # finds nearest neighbours by comparing all-to-all distances
 # however, making sure everything can be fully vectorized by numpy we gain a significant speed-up
 def find_nn_optimized(tiling, nn_dist, eps=1e-5):
-    # prepare
-    v0 = np.zeros(len(tiling.polygons))
-    v1 = np.zeros(len(tiling.polygons))
-    v2 = np.zeros(len(tiling.polygons))
-    for i, poly in enumerate(tiling):
-        v0[i] = poly.centerW[0]  # x
-        v1[i] = poly.centerW[1]  # y and
-        v2[i] = poly.centerW[2]  # z coordinate in weierstrass representation
+    # prepare matrix containing all center coordiantes
+    v = np.zeros((len(pgons), 3))
+    for i, poly in enumerate(pgons):
+        v[i] = poly.centerW
 
-    searchdist = nn_dist + eps # add something to nn_dist to avoid rounding problems
-    retlist = []  # prepare list
-    for i, poly1 in enumerate(tiling):  # loop over polygons
-        vA = poly1.centerW  # distance step 1
-        args = vA[2] * v2 - vA[1] * v1 - vA[0] * v0
-        args[(args < 1)] = 1  # this costs some %, but reduces warnings
-        dists = np.arccosh(args)  # distance step 2; this uses the vectorization of numpy functions
+    # add something to nn_dist to avoid rounding problems
+    # does not need to be particularly small
+    searchdist = nn_dist + eps
+    searchdist = np.cosh(searchdist)
+
+    # prepare list
+    retlist = []
+
+    # loop over polygons
+    for i, poly in enumerate(pgons):
+        w = poly.centerW
+        dists = lorentzian_distance(v, w)
+        dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
         indxs = np.where(dists < searchdist)[0]  # radius search
         self = np.argwhere(indxs == i)  # find self
         indxs = np.delete(indxs, self)  # delete self
-        nums = [tiling[ind].idx for ind in indxs]  # replacing indices by actual polygon number
+        nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
         retlist.append(nums)
     return retlist
 
