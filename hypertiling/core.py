@@ -1,6 +1,5 @@
 import numpy as np
 import copy
-from collections import deque
 
 # relative imports
 from .hyperpolygon import HyperPolygon
@@ -90,13 +89,16 @@ class HyperbolicTiling:
                         center = np.round(adj_pgon.centerP, self.dgts)
                         adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
 
+                        # cut away cells outside the allowed sectors
                         if adj_pgon.sector in sectors:
+                            # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center)
+                            centerset.add(center) 
                             lenB = len(centerset)
-                            # this little trick tells us whether an element has actually been added 
+                            # this tells us whether an element has actually been added
                             if lenB>lenA:
                                 adj_pgon.layer = l+1
+                                # add corresponding poly to large list
                                 self.lpolygons[l].append(adj_pgon)
 
 
