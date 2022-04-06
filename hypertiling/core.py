@@ -66,6 +66,10 @@ class HyperbolicTiling:
         centerset = set()
         centerset.add(np.round(self.fund_poly.centerP, self.dgts))
 
+        centerlist = []
+        centerlist.append(np.round(self.fund_poly.centerP, self.dgts))
+
+        ct = 1
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -88,24 +92,67 @@ class HyperbolicTiling:
                         adj_pgon.find_angle()
                         adj_pgon.find_sector(self.p)
 
-                        if adj_pgon.sector == 1:
-                            adj_pgon.moeb_rotate(+2*np.pi/self.p)  # rotate the whole polygon k times by 2*pi/q
-                        
-                        elif adj_pgon.sector == self.p-1:
-                            adj_pgon.moeb_rotate(-2*np.pi/self.p)  # rotate the whole polygon k times by 2*pi/q
+                        cross_region = 1
+                        a1 = self.dalpha + cross_region
+                        a2 = self.dalpha
+                        a3 = 360
+                        a4 = 360-cross_region
 
-                        elif adj_pgon.sector > 1:
+                        if a1 > adj_pgon.angle > a2:
+                            adj_pgon.moeb_rotate(+2*np.pi/self.p)
+                        
+                        elif a4 < adj_pgon.angle < a3:
+                            adj_pgon.moeb_rotate(-2*np.pi/self.p)
+
+                        elif a1 <= adj_pgon.angle <= a4:
                             continue
 
                         center = np.round(adj_pgon.centerP, self.dgts)
                         adj_pgon.find_angle()
+                
+                        # improve me!
+                        # quick fix for the (5,4,7)
+                        if adj_pgon.angle >= 360-1e-12:
+                            print("%16.15f" % adj_pgon.angle)
+                            adj_pgon.angle = 0
+
+                        a1 = copy.deepcopy(adj_pgon)
+                        a2 = copy.deepcopy(adj_pgon)
+                        a3 = copy.deepcopy(adj_pgon)
+
+                        a2.moeb_rotate(+2*np.pi/self.p)
+                        a3.moeb_rotate(-2*np.pi/self.p)
+
+                        c1 = np.round(a1.centerP,8)
+                        c2 = np.round(a2.centerP,8)
+                        c3 = np.round(a3.centerP,8)
+
+                        b1 = c1 in centerlist
+                        b2 = c2 in centerlist
+                        b3 = c3 in centerlist
+
+                        if l > 1:
+                            if b1 or b2 or b3:
+                                print("warning!")
+                                continue
+
                         adj_pgon.find_sector(self.p)
                         lenA = len(centerset)
                         centerset.add(center)
                         lenB = len(centerset)
                         if lenB>lenA:
                             adj_pgon.layer = l+1
+                            adj_pgon.idx = ct
+                            ct += 1
+                            if 0 <= adj_pgon.angle < 0.0001 or self.dalpha-0.0001 <= adj_pgon.angle < self.dalpha+0.0001 or  adj_pgon.angle > 359.9999:
+#                                print(".")
+                                centerlist.append(np.round(adj_pgon.centerP,8))
+
                             lpolygons[l].append(adj_pgon)
+
+                        # idee: zweites Liste anlegen mit allen Polygonen an den beiden Schnittstellen
+                        # diese wird dann auch auf Duplikate gecheckt jedes mal wenn man an der Schnittstelle ist
+                        # und zwar nicht nur die das Poly selbst sondern auch die um +- Winkel gedreht Variante!
 
 
 
@@ -123,7 +170,12 @@ class HyperbolicTiling:
             # by design this happens more often than not, since the function
             # adj_pgon.is_in_zero_sector comes with a small tolerance
             angle_difference = np.max(angles)-self.dalpha-np.min(angles)
-            if len(lst) > 1 and  np.abs(angle_difference) < 1e-10:
+            print(j)
+            print(lst[np.argmin(angles)].centerP, "\t", np.min(angles))
+            print(lst[np.argmax(angles)].centerP, "\t", np.max(angles))
+            print(angle_difference)
+            if len(lst) > 1 and  np.abs(angle_difference) < 1e-8:
+                print("   deleting ...")
                 del lst[np.argmax(angles)]
 
             for i, pgon in enumerate(lst):
@@ -154,8 +206,10 @@ class HyperbolicTiling:
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.rotate(p*self.phi)
-                pgon.angle += p*self.dalpha
-                pgon.sector += p
+                pgon.find_angle()
+                pgon.find_sector(self.p)
+#                pgon.angle += p*self.dalpha
+#                pgon.sector += p
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
