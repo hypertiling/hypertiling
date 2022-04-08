@@ -16,7 +16,7 @@ class HyperbolicTiling:
         self.nsectors = 360
 
         self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
-        self.dgts = 8  # numerical precision
+        self.dgts = 8  # rounding digits, default: 8 (do not change, unless you know what you are doing!)
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
@@ -56,22 +56,52 @@ class HyperbolicTiling:
     # generates the whole lattice by first constructing one 1/p sector, then uses symmetry to construct
     # the other p-1 sectors
     def generate(self):
+        # prepare list to store polygons 
         self.lpolygons[0].append(self.fund_poly)
-        self.centerlist.append(np.round(self.fund_poly.centerP, self.dgts))
-        sectors = np.arange(0, self.nsectors + 1)  # include one extra sector as "buffer"
+
+        # prepare set which will contain the center coordinates
+        # this is being used for uniqueness checks
+        centerset = set()
+        centerset.add(np.round(self.fund_poly.centerP, self.dgts))
+
+        # include one extra sector as "buffer"
+        sectors = np.arange(0, self.nsectors + 1)
+
+        # loop over layers to be constructed
         for l in range(1, self.nlayers):
-            for pgon in self.lpolygons[l-1]:  # computes all neighbor polygons of layer l
-                for vert_ind in range(self.p):  # iterate every vertex of pgon
-                    for rot_ind in range(1, self.q):  # iterate over all polygons touching this very vertex
+
+            # computes all neighbor polygons of layer l
+            for pgon in self.lpolygons[l-1]:
+
+                # iterate over every vertex of pgon
+                for vert_ind in range(self.p):
+
+                    # iterate over all polygons touching this very vertex
+                    for rot_ind in range(1, self.q):
+
+                        # create copy
                         polycopy = copy.deepcopy(pgon)
+
+                        # generate adjacent polygon
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+
+                        # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        if center not in self.centerlist:  # if the polygon has not already been drawn
-                            adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
-                            if adj_pgon.sector in sectors:  # if the drawn polygon is in an allowed sector (equal to "Is in sector 0")
-                                adj_pgon.layer = l + 1  # has to be in the next layer since otherwise it already exists
-                                self.centerlist.append(center)
+                        adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
+
+                        # cut away cells outside the allowed sectors
+                        if adj_pgon.sector in sectors:
+                            # try adding to centerlist; it is a set() and takes care of duplicates
+                            lenA = len(centerset)
+                            centerset.add(center) 
+                            lenB = len(centerset)
+                            # this tells us whether an element has actually been added
+                            if lenB>lenA:
+                                adj_pgon.layer = l+1
+                                # add corresponding poly to large list
                                 self.lpolygons[l].append(adj_pgon)
+
+
 
         for lst in self.lpolygons:  # flattening the list, only including the right sector polygons
             for polygon in lst:
