@@ -40,10 +40,10 @@ install_slim:
 #    - python3 setup.py check
 #    - pip3 install .
 
-install_buster:
- image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
- script:
-   - pip3 install .
+#install_buster:
+# image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
+ #script:
+ #  - pip3 install .
 
 install_bullseye:
  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
