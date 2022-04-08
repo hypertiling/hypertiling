@@ -14,7 +14,7 @@ class HyperPolygon:
         self.verticesP = np.zeros(shape=self.p, dtype=np.complex128)  # vertices
 
         # Weierstrass (hyperboloid) coordinates
-        self.centerW = np.array([0, 0, 1]) # center
+        self.centerW = np.array([1, 0, 0]) # center
         self.verticesW = np.zeros((3, self.p))  # vertices
 
         

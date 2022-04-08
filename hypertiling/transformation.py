@@ -3,16 +3,16 @@ import numpy as np
 
 def p2w(z):
     x, y = z.real, z.imag
-    factor = 1 / (1 - x * x - y * y)
-    resvec = np.array([2 * x * factor, 2 * y * factor, (1 + x * x + y * y) * factor])
-    return resvec
+    xx = x*x
+    yy = y*y
+    factor = 1 / (1-xx-yy)
+    return factor*np.array([(1+xx+yy), 2*x, 2*y])
 
 
 def w2p(point):
-    [x, y, z] = point
-    factor = 1 / (1 + z)
-    z = complex(x * factor, y * factor)
-    return z
+    [t, x, y] = point
+    factor = 1 / (1+t)
+    return complex(x*factor, y*factor)
 
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
