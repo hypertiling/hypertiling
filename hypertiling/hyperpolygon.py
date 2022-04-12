@@ -81,11 +81,11 @@ class HyperPolygon:
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
-    def moeb_inverse(self, z0, phi=0, s=0):
-        self.centerP = moeb_inverse_trafo(self.centerP, z0, -phi, s)
+    def moeb_inverse(self, z0):
+        self.centerP = moeb_origin_trafo_inverse(z0, self.centerP)
         self.centerW = p2w(self.centerP)
         for i in range(self.p):
-            z = moeb_inverse_trafo(self.verticesP[i], z0, -phi, s)
+            z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
