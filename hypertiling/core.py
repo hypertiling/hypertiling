@@ -45,7 +45,7 @@ class HyperbolicTiling:
     # constructs the vertices of the fundamental hyperbolic {p,q} polygon
     def create_fundamental_polygon(self):
         r = fund_radius(self.p, self.q)
-        polygon = HyperPolygon(self.p, self.q)
+        polygon = HyperPolygon(self.p)
 
         for i in range(self.p):
             z = complex(r * np.cos(i*self.phi), r * np.sin(i*self.phi))  # = r*exp(i*phi)
@@ -188,7 +188,7 @@ class HyperbolicTilingDunham:
 
     def create_fundamental_polygon(self):  # constructs the verticesP of the fundamental hyperbolic {p,q} polygon
         r = fund_radius(self.p, self.q)
-        polygon = HyperPolygon(self.p, self.q)
+        polygon = HyperPolygon(self.p)
         angle = np.pi / self.p
         for i in range(self.p):  # for every corner of the polygon
             z = complex(r * np.cos(angle + 2 * np.pi * i / self.p), r * np.sin(angle + 2 * np.pi * i / self.p))

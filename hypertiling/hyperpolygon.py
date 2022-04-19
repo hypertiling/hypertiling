@@ -6,7 +6,7 @@ from .transformation import *
 
 # defines a hyperbolic polygon
 class HyperPolygon:
-    def __init__(self, p, q):
+    def __init__(self, p):
 
         # Poincare disk coordinates
         self.centerP = complex(0, 0)  # center
