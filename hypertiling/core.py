@@ -9,17 +9,18 @@ from .util import fund_radius
 # the main object of this library
 # essentially represents a list of polygons which build the hyperbolic lattice
 class HyperbolicTiling:
-    def __init__(self, p, q, nlayers):
+    def __init__(self, p, q, nlayers, origin='center'):
         self.p = p  # number of edges (and thus number of vertices) per polygon
         self.q = q  # number of polygons that meet at each vertex
         self.nlayers = nlayers  # layers of the tessellation
+        self.origin = origin  # vertex or center of first polygon at center
         self.nsectors = 360
 
         self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
         self.dgts = 8  # rounding digits, default: 8 (do not change, unless you know what you are doing!)
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
-        self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
+        self.fund_poly = self.create_fundamental_polygon(origin)  # central polygon of the tessellation
         self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
 
@@ -43,7 +44,7 @@ class HyperbolicTiling:
         return len(self.polygons)
 
     # constructs the vertices of the fundamental hyperbolic {p,q} polygon
-    def create_fundamental_polygon(self):
+    def create_fundamental_polygon(self, origin='center'):
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p, self.q)
 
@@ -51,6 +52,15 @@ class HyperbolicTiling:
             z = complex(r * np.cos(i*self.phi), r * np.sin(i*self.phi))  # = r*exp(i*phi)
             polygon.verticesP[i] = z
             polygon.verticesW[:, i] = p2w(z)
+
+        # if centered around a vertex, shift one vertex to origin
+        if origin == 'vertex':
+            polygon.moeb_origin(complex(r, 0))
+            polygon.find_angle(k=1)
+            vertangle = np.arctan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
+            polygon.moeb_rotate(vertangle)
+            polygon.find_angle(k=1)
+
         return polygon
 
     # generates the whole lattice by first constructing one 1/p sector, then uses symmetry to construct
@@ -87,21 +97,19 @@ class HyperbolicTiling:
 
                         # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
+                        adj_pgon.find_angle(360, origin=self.origin)  # divide the disk into 360*p sectors
 
                         # cut away cells outside the allowed sectors
                         if adj_pgon.sector in sectors:
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center) 
+                            centerset.add(center)
                             lenB = len(centerset)
                             # this tells us whether an element has actually been added
-                            if lenB>lenA:
+                            if lenB > lenA:
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.lpolygons[l].append(adj_pgon)
-
-
 
         for lst in self.lpolygons:  # flattening the list, only including the right sector polygons
             for polygon in lst:
@@ -110,8 +118,10 @@ class HyperbolicTiling:
                     self.polygons.append(polygon)
 
         # uses symmetry to fill the disk by rotating the slice
-        self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-
+        if self.origin == 'center':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        else:
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
@@ -121,21 +131,24 @@ class HyperbolicTiling:
         polygon.moeb_inverse(z0)  # map polygon back to former location
         return polygon
 
-
     # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
     def angular_replicate(self, polygons, k):
-        polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
+        if self.origin == 'center':
+            polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
+            angle = self.phi
+        else:
+            angle = 2*np.pi/self.q
+
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                pgon.rotate(p*self.phi)
+                pgon.rotate(p*angle)
                 pgon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
         for num, poly in enumerate(self.polygons):
             poly.idx = num + 1
-
 
     # populate the "edges" list of all polygons in the tiling
     def populate_edge_list(self, digits=12):
@@ -151,7 +164,6 @@ class HyperbolicTiling:
             for i, vert in enumerate(verts[:-1]):
                 poly.edges.append((verts[i], verts[i+1]))
             poly.edges.append((verts[-1], verts[0]))
-
 
 
 # After the algorithm by D. Dunham (1982)
