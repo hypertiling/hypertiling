@@ -1,13 +1,12 @@
 from math import floor
+import math
+import cmath
 from .transformation import *
 
 
 # defines a hyperbolic polygon
 class HyperPolygon:
     def __init__(self, p, q):
-        self.p = p  # number of edges
-        self.q = q  # number of adjacent polygons per vertex
-
 
         # Poincare disk coordinates
         self.centerP = complex(0, 0)  # center
@@ -18,6 +17,7 @@ class HyperPolygon:
         self.verticesW = np.zeros((3, self.p))  # vertices
 
         
+        self.p           = p  # number of edges
         self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
         self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
         self.sector      = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
@@ -28,17 +28,18 @@ class HyperPolygon:
         self.edges = []  # compare self.populate_edge_list
 
 
-    # checks whether two polygons are equal (within given numerical precision)
-    # untested!
-    def __eq__(self, other, digits=7):  
-        re1 = self.centerP.real
-        im1 = self.centerP.imag
-        re2 = other.centerP.real
-        im2 = other.centerP.imag
-        c1 = complex(round(re1, digits), round(im1, digits))
-        c2 = complex(round(re2, digits), round(im2, digits))
-        print("Warning: Equality operator of the HyperPolygon class is untested!")  
-        return c1 == c2
+    # checks whether two polygons are equal
+    def __eq__(self, other):  
+        if isinstance(other, HyperPolygon):
+            centers = cmath.isclose(self.centerP, other.centerP)
+            if not centers:
+                return False
+            orientations = cmath.isclose(self.orientation, other.orientation)
+            if not orientations:
+                return False
+            if self.p == other.p:
+                return True
+        return False
 
 
     # transforms all points of the polygon by matrix tmat
