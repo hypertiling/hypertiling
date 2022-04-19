@@ -17,7 +17,7 @@ class HyperPolygon:
         self.centerW = np.array([1, 0, 0]) # center
         self.verticesW = np.zeros((3, self.p))  # vertices
 
-
+        
         self.idx    = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
         self.layer  = 1  # encodes in which layer of a tessellation this polygons is located
         self.sector = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
@@ -26,17 +26,19 @@ class HyperPolygon:
 
         self.edges = []  # compare self.populate_edge_list
 
+
     # checks whether two polygons are equal (within given numerical precision)
     # untested!
-    def __eq__(self, other, digits=7):
+    def __eq__(self, other, digits=7):  
         re1 = self.centerP.real
         im1 = self.centerP.imag
         re2 = other.centerP.real
         im2 = other.centerP.imag
         c1 = complex(round(re1, digits), round(im1, digits))
         c2 = complex(round(re2, digits), round(im2, digits))
-        print("Warning: Equality operator of the HyperPolygon class is untested!")
+        print("Warning: Equality operator of the HyperPolygon class is untested!")  
         return c1 == c2
+
 
     # transforms all points of the polygon by matrix tmat
     # only used by HyperbolicTilingDunham
@@ -48,8 +50,9 @@ class HyperPolygon:
             self.verticesW[:, i] = tmat @ self.verticesW[:, i]
             self.verticesP[i] = w2p(self.verticesW[:, i])
 
+
     # transforms the entire polygon such that z0 is mapped to origin
-    def moeb_origin(self, z0):
+    def moeb_origin(self, z0):  
         self.centerP = moeb_origin_trafo(z0, self.centerP)
         self.centerW = p2w(self.centerP)
         # self.find_angle(360)  # this might be superfluous
@@ -57,6 +60,7 @@ class HyperPolygon:
             z = moeb_origin_trafo(z0, self.verticesP[i])
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
+
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
         self.centerP = moeb_rotate_trafo(self.centerP, -phi)  # these two lines might be redundant
@@ -113,14 +117,13 @@ class HyperPolygon:
 
         return [xedges, yedges]
 
-    def find_angle(self, k, offset=0, origin='center'):   # has to be called after the inverse trafo...
+
+    def find_angle(self, k, offset=0):   # has to be called after the inverse trafo...
         self.angle = np.arctan2(self.centerP.imag, self.centerP.real)*180/np.pi-offset  # requires y first
         self.angle = np.round(self.angle, 10)
         self.angle += 360 if self.angle < 0 else 0
-        if origin == 'center':
-            self.sector = floor(self.angle/(360/(k*self.p)))  # k*p sectors; insert offset +0.1 here?!
-        else:
-            self.sector = floor(self.angle/(360/(k*self.q)))  # k*p sectors; insert offset +0.1 here?!
+        self.sector = floor(self.angle/(360/(k*self.p)))  # k*p sectors; insert offset +0.1 here?!
+
 
     def mirror(self):
         self.centerP = complex(self.centerP.real, - self.centerP.imag)  # mirror on axis Im(z)=0
