@@ -3,7 +3,7 @@ import copy
 
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w
+from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 
 # the main object of this library
@@ -62,10 +62,11 @@ class HyperbolicTiling:
         # prepare set which will contain the center coordinates
         # this is being used for uniqueness checks
         centerset = set()
+        centerset_extra = set()
         centerset.add(np.round(self.fund_poly.centerP, self.dgts))
 
         # include one extra sector as "buffer"
-        sectors = np.arange(0, self.nsectors + 1)
+        # sectors = np.arange(0, self.nsectors + 1)
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
@@ -87,10 +88,12 @@ class HyperbolicTiling:
 
                         # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        adj_pgon.find_angle(360)  # divide the disk into 360*7 sectors
+                        adj_pgon.find_angle(1)  # divide the disk into 360*7 sectors
+
 
                         # cut away cells outside the allowed sectors
-                        if adj_pgon.sector in sectors:
+                        if 0 <= adj_pgon.angle < 360/self.p+1:
+
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
                             centerset.add(center) 
@@ -101,13 +104,50 @@ class HyperbolicTiling:
                                 # add corresponding poly to large list
                                 self.lpolygons[l].append(adj_pgon)
 
+                            if adj_pgon.angle < 1:
+                                centerset_extra.add(center)
 
 
-        for lst in self.lpolygons:  # flattening the list, only including the right sector polygons
-            for polygon in lst:
-                if polygon.sector in sectors[:-1]:  # removing polygons of the buffer sector
-                    polygon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
-                    self.polygons.append(polygon)
+
+                
+                    
+
+            # note to ourselves: don't do this check while creating the polygons
+            # since the possible duplicate might not yet be created!
+
+#        for curr_layer in self.lpolygons[1:]:
+#            deletelist = []
+#            for k, pgon in enumerate(curr_layer):
+#                if pgon.angle > 360/self.q-1:
+#
+#                    center = moeb_rotate_trafo(pgon.centerP, -self.phi)
+#                    center = np.round(center, self.dgts) # better use simple distance?
+#
+#                    if center in centerset_extra:
+#                        deletelist.append(k)
+#
+#            self.lpolygons[l] = list(np.delete(curr_layer, deletelist))
+#
+
+
+        for curr_layer in self.lpolygons:  # flattening the list, only including the right sector polygons
+            for polygon in curr_layer:
+#                polygon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
+                self.polygons.append(polygon)
+
+        deletelist = []
+        for kk, pgon in enumerate(self.polygons):
+            if pgon.angle > 360/self.q-1:
+
+                center = moeb_rotate_trafo(pgon.centerP, -self.phi)
+                center = np.round(center, self.dgts) # better use simple distance?
+
+                if center in centerset_extra:
+                    deletelist.append(kk)
+
+        self.polygons = list(np.delete(self.polygons, deletelist))
+            
+
 
         # uses symmetry to fill the disk by rotating the slice
         self.angular_replicate(copy.deepcopy(self.polygons), self.p)
