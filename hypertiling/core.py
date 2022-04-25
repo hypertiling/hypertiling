@@ -109,27 +109,6 @@ class HyperbolicTiling:
 
 
 
-                
-                    
-
-            # note to ourselves: don't do this check while creating the polygons
-            # since the possible duplicate might not yet be created!
-
-#        for curr_layer in self.lpolygons[1:]:
-#            deletelist = []
-#            for k, pgon in enumerate(curr_layer):
-#                if pgon.angle > 360/self.q-1:
-#
-#                    center = moeb_rotate_trafo(pgon.centerP, -self.phi)
-#                    center = np.round(center, self.dgts) # better use simple distance?
-#
-#                    if center in centerset_extra:
-#                        deletelist.append(k)
-#
-#            self.lpolygons[l] = list(np.delete(curr_layer, deletelist))
-#
-
-
         for curr_layer in self.lpolygons:  # flattening the list, only including the right sector polygons
             for polygon in curr_layer:
 #                polygon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
@@ -137,7 +116,7 @@ class HyperbolicTiling:
 
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > 360/self.q-1:
+            if pgon.angle > 360/self.p-1:
 
                 center = moeb_rotate_trafo(pgon.centerP, -self.phi)
                 center = np.round(center, self.dgts) # better use simple distance?
