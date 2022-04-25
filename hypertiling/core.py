@@ -88,7 +88,9 @@ class HyperbolicTiling:
 
                         # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        adj_pgon.find_angle(1)  # divide the disk into 360*7 sectors
+                        adj_pgon.find_angle()  # divide the disk into 360*7 sectors
+                        
+#                        adj_pgon.angle = np.round(adj_pgon.angle,10)
 
 
                         # cut away cells outside the allowed sectors
@@ -111,7 +113,6 @@ class HyperbolicTiling:
 
         for curr_layer in self.lpolygons:  # flattening the list, only including the right sector polygons
             for polygon in curr_layer:
-#                polygon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
                 self.polygons.append(polygon)
 
         deletelist = []
@@ -148,7 +149,7 @@ class HyperbolicTiling:
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.rotate(p*self.phi)
-                pgon.find_angle(1)  # set polygon.sector such that the disk is divided into 1*p sectors
+                pgon.find_angle()  # set polygon.sector such that the disk is divided into 1*p sectors
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
