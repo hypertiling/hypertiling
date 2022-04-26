@@ -18,11 +18,12 @@ class HyperPolygon:
         self.verticesW = np.zeros((3, self.p))  # vertices
 
         
-        self.idx    = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
-        self.layer  = 1  # encodes in which layer of a tessellation this polygons is located
-        self.sector = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
-        self.angle  = 0  # angle between self.centerP and the positive x-axis
-        self.val    = 0  # assign a value (useful in any application)
+        self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
+        self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
+        self.sector      = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
+        self.angle       = 0  # angle between self.centerP and the positive x-axis
+        self.val         = 0  # assign a value (useful in any application)
+        self.orientation = 0 # the angle between the line defined by the center and vertices 0, and the abscissa
 
         self.edges = []  # compare self.populate_edge_list
 
@@ -80,11 +81,11 @@ class HyperPolygon:
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
-    def moeb_inverse(self, z0, phi=0, s=0):
-        self.centerP = moeb_inverse_trafo(self.centerP, z0, -phi, s)
+    def moeb_inverse(self, z0):
+        self.centerP = moeb_origin_trafo_inverse(z0, self.centerP)
         self.centerW = p2w(self.centerP)
         for i in range(self.p):
-            z = moeb_inverse_trafo(self.verticesP[i], z0, -phi, s)
+            z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
@@ -135,4 +136,7 @@ class HyperPolygon:
             self.verticesP[i] = complex(self.verticesP[i].real, (-1)*self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
 
+    # returns value between -pi and pi
+    def find_orientation(self):
+        self.orientation = np.angle(self.verticesP[0]-self.centerP)
 
