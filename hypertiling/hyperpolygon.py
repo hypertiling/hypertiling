@@ -121,11 +121,13 @@ class HyperPolygon:
         return [xedges, yedges]
 
 
-    def find_angle(self, k, offset=0):   # has to be called after the inverse trafo...
-        self.angle = np.arctan2(self.centerP.imag, self.centerP.real)*180/np.pi-offset  # requires y first
-        self.angle = np.round(self.angle, 10)
+    def find_angle(self):
+        self.angle = np.angle(self.centerP, deg=True)
         self.angle += 360 if self.angle < 0 else 0
-        self.sector = floor(self.angle/(360/(k*self.p)))  # k*p sectors; insert offset +0.1 here?!
+
+    def find_sector(self):
+        self.sector = floor(self.angle/(360/self.p))
+        
 
 
     def mirror(self):
