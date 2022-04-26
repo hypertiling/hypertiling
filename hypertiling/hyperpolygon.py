@@ -11,7 +11,9 @@ class HyperPolygon:
 
         # Poincare disk coordinates
         self.centerP = complex(0, 0)  # center
+        self.dcenterP = complex(0, 0)
         self.verticesP = np.zeros(shape=self.p, dtype=np.complex128)  # vertices
+        self.dverticesP = np.zeros(shape=self.p, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
         self.centerW = np.array([1, 0, 0]) # center
