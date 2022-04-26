@@ -5,6 +5,7 @@ import copy
 from .hyperpolygon import HyperPolygon
 from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
+from .distance import disk_distance
 
 # the main object of this library
 # essentially represents a list of polygons which build the hyperbolic lattice
@@ -88,10 +89,8 @@ class HyperbolicTiling:
 
                         # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        adj_pgon.find_angle()  # divide the disk into 360*7 sectors
+                        adj_pgon.find_angle()
                         
-#                        adj_pgon.angle = np.round(adj_pgon.angle,10)
-
 
                         # cut away cells outside the allowed sectors
                         if 0 <= adj_pgon.angle < 360/self.p+1:
@@ -108,6 +107,43 @@ class HyperbolicTiling:
 
                             if adj_pgon.angle < 1:
                                 centerset_extra.add(center)
+
+
+
+
+            pgon1 = self.lpolygons[l][0]
+            pgon2 = copy.deepcopy(pgon1)
+            pgon2 = self.generate_adj_poly(pgon2, 0, 1)
+            d = np.abs(pgon1.centerP - pgon2.centerP)
+
+            if -np.log10(d) > self.dgts-1:
+                print("emergency shutdown!")
+                return 0
+
+
+            if l>3:
+                distances = []
+                for j1, pgon1 in enumerate(self.lpolygons[l][0:100]):
+                    for j2, pgon2 in enumerate(self.lpolygons[l][0:100]):
+                        if j1 != j2:
+                            distances.append(disk_distance(pgon1.centerP, pgon2.centerP))
+
+                mindist = np.min(np.array(distances))
+
+                refdist = np.abs(disk_distance(self.fund_poly.centerP, self.lpolygons[1][0].centerP   ))
+
+                print(mindist-refdist)
+
+
+
+                if np.abs(mindist-refdist) > 10**(-self.dgts-1):
+                    print("emergency shutdown2!")
+                    return 0
+
+
+
+            
+
 
 
 
