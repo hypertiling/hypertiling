@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '0.9.0'
+version = '0.9.5'
 
 
 try:
