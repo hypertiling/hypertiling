@@ -16,7 +16,9 @@ class HyperbolicTiling:
         self.nsectors = 360
 
         self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
+        self.degphi = 360/self.p
         self.dgts = 8  # rounding digits, default: 8 (do not change, unless you know what you are doing!)
+        self.degtol = 1 # sector boundary tolerance during lattice construction
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
@@ -88,36 +90,40 @@ class HyperbolicTiling:
 
                         # compute center and angle
                         center = np.round(adj_pgon.centerP, self.dgts)
-                        adj_pgon.find_angle()  # divide the disk into 360*7 sectors
-                        
-#                        adj_pgon.angle = np.round(adj_pgon.angle,10)
+                        adj_pgon.find_angle()
 
-
-                        # cut away cells outside the allowed sectors
-                        if 0 <= adj_pgon.angle < 360/self.p+1:
+                        # cut away cells outside the fundamental sector
+                        # allow some tolerance at the upper boundary
+                        if 0 <= adj_pgon.angle < self.degphi+self.degtol:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
                             centerset.add(center) 
                             lenB = len(centerset)
+
                             # this tells us whether an element has actually been added
                             if lenB>lenA:
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.lpolygons[l].append(adj_pgon)
 
-                            if adj_pgon.angle < 1:
+                            # if angle is in slice, add to centerset_extra
+                            if adj_pgon.angle < self.degtol:
                                 centerset_extra.add(center)
 
 
 
-        for curr_layer in self.lpolygons:  # flattening the list, only including the right sector polygons
+        # flatten the list
+        for curr_layer in self.lpolygons:
             for polygon in curr_layer:
                 self.polygons.append(polygon)
 
+
+
+        # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > 360/self.p-1:
+            if pgon.angle > self.degphi-self.degtol:
 
                 center = moeb_rotate_trafo(pgon.centerP, -self.phi)
                 center = np.round(center, self.dgts) # better use simple distance?
