@@ -156,7 +156,7 @@ class HyperbolicTiling:
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                pgon.rotate(p*self.phi)
+                pgon.moeb_rotate(-p*self.phi)
                 pgon.find_angle()  # set polygon.sector such that the disk is divided into 1*p sectors
                 self.polygons.append(pgon)
 
