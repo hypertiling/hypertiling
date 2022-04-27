@@ -123,8 +123,13 @@ class HyperPolygon:
         self.angle = np.angle(self.centerP, deg=True)
         self.angle += 360 if self.angle < 0 else 0
 
-    def find_sector(self):
-        self.sector = floor(self.angle/(360/self.p))
+
+    def find_sector(self, center):
+        if center == 'cell':
+            self.sector = floor(self.angle/(360/self.p))
+        elif center == 'vertex':
+            self.sector = floor(self.angle/(360/self.q))
+
         
 
 
