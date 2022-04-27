@@ -29,25 +29,25 @@ def twoproduct(x, y):
     e = ((s*t - r) + s*g + f*t) + f*g
     return r, e
 
-def htadd(x, dx, y, dy)
+def htadd(x, dx, y, dy):
     r, e = twosum(x, y)
     e += dx + dy
     r, e = kahan(r, e)
     return r, e
 
-def htdiff(x, dx, y, dy)
+def htdiff(x, dx, y, dy):
     r, e = twodiff(x, y)
     e += dx - dy
     r, e = kahan(r, e)
     return r, e
-    
-def htprod(x, dx, y, dy)
+
+def htprod(x, dx, y, dy):
     r, e = twoproduct(x, y)
     e += x * dy + y*dx
     r, e = kahan(r, e)
     return r, e
 
- def htdiv(x, dx, y, dy):
+def htdiv(x, dx, y, dy):
     r = x/y
     s, f = twoproduct(r, y)
     e = (x - s - f + dx - r*dy)/y
