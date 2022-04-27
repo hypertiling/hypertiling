@@ -18,6 +18,7 @@ class HyperbolicTiling:
         self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
         self.degphi = 360/self.p
         self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
+        self.accuracy = 10**(-self.dgts)
         self.degtol = 1 # sector boundary tolerance during lattice construction
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
@@ -117,40 +118,13 @@ class HyperbolicTiling:
 
 
 
+            if self.numerically_unstable_upper(l):
+                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                break
 
-            pgon1 = self.lpolygons[l][0]
-            pgon2 = copy.deepcopy(pgon1)
-            pgon2 = self.generate_adj_poly(pgon2, 0, 1)
-            d = np.abs(pgon1.centerP - pgon2.centerP)
-
-            if -np.log10(d) > self.dgts-1:
-                print("emergency shutdown!")
-                return 0
-
-
-            if l>3:
-                distances = []
-                for j1, pgon1 in enumerate(self.lpolygons[l][0:100]):
-                    for j2, pgon2 in enumerate(self.lpolygons[l][0:100]):
-                        if j1 != j2:
-                            distances.append(disk_distance(pgon1.centerP, pgon2.centerP))
-
-                mindist = np.min(np.array(distances))
-
-                refdist = np.abs(disk_distance(self.fund_poly.centerP, self.lpolygons[1][0].centerP   ))
-
-                print(mindist-refdist)
-
-
-
-                if np.abs(mindist-refdist) > 10**(-self.dgts-1):
-                    print("emergency shutdown2!")
-                    return 0
-
-
-
-            
-
+            if self.numerically_unstable_lower(l):
+                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                break
 
 
 
@@ -177,6 +151,67 @@ class HyperbolicTiling:
         # fill entire disk by rotating the slice
         self.angular_replicate(copy.deepcopy(self.polygons), self.p)
 
+
+
+
+    # check whether the true "embedding" distance between cells in layer l comes close
+    # to the rounding accuracy
+    def numerically_unstable_upper(self, l, tolfactor=10, samplesize=10):
+
+        # randomly pick a number of sites from l-th layer
+        layersize = len(self.lpolygons[l])
+        true_dists = []
+        for i in range(samplesize):
+            rndidx = np.random.randint(layersize)
+
+            # generate an adjacent cell
+            mother = self.lpolygons[l][rndidx]
+            child  = self.generate_adj_poly(copy.deepcopy(mother), 0, 1)
+
+            # compute the true (non-geodesic) distance
+            true_dist = np.abs(mother.centerP-child.centerP)
+            true_dists.append(true_dist)
+
+        # if this distances comes close to the rounding accuracy
+        # two cells can no longer be reliably distinguished
+        if np.min(true_dist) < self.accuracy*tolfactor:
+            return True
+        else:
+            return False
+
+
+    # we know which geodesic distance two adjancent cells are supposed to have;
+    # here we take a sample of cells from the l-th layer and compute mutual 
+    # distances; if one of those is significantly off compared to the expected
+    # value we are about to enter a dangerous regime in terms of rounding errors
+    def numerically_unstable_lower(self, l, tolfactor=10, samplesize=100):
+
+        # innermost layers are always fine, do nothing
+        if l<3:
+            return False
+
+        # take a sample of cells and compute their distances
+        disk_distances = []
+        for j1, pgon1 in enumerate(self.lpolygons[l][0:samplesize]):
+            for j2, pgon2 in enumerate(self.lpolygons[l][0:samplesize]):
+                if j1 != j2:
+                    disk_distances.append(disk_distance(pgon1.centerP, pgon2.centerP))
+
+        # we are interested in the minimal distance (can be interpreted as an 
+        # upper bound on the accumulated error)
+        mindist = np.min(np.array(disk_distances))
+
+        # the reference distance
+        refdist = disk_distance(self.fund_poly.centerP, self.lpolygons[1][0].centerP)
+
+        # if out arithmetics worked error-free, mindist = refdist
+        # in practice, it does not, so we compute the difference
+        # if it comes close to the rounding accuracy, adjacency can no longer
+        # by reliably resolved and we are about to enter a possibly unstable regime
+        if np.abs(mindist-refdist) > self.accuracy/tolfactor:
+            return True
+        else:
+            return False
 
 
 
