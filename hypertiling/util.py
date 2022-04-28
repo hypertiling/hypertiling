@@ -75,6 +75,15 @@ def border_variance(tiling):
     return var/len(border)
 
 
+
+
+# formula from Mertens & Moore, PRE 96, 042116 (2017)
+def num_pgons_vertex_centered(p,q,n):
+    a = (p-2)*(q-2)-2
+    a4 = np.sqrt(a*a-4)
+    return (p-2)*q / a4 * (((a+a4)/2)**n - ((a-a4)/2)**n)
+
+
 # the following functions find the total number of polygons for some {p, q} tessellation of l layers
 # reference: Baek et al., Phys. Rev.E. 79.011124
 def find_num_of_pgons_73(l):
