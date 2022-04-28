@@ -153,7 +153,6 @@ class HyperbolicTiling:
 
 
 
-
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
     def numerically_unstable_upper(self, l, tolfactor=10, samplesize=10):
@@ -231,7 +230,8 @@ class HyperbolicTiling:
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.moeb_rotate(-p*self.phi)
-                pgon.find_angle()  # set polygon.sector such that the disk is divided into 1*p sectors
+                pgon.find_angle()
+                pgon.find_sector()
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
