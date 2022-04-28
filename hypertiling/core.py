@@ -28,6 +28,9 @@ class HyperbolicTiling:
         self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
 
+        if center not in ['cell', 'vertex']:
+            raise ValueError('Invalid value for argument "center"!')
+
     def __getitem__(self, idx):
         return self.polygons[idx]
 
@@ -184,15 +187,17 @@ class HyperbolicTiling:
         if self.center == 'cell':
             polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
             angle = self.phi
+            k = self.p
         elif self.center == 'vertex':
             angle = self.qhi
+            k = self.q
 
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.moeb_rotate(-p*angle)
                 pgon.find_angle()
-                pgon.find_sector()
+                pgon.find_sector(k)
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
