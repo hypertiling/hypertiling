@@ -170,7 +170,6 @@ class HyperbolicTiling:
 
 
 
-
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
         z0 = polygon.verticesP[ind]
@@ -192,7 +191,8 @@ class HyperbolicTiling:
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 pgon.moeb_rotate(-p*angle)
-                pgon.find_angle()  # set polygon.sector such that the disk is divided into 1*p sectors
+                pgon.find_angle()
+                pgon.find_sector()
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
