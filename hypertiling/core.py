@@ -90,9 +90,6 @@ class HyperbolicTiling:
             sect_angle     = self.qhi
             sect_angle_deg = self.degqhi
 
-        print(sect_angle)
-        print(sect_angle_deg)
-
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
         centerset = set()
