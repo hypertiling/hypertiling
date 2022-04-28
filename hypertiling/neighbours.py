@@ -2,7 +2,7 @@ import numpy as np
 from .distance import weierstrass_distance, lorentzian_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, verbose=False):
+def find(tiling, nn_dist=None, which="optimized", index_from_zero=True, verbose=False):
 
     if nn_dist == None:
         if verbose:
