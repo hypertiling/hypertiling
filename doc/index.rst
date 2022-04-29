@@ -14,7 +14,7 @@
    </style>
 
 The hypertiling documentation
-==========================
+=============================
 
 Welcome to the official documentation of Hypertiling!
 
