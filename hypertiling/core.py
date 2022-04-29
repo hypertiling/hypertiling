@@ -21,7 +21,7 @@ class HyperbolicTiling:
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
-        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
+#        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
 
     def __getitem__(self, idx):
@@ -65,19 +65,20 @@ class HyperbolicTiling:
 
     def generate(self):
         # prepare list to store polygons 
-        self.lpolygons[0].append(self.fund_poly)
-
+        self.polygons.append(self.fund_poly)
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
         centerset = set()
         centerset_extra = set()
         centerset.add(np.round(self.fund_poly.centerP, self.dgts))
 
+        startpgon = 0
+        endpgon = 1
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
             # computes all neighbor polygons of layer l
-            for pgon in self.lpolygons[l-1]:
+            for pgon in self.polygons[startpgon:endpgon]:
 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
@@ -108,18 +109,16 @@ class HyperbolicTiling:
                             if lenB>lenA:
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
-                                self.lpolygons[l].append(adj_pgon)
+                                self.polygons.append(adj_pgon)
 
                             # if angle is in slice, add to centerset_extra
                             if adj_pgon.angle < self.degtol:
                                 centerset_extra.add(center)
-
+            startpgon = endpgon
+            endpgon = len(self.polygons)
 
         # flatten the list
-        for curr_layer in self.lpolygons:
-            for polygon in curr_layer:
-                self.polygons.append(polygon)
-
+        del centerset
 
         # filter out rotational duplicates
         deletelist = []
@@ -133,7 +132,7 @@ class HyperbolicTiling:
                     deletelist.append(kk)
 
         self.polygons = list(np.delete(self.polygons, deletelist))
-            
+
 
         # fill entire disk by rotating the slice
         self.angular_replicate(copy.deepcopy(self.polygons), self.p)
