@@ -8,17 +8,18 @@ class HyperPolygon:
         self.p = p  # number of edges
         self.q = q  # number of adjacent polygons per vertex
 
+# The centers are at the end of the arrays
 
         # Poincare disk coordinates
-        self.centerP = complex(0, 0)  # center
-        self.dcenterP = complex(0, 0)
-        self.verticesP = np.zeros(shape=self.p, dtype=np.complex128)  # vertices
-        self.dverticesP = np.zeros(shape=self.p, dtype=np.complex128)
+#        self.centerP = complex(0, 0)  # center
+#        self.dcenterP = complex(0, 0)
+        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices
+#        self.dverticesP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
-        self.centerW = np.array([1, 0, 0]) # center
-        self.verticesW = np.zeros((3, self.p))  # vertices
-
+#        self.centerW = np.array([1, 0, 0]) # center
+        self.verticesW = np.zeros((3, self.p+1))  # vertices
+        self.verticesW[0,-1] = 1 # center
         
         self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
         self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
@@ -29,14 +30,19 @@ class HyperPolygon:
 
         self.edges = []  # compare self.populate_edge_list
 
-
+    def centerP(self):
+        return self.verticesP[-1]
+    
+    def centerW(self):
+        return self.verticesW[:,-1]
+    
     # checks whether two polygons are equal (within given numerical precision)
     # untested!
     def __eq__(self, other, digits=7):  
-        re1 = self.centerP.real
-        im1 = self.centerP.imag
-        re2 = other.centerP.real
-        im2 = other.centerP.imag
+        re1 = self.centerP().real
+        im1 = self.centerP().imag
+        re2 = other.centerP().real
+        im2 = other.centerP().imag
         c1 = complex(round(re1, digits), round(im1, digits))
         c2 = complex(round(re2, digits), round(im2, digits))
         print("Warning: Equality operator of the HyperPolygon class is untested!")  
@@ -46,47 +52,37 @@ class HyperPolygon:
     # transforms all points of the polygon by matrix tmat
     # only used by HyperbolicTilingDunham
     def transform(self, tmat):
-        self.centerW = tmat @ self.centerW
-        self.centerP = w2p(self.centerW)
-        self.find_angle(360)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             self.verticesW[:, i] = tmat @ self.verticesW[:, i]
             self.verticesP[i] = w2p(self.verticesW[:, i])
+        self.find_angle(360)
 
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):  
-        self.centerP = moeb_origin_trafo(z0, self.centerP)
-        self.centerW = p2w(self.centerP)
-        # self.find_angle(360)  # this might be superfluous
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = moeb_origin_trafo(z0, self.verticesP[i])
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
+        # self.find_angle(360)  # this might be superfluous
 
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        self.centerP = moeb_rotate_trafo(self.centerP, -phi)  # these two lines might be redundant
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = moeb_rotate_trafo(self.verticesP[i], -phi)
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_translate(self, s):
-        self.centerP = moeb_translate_trafo(self.centerP, s)
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = moeb_translate_trafo(self.verticesP[i], s)
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_inverse(self, z0):
-        self.centerP = moeb_origin_trafo_inverse(z0, self.centerP)
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
@@ -94,11 +90,7 @@ class HyperPolygon:
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
-        z = self.centerP
-        z = z*rotation
-        self.centerP = z
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = self.verticesP[i]
             z = z*rotation
             self.verticesP[i] = z
@@ -122,23 +114,20 @@ class HyperPolygon:
 
 
     def find_angle(self):
-        self.angle = np.angle(self.centerP, deg=True)
+        self.angle = np.angle(self.centerP(), deg=True)
         self.angle += 360 if self.angle < 0 else 0
 
     def find_sector(self):
         self.sector = floor(self.angle/(360/self.p))
-        
 
 
     def mirror(self):
-        self.centerP = complex(self.centerP.real, - self.centerP.imag)  # mirror on axis Im(z)=0
-        self.centerW = p2w(self.centerP)
-        self.find_angle(360)
-        for i in range(self.p):
-            self.verticesP[i] = complex(self.verticesP[i].real, (-1)*self.verticesP[i].imag)
+        for i in range(self.p + 1):
+            self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
+        self.find_angle(360)
 
     # returns value between -pi and pi
     def find_orientation(self):
-        self.orientation = np.angle(self.verticesP[0]-self.centerP)
+        self.orientation = np.angle(self.verticesP[0]-self.centerP())
 

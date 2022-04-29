@@ -70,7 +70,7 @@ class HyperbolicTiling:
         # this is used for uniqueness checks later
         centerset = set()
         centerset_extra = set()
-        centerset.add(np.round(self.fund_poly.centerP, self.dgts))
+        centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
 
         startpgon = 0
         endpgon = 1
@@ -93,7 +93,7 @@ class HyperbolicTiling:
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
 
                         # compute center and angle
-                        center = np.round(adj_pgon.centerP, self.dgts)
+                        center = np.round(adj_pgon.centerP(), self.dgts)
                         adj_pgon.find_angle()
 
                         # cut away cells outside the fundamental sector
@@ -125,7 +125,7 @@ class HyperbolicTiling:
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > self.degphi-self.degtol:
 
-                center = moeb_rotate_trafo(pgon.centerP, -self.phi)
+                center = moeb_rotate_trafo(pgon.centerP(), -self.phi)
                 center = np.round(center, self.dgts) # better use simple distance?
 
                 if center in centerset_extra:
@@ -172,7 +172,7 @@ class HyperbolicTiling:
         # are not unique, meaning that the same coordinate can have different representations
         for poly in self.polygons:
             poly.edges = []
-            verts = np.round(poly.verticesP, digits)
+            verts = np.round(poly.verticesP[0:-1], digits)
         
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):

@@ -12,13 +12,13 @@ from .geodesics import geodesic_arc
 def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", dpi=1200, refs=0):
     x, y = [], []
     for pgon in tiling.polygons:
-        v = pgon.verticesP
+        v = pgon.verticesP[0:-1]
         v = np.append(v, v[0])  # appending first vertex to close the circle to overcome missing edges in plot
         x.extend(v.real)
         x.append(None)  # this is some kind of trick that makes it that fast
         y.extend(v.imag)
         y.append(None)
-        plt.text(pgon.centerP.real-0.015, pgon.centerP.imag-0.015, pgon.number, fontsize=fs) if show_label else None
+        plt.text(pgon.centerP().real-0.015, pgon.centerP().imag-0.015, pgon.number, fontsize=fs) if show_label else None
     plt.xlim([-1, 1])
     plt.ylim([-1, 1])
     plt.axis('equal')
@@ -40,7 +40,7 @@ def poly2patch(polygons, colors=None, **kwargs):
     # loop over polygons
     for poly in polygons:
         # extract vertex coordinates
-        u = poly.verticesP
+        u = poly.verticesP[0:-1]
         # transform to matplotlib Polygon format
         stack = np.column_stack((u.real,u.imag))
         polygon = Polygon(stack, True) 
