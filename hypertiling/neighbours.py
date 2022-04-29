@@ -2,7 +2,7 @@ import numpy as np
 from .distance import weierstrass_distance, lorentzian_distance
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized_slice", index_from_zero=True, verbose=False):
+def find(tiling, nn_dist=None, which="optimized", index_from_zero=True, verbose=False):
 
     if nn_dist == None:
         if verbose:
@@ -154,8 +154,8 @@ def find_nn_brute_force(tiling, nn_dist, eps=1e-8):
 # however, making sure everything can be fully vectorized by numpy we gain a significant speed-up
 def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     # prepare matrix containing all center coordiantes
-    v = np.zeros((len(pgons), 3))
-    for i, poly in enumerate(pgons):
+    v = np.zeros((len(tiling), 3))
+    for i, poly in enumerate(tiling):
         v[i] = poly.centerW
 
     # add something to nn_dist to avoid rounding problems
@@ -167,14 +167,14 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     retlist = []
 
     # loop over polygons
-    for i, poly in enumerate(pgons):
+    for i, poly in enumerate(tiling):
         w = poly.centerW
         dists = lorentzian_distance(v, w)
         dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
         indxs = np.where(dists < searchdist)[0]  # radius search
         self = np.argwhere(indxs == i)  # find self
         indxs = np.delete(indxs, self)  # delete self
-        nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
+        nums = [tiling[ind].idx for ind in indxs]  # replacing indices by actual polygon number
         retlist.append(nums)
     return retlist
 
@@ -185,7 +185,8 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
 def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     pgons = []
     for pgon in tiling.polygons:  # pick those polygons that are in sector 0, 1 or last (3 adjacent sectors)
-        pgon.find_angle(1)
+        pgon.find_angle()
+        pgon.find_sector()
         if pgon.sector in [0, 1, tiling.polygons[0].p-1]:
             pgons.append(pgon)
 

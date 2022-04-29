@@ -70,8 +70,7 @@ def w2p(point):
 def mymoeb(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
-    return (z+z0) / complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)
-# (1+z*np.conjugate(z0))
+    return (z+z0) / complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
 def moeb_origin_trafo(z0, z):
@@ -79,7 +78,6 @@ def moeb_origin_trafo(z0, z):
 
 def moeb_origin_trafo_inverse(z0, z):
     return mymoeb(z0, z)
-
 
  # rotates z by phi counter-clockwise about the origin
 def moeb_rotate_trafo(z, phi): 
