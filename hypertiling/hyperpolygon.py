@@ -14,7 +14,7 @@ class HyperPolygon:
 #        self.centerP = complex(0, 0)  # center
 #        self.dcenterP = complex(0, 0)
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices
-#        self.dverticesP = np.zeros(shape=self.p+1, dtype=np.complex128)
+        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
 #        self.centerW = np.array([1, 0, 0]) # center
@@ -31,7 +31,7 @@ class HyperPolygon:
         self.edges = []  # compare self.populate_edge_list
 
     def centerP(self):
-        return self.verticesP[-1]
+        return self.verticesP[self.p]
     
     def centerW(self):
         return self.verticesW[:,-1]
@@ -59,18 +59,20 @@ class HyperPolygon:
 
 
     # transforms the entire polygon such that z0 is mapped to origin
-    def moeb_origin(self, z0):  
+    def moeb_origin(self, z0, dz0):
         for i in range(self.p + 1):
-            z = moeb_origin_trafo(z0, self.verticesP[i])
+            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
             self.verticesP[i] = z
+            self.verticesdP[i] = dz
             self.verticesW[:, i] = p2w(self.verticesP[i])
         # self.find_angle(360)  # this might be superfluous
 
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
         for i in range(self.p + 1):
-            z = moeb_rotate_trafo(self.verticesP[i], -phi)
+            z, dz = moeb_rotate_trafodd(self.verticesP[i], self.verticesdP[i], -phi)
             self.verticesP[i] = z
+            self.verticesdP[i] = dz
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
@@ -81,10 +83,11 @@ class HyperPolygon:
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
-    def moeb_inverse(self, z0):
+    def moeb_inverse(self, z0, dz0):
         for i in range(self.p + 1):
-            z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
+            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
             self.verticesP[i] = z
+            self.verticesdP[i] = dz
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 

@@ -135,16 +135,17 @@ class HyperbolicTiling:
 
 
         # fill entire disk by rotating the slice
-        self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+#        self.angular_replicate(copy.deepcopy(self.polygons), self.p)
 
 
 
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
         z0 = polygon.verticesP[ind]
-        polygon.moeb_origin(z0)  # map vertex at z0 to origin at (0,0)
+        dz0 = polygon.verticesdP[ind]
+        polygon.moeb_origin(z0, dz0)  # map vertex at z0 to origin at (0,0)
         polygon.moeb_rotate(k*2*np.pi/self.q)  # rotate the whole polygon k times by 2*pi/q
-        polygon.moeb_inverse(z0)  # map polygon back to former location
+        polygon.moeb_inverse(z0, dz0)  # map polygon back to former location
         return polygon
 
 
