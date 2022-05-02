@@ -2,18 +2,28 @@ from math import floor
 from .transformation import *
 
 @numba.njit
-def trafo(p, z0, dz0, verticesP, verticesdP):
+def morigin(p, z0, dz0, verticesP, verticesdP, verticesW):
     for i in range(p + 1):
         z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
         verticesdP[i] = dz
+        verticesW[:, i] = p2w(z)
 
 @numba.njit
-def trafo_inv(p, z0, dz0, verticesP, verticesdP):
+def morigin_inv(p, z0, dz0, verticesP, verticesdP, verticesW):
     for i in range(p + 1):
         z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
         verticesdP[i] = dz
+        verticesW[:, i] = p2w(z)
+
+@numba.njit
+def mrotate(p, phi, verticesP, verticesdP, verticesW):
+    for i in range(p + 1):
+        z, dz = moeb_rotate_trafodd(verticesP[i], verticesdP[i], -phi)
+        verticesP[i] = z
+        verticesdP[i] = dz
+        verticesW[:, i] = p2w(z)
 
 # defines a hyperbolic polygon
 class HyperPolygon:
@@ -74,21 +84,22 @@ class HyperPolygon:
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0, dz0):
-        trafo(self.p, z0, dz0, self.verticesP, self.verticesdP)
-        for i in range(self.p + 1):
+        morigin(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+#        for i in range(self.p + 1):
 #            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
 #            self.verticesP[i] = z
 #            self.verticesdP[i] = dz
-            self.verticesW[:, i] = p2w(self.verticesP[i])
+#            self.verticesW[:, i] = p2w(self.verticesP[i])
         # self.find_angle(360)  # this might be superfluous
 
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        for i in range(self.p + 1):
-            z, dz = moeb_rotate_trafodd(self.verticesP[i], self.verticesdP[i], -phi)
-            self.verticesP[i] = z
-            self.verticesdP[i] = dz
-            self.verticesW[:, i] = p2w(self.verticesP[i])
+        mrotate(self.p, phi, self.verticesP, self.verticesdP, self.verticesW)
+#        for i in range(self.p + 1):
+#            z, dz = moeb_rotate_trafodd(self.verticesP[i], self.verticesdP[i], -phi)
+#            self.verticesP[i] = z
+#            self.verticesdP[i] = dz
+#            self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_translate(self, s):
@@ -99,12 +110,12 @@ class HyperPolygon:
 
 
     def moeb_inverse(self, z0, dz0):
-        trafo_inv(self.p, z0, dz0, self.verticesP, self.verticesdP)
-        for i in range(self.p + 1):
+        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+#        for i in range(self.p + 1):
 #            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
 #            self.verticesP[i] = z
 #            self.verticesdP[i] = dz
-            self.verticesW[:, i] = p2w(self.verticesP[i])
+#            self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def rotate(self, phi):
@@ -133,7 +144,7 @@ class HyperPolygon:
 
 
     def find_angle(self):
-        self.angle = np.angle(self.centerP(), deg=True)
+        self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))#np.angle(self.centerP(), deg=True)
         self.angle += 360 if self.angle < 0 else 0
 
     def find_sector(self):

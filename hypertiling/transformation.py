@@ -196,19 +196,33 @@ def moeb_origin_trafo_inverse(z0, z):
 
 @numba.njit
 def moeb_origin_trafodd(z0, dz0, z, dz):
-    return mymoebdd(-z0, -dz0, z, dz)
+    one = complex(1,0)
+    done = complex(0,0)
+    nom, dnom = htcplxdiff(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxdiff(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
+#    return mymoebdd(-z0, -dz0, z, dz)
 
 @numba.njit
 def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
-    return mymoebdd(z0, dz0, z, dz)
+    one = complex(1,0)
+    done = complex(0,0)
+    nom, dnom = htcplxadd(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxadd(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
+#    return mymoebdd(z0, dz0, z, dz)
 
  # rotates z by phi counter-clockwise about the origin
 def moeb_rotate_trafo(z, phi): 
-    return z * np.exp(complex(0, phi))
+    return z * complex(math.cos(phi), math.sin(phi))
 
 @numba.njit
 def moeb_rotate_trafodd(z, dz, phi):
-    ep = np.exp(complex(0, phi))
+    ep = complex(math.cos(phi), math.sin(phi))
     dep = complex(0, 0)
     return htcplxprod(z, dz, ep, dep)
 
@@ -219,8 +233,8 @@ def moeb_translate_trafo(z, s):
 
 # reverses the previous three transformations at once
 def moeb_inverse_trafo(z, z0, phi, s):  
-    exp = np.exp(complex(0, phi))
-    z0c = np.conjugate(z0)
+    exp = complex(math.cos(phi), math.sin(phi))
+    z0c = z0.conjugate()
     num = s+z+exp*z0*(1+s*z)
     denom = exp*(1+s*z)+z0c*(s+z)
     return num/denom

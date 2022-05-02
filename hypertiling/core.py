@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import copy
 import numba
 
@@ -20,7 +21,7 @@ class HyperbolicTiling:
         self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance during lattice construction
 
-        self.centerlist = []  # used to keep track of which polygons has already been drawn
+#        self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon()  # central polygon of the tessellation
 #        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
@@ -50,7 +51,7 @@ class HyperbolicTiling:
         polygon = HyperPolygon(self.p, self.q)
 
         for i in range(self.p):
-            z = complex(r * np.cos(i*self.phi), r * np.sin(i*self.phi))  # = r*exp(i*phi)
+            z = complex(r * math.cos(i*self.phi), r * math.sin(i*self.phi))  # = r*exp(i*phi)
             polygon.verticesP[i] = z
             polygon.verticesW[:, i] = p2w(z)
         return polygon
@@ -118,7 +119,7 @@ class HyperbolicTiling:
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-        # flatten the list
+        # free mem of centerset
         del centerset
 
         # filter out rotational duplicates
@@ -156,7 +157,7 @@ class HyperbolicTiling:
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                pgon.moeb_rotate(-p*self.phi)
+                pgon.moeb_rotate(-p*self.phi) # 3s
                 pgon.find_angle()
                 pgon.find_sector()
                 self.polygons.append(pgon)
