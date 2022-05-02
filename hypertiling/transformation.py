@@ -1,5 +1,6 @@
 import numpy as np
 import math
+
 import numba
 
 @numba.njit
@@ -172,25 +173,36 @@ def mymoebdd(z0, dz0, z, dz):
      ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
      return ret, dret
 
-def mymoeb(z0, z):
-     dz0 = complex(0,0)
-     dz = complex(0,0)
-     one = complex(1,0)
-     done = complex(0,0)
-     nom, dnom = htcplxadd(z, dz, z0, dz0)
-     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-     denom, ddenom = htcplxadd(one, done, denom, ddenom)
-     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-     return ret, dret
+#def mymoeb(z0, z):
+#     dz0 = complex(0,0)
+#     dz = complex(0,0)
+#     one = complex(1,0)
+#     done = complex(0,0)
+#     nom, dnom = htcplxadd(z, dz, z0, dz0)
+#     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+#     denom, ddenom = htcplxadd(one, done, denom, ddenom)
+#     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+#     return ret, dret
 
 #    rez, imz = z.real, z.imag
 #    rez0, imz0 = z0.real, z0.imag
 #    return (z+z0) / complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
+import decimal
+from decimal import Decimal
+@numba.jit
+def mymoeb(z0, z):
+
+    rez, imz = Decimal(z.real), Decimal(z.imag)
+    rez0, imz0 = Decimal(z0.real), Decimal(z0.imag)
+    return complex(rez + rez0, imz + imz0) / complex(1+ rez*rez0+ imz*imz0, imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
+
 # maps all points z such that z0 -> 0, respecting the Poincare projection
+@numba.jit
 def moeb_origin_trafo(z0, z):
     return mymoeb(-z0, z)
 
+@numba.jit
 def moeb_origin_trafo_inverse(z0, z):
     return mymoeb(z0, z)
 
@@ -217,7 +229,8 @@ def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
 #    return mymoebdd(z0, dz0, z, dz)
 
  # rotates z by phi counter-clockwise about the origin
-def moeb_rotate_trafo(z, phi): 
+@numba.njit
+def moeb_rotate_trafo(z, phi):
     return z * complex(math.cos(phi), math.sin(phi))
 
 @numba.njit

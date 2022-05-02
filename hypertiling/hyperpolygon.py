@@ -84,22 +84,22 @@ class HyperPolygon:
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0, dz0):
-        morigin(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
-#        for i in range(self.p + 1):
-#            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
-#            self.verticesP[i] = z
+#        morigin(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+        for i in range(self.p + 1):
+            z = moeb_origin_trafo(z0, self.verticesP[i])
+            self.verticesP[i] = z
 #            self.verticesdP[i] = dz
-#            self.verticesW[:, i] = p2w(self.verticesP[i])
+            self.verticesW[:, i] = p2w(self.verticesP[i])
         # self.find_angle(360)  # this might be superfluous
 
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        mrotate(self.p, phi, self.verticesP, self.verticesdP, self.verticesW)
-#        for i in range(self.p + 1):
-#            z, dz = moeb_rotate_trafodd(self.verticesP[i], self.verticesdP[i], -phi)
-#            self.verticesP[i] = z
+#        mrotate(self.p, phi, self.verticesP, self.verticesdP, self.verticesW)
+        for i in range(self.p + 1):
+            z = moeb_rotate_trafo(self.verticesP[i], -phi)
+            self.verticesP[i] = z
 #            self.verticesdP[i] = dz
-#            self.verticesW[:, i] = p2w(self.verticesP[i])
+            self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_translate(self, s):
@@ -110,12 +110,12 @@ class HyperPolygon:
 
 
     def moeb_inverse(self, z0, dz0):
-        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
-#        for i in range(self.p + 1):
-#            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
-#            self.verticesP[i] = z
+#        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+        for i in range(self.p + 1):
+            z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
+            self.verticesP[i] = z
 #            self.verticesdP[i] = dz
-#            self.verticesW[:, i] = p2w(self.verticesP[i])
+            self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def rotate(self, phi):
