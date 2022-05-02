@@ -45,7 +45,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 html_theme = 'sphinx_rtd_theme'
 html_css_files = ['custom.css']
-html_logo = "./_static/logo.png"
+html_logo = "./_static/logo73.png"
 
 
 
@@ -59,3 +59,5 @@ html_static_path = ['_static']
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
+def setup(app):
+    app.add_css_file('css/custom.css')
