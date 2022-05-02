@@ -1,23 +1,28 @@
 import numpy as np
 import math
+import numba
 
+@numba.njit
 def kahan(x, y):
     r = x + y
     e = y - (r - x)
     return r, e
 
+@numba.njit
 def twosum(x, y):
     r = x + y
     t = r - x
     e = (x - (r - t)) + (y - t)
     return r, e
 
+@numba.njit
 def twodiff(x, y):
     r = x - y
     t = r - x
     e = (x - (r - t)) - (y + t)
     return r, e
 
+@numba.njit
 def twoproduct(x, y):
     u = x*134217729.0
     v = y*134217729.0
@@ -29,24 +34,28 @@ def twoproduct(x, y):
     e = ((s*t - r) + s*g + f*t) + f*g
     return r, e
 
+@numba.njit
 def htadd(x, dx, y, dy): # hypertilingadd
     r, e = twosum(x, y)
     e += dx + dy
     r, e = kahan(r, e)
     return r, e
 
+@numba.njit
 def htdiff(x, dx, y, dy):
     r, e = twodiff(x, y)
     e += dx - dy
     r, e = kahan(r, e)
     return r, e
 
+@numba.njit
 def htprod(x, dx, y, dy):
     r, e = twoproduct(x, y)
     e += x * dy + y*dx
     r, e = kahan(r, e)
     return r, e
 
+@numba.njit
 def htdiv(x, dx, y, dy):
     r = x/y
     s, f = twoproduct(r, y)
@@ -54,6 +63,7 @@ def htdiv(x, dx, y, dy):
     r, e = kahan(r, e)
     return r, e
 
+@numba.njit
 def htcplxprod(a, da, b, db):
    rea, drea = a.real, da.real
    ima, dima = a.imag, da.imag
@@ -74,6 +84,7 @@ def htcplxprod(a, da, b, db):
    r, dr = htdiff(r, dr, i, di)
    return complex(r, imacc), complex(dr, dimacc)
 
+@numba.njit
 def htcplxprodconjb(a, da, b, db):
    rea, drea = a.real, da.real
    ima, dima = a.imag, da.imag
@@ -94,6 +105,7 @@ def htcplxprodconjb(a, da, b, db):
    r, dr = htadd(r, dr, i, di)
    return complex(r, imacc), complex(dr, dimacc)
 
+@numba.njit
 def htcplxadd(a, da, b, db):
    rea, drea = a.real, da.real
    ima, dima = a.imag, da.imag
@@ -104,6 +116,7 @@ def htcplxadd(a, da, b, db):
    i, di = htadd(ima, dima, imb, dimb)
    return complex(r, i), complex(dr, di)
 
+@numba.njit
 def htcplxdiff(a, da, b, db):
    rea, drea = a.real, da.real
    ima, dima = a.imag, da.imag
@@ -114,6 +127,7 @@ def htcplxdiff(a, da, b, db):
    i, di = htdiff(ima, dima, imb, dimb)
    return complex(r, i), complex(dr, di)
 
+@numba.njit
 def htcplxdiv(a, da, b, db):
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -134,6 +148,7 @@ def htcplxdiv(a, da, b, db):
 
     return complex(r, i), complex(dr, di)
 
+@numba.njit
 def p2w(z):
     x, y = z.real, z.imag
     xx = x*x
@@ -147,6 +162,7 @@ def w2p(point):
     factor = 1 / (1+t)
     return complex(x*factor, y*factor)
 
+@numba.njit
 def mymoebdd(z0, dz0, z, dz):
      one = complex(1,0)
      done = complex(0,0)
@@ -154,9 +170,9 @@ def mymoebdd(z0, dz0, z, dz):
      denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
      denom, ddenom = htcplxadd(one, done, denom, ddenom)
      ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-     return ret
+     return ret, dret
 
-def mymoeb(z0, dz0, z, dz):
+def mymoeb(z0, z):
      dz0 = complex(0,0)
      dz = complex(0,0)
      one = complex(1,0)
@@ -178,16 +194,19 @@ def moeb_origin_trafo(z0, z):
 def moeb_origin_trafo_inverse(z0, z):
     return mymoeb(z0, z)
 
+@numba.njit
 def moeb_origin_trafodd(z0, dz0, z, dz):
-    return mymoeb(-z0, -dz0, z, dz)
+    return mymoebdd(-z0, -dz0, z, dz)
 
+@numba.njit
 def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
-    return mymoeb(z0, dz0, z, dz)
+    return mymoebdd(z0, dz0, z, dz)
 
  # rotates z by phi counter-clockwise about the origin
 def moeb_rotate_trafo(z, phi): 
     return z * np.exp(complex(0, phi))
 
+@numba.njit
 def moeb_rotate_trafodd(z, dz, phi):
     ep = np.exp(complex(0, phi))
     dep = complex(0, 0)

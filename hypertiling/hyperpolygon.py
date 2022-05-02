@@ -1,6 +1,19 @@
 from math import floor
 from .transformation import *
 
+@numba.njit
+def trafo(p, z0, dz0, verticesP, verticesdP):
+    for i in range(p + 1):
+        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
+        verticesP[i] = z
+        verticesdP[i] = dz
+
+@numba.njit
+def trafo_inv(p, z0, dz0, verticesP, verticesdP):
+    for i in range(p + 1):
+        z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
+        verticesP[i] = z
+        verticesdP[i] = dz
 
 # defines a hyperbolic polygon
 class HyperPolygon:
@@ -58,12 +71,14 @@ class HyperPolygon:
         self.find_angle(360)
 
 
+
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0, dz0):
+        trafo(self.p, z0, dz0, self.verticesP, self.verticesdP)
         for i in range(self.p + 1):
-            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
-            self.verticesP[i] = z
-            self.verticesdP[i] = dz
+#            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
+#            self.verticesP[i] = z
+#            self.verticesdP[i] = dz
             self.verticesW[:, i] = p2w(self.verticesP[i])
         # self.find_angle(360)  # this might be superfluous
 
@@ -84,10 +99,11 @@ class HyperPolygon:
 
 
     def moeb_inverse(self, z0, dz0):
+        trafo_inv(self.p, z0, dz0, self.verticesP, self.verticesdP)
         for i in range(self.p + 1):
-            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
-            self.verticesP[i] = z
-            self.verticesdP[i] = dz
+#            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
+#            self.verticesP[i] = z
+#            self.verticesdP[i] = dz
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
