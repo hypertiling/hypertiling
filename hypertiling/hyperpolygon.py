@@ -8,6 +8,8 @@ from .transformation import *
 class HyperPolygon:
     def __init__(self, p):
 
+        self.p = p  # number of edges
+
         # Poincare disk coordinates
         self.centerP = complex(0, 0)  # center
         self.verticesP = np.zeros(shape=self.p, dtype=np.complex128)  # vertices
@@ -17,7 +19,6 @@ class HyperPolygon:
         self.verticesW = np.zeros((3, self.p))  # vertices
 
         
-        self.p           = p  # number of edges
         self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
         self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
         self.sector      = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
@@ -125,11 +126,8 @@ class HyperPolygon:
         self.angle += 360 if self.angle < 0 else 0
 
 
-    def find_sector(self, center):
-        if center == 'cell':
-            self.sector = floor(self.angle/(360/self.p))
-        elif center == 'vertex':
-            self.sector = floor(self.angle/(360/self.q))
+    def find_sector(self, k):
+        self.sector = floor(self.angle/(360/k))
 
         
 
