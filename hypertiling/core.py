@@ -101,7 +101,7 @@ class HyperbolicTiling:
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if 10  <= adj_pgon.angle < 10+self.degphi+self.degtol:
+                        if 0  <= adj_pgon.angle < self.degphi+self.degtol:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
