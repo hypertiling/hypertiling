@@ -38,7 +38,8 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
 
         # one "mother" triangle bears 4 "children" triangles, one in its mid
         # and three that each share one vertex with their mother
-        child = HyperPolygon(p, q)  # the center triangle whose vertices are the newly found refined ones
+
+        child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
         for i in range(p):
             child.verticesP[i] = ref_vertices[i]
         #child.verticesP = np.array(ref_vertices)
@@ -48,7 +49,7 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
         ref_lattice.append(child)
 
         for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
-            child = HyperPolygon(p, q)  # these are the non-center children
+            child = HyperPolygon(p)  # these are the non-center children
             vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
             for i in range(p):
                 child.verticesP[i] = vP[i]
@@ -77,6 +78,15 @@ def border_variance(tiling):
     for pgon in border:
         var += (mu-weierstrass_distance([0, 0, 1], pgon.centerW))**2
     return var/len(border)
+
+
+
+
+# formula from Mertens & Moore, PRE 96, 042116 (2017)
+def num_pgons_vertex_centered(p,q,n):
+    a = (p-2)*(q-2)-2
+    a4 = np.sqrt(a*a-4)
+    return (p-2)*q / a4 * (((a+a4)/2)**n - ((a-a4)/2)**n)
 
 
 # the following functions find the total number of polygons for some {p, q} tessellation of l layers

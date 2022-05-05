@@ -1,4 +1,6 @@
 from math import floor
+import math
+import cmath
 from .transformation import *
 
 @numba.njit
@@ -27,11 +29,10 @@ def mrotate(p, phi, verticesP, verticesdP, verticesW):
 
 # defines a hyperbolic polygon
 class HyperPolygon:
-    def __init__(self, p, q):
-        self.p = p  # number of edges
-        self.q = q  # number of adjacent polygons per vertex
+    def __init__(self, p):
 
 # The centers are at the end of the arrays
+        self.p = p  # number of edges
 
         # Poincare disk coordinates
 #        self.centerP = complex(0, 0)  # center
@@ -55,21 +56,23 @@ class HyperPolygon:
 
     def centerP(self):
         return self.verticesP[self.p]
-    
+
     def centerW(self):
         return self.verticesW[:,-1]
-    
-    # checks whether two polygons are equal (within given numerical precision)
-    # untested!
-    def __eq__(self, other, digits=7):  
-        re1 = self.centerP().real
-        im1 = self.centerP().imag
-        re2 = other.centerP().real
-        im2 = other.centerP().imag
-        c1 = complex(round(re1, digits), round(im1, digits))
-        c2 = complex(round(re2, digits), round(im2, digits))
-        print("Warning: Equality operator of the HyperPolygon class is untested!")  
-        return c1 == c2
+
+
+    # checks whether two polygons are equal
+    def __eq__(self, other):  
+        if isinstance(other, HyperPolygon):
+            centers = cmath.isclose(self.centerP, other.centerP)
+            if not centers:
+                return False
+            orientations = cmath.isclose(self.orientation, other.orientation)
+            if not orientations:
+                return False
+            if self.p == other.p:
+                return True
+        return False
 
 
     # transforms all points of the polygon by matrix tmat
@@ -147,9 +150,8 @@ class HyperPolygon:
         self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))#np.angle(self.centerP(), deg=True)
         self.angle += 360 if self.angle < 0 else 0
 
-    def find_sector(self):
-        self.sector = floor(self.angle/(360/self.p))
-
+    def find_sector(self, k):
+        self.sector = floor(self.angle/(360/k))
 
     def mirror(self):
         for i in range(self.p + 1):
