@@ -24,7 +24,7 @@ class HyperbolicTiling:
 
         self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance during lattice construction
-        self.mangle = self.phi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
+        self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
 #        self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
