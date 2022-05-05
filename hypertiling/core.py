@@ -158,7 +158,7 @@ class HyperbolicTiling:
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
 
-                center = moeb_rotate_trafo(pgon.centerP, -sect_angle)
+                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
 
                 center = np.round(center, self.dgts) # better use simple distance?
 
