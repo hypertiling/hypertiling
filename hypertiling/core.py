@@ -22,6 +22,7 @@ class HyperbolicTiling:
 
         self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance during lattice construction
+        self.mangle = self.phi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
         self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
@@ -67,6 +68,8 @@ class HyperbolicTiling:
             vertangle = np.arctan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
             polygon.moeb_rotate(vertangle)
             polygon.find_angle()
+
+        polygon.moeb_rotate(-2*np.pi/360*self.mangle)
             
         return polygon
 
@@ -80,6 +83,7 @@ class HyperbolicTiling:
     # out rotational duplicates after all layers have been constructed
 
     def generate(self):
+
         # prepare list to store polygons 
         self.lpolygons[0].append(self.fund_poly)
 
@@ -106,7 +110,7 @@ class HyperbolicTiling:
                 for vert_ind in range(self.p):
 
                     # iterate over all polygons touching this very vertex
-                    for rot_ind in range(1, self.q):
+                    for rot_ind in range(self.q):
 
                         # create copy
                         polycopy = copy.deepcopy(pgon)
@@ -119,10 +123,9 @@ class HyperbolicTiling:
                         center = np.round(adj_pgon.centerP, self.dgts)
                         adj_pgon.find_angle()
 
-
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if 0 <= adj_pgon.angle < sect_angle_deg+self.degtol:
+                        if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
@@ -136,7 +139,7 @@ class HyperbolicTiling:
                                 self.lpolygons[l].append(adj_pgon)
 
                             # if angle is in slice, add to centerset_extra
-                            if adj_pgon.angle < self.degtol:
+                            if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
                                 centerset_extra.add(center)
 
 
@@ -149,7 +152,7 @@ class HyperbolicTiling:
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg-self.degtol:
+            if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
 
                 center = moeb_rotate_trafo(pgon.centerP, -sect_angle)
                 center = np.round(center, self.dgts) # better use simple distance?
@@ -161,10 +164,10 @@ class HyperbolicTiling:
             
 
         # fill entire disk by rotating the slice
-        if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-        elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+#        if self.center == 'cell':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+#        elif self.center == 'vertex':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
 
