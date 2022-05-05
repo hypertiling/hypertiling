@@ -54,6 +54,7 @@ class HyperbolicTiling:
             z = complex(r * math.cos(i*self.phi), r * math.sin(i*self.phi))  # = r*exp(i*phi)
             polygon.verticesP[i] = z
             polygon.verticesW[:, i] = p2w(z)
+        polygon.moeb_rotate(np.pi/1.23456) # worked: pi/1.23456
         return polygon
 
 
@@ -100,11 +101,11 @@ class HyperbolicTiling:
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if 0 <= adj_pgon.angle < self.degphi+self.degtol:
+                        if 10  <= adj_pgon.angle < 10+self.degphi+self.degtol:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center) 
+                            centerset.add(center)
                             lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
