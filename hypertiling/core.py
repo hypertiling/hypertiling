@@ -166,14 +166,10 @@ class HyperbolicTiling:
 
 
         # fill entire disk by rotating the slice
-        
         if self.center == 'cell':
             self.angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
             self.angular_replicate(copy.deepcopy(self.polygons), self.q)
-
-
-
 
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
