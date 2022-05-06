@@ -1,156 +1,156 @@
 import numpy as np
 import math
-#try:
-#    import numba
-#except ImportError:
-#    pass
+try:
+   import numba
+except ImportError:
+   pass
 
 
-#@numba.njit
-#def kahan(x, y):
-#    r = x + y
-#    e = y - (r - x)
-#    return r, e
+@numba.njit
+def kahan(x, y):
+   r = x + y
+   e = y - (r - x)
+   return r, e
 
-#@numba.njit
-#def twosum(x, y):
-#    r = x + y
-#    t = r - x
-#    e = (x - (r - t)) + (y - t)
-#    return r, e
+@numba.njit
+def twosum(x, y):
+   r = x + y
+   t = r - x
+   e = (x - (r - t)) + (y - t)
+   return r, e
 
-#@numba.njit
-#def twodiff(x, y):
-#    r = x - y
-#    t = r - x
-#    e = (x - (r - t)) - (y + t)
-#    return r, e
+@numba.njit
+def twodiff(x, y):
+   r = x - y
+   t = r - x
+   e = (x - (r - t)) - (y + t)
+   return r, e
 
-#@numba.njit
-#def twoproduct(x, y):
-#    u = x*134217729.0
-#    v = y*134217729.0
-#    s = u - (u - x)
-#    t = v - (v - y)
-#    f = x - s
-#    g = y - t
-#    r = x*y
-#    e = ((s*t - r) + s*g + f*t) + f*g
-#    return r, e
+@numba.njit
+def twoproduct(x, y):
+   u = x*134217729.0
+   v = y*134217729.0
+   s = u - (u - x)
+   t = v - (v - y)
+   f = x - s
+   g = y - t
+   r = x*y
+   e = ((s*t - r) + s*g + f*t) + f*g
+   return r, e
 
-#@numba.njit
-#def htadd(x, dx, y, dy): # hypertilingadd
-#    r, e = twosum(x, y)
-#    e += dx + dy
-#    r, e = kahan(r, e)
-#    return r, e
+@numba.njit
+def htadd(x, dx, y, dy): # hypertilingadd
+   r, e = twosum(x, y)
+   e += dx + dy
+   r, e = kahan(r, e)
+   return r, e
 
-#@numba.njit
-#def htdiff(x, dx, y, dy):
-#    r, e = twodiff(x, y)
-#    e += dx - dy
-#    r, e = kahan(r, e)
-#    return r, e
+@numba.njit
+def htdiff(x, dx, y, dy):
+   r, e = twodiff(x, y)
+   e += dx - dy
+   r, e = kahan(r, e)
+   return r, e
 
-#@numba.njit
-#def htprod(x, dx, y, dy):
-#    r, e = twoproduct(x, y)
-#    e += x * dy + y*dx
-#    r, e = kahan(r, e)
-#    return r, e
+@numba.njit
+def htprod(x, dx, y, dy):
+   r, e = twoproduct(x, y)
+   e += x * dy + y*dx
+   r, e = kahan(r, e)
+   return r, e
 
-#@numba.njit
-#def htdiv(x, dx, y, dy):
-#    r = x/y
-#    s, f = twoproduct(r, y)
-#    e = (x - s - f + dx - r*dy)/y
-#    r, e = kahan(r, e)
-#    return r, e
+@numba.njit
+def htdiv(x, dx, y, dy):
+   r = x/y
+   s, f = twoproduct(r, y)
+   e = (x - s - f + dx - r*dy)/y
+   r, e = kahan(r, e)
+   return r, e
 
-#@numba.njit
-#def htcplxprod(a, da, b, db):
-#   rea, drea = a.real, da.real
-#   ima, dima = a.imag, da.imag
-#   reb, dreb = b.real, db.real
-#   imb, dimb = b.imag, db.imag
+@numba.njit
+def htcplxprod(a, da, b, db):
+  rea, drea = a.real, da.real
+  ima, dima = a.imag, da.imag
+  reb, dreb = b.real, db.real
+  imb, dimb = b.imag, db.imag
 
-   # We employ the Gauss/Karatsuba trick
-   # (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
-#   r, dr = htprod(rea, drea, reb, dreb) # ar*br
-#   i, di = htprod(ima, dima, imb, dimb) # ai*bi
-#
-#   fac1, dfac1 = htadd(rea, drea, ima, dima)
-#   fac2, dfac2 = htadd(reb, dreb, imb, dimb)
-#   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-#   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-#   imacc, dimacc = htdiff(imacc, dimacc, i, di)
+#   We employ the Gauss/Karatsuba trick
+   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
+  r, dr = htprod(rea, drea, reb, dreb) # ar*br
+  i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-#   r, dr = htdiff(r, dr, i, di)
-#   return complex(r, imacc), complex(dr, dimacc)
+  fac1, dfac1 = htadd(rea, drea, ima, dima)
+  fac2, dfac2 = htadd(reb, dreb, imb, dimb)
+  imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+  imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+  imacc, dimacc = htdiff(imacc, dimacc, i, di)
 
-#@numba.njit
-#def htcplxprodconjb(a, da, b, db):
-#   rea, drea = a.real, da.real
-#   ima, dima = a.imag, da.imag
-#   reb, dreb = b.real, db.real
-#   imb, dimb = b.imag, db.imag
+  r, dr = htdiff(r, dr, i, di)
+  return complex(r, imacc), complex(dr, dimacc)
 
-   # We employ the Gauss/Karatsuba trick
-   # (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
-#   r, dr = htprod(rea, drea, reb, dreb) # ar*br
-#   i, di = htprod(ima, dima, imb, dimb) # ai*bi
+@numba.njit
+def htcplxprodconjb(a, da, b, db):
+  rea, drea = a.real, da.real
+  ima, dima = a.imag, da.imag
+  reb, dreb = b.real, db.real
+  imb, dimb = b.imag, db.imag
 
-#   fac1, dfac1 = htadd(rea, drea, ima, dima)
-#   fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
-#   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-#   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-#   imacc, dimacc = htadd(imacc, dimacc, i, di)
+#   We employ the Gauss/Karatsuba trick
+   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
+  r, dr = htprod(rea, drea, reb, dreb) # ar*br
+  i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-#   r, dr = htadd(r, dr, i, di)
-#   return complex(r, imacc), complex(dr, dimacc)
+  fac1, dfac1 = htadd(rea, drea, ima, dima)
+  fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
+  imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+  imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+  imacc, dimacc = htadd(imacc, dimacc, i, di)
 
-#@numba.njit
-#def htcplxadd(a, da, b, db):
-#   rea, drea = a.real, da.real
-#   ima, dima = a.imag, da.imag
-#   reb, dreb = b.real, db.real
-#   imb, dimb = b.imag, db.imag
+  r, dr = htadd(r, dr, i, di)
+  return complex(r, imacc), complex(dr, dimacc)
 
-#   r, dr = htadd(rea, drea, reb, dreb)
-#   i, di = htadd(ima, dima, imb, dimb)
-#   return complex(r, i), complex(dr, di)
+@numba.njit
+def htcplxadd(a, da, b, db):
+  rea, drea = a.real, da.real
+  ima, dima = a.imag, da.imag
+  reb, dreb = b.real, db.real
+  imb, dimb = b.imag, db.imag
 
-#@numba.njit
-#def htcplxdiff(a, da, b, db):
-#   rea, drea = a.real, da.real
-#   ima, dima = a.imag, da.imag
-#   reb, dreb = b.real, db.real
-#   imb, dimb = b.imag, db.imag
+  r, dr = htadd(rea, drea, reb, dreb)
+  i, di = htadd(ima, dima, imb, dimb)
+  return complex(r, i), complex(dr, di)
 
-#   r, dr = htdiff(rea, drea, reb, dreb)
-#   i, di = htdiff(ima, dima, imb, dimb)
-#   return complex(r, i), complex(dr, di)
+@numba.njit
+def htcplxdiff(a, da, b, db):
+  rea, drea = a.real, da.real
+  ima, dima = a.imag, da.imag
+  reb, dreb = b.real, db.real
+  imb, dimb = b.imag, db.imag
 
-#@numba.njit
-#def htcplxdiv(a, da, b, db):
-#    rea, drea = a.real, da.real
-#    ima, dima = a.imag, da.imag
-#    reb, dreb = b.real, db.real
-#    imb, dimb = b.imag, db.imag
-    # We make the denominator real.
-    # Hence we calculate the denominator and the nominator separately
-    # first the denominator: br^2 + bi^2
-#    denom, ddenom = htprod(reb, dreb, reb, dreb)
-#    t1, dt1 = htprod(imb, dimb, imb, dimb)
-#    denom, ddenom = htadd(denom, ddenom , t1, dt1)
+  r, dr = htdiff(rea, drea, reb, dreb)
+  i, di = htdiff(ima, dima, imb, dimb)
+  return complex(r, i), complex(dr, di)
 
-    # Now on to the numerator
-#    nom, dnom = htcplxprodconjb(a, da, b, db)
+@numba.njit
+def htcplxdiv(a, da, b, db):
+   rea, drea = a.real, da.real
+   ima, dima = a.imag, da.imag
+   reb, dreb = b.real, db.real
+   imb, dimb = b.imag, db.imag
+#    We make the denominator real.
+#    Hence we calculate the denominator and the nominator separately
+#    first the denominator: br^2 + bi^2
+   denom, ddenom = htprod(reb, dreb, reb, dreb)
+   t1, dt1 = htprod(imb, dimb, imb, dimb)
+   denom, ddenom = htadd(denom, ddenom , t1, dt1)
 
-#    r, dr = htdiv(nom.real, dnom.real, denom, ddenom) 
-#    i, di = htdiv(nom.imag, dnom.imag, denom, ddenom)
+#    Now on to the numerator
+   nom, dnom = htcplxprodconjb(a, da, b, db)
 
-#    return complex(r, i), complex(dr, di)
+   r, dr = htdiv(nom.real, dnom.real, denom, ddenom) 
+   i, di = htdiv(nom.imag, dnom.imag, denom, ddenom)
+
+   return complex(r, i), complex(dr, di)
 
 def p2w_py(z):
     x, y = z.real, z.imag
