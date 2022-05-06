@@ -1,10 +1,7 @@
 from math import floor
-import math
-import cmath
 from .transformation import *
 
-@numba.njit
-def morigin(p, z0, dz0, verticesP, verticesW):
+def morigin_py(p, z0, dz0, verticesP, verticesW):
     for i in range(p + 1):
         z = moeb_origin_trafo(z0, verticesP[i])
 #        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
@@ -12,8 +9,7 @@ def morigin(p, z0, dz0, verticesP, verticesW):
 #        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
-@numba.njit
-def morigin_inv(p, z0, dz0, verticesP, verticesW):
+def morigin_inv_py(p, z0, dz0, verticesP, verticesW):
     for i in range(p + 1):
         z = moeb_origin_trafo_inverse(z0, verticesP[i])
 #        z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
@@ -21,14 +17,23 @@ def morigin_inv(p, z0, dz0, verticesP, verticesW):
 #        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
-@numba.njit
-def mrotate(p, phi, verticesP, verticesW):
+def mrotate_py(p, phi, verticesP, verticesW):
     for i in range(p + 1):
 #        z, dz = moeb_rotate_trafodd(verticesP[i], verticesdP[i], -phi)
         z = moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
 #        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
+
+try:
+    import numba
+    morigin = numba.njit(morigin_py)
+    morigin_inv = numba.njit(morigin_inv_py)
+    mrotate = numba.njit(mrotate_py)
+except ImportError:
+    morigin = morigin_py
+    morigin_inv = morigin_inv_py
+    mrotate = mrotate_py
 
 # defines a hyperbolic polygon
 class HyperPolygon:
