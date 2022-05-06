@@ -181,7 +181,7 @@ class HyperbolicTiling:
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
         z0 =  complex(polygon.verticesP[ind])
-        dz0 = polygon.verticesdP[ind]
+        dz0 = complex(0,0)#polygon.verticesdP[ind]
         polygon.moeb_origin(z0, dz0)  # map vertex at z0 to origin at (0,0)
         polygon.moeb_rotate(k*self.qhi)  # rotate the whole polygon k times by 2*pi/q
         polygon.moeb_inverse(z0, dz0)  # map polygon back to former location

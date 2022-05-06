@@ -1,6 +1,10 @@
 import numpy as np
 import math
-import numba
+try:
+    import numba
+except ImportError:
+    pass
+
 
 @numba.njit
 def kahan(x, y):
@@ -148,49 +152,66 @@ def htcplxdiv(a, da, b, db):
 
     return complex(r, i), complex(dr, di)
 
-@numba.njit
-def p2w(z):
+def p2w_py(z):
     x, y = z.real, z.imag
     xx = x*x
     yy = y*y
     factor = 1 / (1-xx-yy)
     return factor*np.array([(1+xx+yy), 2*x, 2*y])
 
-
-def w2p(point):
+def w2p_py(point):
     [t, x, y] = point
     factor = 1 / (1+t)
     return complex(x*factor, y*factor)
 
-@numba.njit
-def mymoebdd(z0, dz0, z, dz):
-     one = complex(1,0)
-     done = complex(0,0)
-     nom, dnom = htcplxadd(z, dz, z0, dz0)
-     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-     denom, ddenom = htcplxadd(one, done, denom, ddenom)
-     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-     return ret, dret
+def mymoeb_py(z0, z):
+    rez, imz = z.real, z.imag
+    rez0, imz0 = z0.real, z0.imag
+    return (z+z0) / (1+z*np.conjugate(z0))#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
-def mymoeb(z0, z):
-     dz0 = complex(0,0)
-     dz = complex(0,0)
-     one = complex(1,0)
-     done = complex(0,0)
-     nom, dnom = htcplxadd(z, dz, z0, dz0)
-     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-     denom, ddenom = htcplxadd(one, done, denom, ddenom)
-     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-     return ret, dret
+mymoeb = numba.njit(mymoeb_py)
 
-#    rez, imz = z.real, z.imag
-#    rez0, imz0 = z0.real, z0.imag
-#    return (z+z0) / complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
+try:
+    import numba
+    p2w = numba.njit(p2w_py)
+    w2p = numba.njit(w2p_py)
+    mymoeb = numba.njit(mymoeb_py)
+except ImportError:
+    p2w = p2w_py
+    w2p = w2p_py
+    mymoeb = mymoeb_py
+
+#@numba.njit
+#def mymoebdd(z0, dz0, z, dz):
+#     one = complex(1,0)
+#     done = complex(0,0)
+#     nom, dnom = htcplxadd(z, dz, z0, dz0)
+#     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+#     denom, ddenom = htcplxadd(one, done, denom, ddenom)
+#     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+#     return ret, dret
+
+#@numba.njit
+#def mymoeb(z0, z):
+#     dz0 = complex(0,0)
+#     dz = complex(0,0)
+#     one = complex(1,0)
+#     done = complex(0,0)
+#     nom, dnom = htcplxadd(z, dz, z0, dz0)
+#     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+#     denom, ddenom = htcplxadd(one, done, denom, ddenom)
+#     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+#     return ret, dret
+
+
+
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
+@numba.njit
 def moeb_origin_trafo(z0, z):
     return mymoeb(-z0, z)
 
+@numba.njit
 def moeb_origin_trafo_inverse(z0, z):
     return mymoeb(z0, z)
 
@@ -217,6 +238,7 @@ def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
 #    return mymoebdd(z0, dz0, z, dz)
 
  # rotates z by phi counter-clockwise about the origin
+@numba.njit
 def moeb_rotate_trafo(z, phi): 
     return z * complex(math.cos(phi), math.sin(phi))
 

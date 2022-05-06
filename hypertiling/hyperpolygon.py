@@ -4,27 +4,30 @@ import cmath
 from .transformation import *
 
 @numba.njit
-def morigin(p, z0, dz0, verticesP, verticesdP, verticesW):
+def morigin(p, z0, dz0, verticesP, verticesW):
     for i in range(p + 1):
-        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
+        z = moeb_origin_trafo(z0, verticesP[i])
+#        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
-        verticesdP[i] = dz
+#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
 @numba.njit
-def morigin_inv(p, z0, dz0, verticesP, verticesdP, verticesW):
+def morigin_inv(p, z0, dz0, verticesP, verticesW):
     for i in range(p + 1):
-        z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
+        z = moeb_origin_trafo_inverse(z0, verticesP[i])
+#        z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
-        verticesdP[i] = dz
+#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
 @numba.njit
-def mrotate(p, phi, verticesP, verticesdP, verticesW):
+def mrotate(p, phi, verticesP, verticesW):
     for i in range(p + 1):
-        z, dz = moeb_rotate_trafodd(verticesP[i], verticesdP[i], -phi)
+#        z, dz = moeb_rotate_trafodd(verticesP[i], verticesdP[i], -phi)
+        z = moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
-        verticesdP[i] = dz
+#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
 # defines a hyperbolic polygon
@@ -38,7 +41,7 @@ class HyperPolygon:
 #        self.centerP = complex(0, 0)  # center
 #        self.dcenterP = complex(0, 0)
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices
-        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
+#        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
 #        self.centerW = np.array([1, 0, 0]) # center
@@ -87,7 +90,7 @@ class HyperPolygon:
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0, dz0):
-        morigin(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+        morigin(self.p, z0, dz0, self.verticesP, self.verticesW)
 #        for i in range(self.p + 1):
 #            z, dz = moeb_origin_trafodd(z0, dz0, self.verticesP[i], self.verticesdP[i])
 #            self.verticesP[i] = z
@@ -97,7 +100,7 @@ class HyperPolygon:
 
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        mrotate(self.p, phi, self.verticesP, self.verticesdP, self.verticesW)
+        mrotate(self.p, phi, self.verticesP, self.verticesW)
 #        for i in range(self.p + 1):
 #            z, dz = moeb_rotate_trafodd(self.verticesP[i], self.verticesdP[i], -phi)
 #            self.verticesP[i] = z
@@ -113,7 +116,7 @@ class HyperPolygon:
 
 
     def moeb_inverse(self, z0, dz0):
-        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesdP, self.verticesW)
+        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesW)
 #        for i in range(self.p + 1):
 #            z, dz = moeb_origin_trafo_inversedd(z0, dz0, self.verticesP[i], self.verticesdP[i])
 #            self.verticesP[i] = z
