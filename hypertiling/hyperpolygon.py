@@ -1,38 +1,31 @@
 from math import floor
 from .transformation import *
 
-def morigin_py(p, z0, dz0, verticesP, verticesW):
+def morigin_py(p, z0, verticesP, verticesW):
     for i in range(p + 1):
         z = moeb_origin_trafo(z0, verticesP[i])
-#        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
-#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
-def morigin_inv_py(p, z0, dz0, verticesP, verticesW):
+def morigin_inv_py(p, z0, verticesP, verticesW):
     for i in range(p + 1):
         z = moeb_origin_trafo_inverse(z0, verticesP[i])
-#        z, dz = moeb_origin_trafo_inversedd(z0, dz0, verticesP[i], verticesdP[i])
         verticesP[i] = z
-#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
 def mrotate_py(p, phi, verticesP, verticesW):
     for i in range(p + 1):
-#        z, dz = moeb_rotate_trafodd(verticesP[i], verticesdP[i], -phi)
         z = moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
-#        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
 def mfull_py(p, phi, ind, verticesP, verticesW):
         z0 =  verticesP[ind]
-        dz0 = complex(0,0)#polygon.verticesdP[ind]
-        morigin(p, z0, dz0, verticesP, verticesW) # map vertex at z0 to origin at (0,0)
+        morigin(p, z0, verticesP, verticesW) # map vertex at z0 to origin at (0,0)
         mrotate(p, phi, verticesP, verticesW) # rotate the whole polygon k times by 2*pi/q
-        morigin_inv(p, z0, dz0, verticesP, verticesW) # map polygon back to former location
+        morigin_inv(p, z0, verticesP, verticesW) # map polygon back to former location
 
-
+# try to use numba
 try:
     import numba
     morigin = numba.njit(morigin_py)
@@ -53,14 +46,10 @@ class HyperPolygon:
         self.p = p  # number of edges
 
         # Poincare disk coordinates
-#        self.centerP = complex(0, 0)  # center
-#        self.dcenterP = complex(0, 0)
-        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices
-#        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
+        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
 
         # Weierstrass (hyperboloid) coordinates
-#        self.centerW = np.array([1, 0, 0]) # center
-        self.verticesW = np.zeros((3, self.p+1))  # vertices
+        self.verticesW = np.zeros((3, self.p+1))  # vertices + center
         self.verticesW[0,-1] = 1 # center
         
         self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
@@ -76,7 +65,7 @@ class HyperPolygon:
         return self.verticesP[self.p]
 
     def centerW(self):
-        return self.verticesW[:,-1]
+        return self.verticesW[:,self.p]
 
 
     # checks whether two polygons are equal
@@ -107,8 +96,8 @@ class HyperPolygon:
         mfull(self.p, phi, ind, self.verticesP, self.verticesW)
 
     # transforms the entire polygon such that z0 is mapped to origin
-    def moeb_origin(self, z0, dz0):
-        morigin(self.p, z0, dz0, self.verticesP, self.verticesW)
+    def moeb_origin(self, z0):
+        morigin(self.p, z0, self.verticesP, self.verticesW)
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
         mrotate(self.p, phi, self.verticesP, self.verticesW)
@@ -120,8 +109,8 @@ class HyperPolygon:
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
-    def moeb_inverse(self, z0, dz0):
-        morigin_inv(self.p, z0, dz0, self.verticesP, self.verticesW)
+    def moeb_inverse(self, z0):
+        morigin_inv(self.p, z0, self.verticesP, self.verticesW)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))

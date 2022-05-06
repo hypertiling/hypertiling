@@ -25,9 +25,7 @@ class HyperbolicTiling:
         self.degtol = 1 # sector boundary tolerance during lattice construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
-#        self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
-#        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
 
         if center not in ['cell', 'vertex']:
@@ -168,11 +166,11 @@ class HyperbolicTiling:
 
 
         # fill entire disk by rotating the slice
-
-#        if self.center == 'cell':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-#        elif self.center == 'vertex':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+        
+        if self.center == 'cell':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        elif self.center == 'vertex':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
 
