@@ -75,7 +75,7 @@ def htcplxprod(a, da, b, db):
   imb, dimb = b.imag, db.imag
 
 #   We employ the Gauss/Karatsuba trick
-   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
+#   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
   r, dr = htprod(rea, drea, reb, dreb) # ar*br
   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
@@ -96,7 +96,7 @@ def htcplxprodconjb(a, da, b, db):
   imb, dimb = b.imag, db.imag
 
 #   We employ the Gauss/Karatsuba trick
-   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
+#   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
   r, dr = htprod(rea, drea, reb, dreb) # ar*br
   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
@@ -197,57 +197,57 @@ except ImportError:
     moeb_origin_trafo_inverse = moeb_origin_trafo_inverse_py
     moeb_rotate_trafo = moeb_rotate_trafo_py
 
-#@numba.njit
-#def mymoebdd(z0, dz0, z, dz):
-#     one = complex(1,0)
-#     done = complex(0,0)
-#     nom, dnom = htcplxadd(z, dz, z0, dz0)
-#     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-#     denom, ddenom = htcplxadd(one, done, denom, ddenom)
-#     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-#     return ret, dret
+@numba.njit
+def mymoebdd(z0, dz0, z, dz):
+    one = complex(1,0)
+    done = complex(0,0)
+    nom, dnom = htcplxadd(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxadd(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
 
-#@numba.njit
-#def mymoeb(z0, z):
-#     dz0 = complex(0,0)
-#     dz = complex(0,0)
-#     one = complex(1,0)
-#     done = complex(0,0)
-#     nom, dnom = htcplxadd(z, dz, z0, dz0)
-#     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-#     denom, ddenom = htcplxadd(one, done, denom, ddenom)
-#     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-#     return ret, dret
+@numba.njit
+def mymoebddint(z0, z):
+    dz0 = complex(0,0)
+    dz = complex(0,0)
+    one = complex(1,0)
+    done = complex(0,0)
+    nom, dnom = htcplxadd(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxadd(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
 
-#@numba.njit
-#def moeb_origin_trafodd(z0, dz0, z, dz):
-#    one = complex(1,0)
-#    done = complex(0,0)
-#    nom, dnom = htcplxdiff(z, dz, z0, dz0)
-#    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-#    denom, ddenom = htcplxdiff(one, done, denom, ddenom)
-#    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-#    return ret, dret
-#    return mymoebdd(-z0, -dz0, z, dz)
+@numba.njit
+def moeb_origin_trafodd(z0, dz0, z, dz):
+   one = complex(1,0)
+   done = complex(0,0)
+   nom, dnom = htcplxdiff(z, dz, z0, dz0)
+   denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+   denom, ddenom = htcplxdiff(one, done, denom, ddenom)
+   ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+   return ret, dret
+   return mymoebdd(-z0, -dz0, z, dz)
 
-#@numba.njit
-#def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
-#    one = complex(1,0)
-#    done = complex(0,0)
-#    nom, dnom = htcplxadd(z, dz, z0, dz0)
-#    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-#    denom, ddenom = htcplxadd(one, done, denom, ddenom)
-#    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-#    return ret, dret
-#    return mymoebdd(z0, dz0, z, dz)
+@numba.njit
+def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
+   one = complex(1,0)
+   done = complex(0,0)
+   nom, dnom = htcplxadd(z, dz, z0, dz0)
+   denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+   denom, ddenom = htcplxadd(one, done, denom, ddenom)
+   ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+   return ret, dret
+   return mymoebdd(z0, dz0, z, dz)
 
 
 
-#@numba.njit
-#def moeb_rotate_trafodd(z, dz, phi):
-#    ep = complex(math.cos(phi), math.sin(phi))
-#    dep = complex(0, 0)
-#    return htcplxprod(z, dz, ep, dep)
+@numba.njit
+def moeb_rotate_trafodd(z, dz, phi):
+   ep = complex(math.cos(phi), math.sin(phi))
+   dep = complex(0, 0)
+   return htcplxprod(z, dz, ep, dep)
 
 def moeb_translate_trafo(z, s):
     num = z-s
