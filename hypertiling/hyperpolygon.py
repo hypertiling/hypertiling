@@ -27,10 +27,14 @@ def mrotate_py(p, phi, verticesP, verticesW):
 
 def mfull_py(p, phi, ind, verticesP, verticesW):
         z0 =  verticesP[ind]
-        dz0 = complex(0,0)#polygon.verticesdP[ind]
-        morigin(p, z0, dz0, verticesP, verticesW) # map vertex at z0 to origin at (0,0)
-        mrotate(p, phi, verticesP, verticesW) # rotate the whole polygon k times by 2*pi/q
-        morigin_inv(p, z0, dz0, verticesP, verticesW) # map polygon back to former location
+        #dz0 = complex(0,0)#polygon.verticesdP[ind]
+        
+        for i in range(p + 1):
+            z = moeb_origin_trafo(z0, verticesP[i])
+            z = moeb_rotate_trafo(z, -phi)
+            z = moeb_origin_trafo_inverse(z0, z)
+            verticesP[i] = z
+            verticesW[:, i] = p2w(z)
 
 
 try:
