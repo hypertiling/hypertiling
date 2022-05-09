@@ -172,23 +172,37 @@ def mymoeb_py(z0, z):
 # maps all points z such that z0 -> 0, respecting the Poincare projection
 
 def moeb_origin_trafo_py(z0, z):
-    return mymoeb(-z0, z)
+    ret, dret = mymoebint(-z0, z)
+    return ret
 
 def moeb_origin_trafo_inverse_py(z0, z):
-    return mymoeb(z0, z)
+    ret, dret = mymoebint(z0, z)
+    return ret
 
  # rotates z by phi counter-clockwise about the origin
 def moeb_rotate_trafo_py(z, phi): 
     return z * complex(math.cos(phi), math.sin(phi))
 
+def mymoebddint_py(z0, z):
+    dz0 = complex(0,0)
+    dz = complex(0,0)
+    one = complex(1,0)
+    done = complex(0,0)
+    nom, dnom = htcplxadd(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxadd(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
+
 try:
     import numba
     p2w = numba.njit(p2w_py)
     w2p = numba.njit(w2p_py)
-    mymoeb = numba.njit(mymoeb_py)
     moeb_origin_trafo = numba.njit(moeb_origin_trafo_py)
     moeb_origin_trafo_inverse = numba.njit(moeb_origin_trafo_inverse_py)
     moeb_rotate_trafo = numba.njit(moeb_rotate_trafo_py)
+    mymoebint = numba.njit(mymoebddint_py)
+    mymoeb = numba.njit(mymoeb_py)
 except ImportError:
     p2w = p2w_py
     w2p = w2p_py
@@ -208,18 +222,6 @@ def mymoebdd(z0, dz0, z, dz):
     return ret, dret
 
 @numba.njit
-def mymoebddint(z0, z):
-    dz0 = complex(0,0)
-    dz = complex(0,0)
-    one = complex(1,0)
-    done = complex(0,0)
-    nom, dnom = htcplxadd(z, dz, z0, dz0)
-    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-    denom, ddenom = htcplxadd(one, done, denom, ddenom)
-    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-    return ret, dret
-
-@numba.njit
 def moeb_origin_trafodd(z0, dz0, z, dz):
    one = complex(1,0)
    done = complex(0,0)
@@ -228,7 +230,7 @@ def moeb_origin_trafodd(z0, dz0, z, dz):
    denom, ddenom = htcplxdiff(one, done, denom, ddenom)
    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
    return ret, dret
-   return mymoebdd(-z0, -dz0, z, dz)
+   #return mymoebdd(-z0, -dz0, z, dz)
 
 @numba.njit
 def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
@@ -239,15 +241,18 @@ def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
    denom, ddenom = htcplxadd(one, done, denom, ddenom)
    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
    return ret, dret
-   return mymoebdd(z0, dz0, z, dz)
+   #return mymoebdd(z0, dz0, z, dz)
 
 
 
 @numba.njit
 def moeb_rotate_trafodd(z, dz, phi):
    ep = complex(math.cos(phi), math.sin(phi))
-   dep = complex(0, 0)
-   return htcplxprod(z, dz, ep, dep)
+   ep = ep/np.abs(ep)
+   dep = complex(0,0)
+   ret, dret = htcplxprod(z, dz, ep, dep)
+#   print(np.abs(ep)- 1)
+   return ret, dret
 
 def moeb_translate_trafo(z, s):
     num = z-s

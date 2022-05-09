@@ -27,12 +27,12 @@ def mrotate_py(p, phi, verticesP, verticesW):
 
 def mfull_py(p, phi, ind, verticesP, verticesW):
         z0 =  verticesP[ind]
-        #dz0 = complex(0,0)#polygon.verticesdP[ind]
+        dz0 = complex(0,0)#polygon.verticesdP[ind]
         
         for i in range(p + 1):
-            z = moeb_origin_trafo(z0, verticesP[i])
-            z = moeb_rotate_trafo(z, -phi)
-            z = moeb_origin_trafo_inverse(z0, z)
+            z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
+            z, dz = moeb_rotate_trafodd(z, dz, -phi)
+            z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
             verticesP[i] = z
             verticesW[:, i] = p2w(z)
 

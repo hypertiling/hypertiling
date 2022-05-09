@@ -16,12 +16,12 @@ class HyperbolicTiling:
         self.nlayers = nlayers  # layers of the tessellation
 
         self.center = center # decides whether the tiling is centered around a vertex or polygon
-        self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
-        self.qhi = 2*np.pi/self.q  # angle of rotation that leaves the lattice invariant
+        self.phi = math.tau/self.p  # angle of rotation that leaves the lattice invariant
+        self.qhi = math.tau/self.q  # angle of rotation that leaves the lattice invariant
         self.degphi = 360/self.p
         self.degqhi = 360/self.q
 
-        self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
+        self.dgts = 9   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance during lattice construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
@@ -58,7 +58,9 @@ class HyperbolicTiling:
         polygon = HyperPolygon(self.p)
 
         for i in range(self.p):
-            z = complex(r * math.cos(i*self.phi), r * math.sin(i*self.phi))  # = r*exp(i*phi)
+            z = complex(math.cos(i*self.phi), math.sin(i*self.phi))  # = exp(i*phi)
+            z = z/abs(z)
+            z = r * z
             polygon.verticesP[i] = z
             polygon.verticesW[:, i] = p2w(z)
 
