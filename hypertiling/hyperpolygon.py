@@ -25,15 +25,16 @@ def mrotate_py(p, phi, verticesP, verticesW):
 #        verticesdP[i] = dz
         verticesW[:, i] = p2w(z)
 
-def mfull_py(p, phi, ind, verticesP, verticesW):
+def mfull_py(p, phi, ind, verticesP, verticesdP, verticesW):
         z0 =  verticesP[ind]
-        dz0 = complex(0,0)#polygon.verticesdP[ind]
+        dz0 = verticesdP[ind]
         
         for i in range(p + 1):
             z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
             z, dz = moeb_rotate_trafodd(z, dz, -phi)
             z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
             verticesP[i] = z
+            verticesdP[i] = dz
             verticesW[:, i] = p2w(z)
 
 
@@ -60,7 +61,7 @@ class HyperPolygon:
 #        self.centerP = complex(0, 0)  # center
 #        self.dcenterP = complex(0, 0)
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices
-#        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
+        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
 #        self.centerW = np.array([1, 0, 0]) # center
@@ -108,7 +109,7 @@ class HyperPolygon:
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
-        mfull(self.p, phi, ind, self.verticesP, self.verticesW)
+        mfull(self.p, phi, ind, self.verticesP, self.verticesdP, self.verticesW)
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0, dz0):
