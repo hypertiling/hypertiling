@@ -50,3 +50,14 @@ install_bullseye:
  script:
    - pip3 install .
 
+Sphinx_doc:
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  type: build
+  artifacts:
+    paths:
+      - doc/*
+  script:
+    - apt-get update && apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme
+    - cd doc
+    - sphinx-build . html
+
