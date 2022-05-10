@@ -19,7 +19,7 @@ def fund_radius(p, q):
 # this can be done faster by once again using symmetry, e.g. with angular_replicate() in core
 def refine_lattice(tilingobj, n):  # n is the number of refinements
 
-    if tilingobj.p is not 3:
+    if tilingobj.p > 3:
         print("Refinements only work for triangular tilings!")
     if n == 0:  # recursive function terminates for n==0
         return tilingobj  # and returns an instance of the chosen TilingClass
