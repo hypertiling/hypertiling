@@ -3,7 +3,7 @@ import math
 import copy
 
 # relative imports
-from .hyperpolygon import HyperPolygon
+from .hyperpolygon import HyperPolygon, mfull_point
 from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 from .distance import disk_distance
@@ -130,21 +130,17 @@ class HyperbolicTiling:
 
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
-
-                        # create copy
-                        polycopy = copy.deepcopy(pgon)
-
-                        # generate adjacent polygon
-                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-
-
+                        # get the center:
+                        # transform it:
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        cangle = math.degrees(math.atan2(center.imag, center.real))
+                        cangle += 360 if cangle < 0 else 0
                         # compute center and angle
-                        center = np.round(adj_pgon.centerP(), self.dgts)
-                        adj_pgon.find_angle()
+                        center = np.round(center, self.dgts)
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
+                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
@@ -153,6 +149,12 @@ class HyperbolicTiling:
 
                             # this tells us whether an element has actually been added
                             if lenB>lenA:
+                                # create copy
+                                polycopy = copy.deepcopy(pgon)
+
+                                # generate adjacent polygon
+                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
@@ -165,13 +167,13 @@ class HyperbolicTiling:
             endpgon = len(self.polygons)
 
 
-            if self.numerically_unstable_upper(l, startpgon, endpgon):
-                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
-                break
+            #if self.numerically_unstable_upper(l, startpgon, endpgon):
+                #print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                #break
 
-            if self.numerically_unstable_lower(l, startpgon, endpgon):
-                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
-                break
+            #if self.numerically_unstable_lower(l, startpgon, endpgon):
+                #print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                #break
 
 
 
@@ -197,10 +199,10 @@ class HyperbolicTiling:
 
 
         # fill entire disk by rotating the slice
-        if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-        elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+#        if self.center == 'cell':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+#        elif self.center == 'vertex':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
