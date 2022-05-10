@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import copy
 
 # relative imports
@@ -24,9 +25,7 @@ class HyperbolicTiling:
         self.degtol = 1 # sector boundary tolerance during lattice construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
-        self.centerlist = []  # used to keep track of which polygons has already been drawn
         self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
-        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
         self.polygons = []  # duplicate-free array of polygons of the layer
 
         if center not in ['cell', 'vertex']:
@@ -57,7 +56,7 @@ class HyperbolicTiling:
         polygon = HyperPolygon(self.p)
 
         for i in range(self.p):
-            z = complex(r * np.cos(i*self.phi), r * np.sin(i*self.phi))  # = r*exp(i*phi)
+            z = complex(r * math.cos(i*self.phi), r * math.sin(i*self.phi))  # = r*exp(i*phi)
             polygon.verticesP[i] = z
             polygon.verticesW[:, i] = p2w(z)
 
@@ -70,7 +69,7 @@ class HyperbolicTiling:
             polygon.find_angle()
 
         polygon.moeb_rotate(-2*np.pi/360*self.mangle)
-            
+
         return polygon
 
 
@@ -85,7 +84,8 @@ class HyperbolicTiling:
     def generate(self):
 
         # prepare list to store polygons 
-        self.lpolygons[0].append(self.fund_poly)
+
+        self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
         sect_angle     = self.phi
@@ -98,13 +98,15 @@ class HyperbolicTiling:
         # this is used for uniqueness checks later
         centerset = set()
         centerset_extra = set()
-        centerset.add(np.round(self.fund_poly.centerP, self.dgts))
+        centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
 
+        startpgon = 0
+        endpgon = 1
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
             # computes all neighbor polygons of layer l
-            for pgon in self.lpolygons[l-1]:
+            for pgon in self.polygons[startpgon:endpgon]:
 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
@@ -120,48 +122,48 @@ class HyperbolicTiling:
 
 
                         # compute center and angle
-                        center = np.round(adj_pgon.centerP, self.dgts)
+                        center = np.round(adj_pgon.centerP(), self.dgts)
                         adj_pgon.find_angle()
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
+
                         if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center) 
+                            centerset.add(center)
                             lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
                             if lenB>lenA:
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
-                                self.lpolygons[l].append(adj_pgon)
+                                self.polygons.append(adj_pgon)
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
                                 centerset_extra.add(center)
+            startpgon = endpgon
+            endpgon = len(self.polygons)
 
-
-        # flatten the list
-        for curr_layer in self.lpolygons:
-            for polygon in curr_layer:
-                self.polygons.append(polygon)
-
+        # free mem of centerset
+        del centerset
 
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
 
-                center = moeb_rotate_trafo(pgon.centerP, -sect_angle)
+                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+
                 center = np.round(center, self.dgts) # better use simple distance?
 
                 if center in centerset_extra:
                     deletelist.append(kk)
 
         self.polygons = list(np.delete(self.polygons, deletelist))
-            
+
 
         # fill entire disk by rotating the slice
         if self.center == 'cell':
@@ -169,16 +171,9 @@ class HyperbolicTiling:
         elif self.center == 'vertex':
             self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
-
-
-
-
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
-        z0 = polygon.verticesP[ind]
-        polygon.moeb_origin(z0)  # map vertex at z0 to origin at (0,0)
-        polygon.moeb_rotate(k*self.qhi)  # rotate the whole polygon k times by 2*pi/q
-        polygon.moeb_inverse(z0)  # map polygon back to former location
+        polygon.tf_full(ind, k*self.qhi)
         return polygon
 
 
@@ -213,7 +208,7 @@ class HyperbolicTiling:
         # are not unique, meaning that the same coordinate can have different representations
         for poly in self.polygons:
             poly.edges = []
-            verts = np.round(poly.verticesP, digits)
+            verts = np.round(poly.verticesP[0:-1], digits)
         
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):

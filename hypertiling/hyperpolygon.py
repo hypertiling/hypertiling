@@ -1,23 +1,60 @@
 from math import floor
-import math
-import cmath
 from .transformation import *
 
+def morigin_py(p, z0, verticesP, verticesW):
+    for i in range(p + 1):
+        z = moeb_origin_trafo(z0, verticesP[i])
+        verticesP[i] = z
+        verticesW[:, i] = p2w(z)
+
+def morigin_inv_py(p, z0, verticesP, verticesW):
+    for i in range(p + 1):
+        z = moeb_origin_trafo_inverse(z0, verticesP[i])
+        verticesP[i] = z
+        verticesW[:, i] = p2w(z)
+
+def mrotate_py(p, phi, verticesP, verticesW):
+    for i in range(p + 1):
+        z = moeb_rotate_trafo(verticesP[i], -phi)
+        verticesP[i] = z
+        verticesW[:, i] = p2w(z)
+
+def mfull_py(p, phi, ind, verticesP, verticesW):
+        z0 =  verticesP[ind]
+        
+        for i in range(p + 1):
+            z = moeb_origin_trafo(z0, verticesP[i])
+            z = moeb_rotate_trafo(z, -phi)
+            z = moeb_origin_trafo_inverse(z0, z)
+            verticesP[i] = z
+            verticesW[:, i] = p2w(z)
+
+# try to use numba
+try:
+    import numba
+    morigin = numba.njit(morigin_py)
+    morigin_inv = numba.njit(morigin_inv_py)
+    mrotate = numba.njit(mrotate_py)
+    mfull = numba.njit(mfull_py)
+except ImportError:
+    morigin = morigin_py
+    morigin_inv = morigin_inv_py
+    mrotate = mrotate_py
+    mfull = mfull_py
 
 # defines a hyperbolic polygon
 class HyperPolygon:
     def __init__(self, p):
 
+# The centers are at the end of the arrays
         self.p = p  # number of edges
 
         # Poincare disk coordinates
-        self.centerP = complex(0, 0)  # center
-        self.verticesP = np.zeros(shape=self.p, dtype=np.complex128)  # vertices
+        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
 
         # Weierstrass (hyperboloid) coordinates
-        self.centerW = np.array([1, 0, 0]) # center
-        self.verticesW = np.zeros((3, self.p))  # vertices
-
+        self.verticesW = np.zeros((3, self.p+1))  # vertices + center
+        self.verticesW[0,-1] = 1 # center
         
         self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
         self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
@@ -27,6 +64,12 @@ class HyperPolygon:
         self.orientation = 0 # the angle between the line defined by the center and vertices 0, and the abscissa
 
         self.edges = []  # compare self.populate_edge_list
+
+    def centerP(self):
+        return self.verticesP[self.p]
+
+    def centerW(self):
+        return self.verticesW[:,self.p]
 
 
     # checks whether two polygons are equal
@@ -46,59 +89,36 @@ class HyperPolygon:
     # transforms all points of the polygon by matrix tmat
     # only used by HyperbolicTilingDunham
     def transform(self, tmat):
-        self.centerW = tmat @ self.centerW
-        self.centerP = w2p(self.centerW)
-        self.find_angle(360)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             self.verticesW[:, i] = tmat @ self.verticesW[:, i]
             self.verticesP[i] = w2p(self.verticesW[:, i])
+        self.find_angle(360)
 
+
+    # transforms the entire polygon: to the origin, rotate it and back again
+    def tf_full(self, ind, phi):
+        mfull(self.p, phi, ind, self.verticesP, self.verticesW)
 
     # transforms the entire polygon such that z0 is mapped to origin
-    def moeb_origin(self, z0):  
-        self.centerP = moeb_origin_trafo(z0, self.centerP)
-        self.centerW = p2w(self.centerP)
-        # self.find_angle(360)  # this might be superfluous
-        for i in range(self.p):
-            z = moeb_origin_trafo(z0, self.verticesP[i])
-            self.verticesP[i] = z
-            self.verticesW[:, i] = p2w(self.verticesP[i])
-
+    def moeb_origin(self, z0):
+        morigin(self.p, z0, self.verticesP, self.verticesW)
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        self.centerP = moeb_rotate_trafo(self.centerP, -phi)  # these two lines might be redundant
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
-            z = moeb_rotate_trafo(self.verticesP[i], -phi)
-            self.verticesP[i] = z
-            self.verticesW[:, i] = p2w(self.verticesP[i])
-
+        mrotate(self.p, phi, self.verticesP, self.verticesW)
 
     def moeb_translate(self, s):
-        self.centerP = moeb_translate_trafo(self.centerP, s)
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = moeb_translate_trafo(self.verticesP[i], s)
             self.verticesP[i] = z
             self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_inverse(self, z0):
-        self.centerP = moeb_origin_trafo_inverse(z0, self.centerP)
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
-            z = moeb_origin_trafo_inverse(z0, self.verticesP[i])
-            self.verticesP[i] = z
-            self.verticesW[:, i] = p2w(self.verticesP[i])
-
+        morigin_inv(self.p, z0, self.verticesP, self.verticesW)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
-        z = self.centerP
-        z = z*rotation
-        self.centerP = z
-        self.centerW = p2w(self.centerP)
-        for i in range(self.p):
+        for i in range(self.p + 1):
             z = self.verticesP[i]
             z = z*rotation
             self.verticesP[i] = z
@@ -122,25 +142,19 @@ class HyperPolygon:
 
 
     def find_angle(self):
-        self.angle = np.angle(self.centerP, deg=True)
+        self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))#np.angle(self.centerP(), deg=True)
         self.angle += 360 if self.angle < 0 else 0
-
 
     def find_sector(self, k):
         self.sector = floor(self.angle/(360/k))
 
-        
-
-
     def mirror(self):
-        self.centerP = complex(self.centerP.real, - self.centerP.imag)  # mirror on axis Im(z)=0
-        self.centerW = p2w(self.centerP)
-        self.find_angle(360)
-        for i in range(self.p):
-            self.verticesP[i] = complex(self.verticesP[i].real, (-1)*self.verticesP[i].imag)
+        for i in range(self.p + 1):
+            self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
+        self.find_angle(360)
 
     # returns value between -pi and pi
     def find_orientation(self):
-        self.orientation = np.angle(self.verticesP[0]-self.centerP)
+        self.orientation = np.angle(self.verticesP[0]-self.centerP())
 
