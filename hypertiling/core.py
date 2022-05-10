@@ -1,16 +1,29 @@
 import numpy as np
 import math
 import copy
+import numba
+
+from numba.typed import List
 
 # relative imports
 from .hyperpolygon import HyperPolygon
 from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 
+@numba.njit
+def add_center_if_new(centerset, z):
+    addpgon = True
+    for cen in centerset:
+        if abs(cen - z) < 1E-12:
+            addpgon = False
+            break
+    if addpgon:
+        centerset.append(z)
+
 # the main object of this library
 # essentially represents a list of polygons which build the hyperbolic lattice
 class HyperbolicTiling:
-    def __init__(self, p, q, nlayers, center='cell'):
+    def __init__(self, p, q, nlayers, dgts, center='cell'):
         self.p = p  # number of edges (and thus number of vertices) per polygon
         self.q = q  # number of polygons that meet at each vertex
         self.nlayers = nlayers  # layers of the tessellation
@@ -21,7 +34,7 @@ class HyperbolicTiling:
         self.degphi = 360/self.p
         self.degqhi = 360/self.q
 
-        self.dgts = 9   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
+        self.dgts = dgts   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance during lattice construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
@@ -100,9 +113,10 @@ class HyperbolicTiling:
 
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
-        centerset = set()
+        # centerset = set()
+        centerset = List()
         centerset_extra = set()
-        centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
+        centerset.append(self.fund_poly.centerP())
 
         startpgon = 0
         endpgon = 1
@@ -126,7 +140,7 @@ class HyperbolicTiling:
 
 
                         # compute center and angle
-                        center = np.round(adj_pgon.centerP(), self.dgts)
+#                        center = np.round(adj_pgon.centerP()*(1+10**(-self.dgts-3)), self.dgts)
                         adj_pgon.find_angle()
 
                         # cut away cells outside the fundamental sector
@@ -136,7 +150,15 @@ class HyperbolicTiling:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center)
+                            add_center_if_new(centerset, adj_pgon.centerP())# duplicates only come from previous layers?
+                            ##addpgon = True
+                            ##for cen in centerset:
+                                ##if abs(cen - adj_pgon.centerP()) < 1E-12:
+                                    ##addpgon = False
+                                    ##break
+                            ##if addpgon:
+                                ##centerset.add(adj_pgon.centerP())
+                            #centerset.add(center)
                             lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
@@ -147,13 +169,14 @@ class HyperbolicTiling:
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                centerset_extra.add(center)
+                                centerset_extra.add(adj_pgon.centerP())
+
             startpgon = endpgon
             endpgon = len(self.polygons)
 
         # free mem of centerset
         del centerset
-
+        
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
@@ -161,10 +184,15 @@ class HyperbolicTiling:
 
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
 
-                center = np.round(center, self.dgts) # better use simple distance?
+                #center = np.round(center*(1+10**(-self.dgts-3)), self.dgts) # better use simple distance?
+                
+                for cen in centerset_extra:
+                    if abs(cen - center) < 1E-12:
+                        deletelist.append(kk)
+                        break
 
-                if center in centerset_extra:
-                    deletelist.append(kk)
+                #if center in centerset_extra:
+                    #deletelist.append(kk)
 
         self.polygons = list(np.delete(self.polygons, deletelist))
 
