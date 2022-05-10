@@ -2,6 +2,7 @@ import numpy as np
 import math
 import copy
 import numba
+import bisect
 
 from numba.typed import List
 
@@ -11,14 +12,18 @@ from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 
 @numba.njit
-def add_center_if_new(centerset, z):
+def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
     addpgon = True
-    for cen in centerset:
+    idx = 0
+    for idx, cen in enumerate(centerset[lpos:upos]):
         if abs(cen - z) < 1E-12:
             addpgon = False
             break
-    if addpgon:
-        centerset.append(z)
+    return addpgon
+    #if addpgon:
+        #pos = bisect.bisect_left(centerangles, angle)
+        #centerangles.insert(pos, angle)
+        #centerset.insert(pos, z)
 
 # the main object of this library
 # essentially represents a list of polygons which build the hyperbolic lattice
@@ -115,8 +120,10 @@ class HyperbolicTiling:
         # this is used for uniqueness checks later
         # centerset = set()
         centerset = List()
+        centerangles = List()
         centerset_extra = set()
         centerset.append(self.fund_poly.centerP())
+        centerangles.append(self.phi/2) # the center is arbitrarily set to the magic angle.
 
         startpgon = 0
         endpgon = 1
@@ -138,7 +145,6 @@ class HyperbolicTiling:
                         # generate adjacent polygon
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
 
-
                         # compute center and angle
 #                        center = np.round(adj_pgon.centerP()*(1+10**(-self.dgts-3)), self.dgts)
                         adj_pgon.find_angle()
@@ -147,22 +153,44 @@ class HyperbolicTiling:
                         # allow some tolerance at the upper boundary
 
                         if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
+                            
+                            # angle of new polygon:
+                            nangle = math.atan2(adj_pgon.centerP().imag, adj_pgon.centerP().real)
+                        
+                            #find indices of a range of vertices that have a "compatible" angle
+                            anglefudge = 0.001 # 1 %
+                            lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge))
+                            upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge))
+                            
+                            # now we have a restriction on the possible vertices and don't
+                            # need to search the entire list
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
-                            lenA = len(centerset)
-                            add_center_if_new(centerset, adj_pgon.centerP())# duplicates only come from previous layers?
-                            ##addpgon = True
-                            ##for cen in centerset:
-                                ##if abs(cen - adj_pgon.centerP()) < 1E-12:
-                                    ##addpgon = False
-                                    ##break
-                            ##if addpgon:
-                                ##centerset.add(adj_pgon.centerP())
+                            #lenA = len(centerset)
+                            #print(upos - lpos, lenA)
+                            #add_center_if_new(centerset, adj_pgon.centerP())
+                            
+                            # perform a linear search among candidates
+                            ###addpgon = True
+                            ###for cen in centerset[lpos:upos]:
+                                ###if abs(cen - adj_pgon.centerP()) < 1E-12:
+                                    ###addpgon = False
+                                    ###break
+                            ###if addpgon:
+                                ###pos = bisect.bisect_left(centerangles, nangle)
+                                ####print("insertion position", pos)
+                                ###centerangles.insert(pos, nangle)
+                                ###centerset.insert(pos, adj_pgon.centerP())
+                            addpgon = add_center_if_new(centerset, lpos, upos, centerangles, adj_pgon.centerP(), nangle)
+
                             #centerset.add(center)
-                            lenB = len(centerset)
+                            #lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
-                            if lenB>lenA:
+                            if addpgon:
+                                pos = bisect.bisect_left(centerangles, nangle)
+                                centerangles.insert(pos, nangle)
+                                centerset.insert(pos, adj_pgon.centerP())
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
@@ -175,8 +203,9 @@ class HyperbolicTiling:
             endpgon = len(self.polygons)
 
         # free mem of centerset
-        del centerset
+        #del centerset
         
+        print("starting deletion")
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
@@ -195,7 +224,6 @@ class HyperbolicTiling:
                     #deletelist.append(kk)
 
         self.polygons = list(np.delete(self.polygons, deletelist))
-
 
         # fill entire disk by rotating the slice
 #        if self.center == 'cell':
