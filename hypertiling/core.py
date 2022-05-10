@@ -160,25 +160,23 @@ class HyperbolicTiling:
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
                                 centerset_extra.add(center)
+
             startpgon = endpgon
             endpgon = len(self.polygons)
 
 
+#            if self.numerically_unstable_upper(l, startpgon, endpgon):
+#                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+#                break
 
-            if self.numerically_unstable_upper(l):
-                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
-                break
-
-            if self.numerically_unstable_lower(l):
-                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
-                break
-
+#            if self.numerically_unstable_lower(l, startpgon, endpgon):
+#                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+#                break
 
 
-        # flatten the list
-        for curr_layer in self.lpolygons:
-            for polygon in curr_layer:
-                self.polygons.append(polygon)
+
+
+
 
         # free mem of centerset
         del centerset
@@ -206,20 +204,27 @@ class HyperbolicTiling:
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
-    def numerically_unstable_upper(self, l, tolfactor=10, samplesize=10):
+    def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
+
+
+        # innermost layers are always fine, do nothing
+        if l<3:
+            return False
 
         # randomly pick a number of sites from l-th layer
-        layersize = len(self.lpolygons[l])
+        curr_layer = self.polygons[start:end]
+        layersize = end-start
         true_dists = []
+
         for i in range(samplesize):
             rndidx = np.random.randint(layersize)
 
             # generate an adjacent cell
-            mother = self.lpolygons[l][rndidx]
+            mother = curr_layer[rndidx]
             child  = self.generate_adj_poly(copy.deepcopy(mother), 0, 1)
 
             # compute the true (non-geodesic) distance
-            true_dist = np.abs(mother.centerP-child.centerP)
+            true_dist = np.abs(mother.centerP()-child.centerP())
             true_dists.append(true_dist)
 
         # if this distances comes close to the rounding accuracy
@@ -234,25 +239,26 @@ class HyperbolicTiling:
     # here we take a sample of cells from the l-th layer and compute mutual 
     # distances; if one of those is significantly off compared to the expected
     # value we are about to enter a dangerous regime in terms of rounding errors
-    def numerically_unstable_lower(self, l, tolfactor=10, samplesize=100):
+    def numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100):
 
         # innermost layers are always fine, do nothing
         if l<3:
             return False
 
         # take a sample of cells and compute their distances
+        samples = self.polygons[start:end]
         disk_distances = []
-        for j1, pgon1 in enumerate(self.lpolygons[l][0:samplesize]):
-            for j2, pgon2 in enumerate(self.lpolygons[l][0:samplesize]):
+        for j1, pgon1 in enumerate(samples):
+            for j2, pgon2 in enumerate(samples):
                 if j1 != j2:
-                    disk_distances.append(disk_distance(pgon1.centerP, pgon2.centerP))
+                    disk_distances.append(disk_distance(pgon1.centerP(), pgon2.centerP()))
 
         # we are interested in the minimal distance (can be interpreted as an 
         # upper bound on the accumulated error)
         mindist = np.min(np.array(disk_distances))
 
         # the reference distance
-        refdist = disk_distance(self.fund_poly.centerP, self.lpolygons[1][0].centerP)
+        refdist = disk_distance(self.fund_poly.centerP(), self.polygons[0].centerP())
 
         # if out arithmetics worked error-free, mindist = refdist
         # in practice, it does not, so we compute the difference
