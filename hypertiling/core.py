@@ -129,22 +129,29 @@ class HyperbolicTiling:
                 for vert_ind in range(self.p):
 
                     # iterate over all polygons touching this very vertex
+                    center = [mfull_point(pgon.verticesP[vert_ind], r*self.qhi, pgon.centerP()) for r in range(self.q)]
+                    cangle = [math.degrees(math.atan2(c.imag, c.real)) for c in center]
+                    for rot_ind in range(self.q):
+                        cangle[rot_ind] += 360 if cangle[rot_ind] < 0 else 0
+                        # compute center and angle
+                        center[rot_ind] = np.round(center[rot_ind], self.dgts)
+
                     for rot_ind in range(self.q):
                         # get the center:
                         # transform it:
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
-                        cangle = math.degrees(math.atan2(center.imag, center.real))
-                        cangle += 360 if cangle < 0 else 0
+                        #center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        #cangle = math.degrees(math.atan2(center[rot_ind].imag, center[rot_ind].real))
+                        #cangle += 360 if cangle < 0 else 0
                         # compute center and angle
-                        center = np.round(center, self.dgts)
+                        #center[rot_ind] = np.round(center[rot_ind], self.dgts)
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
+                        if self.mangle <= cangle[rot_ind] < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             lenA = len(centerset)
-                            centerset.add(center)
+                            centerset.add(center[rot_ind])
                             lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
@@ -161,7 +168,7 @@ class HyperbolicTiling:
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                centerset_extra.add(center)
+                                centerset_extra.add(center[rot_ind])
 
             startpgon = endpgon
             endpgon = len(self.polygons)
