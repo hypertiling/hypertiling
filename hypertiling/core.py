@@ -161,7 +161,11 @@ class HyperbolicTiling:
                         cangle[rot_ind] += 360 if cangle[rot_ind] < 0 else 0
                         # compute center and angle
                         #center[rot_ind] = np.round(center[rot_ind], self.dgts)
-
+                    
+                    addendpos = []
+                    centerangleaddends = []
+                    centeraddends = []
+                    
                     for rot_ind in range(self.q):
                         # get the center:
                         # transform it:
@@ -181,20 +185,18 @@ class HyperbolicTiling:
                             anglefudge = 0.001 # 1 %
                             lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge),1)
                             upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge), lpos)
-
-                            # try adding to centerlist; it is a set() and takes care of duplicates
-                            #lenA = len(centerset)
-                            #centerset.add(center[rot_ind])
-                            #lenB = len(centerset)
                             
                             # this tells us whether an element actually should be added
                             addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
                             if addpgon:
                                 
                                 pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
+                                addendpos.append(pos)
+                                centerangleaddends.append(nangle)
+                                centeraddends.append(center[rot_ind])
                                 #centerangles.insert(pos, nangle)
-                                centerangles = np.insert(centerangles, pos, nangle)
-                                centerset = np.insert(centerset, pos, center[rot_ind])
+#                                centerangles = np.insert(centerangles, pos, nangle)
+#                                centerset = np.insert(centerset, pos, center[rot_ind])
                                 #centerset.insert(pos, center[rot_ind])
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
@@ -209,7 +211,12 @@ class HyperbolicTiling:
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
                                 centerset_extra.add(center[rot_ind])
-
+                    print(addendpos, centerangleaddends)
+                    if len(addendpos) == len(set(addendpos)):
+                        centerangles = np.insert(centerangles, addendpos, centerangleaddends)
+                        centerset = np.insert(centerset, addendpos, centeraddends)
+                    else:
+                        # redo everything....
             startpgon = endpgon
             endpgon = len(self.polygons)
 
