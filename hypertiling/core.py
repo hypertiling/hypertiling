@@ -8,38 +8,51 @@ from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 from .distance import disk_distance
 
+
 # the main object of this library
-# essentially represents a list of polygons which build the hyperbolic lattice
+# essentially represents a list of polygons which constitute the hyperbolic lattice
 class HyperbolicTiling:
     def __init__(self, p, q, nlayers, center='cell'):
-        self.p = p  # number of edges (and thus number of vertices) per polygon
-        self.q = q  # number of polygons that meet at each vertex
-        self.nlayers = nlayers  # layers of the tessellation
 
-        self.center = center # decides whether the tiling is centered around a vertex or polygon
-        self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant
-        self.qhi = 2*np.pi/self.q  # angle of rotation that leaves the lattice invariant
-        self.degphi = 360/self.p
-        self.degqhi = 360/self.q
+        # main attributes
+        self.p = p                  # number of edges (and thus number of vertices) per polygon
+        self.q = q                  # number of polygons that meet at each vertex
+        self.nlayers = nlayers      # layers of the tessellation
+        self.center = center        # tiling can be centered around a "cell" (default) or a "vertex"
 
-        self.dgts = 8   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
-        self.accuracy = 10**(-self.dgts)
-        self.degtol = 1 # sector boundary tolerance during lattice construction
+        # symmetry angles
+        self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant when cell centered
+        self.qhi = 2*np.pi/self.q  # angle of rotation that leaves the lattice invariant when vertex centered
+        self.degphi = 360/self.p   # self.phi in degrees
+        self.degqhi = 360/self.q   # self.qhi in degrees
+
+        # technical parameters 
+        # do not change, unless you know what you are doing!)
+        self.dgts = 8   # rounding digits, default: 8
+        self.accuracy = 10**(-self.dgts) # numerical accuracy
+        self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
-        self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
-        self.polygons = []  # duplicate-free array of polygons of the layer
+
+        # fundamental polygon of the tiling
+        self.fund_poly = self.create_fundamental_polygon(center)
+
+        # prepare list to store polygons 
+        self.polygons = []
 
         if center not in ['cell', 'vertex']:
             raise ValueError('Invalid value for argument "center"!')
 
+
     def __getitem__(self, idx):
         return self.polygons[idx]
+
 
     def __iter__(self):
         self.iterctr = 0
         self.itervar = self.polygons[self.iterctr]
         return self
+
 
     def __next__(self):
         if self.iterctr < len(self.polygons):
@@ -49,8 +62,10 @@ class HyperbolicTiling:
         else:
             raise StopIteration
 
+
     def __len__(self):
         return len(self.polygons)
+
 
     # constructs the vertices of the fundamental hyperbolic {p,q} polygon
     def create_fundamental_polygon(self, center='cell'):
@@ -85,8 +100,7 @@ class HyperbolicTiling:
 
     def generate(self):
 
-        # prepare list to store polygons 
-
+        # add fundamental polygon to list
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
@@ -97,13 +111,14 @@ class HyperbolicTiling:
             sect_angle_deg = self.degqhi
 
         # prepare sets which will contain the center coordinates
-        # this is used for uniqueness checks later
+        # will be used for uniqueness checks
         centerset = set()
         centerset_extra = set()
         centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
 
         startpgon = 0
         endpgon = 1
+
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -129,7 +144,6 @@ class HyperbolicTiling:
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-
                         if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
