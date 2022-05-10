@@ -165,13 +165,13 @@ class HyperbolicTiling:
             endpgon = len(self.polygons)
 
 
-#            if self.numerically_unstable_upper(l, startpgon, endpgon):
-#                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
-#                break
+            if self.numerically_unstable_upper(l, startpgon, endpgon):
+                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                break
 
-#            if self.numerically_unstable_lower(l, startpgon, endpgon):
-#                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
-#                break
+            if self.numerically_unstable_lower(l, startpgon, endpgon):
+                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                break
 
 
 
@@ -258,7 +258,7 @@ class HyperbolicTiling:
         mindist = np.min(np.array(disk_distances))
 
         # the reference distance
-        refdist = disk_distance(self.fund_poly.centerP(), self.polygons[0].centerP())
+        refdist = disk_distance(self.fund_poly.centerP(), self.polygons[1].centerP())
 
         # if out arithmetics worked error-free, mindist = refdist
         # in practice, it does not, so we compute the difference
