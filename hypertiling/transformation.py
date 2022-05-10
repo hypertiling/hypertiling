@@ -194,6 +194,7 @@ def mymoebddint_py(z0, z):
     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
     return ret, dret
 
+# If numba is present we use the numba compiled functions, else the plain ones.
 try:
     import numba
     p2w = numba.njit(p2w_py)

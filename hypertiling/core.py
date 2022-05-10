@@ -7,9 +7,11 @@ import bisect
 from numba.typed import List
 
 # relative imports
-from .hyperpolygon import HyperPolygon
+from .hyperpolygon import HyperPolygon, mfull_point
 from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
+from .distance import disk_distance
+
 
 @numba.njit
 def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
@@ -26,38 +28,49 @@ def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
         #centerset.insert(pos, z)
 
 # the main object of this library
-# essentially represents a list of polygons which build the hyperbolic lattice
+# essentially represents a list of polygons which constitute the hyperbolic lattice
 class HyperbolicTiling:
-    def __init__(self, p, q, nlayers, dgts, center='cell'):
-        self.p = p  # number of edges (and thus number of vertices) per polygon
-        self.q = q  # number of polygons that meet at each vertex
-        self.nlayers = nlayers  # layers of the tessellation
+    def __init__(self, p, q, nlayers, center='cell'):
 
-        self.center = center # decides whether the tiling is centered around a vertex or polygon
-        self.phi = math.tau/self.p  # angle of rotation that leaves the lattice invariant
-        self.qhi = math.tau/self.q  # angle of rotation that leaves the lattice invariant
-        self.degphi = 360/self.p
-        self.degqhi = 360/self.q
+        # main attributes
+        self.p = p                  # number of edges (and thus number of vertices) per polygon
+        self.q = q                  # number of polygons that meet at each vertex
+        self.nlayers = nlayers      # layers of the tessellation
+        self.center = center        # tiling can be centered around a "cell" (default) or a "vertex"
 
-        self.dgts = dgts   # rounding digits, default: 8 (do not change, unless you know what you are doing!)
-        self.degtol = 1 # sector boundary tolerance during lattice construction
+        # symmetry angles
+        self.phi = 2*np.pi/self.p  # angle of rotation that leaves the lattice invariant when cell centered
+        self.qhi = 2*np.pi/self.q  # angle of rotation that leaves the lattice invariant when vertex centered
+        self.degphi = 360/self.p   # self.phi in degrees
+        self.degqhi = 360/self.q   # self.qhi in degrees
+
+        # technical parameters 
+        # do not change, unless you know what you are doing!)
+        self.dgts = 8   # rounding digits, default: 8
+        self.accuracy = 10**(-self.dgts) # numerical accuracy
+        self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
-#        self.centerlist = []  # used to keep track of which polygons has already been drawn
-        self.fund_poly = self.create_fundamental_polygon(center)  # central polygon of the tessellation
-#        self.lpolygons = [[] for _ in range(self.nlayers)]  # for each layer there is one subarray
-        self.polygons = []  # duplicate-free array of polygons of the layer
+
+        # fundamental polygon of the tiling
+        self.fund_poly = self.create_fundamental_polygon(center)
+
+        # prepare list to store polygons 
+        self.polygons = []
 
         if center not in ['cell', 'vertex']:
             raise ValueError('Invalid value for argument "center"!')
 
+
     def __getitem__(self, idx):
         return self.polygons[idx]
+
 
     def __iter__(self):
         self.iterctr = 0
         self.itervar = self.polygons[self.iterctr]
         return self
+
 
     def __next__(self):
         if self.iterctr < len(self.polygons):
@@ -67,8 +80,10 @@ class HyperbolicTiling:
         else:
             raise StopIteration
 
+
     def __len__(self):
         return len(self.polygons)
+
 
     # constructs the vertices of the fundamental hyperbolic {p,q} polygon
     def create_fundamental_polygon(self, center='cell'):
@@ -105,8 +120,7 @@ class HyperbolicTiling:
 
     def generate(self):
 
-        # prepare list to store polygons 
-
+        # add fundamental polygon to list
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
@@ -121,12 +135,14 @@ class HyperbolicTiling:
         # centerset = set()
         centerset = List()
         centerangles = List()
+
         centerset_extra = set()
         centerset.append(self.fund_poly.centerP())
         centerangles.append(self.phi/2) # the center is arbitrarily set to the magic angle.
 
         startpgon = 0
         endpgon = 1
+
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -137,70 +153,75 @@ class HyperbolicTiling:
                 for vert_ind in range(self.p):
 
                     # iterate over all polygons touching this very vertex
+                    center = [mfull_point(pgon.verticesP[vert_ind], r*self.qhi, pgon.centerP()) for r in range(self.q)]
+                    cangle = [math.degrees(math.atan2(c.imag, c.real)) for c in center]
                     for rot_ind in range(self.q):
-
-                        # create copy
-                        polycopy = copy.deepcopy(pgon)
-
-                        # generate adjacent polygon
-                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-
+                        cangle[rot_ind] += 360 if cangle[rot_ind] < 0 else 0
                         # compute center and angle
-#                        center = np.round(adj_pgon.centerP()*(1+10**(-self.dgts-3)), self.dgts)
-                        adj_pgon.find_angle()
+                        #center[rot_ind] = np.round(center[rot_ind], self.dgts)
+
+                    for rot_ind in range(self.q):
+                        # get the center:
+                        # transform it:
+                        #center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        #cangle = math.degrees(math.atan2(center[rot_ind].imag, center[rot_ind].real))
+                        #cangle += 360 if cangle < 0 else 0
+                        # compute center and angle
+                        #center[rot_ind] = np.round(center[rot_ind], self.dgts)
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-
-                        if self.mangle <= adj_pgon.angle < sect_angle_deg+self.degtol+self.mangle:
+                        if self.mangle <= cangle[rot_ind] < sect_angle_deg+self.degtol+self.mangle:
                             
-                            # angle of new polygon:
-                            nangle = math.atan2(adj_pgon.centerP().imag, adj_pgon.centerP().real)
+                            nangle = math.atan2(center[rot_ind].imag, center[rot_ind].real)
                         
                             #find indices of a range of vertices that have a "compatible" angle
                             anglefudge = 0.001 # 1 %
-                            lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge))
-                            upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge))
-                            
-                            # now we have a restriction on the possible vertices and don't
-                            # need to search the entire list
+                            lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge),1)
+                            upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge), lpos)
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             #lenA = len(centerset)
-                            #print(upos - lpos, lenA)
-                            #add_center_if_new(centerset, adj_pgon.centerP())
-                            
-                            # perform a linear search among candidates
-                            ###addpgon = True
-                            ###for cen in centerset[lpos:upos]:
-                                ###if abs(cen - adj_pgon.centerP()) < 1E-12:
-                                    ###addpgon = False
-                                    ###break
-                            ###if addpgon:
-                                ###pos = bisect.bisect_left(centerangles, nangle)
-                                ####print("insertion position", pos)
-                                ###centerangles.insert(pos, nangle)
-                                ###centerset.insert(pos, adj_pgon.centerP())
-                            addpgon = add_center_if_new(centerset, lpos, upos, centerangles, adj_pgon.centerP(), nangle)
-
-                            #centerset.add(center)
+                            #centerset.add(center[rot_ind])
                             #lenB = len(centerset)
-
-                            # this tells us whether an element has actually been added
+                            
+                            # this tells us whether an element actually should be added
+                            addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
                             if addpgon:
-                                pos = bisect.bisect_left(centerangles, nangle)
+                                
+                                pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
                                 centerangles.insert(pos, nangle)
-                                centerset.insert(pos, adj_pgon.centerP())
+                                centerset.insert(pos, center[rot_ind])
+                                # create copy
+                                polycopy = copy.deepcopy(pgon)
+
+                                # generate adjacent polygon
+                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                centerset_extra.add(adj_pgon.centerP())
+                                centerset_extra.add(center[rot_ind])
 
             startpgon = endpgon
             endpgon = len(self.polygons)
+
+
+            #if self.numerically_unstable_upper(l, startpgon, endpgon):
+                #print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                #break
+
+            #if self.numerically_unstable_lower(l, startpgon, endpgon):
+                #print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                #break
+
+
+
+
+
 
         # free mem of centerset
         #del centerset
@@ -230,6 +251,74 @@ class HyperbolicTiling:
 #            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
 #        elif self.center == 'vertex':
 #            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+
+    # check whether the true "embedding" distance between cells in layer l comes close
+    # to the rounding accuracy
+    def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
+
+
+        # innermost layers are always fine, do nothing
+        if l<3:
+            return False
+
+        # randomly pick a number of sites from l-th layer
+        curr_layer = self.polygons[start:end]
+        layersize = end-start
+        true_dists = []
+
+        for i in range(samplesize):
+            rndidx = np.random.randint(layersize)
+
+            # generate an adjacent cell
+            mother = curr_layer[rndidx]
+            child  = self.generate_adj_poly(copy.deepcopy(mother), 0, 1)
+
+            # compute the true (non-geodesic) distance
+            true_dist = np.abs(mother.centerP()-child.centerP())
+            true_dists.append(true_dist)
+
+        # if this distances comes close to the rounding accuracy
+        # two cells can no longer be reliably distinguished
+        if np.min(true_dist) < self.accuracy*tolfactor:
+            return True
+        else:
+            return False
+
+
+    # we know which geodesic distance two adjancent cells are supposed to have;
+    # here we take a sample of cells from the l-th layer and compute mutual 
+    # distances; if one of those is significantly off compared to the expected
+    # value we are about to enter a dangerous regime in terms of rounding errors
+    def numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100):
+
+        # innermost layers are always fine, do nothing
+        if l<3:
+            return False
+
+        # take a sample of cells and compute their distances
+        samples = self.polygons[start:end]
+        disk_distances = []
+        for j1, pgon1 in enumerate(samples):
+            for j2, pgon2 in enumerate(samples):
+                if j1 != j2:
+                    disk_distances.append(disk_distance(pgon1.centerP(), pgon2.centerP()))
+
+        # we are interested in the minimal distance (can be interpreted as an 
+        # upper bound on the accumulated error)
+        mindist = np.min(np.array(disk_distances))
+
+        # the reference distance
+        refdist = disk_distance(self.fund_poly.centerP(), self.polygons[1].centerP())
+
+        # if out arithmetics worked error-free, mindist = refdist
+        # in practice, it does not, so we compute the difference
+        # if it comes close to the rounding accuracy, adjacency can no longer
+        # by reliably resolved and we are about to enter a possibly unstable regime
+        if np.abs(mindist-refdist) > self.accuracy/tolfactor:
+            return True
+        else:
+            return False
+
 
 
     # finds the next polygon by k-fold rotation of polygon around the vertex number ind
