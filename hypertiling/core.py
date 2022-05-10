@@ -133,13 +133,15 @@ class HyperbolicTiling:
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
         # centerset = set()
-        centerset = List()
-        centerangles = List()
+        #centerset = List()
+        #centerangles = List()
 
         centerset_extra = set()
-        centerset.append(self.fund_poly.centerP())
-        centerangles.append(self.phi/2) # the center is arbitrarily set to the magic angle.
-
+        #centerset.append(self.fund_poly.centerP())
+        #centerangles.append(self.phi/2) # the center is arbitrarily set to the magic angle.
+        
+        centerset = np.array([self.fund_poly.centerP()])
+        centerangles = np.array([self.phi/2])
         startpgon = 0
         endpgon = 1
 
@@ -190,8 +192,10 @@ class HyperbolicTiling:
                             if addpgon:
                                 
                                 pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
-                                centerangles.insert(pos, nangle)
-                                centerset.insert(pos, center[rot_ind])
+                                #centerangles.insert(pos, nangle)
+                                centerangles = np.insert(centerangles, pos, nangle)
+                                centerset = np.insert(centerset, pos, center[rot_ind])
+                                #centerset.insert(pos, center[rot_ind])
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
 
