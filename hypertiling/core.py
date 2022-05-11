@@ -180,7 +180,7 @@ class HyperbolicTiling:
         centerangles = np.array([self.phi/2])
         startpgon = 0
         endpgon = 1
-        
+        anglefudge = 0.1
         centerarray = SortedList([HTCenter(fund_radius(self.p, self.q), self.phi/2)])
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
@@ -219,41 +219,26 @@ class HyperbolicTiling:
                             nangle = math.atan2(center[rot_ind].imag, center[rot_ind].real)
                         
                             #find indices of a range of vertices that have a "compatible" angle
-                            anglefudge = 0.001 # 1 %
                             ##lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge))
                             ##upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge), lpos)
                             
                             centerarray_iterator = centerarray.irange(HTCenter(1, nangle*(1-anglefudge)), HTCenter(1, nangle*(1+anglefudge)))
-                            #if len(list(centerarray_iterator))- (upos - lpos) != 0:
-                                #print("=============================")
-                                #print(nangle*(1-anglefudge), nangle*(1+anglefudge))
-                                #print(lpos, upos, len(centerangles))
-                                #print("................")
-                                #for c in centerangles[lpos:upos]:
-                                    #print(c)
-                                #print(centerangles[upos], centerangles[upos+1])
-                                #print(centerangles[lpos], centerangles[upos])
-                                #clpos = centerarray.bisect_left(HTCenter(1, nangle*(1-anglefudge)))
-                                #cupos = centerarray.bisect_left(HTCenter(1, nangle*(1+anglefudge)))
-                                #for c in centerarray[clpos:cupos]:
-                                    #print(c.angle, c.z)
-                                #print(clpos, cupos, centerarray[clpos].angle, centerarray[cupos].angle)
-                                ##for z in centerarray:
-                                    ##print(z.angle)
-                                #print(len(list(centerarray_iterator)), upos - lpos)
-                            
                             # this tells us whether an element actually should be added
                             #addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
-                            #addpgon = True
-                            #for c in centerarray_iterator:
-                                #if abs(center[rot_ind] - c.z) < 1E-12:
-                                    #addpgon = False
-                                    #break
+                            addpgon = True
+                            iterlen = 0
+                            for c in centerarray_iterator:
+                                iterlen += 1
+                                if abs(center[rot_ind] - c.z) < 1E-12:
+                                    addpgon = False
+                                    break
+                            if iterlen > self.p*self.q:
+                                anglefudge /= 2
                             #mylist = [c.z for c in centerarray_iterator]
                             #addpgon = True
                             #if len(mylist) > 0:
                                 #addpgon = add_center_if_new_sc(List(mylist), center[rot_ind])
-                            addpgon = not any(abs(c.z-center[rot_ind]) < 1E-12 for c in centerarray_iterator)
+                            #addpgon = not any(abs(c.z-center[rot_ind]) < 1E-12 for c in centerarray_iterator)# for short ranges this seems to be equivalent
                             if addpgon:
 #                                pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
 #                                addendpos.append(pos)
