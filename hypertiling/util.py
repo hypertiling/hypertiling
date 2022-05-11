@@ -84,10 +84,23 @@ def border_variance(tiling):
 
 
 # formula from Mertens & Moore, PRE 96, 042116 (2017)
-def num_pgons_vertex_centered(p,q,n):
+# note that they use a different convention
+def n_cell_centered(p,q,n):
+    retval = 1 # first layer always has one cell
+    for j in range(1,n):
+        retval = retval + n_cell_centered_recursion(q,p,j) 
+    return retval
+
+def n_cell_centered_recursion(p,q,l):
     a = (p-2)*(q-2)-2
-    a4 = np.sqrt(a*a-4)
-    return (p-2)*q / a4 * (((a+a4)/2)**n - ((a-a4)/2)**n)
+    if l==0:
+        return 0
+    elif l==1:
+        return (p-2)*q
+    else:
+        return a*n_cell_centered_recursion(p,q,l-1)-n_cell_centered_recursion(p,q,l-2)
+
+
 
 
 # the following functions find the total number of polygons for some {p, q} tessellation of l layers
