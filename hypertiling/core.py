@@ -132,13 +132,12 @@ class HyperbolicTiling:
                     for rot_ind in range(self.q):
                         # compute center and angle
                         center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
-                        #center = np.round(adj_pgon.centerP(), self.dgts)
                         
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
+
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-
                         if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
