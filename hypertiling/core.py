@@ -5,6 +5,7 @@ import numba
 import bisect
 
 from numba.typed import List
+from sortedcontainers import SortedList
 
 # relative imports
 from .hyperpolygon import HyperPolygon, mfull_point
@@ -12,6 +13,27 @@ from .transformation import p2w, moeb_rotate_trafo
 from .util import fund_radius
 from .distance import disk_distance
 
+class HTCenter:
+    def __init__(self, *args):        
+        if len(args) == 1:
+            self.z = args[0]
+            self.angle = math.atan2(self.z.imag, self.z.real)
+        elif len(args) == 2:
+            self.z = args[0]*complex(math.cos(args[1]), math.sin(args[1]))
+            self.angle = args[1]
+
+    def __le__(self, other):
+        return self.angle <= other.angle
+    def __lt__(self, other):
+        return self.angle < other.angle
+    def __ge__(self, other):
+        return self.angle >= other.angle
+    def __gt__(self, other):
+        return self.angle > other.angle
+    def __eq__(self, other):
+        return self.z == other.z
+    def __ne__(self, other):
+        return self.z != other.z
 
 @numba.njit
 def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
@@ -22,10 +44,15 @@ def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
             addpgon = False
             break
     return addpgon
-    #if addpgon:
-        #pos = bisect.bisect_left(centerangles, angle)
-        #centerangles.insert(pos, angle)
-        #centerset.insert(pos, z)
+
+@numba.njit
+def add_center_if_new_sc(centerset, z):
+    addpgon = True
+    for cen in centerset:
+        if abs(cen - z) < 1E-12:
+            addpgon = False
+            break
+    return addpgon
 
 @numba.njit
 def filldeletelist(center, centerset_extra, deletelist, kk):
@@ -153,7 +180,8 @@ class HyperbolicTiling:
         centerangles = np.array([self.phi/2])
         startpgon = 0
         endpgon = 1
-
+        
+        centerarray = SortedList([HTCenter(fund_radius(self.p, self.q), self.phi/2)])
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -192,16 +220,47 @@ class HyperbolicTiling:
                         
                             #find indices of a range of vertices that have a "compatible" angle
                             anglefudge = 0.001 # 1 %
-                            lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge),1)
-                            upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge), lpos)
+                            ##lpos = bisect.bisect_left(centerangles, nangle*(1-anglefudge))
+                            ##upos = bisect.bisect_left(centerangles, nangle*(1+anglefudge), lpos)
+                            
+                            centerarray_iterator = centerarray.irange(HTCenter(1, nangle*(1-anglefudge)), HTCenter(1, nangle*(1+anglefudge)))
+                            #if len(list(centerarray_iterator))- (upos - lpos) != 0:
+                                #print("=============================")
+                                #print(nangle*(1-anglefudge), nangle*(1+anglefudge))
+                                #print(lpos, upos, len(centerangles))
+                                #print("................")
+                                #for c in centerangles[lpos:upos]:
+                                    #print(c)
+                                #print(centerangles[upos], centerangles[upos+1])
+                                #print(centerangles[lpos], centerangles[upos])
+                                #clpos = centerarray.bisect_left(HTCenter(1, nangle*(1-anglefudge)))
+                                #cupos = centerarray.bisect_left(HTCenter(1, nangle*(1+anglefudge)))
+                                #for c in centerarray[clpos:cupos]:
+                                    #print(c.angle, c.z)
+                                #print(clpos, cupos, centerarray[clpos].angle, centerarray[cupos].angle)
+                                ##for z in centerarray:
+                                    ##print(z.angle)
+                                #print(len(list(centerarray_iterator)), upos - lpos)
                             
                             # this tells us whether an element actually should be added
-                            addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
-                            if addpgon:                                
-                                pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
-                                addendpos.append(pos)
+                            #addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
+                            #addpgon = True
+                            #for c in centerarray_iterator:
+                                #if abs(center[rot_ind] - c.z) < 1E-12:
+                                    #addpgon = False
+                                    #break
+                            #mylist = [c.z for c in centerarray_iterator]
+                            #addpgon = True
+                            #if len(mylist) > 0:
+                                #addpgon = add_center_if_new_sc(List(mylist), center[rot_ind])
+                            addpgon = not any(abs(c.z-center[rot_ind]) < 1E-12 for c in centerarray_iterator)
+                            if addpgon:
+#                                pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
+#                                addendpos.append(pos)
                                 centerangleaddends.append(nangle)
                                 centeraddends.append(center[rot_ind])
+                                #FIXME Next line iscorrect, but currently not used due to debugging!!!!
+                                # centerarray.add(HTCenter(center[rot_ind]))
                                 #centerangles.insert(pos, nangle)
 #                                centerangles = np.insert(centerangles, pos, nangle)
 #                                centerset = np.insert(centerset, pos, center[rot_ind])
@@ -220,26 +279,27 @@ class HyperbolicTiling:
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
                                 centerset_extra.append(center[rot_ind])
                                 #centerset_extra.add(center[rot_ind])
-
-                    if (len(addendpos) == len(set(addendpos))) or (sorted(centerangleaddends) == centerangleaddends):
-                        centerangles = np.insert(centerangles, addendpos, centerangleaddends)
-                        centerset = np.insert(centerset, addendpos, centeraddends)
-                    else:
-                        # bubblesort centeraddends according to centerangleaddends
-                        n = len(centerangleaddends)
-                        for i in range(n-1):
-                            for j in range(0, n - i - 1):
-                                if centerangleaddends[j] > centerangleaddends[j+1]:
-                                    centerangleaddends[j], centerangleaddends[j+1] = centerangleaddends[j+1], centerangleaddends[j]
-                                    centeraddends[j], centeraddends[j+1] = centeraddends[j+1], centeraddends[j]
-                                    addendpos[j], addendpos[j+1] = addendpos[j+1], addendpos[j]
+                    for z in centeraddends:
+                        centerarray.add(HTCenter(z))
+                    ##if (len(addendpos) == len(set(addendpos))) or (sorted(centerangleaddends) == centerangleaddends):
+                        ##centerangles = np.insert(centerangles, addendpos, centerangleaddends)
+                        ##centerset = np.insert(centerset, addendpos, centeraddends)
+                    ##else:
+                        ### bubblesort centeraddends according to centerangleaddends
+                        ##n = len(centerangleaddends)
+                        ##for i in range(n-1):
+                            ##for j in range(0, n - i - 1):
+                                ##if centerangleaddends[j] > centerangleaddends[j+1]:
+                                    ##centerangleaddends[j], centerangleaddends[j+1] = centerangleaddends[j+1], centerangleaddends[j]
+                                    ##centeraddends[j], centeraddends[j+1] = centeraddends[j+1], centeraddends[j]
+                                    ##addendpos[j], addendpos[j+1] = addendpos[j+1], addendpos[j]
                         #for i in range(len(addendpos)):
                             #pos = bisect.bisect_left(centerangles, centerangleaddends[i], lpos)
                             #centerangles = np.insert(centerangles, pos, centerangleaddends[i])
                             #centerset = np.insert(centerset, pos, centeraddends[i])
 
-                        centerangles = np.insert(centerangles, addendpos, centerangleaddends)
-                        centerset = np.insert(centerset, addendpos, centeraddends)
+                        #centerangles = np.insert(centerangles, addendpos, centerangleaddends)
+                        #centerset = np.insert(centerset, addendpos, centeraddends)
                         
 #                        addendpos.append(pos)
 #                        centerangleaddends.append(nangle)
