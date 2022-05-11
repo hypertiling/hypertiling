@@ -41,8 +41,8 @@ class HyperbolicTiling:
         # do not change, unless you know what you are doing!)
         self.dgts = 8   # rounding digits, default: 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
-        self.degtol = 1 # sector boundary tolerance during construction
-        self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
+        self.degtol = 0.1 # sector boundary tolerance during construction
+        self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
 
         # fundamental polygon of the tiling
@@ -142,12 +142,10 @@ class HyperbolicTiling:
 
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
-                        # get the center:
-                        # transform it:
+                        # compute center and angle
                         center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
-                        # compute center and angle
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
@@ -167,20 +165,20 @@ class HyperbolicTiling:
                                 self.polygons.append(adj_pgon)
 
                             # if angle is in slice, add to centerset_extra
-                            if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
+                            if self.mangle < cangle < self.degtol+self.mangle:
                                 centerset_extra.append(center)
-                                #centerset_extra.add(center[rot_ind])
+
             startpgon = endpgon
             endpgon = len(self.polygons)
 
 
-            #if self.numerically_unstable_upper(l, startpgon, endpgon):
-                #print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
-                #break
+            if self.numerically_unstable_upper(l, startpgon, endpgon):
+                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                break
 
-            #if self.numerically_unstable_lower(l, startpgon, endpgon):
-                #print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
-                #break
+            if self.numerically_unstable_lower(l, startpgon, endpgon):
+                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                break
 
         # free mem of centerset
         del centerarray
@@ -208,10 +206,10 @@ class HyperbolicTiling:
         self.polygons = list(np.delete(self.polygons, deletelist))
 
         # fill entire disk by rotating the slice
-#        if self.center == 'cell':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-#        elif self.center == 'vertex':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+        if self.center == 'cell':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        elif self.center == 'vertex':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
