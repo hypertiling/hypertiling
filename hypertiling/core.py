@@ -31,7 +31,7 @@ class HyperbolicTiling:
         self.dgts = 8   # rounding digits, default: 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
         self.degtol = 1 # sector boundary tolerance during construction
-        self.mangle = self.degphi/2 # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
+        self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
 
         # fundamental polygon of the tiling
@@ -129,29 +129,22 @@ class HyperbolicTiling:
                 for vert_ind in range(self.p):
 
                     # iterate over all polygons touching this very vertex
-                    center = [mfull_point(pgon.verticesP[vert_ind], r*self.qhi, pgon.centerP()) for r in range(self.q)]
-                    cangle = [math.degrees(math.atan2(c.imag, c.real)) for c in center]
                     for rot_ind in range(self.q):
-                        cangle[rot_ind] += 360 if cangle[rot_ind] < 0 else 0
                         # compute center and angle
-                        center[rot_ind] = np.round(center[rot_ind], self.dgts)
-
-                    for rot_ind in range(self.q):
-                        # get the center:
-                        # transform it:
-                        #center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
-                        #cangle = math.degrees(math.atan2(center[rot_ind].imag, center[rot_ind].real))
-                        #cangle += 360 if cangle < 0 else 0
-                        # compute center and angle
-                        #center[rot_ind] = np.round(center[rot_ind], self.dgts)
-
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        #center = np.round(adj_pgon.centerP(), self.dgts)
+                        
+                        cangle = math.degrees(math.atan2(center.imag, center.real))
+                        cangle += 360 if cangle < 0 else 0
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle <= cangle[rot_ind] < sect_angle_deg+self.degtol+self.mangle:
+
+                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
+                            center = np.round(center, self.dgts)
                             lenA = len(centerset)
-                            centerset.add(center[rot_ind])
+                            centerset.add(center)
                             lenB = len(centerset)
 
                             # this tells us whether an element has actually been added
@@ -166,21 +159,21 @@ class HyperbolicTiling:
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
-                                # if angle is in slice, add to centerset_extra
-                                if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                    centerset_extra.add(center[rot_ind])
+                            # if angle is in slice, add to centerset_extra
+                            if self.mangle < cangle < self.degtol+self.mangle:
+                                centerset_extra.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
 
 
-            #if self.numerically_unstable_upper(l, startpgon, endpgon):
-                #print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
-                #break
+            if self.numerically_unstable_upper(l, startpgon, endpgon):
+                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                break
 
-            #if self.numerically_unstable_lower(l, startpgon, endpgon):
-                #print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
-                #break
+            if self.numerically_unstable_lower(l, startpgon, endpgon):
+                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                break
 
 
 
