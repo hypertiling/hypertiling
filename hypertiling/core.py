@@ -17,7 +17,7 @@ from .distance import disk_distance
 def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
     addpgon = True
     idx = 0
-    for idx, cen in enumerate(centerset[lpos:upos]):
+    for cen in centerset[lpos:upos]:
         if abs(cen - z) < 1E-12:
             addpgon = False
             break
@@ -26,6 +26,13 @@ def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
         #pos = bisect.bisect_left(centerangles, angle)
         #centerangles.insert(pos, angle)
         #centerset.insert(pos, z)
+
+@numba.njit
+def filldeletelist(center, centerset_extra, deletelist, kk):
+                for cen in centerset_extra:
+                    if abs(cen - center) < 1E-12:
+                        deletelist.append(kk)
+                        break
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -136,7 +143,9 @@ class HyperbolicTiling:
         #centerset = List()
         #centerangles = List()
 
-        centerset_extra = set()
+        #centerset_extra = set()
+        centerset_extra = List()
+        
         #centerset.append(self.fund_poly.centerP())
         #centerangles.append(self.phi/2) # the center is arbitrarily set to the magic angle.
         
@@ -188,8 +197,7 @@ class HyperbolicTiling:
                             
                             # this tells us whether an element actually should be added
                             addpgon = add_center_if_new(centerset, lpos, upos, centerangles, center[rot_ind], nangle)
-                            if addpgon:
-                                
+                            if addpgon:                                
                                 pos = bisect.bisect_left(centerangles, nangle, lpos, upos)
                                 addendpos.append(pos)
                                 centerangleaddends.append(nangle)
@@ -210,13 +218,35 @@ class HyperbolicTiling:
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                centerset_extra.add(center[rot_ind])
-                    print(addendpos, centerangleaddends)
-                    if len(addendpos) == len(set(addendpos)):
+                                centerset_extra.append(center[rot_ind])
+                                #centerset_extra.add(center[rot_ind])
+
+                    if (len(addendpos) == len(set(addendpos))) or (sorted(centerangleaddends) == centerangleaddends):
                         centerangles = np.insert(centerangles, addendpos, centerangleaddends)
                         centerset = np.insert(centerset, addendpos, centeraddends)
                     else:
-                        # redo everything....
+                        # bubblesort centeraddends according to centerangleaddends
+                        n = len(centerangleaddends)
+                        for i in range(n-1):
+                            for j in range(0, n - i - 1):
+                                if centerangleaddends[j] > centerangleaddends[j+1]:
+                                    centerangleaddends[j], centerangleaddends[j+1] = centerangleaddends[j+1], centerangleaddends[j]
+                                    centeraddends[j], centeraddends[j+1] = centeraddends[j+1], centeraddends[j]
+                                    addendpos[j], addendpos[j+1] = addendpos[j+1], addendpos[j]
+                        #for i in range(len(addendpos)):
+                            #pos = bisect.bisect_left(centerangles, centerangleaddends[i], lpos)
+                            #centerangles = np.insert(centerangles, pos, centerangleaddends[i])
+                            #centerset = np.insert(centerset, pos, centeraddends[i])
+
+                        centerangles = np.insert(centerangles, addendpos, centerangleaddends)
+                        centerset = np.insert(centerset, addendpos, centeraddends)
+                        
+#                        addendpos.append(pos)
+#                        centerangleaddends.append(nangle)
+#                        centeraddends.append(center[rot_ind])
+
+#                        centerangles = np.insert(centerangles, addendpos, centerangleaddends)
+#                        centerset = np.insert(centerset, addendpos, centeraddends)
             startpgon = endpgon
             endpgon = len(self.polygons)
 
@@ -239,7 +269,10 @@ class HyperbolicTiling:
         
         print("starting deletion")
         # filter out rotational duplicates
-        deletelist = []
+        deletelist = List()
+        deletelist.append(1)
+        deletelist.pop(0)
+        
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
 
@@ -247,10 +280,13 @@ class HyperbolicTiling:
 
                 #center = np.round(center*(1+10**(-self.dgts-3)), self.dgts) # better use simple distance?
                 
-                for cen in centerset_extra:
-                    if abs(cen - center) < 1E-12:
-                        deletelist.append(kk)
-                        break
+                #if(any(abs(cen - center) < 1E-12 for cen in centerset_extra) ):
+                    #deletelist.append(kk)
+                filldeletelist(center, centerset_extra, deletelist, kk)
+                #for cen in centerset_extra:
+                    #if abs(cen - center) < 1E-12:
+                        #deletelist.append(kk)
+                        #break
 
                 #if center in centerset_extra:
                     #deletelist.append(kk)
