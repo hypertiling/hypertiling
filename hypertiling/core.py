@@ -206,10 +206,10 @@ class HyperbolicTiling:
 
 
         # fill entire disk by rotating the slice
-#        if self.center == 'cell':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-#        elif self.center == 'vertex':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+        if self.center == 'cell':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        elif self.center == 'vertex':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
