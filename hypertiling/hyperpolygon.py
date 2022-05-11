@@ -19,13 +19,17 @@ def mrotate_py(p, phi, verticesP, verticesW):
         verticesP[i] = z
         verticesW[:, i] = p2w(z)
 
+def mfull_point_py(z0, phi, p):
+    z = moeb_origin_trafo(z0, p)
+    z = moeb_rotate_trafo(z, -phi)
+    return moeb_origin_trafo_inverse(z0, z)
+
+
 def mfull_py(p, phi, ind, verticesP, verticesW):
         z0 =  verticesP[ind]
         
         for i in range(p + 1):
-            z = moeb_origin_trafo(z0, verticesP[i])
-            z = moeb_rotate_trafo(z, -phi)
-            z = moeb_origin_trafo_inverse(z0, z)
+            z = mfull_point(z0, phi, verticesP[i])
             verticesP[i] = z
             verticesW[:, i] = p2w(z)
 
@@ -35,11 +39,13 @@ try:
     morigin = numba.njit(morigin_py)
     morigin_inv = numba.njit(morigin_inv_py)
     mrotate = numba.njit(mrotate_py)
+    mfull_point = numba.njit(mfull_point_py)
     mfull = numba.njit(mfull_py)
 except ImportError:
     morigin = morigin_py
     morigin_inv = morigin_inv_py
     mrotate = mrotate_py
+    mfull_point = mfull_point_py
     mfull = mfull_py
 
 # defines a hyperbolic polygon
