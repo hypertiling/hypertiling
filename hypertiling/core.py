@@ -166,9 +166,9 @@ class HyperbolicTiling:
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
-                            # if angle is in slice, add to centerset_extra
-                            if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
-                                centerset_extra.add(center[rot_ind])
+                                # if angle is in slice, add to centerset_extra
+                                if self.mangle < adj_pgon.angle < self.degtol+self.mangle:
+                                    centerset_extra.add(center[rot_ind])
 
             startpgon = endpgon
             endpgon = len(self.polygons)
