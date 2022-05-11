@@ -1,9 +1,6 @@
 import numpy as np
 import math
 import numba
-import bisect
-
-from sortedcontainers import SortedList
 
 from .util import fund_radius
 
@@ -48,28 +45,53 @@ class HTCenter:
     def __ne__(self, other):
         return self.z != other.z
 
-class CenterContainer:
-    def __init__(self, p, q, phi):
-        # Note to self, think of numpy in the alternative implementation
-        self.p = p
-        self.q = q
-        self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-        self.centers = SortedList([HTCenter(fund_radius(self.p, self.q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+try:
+    from sortedcontainers import SortedList
+    class CenterContainer:
+        def __init__(self, p, q, phi):
+            # Note to self, think of numpy in the alternative implementation
+            self.p = p
+            self.q = q
+            self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
+            self.centers = SortedList([HTCenter(fund_radius(self.p, self.q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
         
-    def add(self, z):
-        self.centers.add(HTCenter(z))
+        def add(self, z):
+            self.centers.add(HTCenter(z))
         
-    def fp_has(self, z):
-        nangle = math.atan2(z.imag, z.real)
-        centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
-        addpgon = True
-        iterlen = 0 # since we cannot apply len() on the irange iterator we have to determine the length ourselves
-        for c in centerarray_iterator:
-            iterlen += 1
-            if abs(z - c.z) < 1E-12:
-                addpgon = False
-                break
-        if iterlen > self.p*self.q:
-            self.dangle /= 2
-        return addpgon
+        def fp_has(self, z):
+            nangle = math.atan2(z.imag, z.real)
+            centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
+            addpgon = True
+            iterlen = 0 # since we cannot apply len() on the irange iterator we have to determine the length ourselves
+            for c in centerarray_iterator:
+                iterlen += 1
+                if abs(z - c.z) < 1E-12:
+                    addpgon = False
+                    break
+            if iterlen > self.p*self.q:
+                self.dangle /= 2
+            return addpgon
+except ImportError:
+    import bisect
 
+    class CenterContainer:
+        def __init__(self, p, q, phi):
+            # Note to self, think of numpy in this alternative implementation
+            self.p = p
+            self.q = q
+            self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
+            self.centers = List(HTCenter(fund_radius(self.p, self.q), phi/2)) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+        
+        def add(self, z):
+            temp = HTCenter(z)
+            pos = bisect.bisect_left(self.centers, temp)
+            self.centers.insert(temp)
+        
+        def fp_has(self, z):
+            nangle = math.atan2(z.imag, z.real)
+            lpos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1-self.dangle)))
+            upos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1+self.dangle)))
+            addpgon = True
+            if (upos - lpos) > self.p*self.q:
+                self.dangle /= 2            
+            return not any(abs(c.z - z) < 1E-12 for c in centers[lpos:upos])
