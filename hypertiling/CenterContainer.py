@@ -1,13 +1,30 @@
 import numpy as np
 import math
-import copy
 import numba
 import bisect
 
-from numba.typed import List
 from sortedcontainers import SortedList
 
 from .util import fund_radius
+
+#@numba.njit
+#def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
+    #addpgon = True
+    #idx = 0
+    #for cen in centerset[lpos:upos]:
+        #if abs(cen - z) < 1E-12:
+            #addpgon = False
+            #break
+    #return addpgon
+
+#@numba.njit
+#def add_center_if_new_sc(centerset, z):
+    #addpgon = True
+    #for cen in centerset:
+        #if abs(cen - z) < 1E-12:
+            #addpgon = False
+            #break
+    #return addpgon
 
 class HTCenter:
     def __init__(self, *args):        
@@ -32,15 +49,19 @@ class HTCenter:
         return self.z != other.z
 
 class CenterContainer:
-    def __init__(self, p, q, phi/2):
-        self.centers = SortedList([HTCenter(fund_radius(self.p, self.q), self.phi/2)])
+    def __init__(self, p, q, phi):
+        # Note to self, think of numpy in the alternative implementation
+        self.p = p
+        self.q = q
+        self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
+        self.centers = SortedList([HTCenter(fund_radius(self.p, self.q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
         
-    def add(z):
-        self.centers.add(z)
+    def add(self, z):
+        self.centers.add(HTCenter(z))
         
-    def fp_has(z):
+    def fp_has(self, z):
         nangle = math.atan2(z.imag, z.real)
-        centerarray_iterator = centers.irange(HTCenter(1, nangle*(1-anglefudge)), HTCenter(1, nangle*(1+anglefudge)))
+        centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
         addpgon = True
         iterlen = 0 # since we cannot apply len() on the irange iterator we have to determine the length ourselves
         for c in centerarray_iterator:
@@ -49,6 +70,6 @@ class CenterContainer:
                 addpgon = False
                 break
         if iterlen > self.p*self.q:
-            anglefudge /= 2
+            self.dangle /= 2
         return addpgon
 
