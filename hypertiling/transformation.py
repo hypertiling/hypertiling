@@ -249,7 +249,7 @@ except ImportError:
     twoproduct = ddtwoproduct
     twosum = ddtwosum
     twodiff = ddtwodiff
-    kahan = numba.njit(ddkahan)
+    kahan = ddkahan
 
 def moeb_translate_trafo(z, s):
     num = z-s
