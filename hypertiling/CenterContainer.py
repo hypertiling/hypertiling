@@ -1,27 +1,6 @@
-import numpy as np
 import math
-import numba
 
 from .util import fund_radius
-
-#@numba.njit
-#def add_center_if_new(centerset, lpos, upos, centerangles, z, angle):
-    #addpgon = True
-    #idx = 0
-    #for cen in centerset[lpos:upos]:
-        #if abs(cen - z) < 1E-12:
-            #addpgon = False
-            #break
-    #return addpgon
-
-#@numba.njit
-#def add_center_if_new_sc(centerset, z):
-    #addpgon = True
-    #for cen in centerset:
-        #if abs(cen - z) < 1E-12:
-            #addpgon = False
-            #break
-    #return addpgon
 
 class HTCenter:
     def __init__(self, *args):        
@@ -50,10 +29,9 @@ try:
     class CenterContainer:
         def __init__(self, p, q, phi):
             # Note to self, think of numpy in the alternative implementation
-            self.p = p
-            self.q = q
+            self.maxlinlength = p*q# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            self.centers = SortedList([HTCenter(fund_radius(self.p, self.q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+            self.centers = SortedList([HTCenter(fund_radius(p, q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
         
         def add(self, z):
             self.centers.add(HTCenter(z))
@@ -68,8 +46,8 @@ try:
                 if abs(z - c.z) < 1E-12:
                     addpgon = True
                     break
-            if iterlen > self.p*self.q:
-                self.dangle /= 2
+            if iterlen > seolf.maxlinlength:
+                self.dangle /= 2.0
             return addpgon
 except ImportError:
     import bisect
@@ -77,10 +55,9 @@ except ImportError:
     class CenterContainer:
         def __init__(self, p, q, phi):
             # Note to self, think of numpy in this alternative implementation
-            self.p = p
-            self.q = q
+            self.maxlinlength = p*q# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            self.centers = List(HTCenter(fund_radius(self.p, self.q), phi/2)) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+            self.centers = List(HTCenter(fund_radius(p, q), phi/2)) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
         
         def add(self, z):
             temp = HTCenter(z)
@@ -91,6 +68,6 @@ except ImportError:
             nangle = math.atan2(z.imag, z.real)
             lpos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1-self.dangle)))
             upos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1+self.dangle)))
-            if (upos - lpos) > self.p*self.q:
-                self.dangle /= 2            
+            if (upos - lpos) > self.maxlinlength:
+                self.dangle /= 2.0
             return any(abs(c.z - z) < 1E-12 for c in centers[lpos:upos])
