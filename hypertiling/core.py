@@ -29,7 +29,6 @@ class HyperbolicTiling:
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
-        self.dgts = 8   # rounding digits, default: 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
         self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
