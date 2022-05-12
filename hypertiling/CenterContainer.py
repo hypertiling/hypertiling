@@ -56,7 +56,7 @@ try:
             '''
             self.centers.add(HTCenter(z))
         
-        def __len(self)__:
+        def __len__(self):
             '''
                 Returns the length of the container and should enable use of the len() builtin on this container.
             '''
@@ -110,7 +110,7 @@ except ImportError:
             pos = bisect.bisect_left(self.centers, temp)
             self.centers.insert(temp)
         
-        def __len(self)__:
+        def __len__(self):
             '''
                 Returns the length of the container and should enable use of the len() builtin on this container.
             '''
