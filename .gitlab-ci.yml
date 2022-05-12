@@ -58,7 +58,6 @@ unit-test:
     script:
         - pip install .
         - echo "Testing ..."
-        - cd test
         - python3 -m tests.test_core 
 
 #Sphinx_doc:
