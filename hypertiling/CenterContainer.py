@@ -97,7 +97,7 @@ except ImportError:
             # Note to self, think of numpy in this alternative implementation
             self.maxlinlength = p*q# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            self.centers = List(HTCenter(fund_radius(p, q), phi/2)) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+            self.centers = [HTCenter(fund_radius(p, q), phi/2)] # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
         
         def add(self, z):
             '''
