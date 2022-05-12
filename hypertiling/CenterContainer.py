@@ -61,12 +61,12 @@ try:
         def fp_has(self, z):
             nangle = math.atan2(z.imag, z.real)
             centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
-            addpgon = True
+            addpgon = False
             iterlen = 0 # since we cannot apply len() on the irange iterator we have to determine the length ourselves
             for c in centerarray_iterator:
                 iterlen += 1
                 if abs(z - c.z) < 1E-12:
-                    addpgon = False
+                    addpgon = True
                     break
             if iterlen > self.p*self.q:
                 self.dangle /= 2
@@ -91,7 +91,6 @@ except ImportError:
             nangle = math.atan2(z.imag, z.real)
             lpos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1-self.dangle)))
             upos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1+self.dangle)))
-            addpgon = True
             if (upos - lpos) > self.p*self.q:
                 self.dangle /= 2            
-            return not any(abs(c.z - z) < 1E-12 for c in centers[lpos:upos])
+            return any(abs(c.z - z) < 1E-12 for c in centers[lpos:upos])
