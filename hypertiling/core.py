@@ -41,7 +41,7 @@ class HyperbolicTiling:
         # do not change, unless you know what you are doing!)
         self.dgts = 8   # rounding digits, default: 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
-        self.degtol = 0.1 # sector boundary tolerance during construction
+        self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
 
@@ -125,7 +125,7 @@ class HyperbolicTiling:
 
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
-        centerset_extra = List()
+        centerset_extra = CenterContainer(self.p, self.q, self.phi)
 
         startpgon = 0
         endpgon = 1
@@ -166,7 +166,9 @@ class HyperbolicTiling:
 
                             # if angle is in slice, add to centerset_extra
                             if self.mangle < cangle < self.degtol+self.mangle:
-                                centerset_extra.append(center)
+                                if not centerset_extra.fp_has(center):
+                                    centerset_extra.add(center)
+                                #centerset_extra.append(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
@@ -194,7 +196,9 @@ class HyperbolicTiling:
 
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
 
-                filldeletelist(center, centerset_extra, deletelist, kk)
+                #filldeletelist(center, centerset_extra, deletelist, kk)
+                if centerset_extra.fp_has(center):
+                    deletelist.append(kk)
                 #for cen in centerset_extra:
                     #if abs(cen - center) < 1E-12:
                         #deletelist.append(kk)
@@ -202,14 +206,16 @@ class HyperbolicTiling:
 
                 #if center in centerset_extra:
                     #deletelist.append(kk)
-
+        for it in centerset_extra.centers:
+            print(it.z)
+        print(len(deletelist), len(centerset_extra.centers))
         self.polygons = list(np.delete(self.polygons, deletelist))
 
         # fill entire disk by rotating the slice
-        if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-        elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+#        if self.center == 'cell':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+#        elif self.center == 'vertex':
+#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
