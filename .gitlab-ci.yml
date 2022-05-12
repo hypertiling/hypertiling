@@ -59,7 +59,7 @@ unit-test:
         - pip install .
         - echo "Testing ..."
         - cd test
-        - python3 -m unittest 1-number-of-cells.py
+        - python3 -m tests.test_core 
 
 #Sphinx_doc:
 #  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3

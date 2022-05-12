@@ -4,7 +4,7 @@ from hypertiling.util import n_cell_centered
 
 
 
-class TestNumberOfCells(unittest.TestCase):
+class TestCore(unittest.TestCase):
     def test_num_cells_cell_centered(self):
         p, q = 3, 7
         for n in range(5):
@@ -85,3 +85,8 @@ class TestNumberOfCells(unittest.TestCase):
             T = HyperbolicTiling(q, p, n)
             T.generate()
             self.assertEqual(n_cell_centered(q,p,n),len(T))
+
+
+
+if __name__ == '__main__':
+    unittest.main()
