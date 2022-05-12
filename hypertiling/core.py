@@ -129,7 +129,7 @@ class HyperbolicTiling:
 
         startpgon = 0
         endpgon = 1
-        
+
         fr = fund_radius(self.p, self.q)/2
         centerarray = CenterContainer(self.p, self.q, self.phi)
         # loop over layers to be constructed
@@ -152,7 +152,7 @@ class HyperbolicTiling:
                         # allow some tolerance at the upper boundary
                         if (self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle) and (abs(center) > fr):
                             
-                            if centerarray.fp_has(center):
+                            if not centerarray.fp_has(center):
                                 centerarray.add(center)
 
                                 # create copy
@@ -186,7 +186,6 @@ class HyperbolicTiling:
         # free mem of centerset
         del centerarray
         
-        print("starting deletion")
         # filter out rotational duplicates
         deletelist = List()
         deletelist.append(1)
@@ -194,7 +193,6 @@ class HyperbolicTiling:
         
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
-
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
 
                 #filldeletelist(center, centerset_extra, deletelist, kk)
@@ -207,16 +205,13 @@ class HyperbolicTiling:
 
                 #if center in centerset_extra:
                     #deletelist.append(kk)
-        for it in centerset_extra.centers:
-            print(it.z)
-        print(len(deletelist), len(centerset_extra.centers))
         self.polygons = list(np.delete(self.polygons, deletelist))
 
         # fill entire disk by rotating the slice
-#        if self.center == 'cell':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-#        elif self.center == 'vertex':
-#            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+        if self.center == 'cell':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        elif self.center == 'vertex':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
@@ -262,7 +257,7 @@ class HyperbolicTiling:
             return False
 
         # take a sample of cells and compute their distances
-        samples = self.polygons[start:end]
+        samples = self.polygons[start:end][:samplesize]
         disk_distances = []
         for j1, pgon1 in enumerate(samples):
             for j2, pgon2 in enumerate(samples):
