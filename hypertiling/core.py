@@ -29,7 +29,7 @@ class HyperbolicTiling:
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
-        self.accuracy = 10**(-self.dgts) # numerical accuracy
+        self.accuracy = 10**(-8) # numerical accuracy
         self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
@@ -160,7 +160,6 @@ class HyperbolicTiling:
                                 if self.mangle <= cangle <= self.degtol+self.mangle:
                                     if not centerset_extra.fp_has(center):
                                         centerset_extra.add(center)
-                                    #centerset_extra.append(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
