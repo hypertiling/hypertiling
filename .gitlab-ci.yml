@@ -54,6 +54,7 @@ install_bullseye:
 
 unit-test:
     stage: test
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     script:
         - pip install .
         - echo "Testing ..."
