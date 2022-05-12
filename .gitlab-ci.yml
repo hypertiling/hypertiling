@@ -56,7 +56,8 @@ unit-test:
     stage: test
     script:
         - echo "Testing ..."
-        - python3 -m unittest test/1-number-of-cells.py
+        - cd test
+        - python3 -m unittest 1-number-of-cells.py
 
 #Sphinx_doc:
 #  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
