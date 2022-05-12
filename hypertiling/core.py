@@ -130,6 +130,7 @@ class HyperbolicTiling:
         startpgon = 0
         endpgon = 1
         
+        fr = fund_radius(self.p, self.q)/2
         centerarray = CenterContainer(self.p, self.q, self.phi)
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
@@ -149,7 +150,7 @@ class HyperbolicTiling:
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
+                        if (self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle) and (abs(center) > fr):
                             
                             if centerarray.fp_has(center):
                                 centerarray.add(center)
