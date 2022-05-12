@@ -234,6 +234,7 @@ except ImportError:
     moeb_origin_trafo = moeb_origin_trafo_py
     moeb_origin_trafo_inverse = moeb_origin_trafo_inverse_py
     moeb_rotate_trafo = moeb_rotate_trafo_py
+    mymoebint = mymoebddint_py
     moeb_origin_trafodd = moeb_origin_trafodd_py
     moeb_rotate_trafodd = moeb_rotate_trafodd_py
     moeb_origin_trafo_inversedd = moeb_origin_trafo_inversedd_py
