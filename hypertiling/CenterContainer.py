@@ -132,4 +132,4 @@ except ImportError:
             upos = bisect.bisect_left(self.centers, HTCenter(1, nangle*(1+self.dangle)))
             if (upos - lpos) > self.maxlinlength:
                 self.dangle /= 2.0
-            return any(abs(c.z - z) < 1E-12 for c in centers[lpos:upos])
+            return any(abs(c.z - z) < 1E-12 for c in self.centers[lpos:upos])
