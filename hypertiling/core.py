@@ -1,10 +1,6 @@
 import numpy as np
 import math
 import copy
-import numba
-import bisect
-
-from numba.typed import List
 
 # relative imports
 from .hyperpolygon import HyperPolygon, mfull_point
@@ -13,12 +9,6 @@ from .util import fund_radius
 from .distance import disk_distance
 from .CenterContainer import CenterContainer
 
-@numba.njit
-def filldeletelist(center, centerset_extra, deletelist, kk):
-                for cen in centerset_extra:
-                    if abs(cen - center) < 1E-12:
-                        deletelist.append(kk)
-                        break
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -189,24 +179,13 @@ class HyperbolicTiling:
         del centerarray
 
         # filter out rotational duplicates
-        deletelist = List()
-        deletelist.append(1)
-        deletelist.pop(0)
+        deletelist = []
 
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
-
-                #filldeletelist(center, centerset_extra, deletelist, kk)
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
-                #for cen in centerset_extra:
-                    #if abs(cen - center) < 1E-12:
-                        #deletelist.append(kk)
-                        #break
-
-                #if center in centerset_extra:
-                    #deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
 
     def replicate(self):
