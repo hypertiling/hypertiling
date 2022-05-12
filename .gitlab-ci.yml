@@ -57,6 +57,7 @@ unit-test:
     image: python:slim
     script:
         - pip install .
+        - pip install numpy
         - echo "Testing ..."
         - python3 -m tests.test_core 
 
