@@ -111,7 +111,10 @@ class HyperbolicTiling:
     # fundamental sector a little bit wider than 360/p degrees in filter
     # out rotational duplicates after all layers have been constructed
 
-    def generate(self):
+    def generate_sector(self):
+
+        # clear list
+        self.polygons = []
 
         # add fundamental polygon to list
         self.polygons.append(self.fund_poly)
@@ -151,7 +154,6 @@ class HyperbolicTiling:
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
                         if (self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle) and (abs(center) > fr):
-                            
                             if not centerarray.fp_has(center):
                                 centerarray.add(center)
 
@@ -185,12 +187,12 @@ class HyperbolicTiling:
 
         # free mem of centerset
         del centerarray
-        
+
         # filter out rotational duplicates
         deletelist = List()
         deletelist.append(1)
         deletelist.pop(0)
-        
+
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
@@ -207,11 +209,17 @@ class HyperbolicTiling:
                     #deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
 
+    def replicate(self):
         # fill entire disk by rotating the slice
         if self.center == 'cell':
             self.angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
             self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+
+
+    def generate(self):
+        self.generate_sector()
+        self.replicate()
 
     # check whether the true "embedding" distance between cells in layer l comes close
     # to the rounding accuracy
