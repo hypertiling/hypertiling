@@ -247,7 +247,7 @@ class HyperbolicTiling:
             return False
 
         # take a sample of cells and compute their distances
-        samples = self.polygons[start:end]
+        samples = self.polygons[start:end][:samplesize]
         disk_distances = []
         for j1, pgon1 in enumerate(samples):
             for j2, pgon2 in enumerate(samples):
