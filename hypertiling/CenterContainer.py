@@ -108,7 +108,7 @@ except ImportError:
             '''
             temp = HTCenter(z)
             pos = bisect.bisect_left(self.centers, temp)
-            self.centers.insert(temp)
+            self.centers.insert(pos, temp)
         
         def __len__(self):
             '''
