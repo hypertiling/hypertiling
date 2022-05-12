@@ -100,6 +100,9 @@ class HyperbolicTiling:
 
     def generate(self):
 
+        # clear list
+        self.polygons = []
+
         # add fundamental polygon to list
         self.polygons.append(self.fund_poly)
 
