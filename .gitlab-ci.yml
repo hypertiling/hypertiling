@@ -54,7 +54,9 @@ install_bullseye:
 
 unit-test:
     stage: test
+    image: python:3.9.12-alpine3.15
     script:
+        - pip install .
         - echo "Testing ..."
         - cd test
         - python3 -m unittest 1-number-of-cells.py
