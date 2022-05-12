@@ -54,7 +54,7 @@ install_bullseye:
 
 unit-test:
     stage: test
-    image: python:3.9.12-alpine3.15
+    image: python:slim
     script:
         - pip install .
         - echo "Testing ..."
