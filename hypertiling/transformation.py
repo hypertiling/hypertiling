@@ -2,10 +2,10 @@ import math
 from numpy import array as nparray
 
 def ddkahan(x, y):
-   '''transform the addition of two floating point numbers: x+y = r + e (Dekker1971) showed that this transform is exact, if |x|>|y|'''
-   r = x + y
-   e = y - (r - x)
-   return r, e
+    '''transform the addition of two floating point numbers: x+y = r + e (Dekker1971) showed that this transform is exact, if |x|>|y|'''
+    r = x + y
+    e = y - (r - x)
+    return r, e
 
 def ddtwosum(x, y):
    '''branch free transformation of addition by Knuth'''
@@ -64,67 +64,67 @@ def dddiv(x, dx, y, dy):
 
 def ddcplxprod(a, da, b, db):
    '''perform multiplication of complex double double numbers '''
-  rea, drea = a.real, da.real
-  ima, dima = a.imag, da.imag
-  reb, dreb = b.real, db.real
-  imb, dimb = b.imag, db.imag
+   rea, drea = a.real, da.real
+   ima, dima = a.imag, da.imag
+   reb, dreb = b.real, db.real
+   imb, dimb = b.imag, db.imag
 
-#   We employ the Gauss/Karatsuba trick
-#   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
-  r, dr = htprod(rea, drea, reb, dreb) # ar*br
-  i, di = htprod(ima, dima, imb, dimb) # ai*bi
+   #   We employ the Gauss/Karatsuba trick
+   #   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
+   r, dr = htprod(rea, drea, reb, dreb) # ar*br
+   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-  fac1, dfac1 = htadd(rea, drea, ima, dima)
-  fac2, dfac2 = htadd(reb, dreb, imb, dimb)
-  imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-  imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-  imacc, dimacc = htdiff(imacc, dimacc, i, di)
+   fac1, dfac1 = htadd(rea, drea, ima, dima)
+   fac2, dfac2 = htadd(reb, dreb, imb, dimb)
+   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+   imacc, dimacc = htdiff(imacc, dimacc, i, di)
 
-  r, dr = htdiff(r, dr, i, di)
-  return complex(r, imacc), complex(dr, dimacc)
+   r, dr = htdiff(r, dr, i, di)
+   return complex(r, imacc), complex(dr, dimacc)
 
 def ddcplxprodconjb(a, da, b, db):
    '''perform multiplication of complex double double numbers: a * b^* '''
-  rea, drea = a.real, da.real
-  ima, dima = a.imag, da.imag
-  reb, dreb = b.real, db.real
-  imb, dimb = b.imag, db.imag
+   rea, drea = a.real, da.real
+   ima, dima = a.imag, da.imag
+   reb, dreb = b.real, db.real
+   imb, dimb = b.imag, db.imag
 
-#   We employ the Gauss/Karatsuba trick
-#   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
-  r, dr = htprod(rea, drea, reb, dreb) # ar*br
-  i, di = htprod(ima, dima, imb, dimb) # ai*bi
+   #   We employ the Gauss/Karatsuba trick
+   #   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
+   r, dr = htprod(rea, drea, reb, dreb) # ar*br
+   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-  fac1, dfac1 = htadd(rea, drea, ima, dima)
-  fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
-  imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-  imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-  imacc, dimacc = htadd(imacc, dimacc, i, di)
+   fac1, dfac1 = htadd(rea, drea, ima, dima)
+   fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
+   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+   imacc, dimacc = htadd(imacc, dimacc, i, di)
 
-  r, dr = htadd(r, dr, i, di)
-  return complex(r, imacc), complex(dr, dimacc)
+   r, dr = htadd(r, dr, i, di)
+   return complex(r, imacc), complex(dr, dimacc)
 
 def ddcplxadd(a, da, b, db):
-   '''perform addition of complex double double numbers '''
-  rea, drea = a.real, da.real
-  ima, dima = a.imag, da.imag
-  reb, dreb = b.real, db.real
-  imb, dimb = b.imag, db.imag
+    '''perform addition of complex double double numbers '''
+    rea, drea = a.real, da.real
+    ima, dima = a.imag, da.imag
+    reb, dreb = b.real, db.real
+    imb, dimb = b.imag, db.imag
 
-  r, dr = htadd(rea, drea, reb, dreb)
-  i, di = htadd(ima, dima, imb, dimb)
-  return complex(r, i), complex(dr, di)
+    r, dr = htadd(rea, drea, reb, dreb)
+    i, di = htadd(ima, dima, imb, dimb)
+    return complex(r, i), complex(dr, di)
 
 def ddcplxdiff(a, da, b, db):
-   '''perform subtraction of complex double double numbers '''
-  rea, drea = a.real, da.real
-  ima, dima = a.imag, da.imag
-  reb, dreb = b.real, db.real
-  imb, dimb = b.imag, db.imag
+    '''perform subtraction of complex double double numbers '''
+    rea, drea = a.real, da.real
+    ima, dima = a.imag, da.imag
+    reb, dreb = b.real, db.real
+    imb, dimb = b.imag, db.imag
 
-  r, dr = htdiff(rea, drea, reb, dreb)
-  i, di = htdiff(ima, dima, imb, dimb)
-  return complex(r, i), complex(dr, di)
+    r, dr = htdiff(rea, drea, reb, dreb)
+    i, di = htdiff(ima, dima, imb, dimb)
+    return complex(r, i), complex(dr, di)
 
 def ddcplxdiv(a, da, b, db):
    '''perform division of complex double double numbers '''
@@ -148,7 +148,7 @@ def ddcplxdiv(a, da, b, db):
    return complex(r, i), complex(dr, di)
 
 def p2w_py(z):
-   '''Convert Poincare to Weierstraß representation '''
+    '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
     xx = x*x
     yy = y*y
@@ -156,7 +156,7 @@ def p2w_py(z):
     return factor*nparray([(1+xx+yy), 2*x, 2*y])
 
 def w2p_py(point):
-   '''Convert Weierstraß to Poincare representation '''
+    '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
     factor = 1 / (1+t)
     return complex(x*factor, y*factor)
