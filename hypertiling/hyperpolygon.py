@@ -1,4 +1,5 @@
 from math import floor
+import numpy as np
 from .transformation import *
 
 def morigin_py(p, z0, verticesP, verticesW):
@@ -24,17 +25,17 @@ def mfull_point_py(z0, phi, p):
     z = moeb_rotate_trafo(z, -phi)
     return moeb_origin_trafo_inverse(z0, z)
 
-def mfull_py(p, phi, ind, verticesP, verticesdP, verticesW):
+def mfull_py(p, phi, ind, verticesP, verticesW):
         z0 =  verticesP[ind]
-        dz0 = verticesdP[ind]
+        dz0 = complex(0, 0)
         
         for i in range(p + 1):
             z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
             z, dz = moeb_rotate_trafodd(z, dz, -phi)
             z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
             verticesP[i] = z
-            verticesdP[i] = dz
-            verticesW[:, i] = p2w(z)
+            #verticesdP[i] = dz
+            #verticesW[:, i] = p2w(z)
 
 # try to use numba
 try:
@@ -60,7 +61,7 @@ class HyperPolygon:
 
         # Poincare disk coordinates
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
-        self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
+        #self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates
         self.verticesW = np.zeros((3, self.p+1))  # vertices + center
@@ -107,7 +108,7 @@ class HyperPolygon:
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
-        mfull(self.p, phi, ind, self.verticesP, self.verticesdP, self.verticesW)
+        mfull(self.p, phi, ind, self.verticesP, self.verticesW)
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):

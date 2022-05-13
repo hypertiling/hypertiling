@@ -1,26 +1,30 @@
-import numpy as np
 import math
+from numpy import array as nparray
 
 def ddkahan(x, y):
+   '''transform the addition of two floating point numbers: x+y = r + e (Dekker1971) showed that this transform is exact, if |x|>|y|'''
    r = x + y
    e = y - (r - x)
    return r, e
 
 def ddtwosum(x, y):
+   '''branch free transformation of addition by Knuth'''
    r = x + y
    t = r - x
    e = (x - (r - t)) + (y - t)
    return r, e
 
 def ddtwodiff(x, y):
+   '''branch free transformation of subtraction'''
    r = x - y
    t = r - x
    e = (x - (r - t)) - (y + t)
    return r, e
 
 def ddtwoproduct(x, y):
-   u = x*134217729.0
-   v = y*134217729.0
+   '''Product of two numbers: x*y = r + e. See Ogita et al. 2005'''
+   u = x*134217729.0 # Split input x
+   v = y*134217729.0 # Split input y
    s = u - (u - x)
    t = v - (v - y)
    f = x - s
@@ -30,31 +34,36 @@ def ddtwoproduct(x, y):
    return r, e
 
 def ddadd(x, dx, y, dy): # double double add
+   '''perform addition of numbers given in double double representation '''
    r, e = twosum(x, y)
    e += dx + dy
    r, e = kahan(r, e)
    return r, e
 
 def dddiff(x, dx, y, dy):
+   '''perform subtraction of numbers given in double double representation '''
    r, e = twodiff(x, y)
    e += dx - dy
    r, e = kahan(r, e)
    return r, e
 
 def ddprod(x, dx, y, dy):
+   '''perform multplication of numbers given in double double representation '''
    r, e = twoproduct(x, y)
    e += x * dy + y*dx
    r, e = kahan(r, e)
    return r, e
 
 def dddiv(x, dx, y, dy):
+   '''perform division of numbers given in double double representation '''
    r = x/y
    s, f = twoproduct(r, y)
-   e = (x - s - f + dx - r*dy)/y
+   e = (x - s - f + dx - r*dy)/y # Taylor expansion
    r, e = kahan(r, e)
    return r, e
 
 def ddcplxprod(a, da, b, db):
+   '''perform multiplication of complex double double numbers '''
   rea, drea = a.real, da.real
   ima, dima = a.imag, da.imag
   reb, dreb = b.real, db.real
@@ -75,6 +84,7 @@ def ddcplxprod(a, da, b, db):
   return complex(r, imacc), complex(dr, dimacc)
 
 def ddcplxprodconjb(a, da, b, db):
+   '''perform multiplication of complex double double numbers: a * b^* '''
   rea, drea = a.real, da.real
   ima, dima = a.imag, da.imag
   reb, dreb = b.real, db.real
@@ -95,6 +105,7 @@ def ddcplxprodconjb(a, da, b, db):
   return complex(r, imacc), complex(dr, dimacc)
 
 def ddcplxadd(a, da, b, db):
+   '''perform addition of complex double double numbers '''
   rea, drea = a.real, da.real
   ima, dima = a.imag, da.imag
   reb, dreb = b.real, db.real
@@ -105,6 +116,7 @@ def ddcplxadd(a, da, b, db):
   return complex(r, i), complex(dr, di)
 
 def ddcplxdiff(a, da, b, db):
+   '''perform subtraction of complex double double numbers '''
   rea, drea = a.real, da.real
   ima, dima = a.imag, da.imag
   reb, dreb = b.real, db.real
@@ -115,6 +127,7 @@ def ddcplxdiff(a, da, b, db):
   return complex(r, i), complex(dr, di)
 
 def ddcplxdiv(a, da, b, db):
+   '''perform division of complex double double numbers '''
    rea, drea = a.real, da.real
    ima, dima = a.imag, da.imag
    reb, dreb = b.real, db.real
@@ -135,13 +148,15 @@ def ddcplxdiv(a, da, b, db):
    return complex(r, i), complex(dr, di)
 
 def p2w_py(z):
+   '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
     xx = x*x
     yy = y*y
     factor = 1 / (1-xx-yy)
-    return factor*np.array([(1+xx+yy), 2*x, 2*y])
+    return factor*nparray([(1+xx+yy), 2*x, 2*y])
 
 def w2p_py(point):
+   '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
     factor = 1 / (1+t)
     return complex(x*factor, y*factor)
@@ -149,7 +164,7 @@ def w2p_py(point):
 def mymoeb_py(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
-    return (z+z0) / (1+z*np.conjugate(z0))#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
+    return (z+z0) / (1+z*z0.conjugate)#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
 
@@ -177,6 +192,7 @@ def mymoebddint_py(z0, z):
     return ret, dret
 
 def moeb_origin_trafodd_py(z0, dz0, z, dz):
+   '''Möbius transform to the origin in double double representation'''
    one = complex(1,0)
    done = complex(0,0)
    nom, dnom = htcplxdiff(z, dz, z0, dz0)
@@ -186,13 +202,15 @@ def moeb_origin_trafodd_py(z0, dz0, z, dz):
    return ret, dret
 
 def moeb_rotate_trafodd_py(z, dz, phi):
+   '''Rotation of a complex number'''
    ep = complex(math.cos(phi), math.sin(phi))
-   ep = ep/np.abs(ep)
+   ep = ep/abs(ep) # We calculated sin and cos separately. We can't be sure that |ep| == 1
    dep = complex(0,0)
    ret, dret = htcplxprod(z, dz, ep, dep)
    return ret, dret
 
 def moeb_origin_trafo_inversedd_py(z0, dz0, z, dz):
+   '''Inverse Möbius transform to the origin in double double representation'''
    one = complex(1,0)
    done = complex(0,0)
    nom, dnom = htcplxadd(z, dz, z0, dz0)
