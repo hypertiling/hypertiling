@@ -18,7 +18,7 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
     if kernel not in kernels:
        raise KeyError("no valid kernel specified")
     if kernel == "flo":
-        raise NotImplementedError("Flo currently is currently not implemented in the master branch")
+        raise NotImplementedError("Flo kernel is currently not implemented in the master branch")
     if kernel == "dunham":
         raise NotImplementedError("Dunham kernel is currently broken (fixme!)")
     return kernels[kernel](p, q, n, center)
