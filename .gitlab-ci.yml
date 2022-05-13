@@ -74,7 +74,7 @@ unit-test_fancy:
     stage: test
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     script:
-        - apt-get install -y python3-sortedcontainers python3-numba
+        - apt-get install -y python3-sortedcontainers python3-numba python3-matplotlib
         - pip3 install .
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core 
