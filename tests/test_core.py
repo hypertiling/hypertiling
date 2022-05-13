@@ -6,7 +6,7 @@ from hypertiling.util import n_cell_centered
 
 class TestCore(unittest.TestCase):
     def test_num_cells_cell_centered(self):
-        l = 7
+        l = 5
         p, q = 3, 7
         for n in range(l):
             print("Constructing lattice (p,q,n) = ", p, q, n)

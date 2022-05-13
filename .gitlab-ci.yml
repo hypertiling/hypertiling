@@ -52,13 +52,22 @@ install_bullseye:
 
 
 
-unit-test:
+unit-test_plain:
     stage: test
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     script:
-        - pip install .
         - apt-get install --assume-yes python3-matplotlib
-        - echo "Testing ..."
+        - pip3 install .
+        - echo "Testing without fancy packages..."
+        - python3 -m tests.test_core 
+
+unit-test_fancy:
+    stage: test
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    script:
+        - apt-get install -y python3-sortedcontainers python3-numba
+        - pip3 install .
+        - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core 
 
 Sphinx_doc:
