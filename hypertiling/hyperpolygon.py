@@ -98,7 +98,7 @@ class HyperPolygon:
         for i in range(self.p + 1):
             self.verticesW[:, i] = tmat @ self.verticesW[:, i]
             self.verticesP[i] = w2p(self.verticesW[:, i])
-        self.find_angle(360)
+        self.find_angle()
 
 
     # transforms the entire polygon: to the origin, rotate it and back again
@@ -158,7 +158,7 @@ class HyperPolygon:
         for i in range(self.p + 1):
             self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
-        self.find_angle(360)
+        self.find_angle()
 
     # returns value between -pi and pi
     def find_orientation(self):
