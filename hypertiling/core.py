@@ -12,7 +12,7 @@ from .distance import disk_distance
 
 # factory pattern allows to select between kernels
 def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
-    kernels = { "manu":   KernelManu, 
+    kernels = { "manu":   KernelManu, # to-do: we need better names for the kernels ;)
                 "flo":    KernelFlo, 
                 "dunham": KernelDunham}
     if kernel not in kernels:
