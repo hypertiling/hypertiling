@@ -9,9 +9,16 @@ from .util import fund_radius
 from .distance import disk_distance
 
 
+
+# factory pattern allows to select between kernels
+def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
+    kernels = {"manu": KernelManu, "flo": KernelFlo, "dunham": KernelDunham}
+    return kernels[kernel](p, q, n, center)
+
+
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
-class HyperbolicTiling:
+class HyperbolicTilingBase:
     def __init__(self, p, q, nlayers, center='cell'):
 
         # main attributes
@@ -90,6 +97,25 @@ class HyperbolicTiling:
         return polygon
 
 
+
+    
+
+        
+
+
+
+
+class KernelFlo(HyperbolicTilingBase):
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelFlo, self).__init__(p, q, n, center="cell")
+
+    # Flo input your "generate" function here
+
+
+
+class KernelManu(HyperbolicTilingBase):
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelManu, self).__init__(p, q, n, center="cell")
 
     # generates the whole lattice by first constructing one 1/p sector, 
     # then uses symmetry to construct the other p-1 sectors
@@ -170,11 +196,13 @@ class HyperbolicTiling:
 
 
             if self.numerically_unstable_upper(l, startpgon, endpgon):
-                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                print("Numerical accuracy exhausted;")
+                print("No more layers will be constructed; automatic shutdown")
                 break
 
             if self.numerically_unstable_lower(l, startpgon, endpgon):
-                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                print("Accumulated numerical errors have become too large;")
+                print("No more layers will be constructed; automatic shutdown")
                 break
 
 
@@ -330,11 +358,9 @@ class HyperbolicTiling:
 # After the algorithm by D. Dunham (1982)
 # works for every valid combination {p,q}
 # however produces a lot of duplicates
-class HyperbolicTilingDunham:
-    def __init__(self, p, q, nlayers):
-        self.p = p
-        self.q = q
-        self.nlayers = nlayers
+class KernelDunham(HyperbolicTilingBase):
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelDunham, self).__init__(p, q, n, center="cell")
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
