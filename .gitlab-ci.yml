@@ -3,6 +3,12 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
+stages:
+  - install
+  - test
+  - docs
+
+
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
 #
@@ -21,6 +27,7 @@ before_script:
 
 install_latest:
   image: python:latest
+  stage: install
   script:
     - python setup.py check
     - pip install .
@@ -30,6 +37,7 @@ install_latest:
 
 install_slim:
   image: python:slim
+  stage: install
   script:
     - python setup.py check
     - pip install .
@@ -46,9 +54,10 @@ install_slim:
  #  - pip3 install .
 
 install_bullseye:
- image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
- script:
-   - pip3 install .
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  stage: install
+  script:
+    - pip3 install .
 
 
 
@@ -72,7 +81,7 @@ unit-test_fancy:
 
 Sphinx_doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: build
+  stage: doc
   artifacts:
     paths:
       - doc/*
