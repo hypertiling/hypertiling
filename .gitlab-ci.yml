@@ -20,7 +20,7 @@ before_script:
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
 
-install_latest:
+install-latest:
   stage: build
   image: python:latest
   script:
@@ -30,23 +30,13 @@ install_latest:
 #    - tox -e py36,flake8
 
 
-install_slim:
+install-slim:
   stage: build
   image: python:slim
   script:
     - python setup.py check
     - pip install .
 
-#install_stretch:
-#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack-fftw-hdf5-scipy3
-#  script:
-#    - python3 setup.py check
-#    - pip3 install .
-
-#install_buster:
-# image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
- #script:
- #  - pip3 install .
 
 install-bullseye:
   stage: build
