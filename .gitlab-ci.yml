@@ -3,6 +3,10 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
+stages:
+  - install
+  - test
+  - docs
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -15,7 +19,7 @@ cache:
     - hypervenv/
 
 before_script:
-  - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv
+  - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
   - python3 --version
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
@@ -23,6 +27,7 @@ before_script:
 install-latest:
   stage: build
   image: python:latest
+  stage: install
   script:
     - python setup.py check
     - pip install .
@@ -33,36 +38,41 @@ install-latest:
 install-slim:
   stage: build
   image: python:slim
+  stage: install
   script:
     - python setup.py check
     - pip install .
 
-
 install-bullseye:
-  stage: build
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  stage: install
   script:
-   - pip3 install .
+    - pip3 install .
 
-
-
-polygon-number-unit-test:
+unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
     script:
-        - pip install .
-        - apt-get install --assume-yes python3-matplotlib
-        - echo "Testing ..."
+        - pip3 install .
+        - echo "Testing without fancy packages..."
+        - python3 -m tests.test_core 
+
+unit-test-fancy:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: test
+    script:
+        - apt-get install -y python3-sortedcontainers python3-numba
+        - pip3 install .
+        - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core 
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: build
+  stage: docs
   artifacts:
     paths:
       - doc/*
   script:
-    - apt-get update && apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme
+    - apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme
     - cd doc
     - sphinx-build . html
-

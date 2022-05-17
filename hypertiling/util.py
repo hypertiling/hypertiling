@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import math
 
 from .distance import weierstrass_distance
 from .hyperpolygon import HyperPolygon
@@ -9,8 +10,8 @@ from .geodesics import geodesic_midpoint
 
 # radius of the fundamental (and every other) polygon
 def fund_radius(p, q):
-    num = np.cos(np.pi / p + np.pi / q)
-    denom = np.cos(np.pi / p - np.pi / q)
+    num = math.cos(math.pi*(p+q)/p/q) #np.cos(np.pi / p + np.pi / q)
+    denom = math.cos(math.pi*(q-p)/p/q)#np.cos(np.pi / p - np.pi / q)
     return np.sqrt(num / denom)
 
 
