@@ -32,13 +32,14 @@ class HyperbolicTilingBase:
 
     """
 
-    def __init__(self, p, q, nlayers, center='cell'):
+    def __init__(self, p, q, nlayers, center="cell"):
 
         # main attributes
         self.p = p                  # number of edges (and thus number of vertices) per polygon
         self.q = q                  # number of polygons that meet at each vertex
         self.nlayers = nlayers      # layers of the tessellation
         self.center = center        # tiling can be centered around a "cell" (default) or a "vertex"
+        print(self.center, "base")
 
         # symmetry angles
         self.phi = 2*math.pi/self.p  # angle of rotation that leaves the lattice invariant when cell centered
@@ -125,8 +126,8 @@ class KernelCommon(HyperbolicTilingBase):
     Commonalities
     """
 
-    def __init__ (self, p, q, n, center="cell"):
-        super(KernelCommon, self).__init__(p, q, n, center="cell")
+    def __init__ (self, p, q, n, center):
+        super(KernelCommon, self).__init__(p, q, n, center)
 
     def replicate(self):
         """

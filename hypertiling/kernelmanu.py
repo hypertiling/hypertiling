@@ -35,8 +35,8 @@ class KernelManu(KernelCommon):
         is getting close the round accuracy
     """
 
-    def __init__ (self, p, q, n, center="cell"):
-        super(KernelManu, self).__init__(p, q, n, center="cell")
+    def __init__ (self, p, q, n, center):
+        super(KernelManu, self).__init__(p, q, n, center)
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 

@@ -13,8 +13,8 @@ class KernelFlo(KernelCommon):
     """
     High precision kernel written by F. Goth
     """
-    def __init__ (self, p, q, n, center="cell"):
-        super(KernelFlo, self).__init__(p, q, n, center="cell")
+    def __init__ (self, p, q, n, center):
+        super(KernelFlo, self).__init__(p, q, n, center)
 
     def generate_sector(self):
         """

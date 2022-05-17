@@ -26,7 +26,6 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
     """
 
 
-
     kernels = { "manu":   KernelManu, # to-do: we need better names for the kernels ;)
                 "flo":    KernelFlo, 
                 "dunham": KernelDunham}
