@@ -3,6 +3,7 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
+
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
 #
@@ -20,6 +21,7 @@ before_script:
   - source hypervenv/bin/activate
 
 install_latest:
+ stage: build
   image: python:latest
   script:
     - python setup.py check
@@ -29,6 +31,7 @@ install_latest:
 
 
 install_slim:
+ stage: build
   image: python:slim
   script:
     - python setup.py check
@@ -45,14 +48,15 @@ install_slim:
  #script:
  #  - pip3 install .
 
-install_bullseye:
+install-bullseye:
+ stage: build
  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
  script:
    - pip3 install .
 
 
 
-unit-test:
+polygon-number-unit-test:
     stage: test
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     script:
@@ -61,7 +65,7 @@ unit-test:
         - echo "Testing ..."
         - python3 -m tests.test_core 
 
-Sphinx_doc:
+sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: build
   artifacts:
