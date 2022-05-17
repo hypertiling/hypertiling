@@ -7,7 +7,7 @@ def find(tiling, nn_dist=None, which="optimized", index_from_zero=True, verbose=
     if nn_dist == None:
         if verbose:
             print("No search radius given; using distance between first and second vertex in the tessellation!")
-        nn_dist = weierstrass_distance(tiling[0].centerW, tiling[1].centerW)
+        nn_dist = weierstrass_distance(tiling[0].centerW(), tiling[1].centerW())
 
     if which == "optimized_slice":
         retval = find_nn_optimized_slice(tiling, nn_dist) # fastest
@@ -141,7 +141,7 @@ def find_nn_brute_force(tiling, nn_dist, eps=1e-8):
     for poly1 in tiling.polygons:  # loop over polygons
         sublist = []
         for poly2 in tiling.polygons:
-            dist = weierstrass_distance(poly1.centerW, poly2.centerW) # compare distances
+            dist = weierstrass_distance(poly1.centerW(), poly2.centerW()) # compare distances
             if dist < nn_dist + eps: # add something to nn_dist to avoid rounding problems
                 if poly1.idx is not poly2.idx   :  # avoiding finding A as neighbor of A
                     sublist.append(poly2.idx)
@@ -156,7 +156,7 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     # prepare matrix containing all center coordiantes
     v = np.zeros((len(tiling), 3))
     for i, poly in enumerate(tiling):
-        v[i] = poly.centerW
+        v[i] = poly.centerW()
 
     # add something to nn_dist to avoid rounding problems
     # does not need to be particularly small
@@ -168,7 +168,7 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
 
     # loop over polygons
     for i, poly in enumerate(tiling):
-        w = poly.centerW
+        w = poly.centerW()
         dists = lorentzian_distance(v, w)
         dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
         indxs = np.where(dists < searchdist)[0]  # radius search
@@ -193,7 +193,7 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     # prepare matrix containing all center coordiantes
     v = np.zeros((len(pgons), 3))
     for i, poly in enumerate(pgons):
-        v[i] = poly.centerW
+        v[i] = poly.centerW()
 
     # add something to nn_dist to avoid rounding problems
     # does not need to be particularly small
@@ -205,7 +205,7 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     # loop over polygons
     for i, poly in enumerate(pgons):
         if poly.sector == 0:
-            w = poly.centerW
+            w = poly.centerW()
             dists = lorentzian_distance(v, w)
             dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
             indxs = np.where(dists < searchdist)[0]  # radius search
@@ -266,7 +266,7 @@ def find_nn_slice(slices, nn_distance):  # slices contains polygons of two adjac
         if polygon.sector == 0:  # find nn only for polygons of the first 1/p-slice
             nn_sector[row, 0] = row + 1
             for pgon in slices:
-                dist = weierstrass_distance(pgon.centerW, polygon.centerW)
+                dist = weierstrass_distance(pgon.centerW(), polygon.centerW())
                 if polygon.centerP != pgon.centerP and round(dist, 9) <= round(nn_distance, 9):
                     nn_sector[row, col] = pgon.idx
                     col += 1
