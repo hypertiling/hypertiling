@@ -39,7 +39,6 @@ class HyperbolicTilingBase:
         self.q = q                  # number of polygons that meet at each vertex
         self.nlayers = nlayers      # layers of the tessellation
         self.center = center        # tiling can be centered around a "cell" (default) or a "vertex"
-        print(self.center, "base")
 
         # symmetry angles
         self.phi = 2*math.pi/self.p  # angle of rotation that leaves the lattice invariant when cell centered
