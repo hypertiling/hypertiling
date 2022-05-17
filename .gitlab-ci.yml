@@ -8,7 +8,6 @@ stages:
   - test
   - docs
 
-
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
 #
@@ -25,7 +24,8 @@ before_script:
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
 
-install_latest:
+install-latest:
+  stage: build
   image: python:latest
   stage: install
   script:
@@ -35,50 +35,38 @@ install_latest:
 #    - tox -e py36,flake8
 
 
-install_slim:
+install-slim:
+  stage: build
   image: python:slim
   stage: install
   script:
     - python setup.py check
     - pip install .
 
-#install_stretch:
-#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack-fftw-hdf5-scipy3
-#  script:
-#    - python3 setup.py check
-#    - pip3 install .
-
-#install_buster:
-# image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
- #script:
- #  - pip3 install .
-
-install_bullseye:
+install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
   script:
     - pip3 install .
 
-
-
-unit-test_plain:
-    stage: test
+unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: test
     script:
         - pip3 install .
         - echo "Testing without fancy packages..."
         - python3 -m tests.test_core 
 
-unit-test_fancy:
-    stage: test
+unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: test
     script:
         - apt-get install -y python3-sortedcontainers python3-numba
         - pip3 install .
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core 
 
-Sphinx_doc:
+sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: docs
   artifacts:
@@ -88,4 +76,3 @@ Sphinx_doc:
     - apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme
     - cd doc
     - sphinx-build . html
-

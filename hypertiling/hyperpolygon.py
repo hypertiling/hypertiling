@@ -52,12 +52,77 @@ except ImportError:
     mfull_point = mfull_point_py
     mfull = mfull_py
 
+
+
+
 # defines a hyperbolic polygon
+
 class HyperPolygon:
+    """
+    Hyperbolic polygon object
+
+    Attributes
+    ----------
+
+    p : int
+        number of outer vertices (edges)
+
+    verticesP : ndarray
+        1D array of np.complex128 type, containting positions of vertices and the polygon center
+        in Poincare disk coordinates
+
+    idx : int
+        auxiliary scalar index; can be used, e.g, for easy identifaction inside a tiling
+
+    layer : int
+        encodes in which layer of a tessellation this polygons is located
+        
+    sector : int
+        index of the sector this polygons is located
+
+    angle : float
+        angle between center and the positive x-axis
+
+    val : float
+        assign a value (useful in any application)
+
+    orientation : float
+        the angle between the line defined by the center and vertices 0, and the abscissa
+
+
+    Methods
+    -------
+
+    centerP()
+        returns the center of the polygon in Poincare coordiantes
+
+    centerW()
+        returns the center of the polygon in Weierstrass coordiantes
+    
+    __equal__()
+        checks whether two polygons are equal by comparing centers and orientations
+
+    transform(tmat)
+        apply Moebius transformation matrix "tmat" to  all points (vertices + center) of the polygon
+
+    tf_full(ind, phi)
+        transforms the entire polygon: to the origin, rotate it and back again
+
+
+    ... to be completed
+
+
+    """
+
     def __init__(self, p):
 
-# The centers are at the end of the arrays
-        self.p = p  # number of edges
+        self.p           = p
+        self.idx         = 1
+        self.layer       = 1
+        self.sector      = 0
+        self.angle       = 0
+        self.val         = 0
+        self.orientation = 0
 
         # Poincare disk coordinates
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
@@ -67,14 +132,8 @@ class HyperPolygon:
         self.verticesW = np.zeros((3, self.p+1))  # vertices + center
         self.verticesW[0,-1] = 1 # center
         
-        self.idx         = 1  # auxiliary scalar index; can be used, e.g, for easy identifaction inside a tessellation
-        self.layer       = 1  # encodes in which layer of a tessellation this polygons is located
-        self.sector      = 0  # index of the sector this polygons is located; can be used for finding neighbours more efficiently
-        self.angle       = 0  # angle between self.centerP and the positive x-axis
-        self.val         = 0  # assign a value (useful in any application)
-        self.orientation = 0 # the angle between the line defined by the center and vertices 0, and the abscissa
-
-        self.edges = []  # compare self.populate_edge_list
+        # List of edges (untested, compare self.populate_edge_list)
+        self.edges = []
 
     def centerP(self):
         return self.verticesP[self.p]
@@ -97,13 +156,12 @@ class HyperPolygon:
         return False
 
 
-    # transforms all points of the polygon by matrix tmat
-    # only used by HyperbolicTilingDunham
+    # apply Moebius transformation matrix "tmat" to  all points (vertices + center) of the polygon
     def transform(self, tmat):
         for i in range(self.p + 1):
             self.verticesW[:, i] = tmat @ self.verticesW[:, i]
             self.verticesP[i] = w2p(self.verticesW[:, i])
-        self.find_angle(360)
+        self.find_angle()
 
 
     # transforms the entire polygon: to the origin, rotate it and back again
@@ -152,18 +210,21 @@ class HyperPolygon:
         return [xedges, yedges]
 
 
+    # compute angle between center and the positive x-axis
     def find_angle(self):
-        self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))#np.angle(self.centerP(), deg=True)
+        self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))
         self.angle += 360 if self.angle < 0 else 0
 
+    # compute in which sector out of k sectors the polygon resides
     def find_sector(self, k):
         self.sector = floor(self.angle/(360/k))
 
+    # mirror on the x-axis
     def mirror(self):
         for i in range(self.p + 1):
             self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
             self.verticesW = p2w(self.verticesP)
-        self.find_angle(360)
+        self.find_angle()
 
     # returns value between -pi and pi
     def find_orientation(self):
