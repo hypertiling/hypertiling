@@ -58,7 +58,7 @@ class KernelFlo(KernelCommon):
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        center = mfull_point(np.complex128(pgon.verticesP[vert_ind]), rot_ind*self.qhi, np.complex128(pgon.centerP()))
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
