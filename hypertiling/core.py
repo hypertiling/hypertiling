@@ -9,9 +9,68 @@ from .util import fund_radius
 from .distance import disk_distance
 
 
+
+
+# factory pattern allows to select between kernels
+def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
+    """
+    The base function which invokes a hyperbolic tiling
+
+    Parameters
+    ----------
+    p : int
+        number of vertices per cells
+    q : int
+        number of cells meeting at each vertex
+    n : int
+        number of layers to be constructed
+    center : str
+        decides whether the tiling is constructed about a "vertex" or "cell" (default)
+    kernel : str
+        selects the construction algorithm
+    """
+
+
+
+    kernels = { "manu":   KernelManu, # to-do: we need better names for the kernels ;)
+                "flo":    KernelFlo, 
+                "dunham": KernelDunham}
+    if kernel not in kernels:
+       raise KeyError("no valid kernel specified")
+    if kernel == "flo":
+        raise NotImplementedError("Flo kernel is currently not implemented in the master branch")
+    if kernel == "dunham":
+        raise NotImplementedError("Dunham kernel is currently broken (fixme!)")
+    return kernels[kernel](p, q, n, center)
+    
+
+
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
-class HyperbolicTiling:
+class HyperbolicTilingBase:
+    """
+    Base class of a hyperbolic tiling object
+
+    Attributes
+    ----------
+
+
+    Methods
+    -------
+    __getitem__(idx)
+        returns the idx-th HyperPolygon in the tiling
+
+    __iter__()
+        traverses throught all HyperPolygons in the tiling
+
+    __next__()
+        returns the next HyperPolygon in the tiling
+
+    __len__()
+        returns the size of the tiling, which is the number of cells
+
+    """
+
     def __init__(self, p, q, nlayers, center='cell'):
 
         # main attributes
@@ -67,8 +126,19 @@ class HyperbolicTiling:
         return len(self.polygons)
 
 
-    # constructs the vertices of the fundamental hyperbolic {p,q} polygon
     def create_fundamental_polygon(self, center='cell'):
+        """
+        Constructs the vertices of the fundamental hyperbolic {p,q} polygon
+
+        Parameters
+        ----------
+
+        center : str
+            decides whether the fundamental cell is construct centered at the origin ("cell", default) 
+            or with the origin being one of its vertices ("vertex")
+
+
+        """
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
@@ -91,14 +161,62 @@ class HyperbolicTiling:
 
 
 
-    # generates the whole lattice by first constructing one 1/p sector, 
-    # then uses symmetry to construct the other p-1 sectors
+    
 
-    # in order to avoid problems associated to rounding we construct the
-    # fundamental sector a little bit wider than 360/p degrees in filter
-    # out rotational duplicates after all layers have been constructed
+        
+
+
+
+
+class KernelFlo(HyperbolicTilingBase):
+    """
+    High precision kernel written by F. Goth
+    """
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelFlo, self).__init__(p, q, n, center="cell")
+
+    # Flo input your "generate" function here
+
+
+
+class KernelManu(HyperbolicTilingBase):
+    """
+    Tiling construction algorithm written by M. Schrauth and F. Dusel
+
+    Methods
+    -------
+    generate_sector()
+        construct all cells residing in one fundamental p or q-fold sector
+
+    angular_replicate()
+        replicate fundamental sector in order to tessellate the entire disk
+
+    generate()
+        executes generate_sector and angular_replicate
+
+    generate_adj_poly(polygon, ind, k)
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+
+    numerically_unstable_upper(l, start, end, tolfactor=10, samplesize=10)
+        check whether the true "embedding" distance between cells in layer l 
+        is getting close to the rounding accuracy
+
+    numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100)
+        check whether the actual hyperbolic distance between points in layer l
+        is getting close the round accuracy
+    """
+
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelManu, self).__init__(p, q, n, center="cell")
+
 
     def generate_sector(self):
+        """
+        generates one p or q-fold sector of the lattice
+        in order to avoid problems associated to rounding we construct the
+        fundamental sector a little bit wider than 360/p degrees in filter
+        out rotational duplicates after all layers have been constructed
+        """
 
         # clear list
         self.polygons = []
@@ -170,16 +288,14 @@ class HyperbolicTiling:
 
 
             if self.numerically_unstable_upper(l, startpgon, endpgon):
-                print("Numerical accuracy exhausted; no more layers will be constructed; automatic shutdown")
+                print("Numerical accuracy exhausted;")
+                print("No more layers will be constructed; automatic shutdown")
                 break
 
             if self.numerically_unstable_lower(l, startpgon, endpgon):
-                print("Accumulated numerical errors have become too large; no more layers will be constructed; automatic shutdown")
+                print("Accumulated numerical errors have become too large;")
+                print("No more layers will be constructed; automatic shutdown")
                 break
-
-
-
-
 
 
         # free mem of centerset
@@ -199,9 +315,11 @@ class HyperbolicTiling:
 
         self.polygons = list(np.delete(self.polygons, deletelist))
 
-    def replicate(self):
 
-        # fill entire disk by rotating the slice
+    def replicate(self):
+        """
+        tessellate the entire disk by replicating the fundamental sector
+        """
         if self.center == 'cell':
             self.angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
@@ -209,13 +327,17 @@ class HyperbolicTiling:
 
 
     def generate(self):
+        """
+        do full construction
+        """
         self.generate_sector()
         self.replicate()
 
-    # check whether the true "embedding" distance between cells in layer l comes close
-    # to the rounding accuracy
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
-
+        """
+        check whether the true "embedding" distance between cells in layer l comes close
+        to the rounding accuracy
+        """
 
         # innermost layers are always fine, do nothing
         if l<3:
@@ -245,11 +367,13 @@ class HyperbolicTiling:
             return False
 
 
-    # we know which geodesic distance two adjancent cells are supposed to have;
-    # here we take a sample of cells from the l-th layer and compute mutual 
-    # distances; if one of those is significantly off compared to the expected
-    # value we are about to enter a dangerous regime in terms of rounding errors
     def numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100):
+        """
+        we know which geodesic distance two adjancent cells are supposed to have;
+        here we take a sample of cells from the l-th layer and compute mutual 
+        distances; if one of those is significantly off compared to the expected
+        value we are about to enter a dangerous regime in terms of rounding errors
+        """
 
         # innermost layers are always fine, do nothing
         if l<3:
@@ -281,8 +405,10 @@ class HyperbolicTiling:
 
 
 
-    # finds the next polygon by k-fold rotation of polygon around the vertex number ind
     def generate_adj_poly(self, polygon, ind, k):
+        """
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        """
         polygon.tf_full(ind, k*self.qhi)
         return polygon
 
@@ -327,14 +453,17 @@ class HyperbolicTiling:
 
 
 
-# After the algorithm by D. Dunham (1982)
-# works for every valid combination {p,q}
-# however produces a lot of duplicates
-class HyperbolicTilingDunham:
-    def __init__(self, p, q, nlayers):
-        self.p = p
-        self.q = q
-        self.nlayers = nlayers
+class KernelDunham(HyperbolicTilingBase):
+    """
+    Original construction algorithm by D. Dunham (1982)
+    works for every valid combination {p,q}
+    however produces a lot of duplicates
+    
+    currently broken! fixme
+    """
+
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelDunham, self).__init__(p, q, n, center="cell")
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))

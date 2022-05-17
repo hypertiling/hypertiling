@@ -3,6 +3,7 @@
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
+
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
 #
@@ -19,7 +20,8 @@ before_script:
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
 
-install_latest:
+install-latest:
+  stage: build
   image: python:latest
   script:
     - python setup.py check
@@ -28,40 +30,32 @@ install_latest:
 #    - tox -e py36,flake8
 
 
-install_slim:
+install-slim:
+  stage: build
   image: python:slim
   script:
     - python setup.py check
     - pip install .
 
-#install_stretch:
-#  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack-fftw-hdf5-scipy3
-#  script:
-#    - python3 setup.py check
-#    - pip3 install .
 
-#install_buster:
-# image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack-fftw-hdf5-scipy3
- #script:
- #  - pip3 install .
-
-install_bullseye:
- image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
- script:
+install-bullseye:
+  stage: build
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  script:
    - pip3 install .
 
 
 
-unit-test:
-    stage: test
+polygon-number-unit-test:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: test
     script:
         - pip install .
         - apt-get install --assume-yes python3-matplotlib
         - echo "Testing ..."
         - python3 -m tests.test_core 
 
-Sphinx_doc:
+sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: build
   artifacts:

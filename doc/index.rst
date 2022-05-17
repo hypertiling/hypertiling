@@ -27,6 +27,24 @@ Welcome to the official documentation of Hypertiling!
    changelog
    getting_started
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules
+
+   hyperpolygon
+   tiling
+   kernels
+   transformations
+   geodesics
+   neighbours
+
+.. toctree::
+   :caption: API reference
+   :maxdepth: 2
+
+   api/core
+   api/hyperpolygon
+
 
 Indices and tables
 ==================
