@@ -90,7 +90,7 @@ class KernelManu(KernelCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
+                        if self.mangle-1e-14 <= cangle < sect_angle_deg+self.degtol+self.mangle:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             center = np.round(center, self.dgts)
@@ -111,7 +111,7 @@ class KernelManu(KernelCommon):
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if self.mangle <= cangle <= self.degtol+self.mangle:
+                                if self.mangle-1e-14 <= cangle <= self.degtol+self.mangle:
                                     centerset_extra.add(center)
 
             startpgon = endpgon
