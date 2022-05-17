@@ -69,9 +69,6 @@ class HyperbolicTilingBase:
     __len__()
         returns the size of the tiling, which is the number of cells
 
-    create_fundamental_polygon(center="cell")
-        constructs the vertices of the fundamental hyperbolic {p,q} polygon
-
     """
 
     def __init__(self, p, q, nlayers, center='cell'):
@@ -172,6 +169,9 @@ class HyperbolicTilingBase:
 
 
 class KernelFlo(HyperbolicTilingBase):
+    """
+    High precision kernel written by F. Goth
+    """
     def __init__ (self, p, q, n, center="cell"):
         super(KernelFlo, self).__init__(p, q, n, center="cell")
 
