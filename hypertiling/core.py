@@ -317,9 +317,9 @@ class KernelManu(HyperbolicTilingBase):
 
 
     def replicate(self):
-    """
-    tessellate the entire disk by replicating the fundamental sector
-    """
+        """
+        tessellate the entire disk by replicating the fundamental sector
+        """
         if self.center == 'cell':
             self.angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
@@ -327,17 +327,17 @@ class KernelManu(HyperbolicTilingBase):
 
 
     def generate(self):
-    """
-    do full construction
-    """
+        """
+        do full construction
+        """
         self.generate_sector()
         self.replicate()
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
-    """
-    check whether the true "embedding" distance between cells in layer l comes close
-    to the rounding accuracy
-    """
+        """
+        check whether the true "embedding" distance between cells in layer l comes close
+        to the rounding accuracy
+        """
 
         # innermost layers are always fine, do nothing
         if l<3:
@@ -368,12 +368,12 @@ class KernelManu(HyperbolicTilingBase):
 
 
     def numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100):
-    """
-    we know which geodesic distance two adjancent cells are supposed to have;
-    here we take a sample of cells from the l-th layer and compute mutual 
-    distances; if one of those is significantly off compared to the expected
-    value we are about to enter a dangerous regime in terms of rounding errors
-    """
+        """
+        we know which geodesic distance two adjancent cells are supposed to have;
+        here we take a sample of cells from the l-th layer and compute mutual 
+        distances; if one of those is significantly off compared to the expected
+        value we are about to enter a dangerous regime in terms of rounding errors
+        """
 
         # innermost layers are always fine, do nothing
         if l<3:
@@ -406,9 +406,9 @@ class KernelManu(HyperbolicTilingBase):
 
 
     def generate_adj_poly(self, polygon, ind, k):
-    """
-    finds the next polygon by k-fold rotation of polygon around the vertex number ind
-    """
+        """
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        """
         polygon.tf_full(ind, k*self.qhi)
         return polygon
 
