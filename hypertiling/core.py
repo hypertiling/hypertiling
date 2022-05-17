@@ -38,8 +38,6 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
                 "dunham": KernelDunham}
     if kernel not in kernels:
        raise KeyError("no valid kernel specified")
-    if kernel == "flo":
-        raise NotImplementedError("Flo kernel is currently not implemented in the master branch")
     if kernel == "dunham":
         raise NotImplementedError("Dunham kernel is currently broken (fixme!)")
     return kernels[kernel](p, q, n, center)
@@ -88,7 +86,6 @@ class HyperbolicTilingBase:
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
-        self.accuracy = 10**(-8) # numerical accuracy
         self.degtol = 1 # sector boundary tolerance during construction
         self.mangle = self.degphi/np.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!
 
@@ -161,56 +158,89 @@ class HyperbolicTilingBase:
 
         return polygon
 
+class KernelCommon(HyperbolicTilingBase):
+    """
+    Commonalities
+    """
+
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelCommon, self).__init__(p, q, n, center="cell")
+
+    def replicate(self):
+        """
+        tessellate the entire disk by replicating the fundamental sector
+        """
+        if self.center == 'cell':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+        elif self.center == 'vertex':
+            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
-    
+    def generate(self):
+        """
+        do full construction
+        """
+        self.generate_sector()
+        self.replicate()
 
+
+
+    def generate_adj_poly(self, polygon, ind, k):
+        """
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        """
+        polygon.tf_full(ind, k*self.qhi)
+        return polygon
+
+
+    # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
+    def angular_replicate(self, polygons, k):
+        if self.center == 'cell':
+            polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
+            angle = self.phi
+            k = self.p
+        elif self.center == 'vertex':
+            angle = self.qhi
+            k = self.q
+
+        for p in range(1, k):
+            for polygon in polygons:
+                pgon = copy.deepcopy(polygon)
+                pgon.moeb_rotate(-p*angle)
+                pgon.find_angle()
+                pgon.find_sector(k)
+                self.polygons.append(pgon)
+
+        # assign each polygon a unique number
+        for num, poly in enumerate(self.polygons):
+            poly.idx = num + 1
+
+
+    # populate the "edges" list of all polygons in the tiling
+    def populate_edge_list(self, digits=12):
+        # note: same neighbour search methods employ the fact that adjacent polygons share an edge
+        # hence these will later be identified via floating point comparison and we need to round
+        # note: this procedure fails for Weierstrass coordinates, as these
+        # are not unique, meaning that the same coordinate can have different representations
+        for poly in self.polygons:
+            poly.edges = []
+            verts = np.round(poly.verticesP[0:-1], digits)
         
+            # append edges as tuples
+            for i, vert in enumerate(verts[:-1]):
+                poly.edges.append((verts[i], verts[i+1]))
+            poly.edges.append((verts[-1], verts[0]))
 
 
 
 
-class KernelFlo(HyperbolicTilingBase):
+
+class KernelFlo(KernelCommon):
     """
     High precision kernel written by F. Goth
     """
     def __init__ (self, p, q, n, center="cell"):
         super(KernelFlo, self).__init__(p, q, n, center="cell")
-
-    # Flo input your "generate" function here
-
-
-
-class KernelManu(HyperbolicTilingBase):
-    """
-    Tiling construction algorithm written by M. Schrauth and F. Dusel
-
-    Methods
-    -------
-    generate_sector()
-        construct all cells residing in one fundamental p or q-fold sector
-
-    angular_replicate()
-        replicate fundamental sector in order to tessellate the entire disk
-
-    generate()
-        executes generate_sector and angular_replicate
-
-    generate_adj_poly(polygon, ind, k)
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
-
-    numerically_unstable_upper(l, start, end, tolfactor=10, samplesize=10)
-        check whether the true "embedding" distance between cells in layer l 
-        is getting close to the rounding accuracy
-
-    numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100)
-        check whether the actual hyperbolic distance between points in layer l
-        is getting close the round accuracy
-    """
-
-    def __init__ (self, p, q, n, center="cell"):
-        super(KernelManu, self).__init__(p, q, n, center="cell")
-
 
     def generate_sector(self):
         """
@@ -282,17 +312,6 @@ class KernelManu(HyperbolicTilingBase):
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-
-            if self.numerically_unstable_upper(l, startpgon, endpgon):
-                print("Numerical accuracy exhausted;")
-                print("No more layers will be constructed; automatic shutdown")
-                break
-
-            if self.numerically_unstable_lower(l, startpgon, endpgon):
-                print("Accumulated numerical errors have become too large;")
-                print("No more layers will be constructed; automatic shutdown")
-                break
-
         # free mem of centerset
         del centerarray
 
@@ -306,22 +325,146 @@ class KernelManu(HyperbolicTilingBase):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
 
-    def replicate(self):
-        """
-        tessellate the entire disk by replicating the fundamental sector
-        """
-        if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
-        elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+
+class KernelManu(KernelCommon):
+    """
+    Tiling construction algorithm written by M. Schrauth and F. Dusel
+
+    Methods
+    -------
+    generate_sector()
+        construct all cells residing in one fundamental p or q-fold sector
+
+    angular_replicate()
+        replicate fundamental sector in order to tessellate the entire disk
+
+    generate()
+        executes generate_sector and angular_replicate
+
+    generate_adj_poly(polygon, ind, k)
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+
+    numerically_unstable_upper(l, start, end, tolfactor=10, samplesize=10)
+        check whether the true "embedding" distance between cells in layer l 
+        is getting close to the rounding accuracy
+
+    numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100)
+        check whether the actual hyperbolic distance between points in layer l
+        is getting close the round accuracy
+    """
+
+    def __init__ (self, p, q, n, center="cell"):
+        super(KernelManu, self).__init__(p, q, n, center="cell")
+        self.dgts = 8
+        self.accuracy = 10**(-self.dgts) # numerical accuracy
 
 
-    def generate(self):
+    def generate_sector(self):
         """
-        do full construction
+        generates one p or q-fold sector of the lattice
+        in order to avoid problems associated to rounding we construct the
+        fundamental sector a little bit wider than 360/p degrees in filter
+        out rotational duplicates after all layers have been constructed
         """
-        self.generate_sector()
-        self.replicate()
+
+        # clear list
+        self.polygons = []
+
+        # add fundamental polygon to list
+        self.polygons.append(self.fund_poly)
+
+        # angle width of the fundamental sector
+        sect_angle     = self.phi
+        sect_angle_deg = self.degphi
+        if self.center == "vertex":
+            sect_angle     = self.qhi
+            sect_angle_deg = self.degqhi
+
+        # prepare sets which will contain the center coordinates
+        # will be used for uniqueness checks
+        centerset = set()
+        centerset_extra = set()
+        centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
+
+        startpgon = 0
+        endpgon = 1
+
+        # loop over layers to be constructed
+        for l in range(1, self.nlayers):
+
+            # computes all neighbor polygons of layer l
+            for pgon in self.polygons[startpgon:endpgon]:
+
+                # iterate over every vertex of pgon
+                for vert_ind in range(self.p):
+
+                    # iterate over all polygons touching this very vertex
+                    for rot_ind in range(self.q):
+                        # compute center and angle
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        
+                        cangle = math.degrees(math.atan2(center.imag, center.real))
+                        cangle += 360 if cangle < 0 else 0
+
+                        # cut away cells outside the fundamental sector
+                        # allow some tolerance at the upper boundary
+                        if self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle:
+
+                            # try adding to centerlist; it is a set() and takes care of duplicates
+                            center = np.round(center, self.dgts)
+                            lenA = len(centerset)
+                            centerset.add(center)
+                            lenB = len(centerset)
+
+                            # this tells us whether an element has actually been added
+                            if lenB>lenA:
+                                # create copy
+                                polycopy = copy.deepcopy(pgon)
+
+                                # generate adjacent polygon
+                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon.find_angle()
+                                adj_pgon.layer = l+1
+                                # add corresponding poly to large list
+                                self.polygons.append(adj_pgon)
+
+                                # if angle is in slice, add to centerset_extra
+                                if self.mangle <= cangle <= self.degtol+self.mangle:
+                                    centerset_extra.add(center)
+
+            startpgon = endpgon
+            endpgon = len(self.polygons)
+
+
+            if self.numerically_unstable_upper(l, startpgon, endpgon):
+                print("Numerical accuracy exhausted;")
+                print("No more layers will be constructed; automatic shutdown")
+                break
+
+            if self.numerically_unstable_lower(l, startpgon, endpgon):
+                print("Accumulated numerical errors have become too large;")
+                print("No more layers will be constructed; automatic shutdown")
+                break
+
+
+        # free mem of centerset
+        del centerset
+
+        # filter out rotational duplicates
+        deletelist = []
+        for kk, pgon in enumerate(self.polygons):
+            if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
+
+                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+
+                center = np.round(center, self.dgts) # better use simple distance?
+
+                if center in centerset_extra:
+                    deletelist.append(kk)
+
+        self.polygons = list(np.delete(self.polygons, deletelist))
+
+
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
         """
@@ -392,55 +535,6 @@ class KernelManu(HyperbolicTilingBase):
             return True
         else:
             return False
-
-
-
-    def generate_adj_poly(self, polygon, ind, k):
-        """
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
-        """
-        polygon.tf_full(ind, k*self.qhi)
-        return polygon
-
-
-    # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
-    def angular_replicate(self, polygons, k):
-        if self.center == 'cell':
-            polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
-            angle = self.phi
-            k = self.p
-        elif self.center == 'vertex':
-            angle = self.qhi
-            k = self.q
-
-        for p in range(1, k):
-            for polygon in polygons:
-                pgon = copy.deepcopy(polygon)
-                pgon.moeb_rotate(-p*angle)
-                pgon.find_angle()
-                pgon.find_sector(k)
-                self.polygons.append(pgon)
-
-        # assign each polygon a unique number
-        for num, poly in enumerate(self.polygons):
-            poly.idx = num + 1
-
-
-    # populate the "edges" list of all polygons in the tiling
-    def populate_edge_list(self, digits=12):
-        # note: same neighbour search methods employ the fact that adjacent polygons share an edge
-        # hence these will later be identified via floating point comparison and we need to round
-        # note: this procedure fails for Weierstrass coordinates, as these
-        # are not unique, meaning that the same coordinate can have different representations
-        for poly in self.polygons:
-            poly.edges = []
-            verts = np.round(poly.verticesP[0:-1], digits)
-        
-            # append edges as tuples
-            for i, vert in enumerate(verts[:-1]):
-                poly.edges.append((verts[i], verts[i+1]))
-            poly.edges.append((verts[-1], verts[0]))
-
 
 
 class KernelDunham(HyperbolicTilingBase):
