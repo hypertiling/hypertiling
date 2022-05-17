@@ -26,14 +26,14 @@ def mfull_point_py(z0, phi, p):
     return moeb_origin_trafo_inverse(z0, z)
 
 def mfull_py(p, phi, ind, verticesP, verticesW):
-        z0 =  np.complex128(verticesP[ind])
-        dz0 = np.complex128(complex(0, 0))
+        z0 =  verticesP[ind]
+        dz0 = complex(0, 0)
         
         for i in range(p + 1):
-            z, dz = moeb_origin_trafodd(z0, dz0, np.complex128(verticesP[i]), dz0)
+            z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
             z, dz = moeb_rotate_trafodd(z, dz, -phi)
             z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
-            verticesP[i] = np.complex64(z)
+            verticesP[i] = z
             #verticesdP[i] = dz
             #verticesW[:, i] = p2w(z)
 
@@ -125,7 +125,7 @@ class HyperPolygon:
         self.orientation = 0
 
         # Poincare disk coordinates
-        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex64)  # vertices + center
+        self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
         #self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
         # Weierstrass (hyperboloid) coordinates

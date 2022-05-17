@@ -1,5 +1,4 @@
 import math
-import numpy
 
 from .util import fund_radius
 
@@ -16,11 +15,11 @@ class HTCenter:
                 phi (real) : angle
         '''
         if len(args) == 1:
-            self.z = numpy.complex128(args[0])
+            self.z = args[0]
             self.angle = math.atan2(self.z.imag, self.z.real)
         elif len(args) == 2:
-            self.z = numpy.complex128(args[0])*numpy.complex128(complex(math.cos(args[1]), math.sin(args[1])))
-            self.angle = math.atan2(self.z.imag, self.z.real)
+            self.z = args[0]*complex(math.cos(args[1]), math.sin(args[1]))
+            self.angle = args[1]
 
     def __le__(self, other):
         return self.angle <= other.angle
@@ -74,15 +73,13 @@ try:
                     true if a number that is as close as 1E-12 to z has already been stored
                     else false.
             '''
-            z = numpy.complex128(z)
             nangle = math.atan2(z.imag, z.real)
             centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
             incontainer = False
             iterlen = 0 # since we cannot apply len() on the irange iterator we have to determine the length ourselves
             for c in centerarray_iterator:
                 iterlen += 1
-                #print(type(z), type(c.z))
-                if abs(z - c.z) < 1E-4: # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
+                if abs(z - c.z) < 1E-12: # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
                     incontainer = True
                     break
             if iterlen > self.maxlinlength:
