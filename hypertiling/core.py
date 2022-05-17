@@ -130,18 +130,18 @@ class HyperbolicTilingBase:
 
 
     def create_fundamental_polygon(self, center='cell'):
-    """
-    Constructs the vertices of the fundamental hyperbolic {p,q} polygon
+        """
+        Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
-    Parameters
-    ----------
+        Parameters
+        ----------
 
-    center : str
-        decides whether the fundamental cell is construct centered at the origin ("cell", default) 
-        or with the origin being one of its vertices ("vertex")
+        center : str
+            decides whether the fundamental cell is construct centered at the origin ("cell", default) 
+            or with the origin being one of its vertices ("vertex")
 
 
-    """
+        """
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
@@ -181,7 +181,7 @@ class KernelFlo(HyperbolicTilingBase):
 
 class KernelManu(HyperbolicTilingBase):
     """
-    Constructing algorithm written by M. Schrauth and F. Dusel
+    Tiling construction algorithm written by M. Schrauth and F. Dusel
 
     Methods
     -------
@@ -296,10 +296,6 @@ class KernelManu(HyperbolicTilingBase):
                 print("Accumulated numerical errors have become too large;")
                 print("No more layers will be constructed; automatic shutdown")
                 break
-
-
-
-
 
 
         # free mem of centerset
@@ -457,10 +453,15 @@ class KernelManu(HyperbolicTilingBase):
 
 
 
-# After the algorithm by D. Dunham (1982)
-# works for every valid combination {p,q}
-# however produces a lot of duplicates
 class KernelDunham(HyperbolicTilingBase):
+    """
+    Original construction algorithm by D. Dunham (1982)
+    works for every valid combination {p,q}
+    however produces a lot of duplicates
+    
+    currently broken! fixme
+    """
+
     def __init__ (self, p, q, n, center="cell"):
         super(KernelDunham, self).__init__(p, q, n, center="cell")
 
