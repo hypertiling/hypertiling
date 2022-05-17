@@ -21,7 +21,7 @@ before_script:
   - source hypervenv/bin/activate
 
 install_latest:
- stage: build
+  stage: build
   image: python:latest
   script:
     - python setup.py check
@@ -31,7 +31,7 @@ install_latest:
 
 
 install_slim:
- stage: build
+  stage: build
   image: python:slim
   script:
     - python setup.py check
@@ -49,16 +49,16 @@ install_slim:
  #  - pip3 install .
 
 install-bullseye:
- stage: build
- image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
- script:
+  stage: build
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  script:
    - pip3 install .
 
 
 
 polygon-number-unit-test:
-    stage: test
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: test
     script:
         - pip install .
         - apt-get install --assume-yes python3-matplotlib
