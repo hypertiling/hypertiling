@@ -1,6 +1,6 @@
 <table  align="center"><td align="center" width="9999">
 
-<img src="assets/logo/logo73.svg" align="center" width="380" alt="project icon">
+<img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/logo/logo73.svg" align="center" width="380" alt="project icon">
 
 </td>
 <tr>
@@ -58,7 +58,7 @@ University of Wuerzburg
 Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling at low temperature. One readily recognizes a number of magnetic domains of opposite spin orientation (red/blue areas). The domain walls are approximately given by arcs of Euclidean circles contained within the disk and orthogonal to its boundary. These arcs represent straight lines in the Poincare disk representation of the hyperbolic plane.
 
 <p align="center">
-  <img src="assets/hyp6.svg" width="300" />
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/hyp6.svg" width="300" />
 </p>
 
 Further information and examples can be found in our Jupyter notebooks in /examples subfolder. 
