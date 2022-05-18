@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '0.9.5'
+version = '0.9.7'
 
 
 try:
@@ -16,7 +16,7 @@ except:
 setup(
     name=package_name,
     version=version,
-    description='A Python 3 libary for the fast generation of regular hyperbolic tilings',
+    description='A Python 3 libary for fast generation of regular hyperbolic tilings',
     long_description = long_desc,
     long_description_content_type = 'text/markdown',
     author='Manuel Schrauth, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela',
@@ -28,7 +28,7 @@ setup(
     classifiers = [
          'Topic :: Scientific/Engineering :: Mathematics',
          'Topic :: Scientific/Engineering :: Visualization',
-         'Development Status :: 3 - Alpha',
+         'Development Status :: 4 - Beta',
          'License :: OSI Approved :: MIT License',
          'Programming Language :: Python :: 3',
         ],
