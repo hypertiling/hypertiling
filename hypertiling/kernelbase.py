@@ -178,11 +178,10 @@ class KernelCommon(HyperbolicTilingBase):
 
 
     # populate the "edges" list of all polygons in the tiling
+    # untested!!
     def populate_edge_list(self, digits=12):
         # note: same neighbour search methods employ the fact that adjacent polygons share an edge
         # hence these will later be identified via floating point comparison and we need to round
-        # note: this procedure fails for Weierstrass coordinates, as these
-        # are not unique, meaning that the same coordinate can have different representations
         for poly in self.polygons:
             poly.edges = []
             verts = round(poly.verticesP[0:-1], digits)
