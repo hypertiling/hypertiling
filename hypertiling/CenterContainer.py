@@ -41,15 +41,16 @@ try:
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.
         '''
-        def __init__(self, p, q, phi):
+        def __init__(self, linlength, r, phi):
             # Note to self, think of numpy in the alternative implementation
-            self.maxlinlength = p*q# the maximum linear length
+            self.maxlinlength = linlength# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            self.centers = SortedList([HTCenter(fund_radius(p, q), phi/2)]) # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
+            
+            self.centers = SortedList([HTCenter(r, phi)])
         
         def add(self, z):
             '''
-                Add z to the container
+                Add z to the container.
                 
                 Parameters:
                     z (complex) A complex number. should not be 0+0*I...
@@ -64,7 +65,7 @@ try:
         
         def fp_has(self, z):
             '''
-                Checks whether a representative of z has already been stored
+                Checks whether a representative of z has already been stored.
                 
                 Parameter:
                     z (complex): the number to check.
@@ -93,12 +94,12 @@ except ImportError:
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.
         '''
-        def __init__(self, p, q, phi):
-            # Note to self, think of numpy in this alternative implementation
-            self.maxlinlength = p*q# the maximum linear length
-            self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            self.centers = [HTCenter(fund_radius(p, q), phi/2)] # We arbitrarily set the initial fundamental Polygon to have an angle of phi/2
-        
+        def __init__(self, linlength, r, phi):
+            # Note to self, think of numpy in the alternative implementation
+            self.maxlinlength = linlength# the maximum linear length
+            self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches            
+            self.centers = SortedList([HTCenter(r, phi)])
+
         def add(self, z):
             '''
                 Add z to the container

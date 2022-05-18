@@ -36,16 +36,19 @@ class KernelFlo(KernelCommon):
         if self.center == "vertex":
             sect_angle     = self.qhi
             sect_angle_deg = self.degqhi
-
+            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), math.atan2(self.fund_poly.centerP().imag, self.fund_poly.centerP().real))
+            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), math.atan2(self.fund_poly.centerP().imag, self.fund_poly.centerP().real))
+        else:
+            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), self.phi/2) # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
+            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), self.phi/2)
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
-        centerset_extra = CenterContainer(self.p, self.q, self.phi)
+    
 
         startpgon = 0
         endpgon = 1
 
         fr = fund_radius(self.p, self.q)/2
-        centerarray = CenterContainer(self.p, self.q, self.phi)
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -93,7 +96,7 @@ class KernelFlo(KernelCommon):
         deletelist = []
 
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
+            if pgon.angle > sect_angle_deg - self.degtol + self.mangle:
                 center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
