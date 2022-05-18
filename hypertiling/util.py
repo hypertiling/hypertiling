@@ -43,9 +43,7 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
         child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
         for i in range(p):
             child.verticesP[i] = ref_vertices[i]
-        #child.verticesP = np.array(ref_vertices)
         child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
-        child.verticesW[:,-1] = p2w(child.centerP())
         child.idx = 4*num+1  # assigning a unique number
         ref_lattice.append(child)
 
@@ -54,11 +52,9 @@ def refine_lattice(tilingobj, n):  # n is the number of refinements
             vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
             for i in range(p):
                 child.verticesP[i] = vP[i]
-            #child.verticesP = np.array(vP)
             center_x = np.sum(np.real(child.verticesP[:p]))/p  # trick: average over the xs and ys of the vertices to get
             center_y = np.sum(np.imag(child.verticesP[:p]))/p  # ... an approximate value for centerP
             child.verticesP[-1] = complex(center_x, center_y)
-            child.verticesW[:,-1] = p2w(child.centerP())
             child.idx = (4*num+1)+1+vrtx  # unique number
             ref_lattice.append(child)
 
