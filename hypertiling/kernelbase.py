@@ -106,7 +106,6 @@ class HyperbolicTilingBase:
             z = z/abs(z)
             z = r * z
             polygon.verticesP[i] = z
-            polygon.verticesW[:, i] = p2w(z)
 
         # if centered around a vertex, shift one vertex to origin
         if center == 'vertex':

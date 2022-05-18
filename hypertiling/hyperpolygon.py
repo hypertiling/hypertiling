@@ -2,30 +2,27 @@ from math import floor
 import numpy as np
 from .transformation import *
 
-def morigin_py(p, z0, verticesP, verticesW):
+def morigin_py(p, z0, verticesP):
     for i in range(p + 1):
         z = moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
-        verticesW[:, i] = p2w(z)
 
-def morigin_inv_py(p, z0, verticesP, verticesW):
+def morigin_inv_py(p, z0, verticesP):
     for i in range(p + 1):
         z = moeb_origin_trafo_inverse(z0, verticesP[i])
         verticesP[i] = z
-        verticesW[:, i] = p2w(z)
 
-def mrotate_py(p, phi, verticesP, verticesW):
+def mrotate_py(p, phi, verticesP):
     for i in range(p + 1):
         z = moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
-        verticesW[:, i] = p2w(z)
 
 def mfull_point_py(z0, phi, p):
     z = moeb_origin_trafo(z0, p)
     z = moeb_rotate_trafo(z, -phi)
     return moeb_origin_trafo_inverse(z0, z)
 
-def mfull_py(p, phi, ind, verticesP, verticesW):
+def mfull_py(p, phi, ind, verticesP):
         z0 =  verticesP[ind]
         dz0 = complex(0, 0)
         
@@ -35,7 +32,6 @@ def mfull_py(p, phi, ind, verticesP, verticesW):
             z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
             verticesP[i] = z
             #verticesdP[i] = dz
-            #verticesW[:, i] = p2w(z)
 
 # try to use numba
 try:
@@ -128,10 +124,6 @@ class HyperPolygon:
         self.verticesP = np.zeros(shape=self.p+1, dtype=np.complex128)  # vertices + center
         #self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
-        # Weierstrass (hyperboloid) coordinates
-        self.verticesW = np.zeros((3, self.p+1))  # vertices + center
-        self.verticesW[0,-1] = 1 # center
-        
         # List of edges (untested, compare self.populate_edge_list)
         self.edges = []
 
@@ -139,7 +131,7 @@ class HyperPolygon:
         return self.verticesP[self.p]
 
     def centerW(self):
-        return self.verticesW[:,self.p]
+        return p2w(self.verticesP[self.p])
 
 
     # checks whether two polygons are equal
@@ -156,34 +148,27 @@ class HyperPolygon:
         return False
 
 
-    # apply Moebius transformation matrix "tmat" to  all points (vertices + center) of the polygon
-    def transform(self, tmat):
-        for i in range(self.p + 1):
-            self.verticesW[:, i] = tmat @ self.verticesW[:, i]
-            self.verticesP[i] = w2p(self.verticesW[:, i])
-        self.find_angle()
 
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
-        mfull(self.p, phi, ind, self.verticesP, self.verticesW)
+        mfull(self.p, phi, ind, self.verticesP)
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):
-        morigin(self.p, z0, self.verticesP, self.verticesW)
+        morigin(self.p, z0, self.verticesP)
 
     def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
-        mrotate(self.p, phi, self.verticesP, self.verticesW)
+        mrotate(self.p, phi, self.verticesP)
 
     def moeb_translate(self, s):
         for i in range(self.p + 1):
             z = moeb_translate_trafo(self.verticesP[i], s)
             self.verticesP[i] = z
-            self.verticesW[:, i] = p2w(self.verticesP[i])
 
 
     def moeb_inverse(self, z0):
-        morigin_inv(self.p, z0, self.verticesP, self.verticesW)
+        morigin_inv(self.p, z0, self.verticesP)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
@@ -191,23 +176,7 @@ class HyperPolygon:
             z = self.verticesP[i]
             z = z*rotation
             self.verticesP[i] = z
-            self.verticesW[:, i] = p2w(self.verticesP[i])
 
-
-    def find_edges(self):  # finds twice the amount of necessary edges!
-        xedges = []
-        yedges = []
-        for i in range(self.p):
-            epW1 = self.verticesW[:, i]  # edge point Weierstrass 1 and 2
-            epW2 = self.verticesW[:, (i+1) % self.p]
-            epP1 = w2p(epW1)  # edge point Poincare 1 and 2
-            epP2 = w2p(epW2)
-            xedges.append(epP1.real)
-            xedges.append(epP2.real)
-            yedges.append(epP1.imag)
-            yedges.append(epP2.imag)
-
-        return [xedges, yedges]
 
 
     # compute angle between center and the positive x-axis
@@ -223,7 +192,6 @@ class HyperPolygon:
     def mirror(self):
         for i in range(self.p + 1):
             self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
-            self.verticesW = p2w(self.verticesP)
         self.find_angle()
 
     # returns value between -pi and pi
