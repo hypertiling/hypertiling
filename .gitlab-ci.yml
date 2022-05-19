@@ -49,6 +49,13 @@ install-bullseye:
   script:
     - pip3 install .
 
+test-pip:
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  stage: test
+  script:
+    - pip3 install hypertiling
+
+
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
