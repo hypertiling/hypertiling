@@ -186,9 +186,14 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     pgons = []
     for pgon in tiling.polygons:  # pick those polygons that are in sector 0, 1 or last (3 adjacent sectors)
         pgon.find_angle()
-        pgon.find_sector()
-        if pgon.sector in [0, 1, tiling.polygons[0].p-1]:
-            pgons.append(pgon)
+        if tiling.center == "cell":
+            pgon.find_sector(tiling.p)
+            if pgon.sector in [0, 1, tiling.p-1]:
+                pgons.append(pgon)
+        elif tiling.center == "vertex":
+            pgon.find_sector(tiling.q)
+            if pgon.sector in [0, 1, tiling.q-1]:
+                pgons.append(pgon)
 
     # prepare matrix containing all center coordiantes
     v = np.zeros((len(pgons), 3))
@@ -216,7 +221,7 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
 
 
     pps = int((len(pgons)-1)/3)  # polygons per sector, excl. center polygon
-    p = pgons[0].p  # number of edges of each polygon
+    p = tiling.p  # number of edges of each polygon
     total_num = p*pps+1  # total number of polygons
 
     lst = np.zeros((pps+1, p+1), dtype=np.int32)  # fundamental nn-data of sector 0
