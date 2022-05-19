@@ -13,21 +13,15 @@ class TestCore(unittest.TestCase):
         for k in kernels:
             for which in nn_algorithms:
                 for nl in range(2,nlayer):
-                    print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = cell, kernel =", k)
-                    T = HyperbolicTiling(p, q, nl, kernel=k, center="cell")
-                    T.generate()
-                    nbrs = find(T, which=which)
-                    for n in nbrs:
-                        self.assertFalse(len(n) > p)
-                        self.assertFalse(len(n) < 1)
+                    for cen in ["cell", "vertex"]:
+                        print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = ", cen, ", kernel =", k)
+                        T = HyperbolicTiling(p, q, nl, kernel=k, center=cen)
+                        T.generate()
+                        nbrs = find(T, which=which)
+                        for n in nbrs:
+                            self.assertFalse(len(n) > p)
+                            self.assertFalse(len(n) < 1)
 
-                    print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = vertex, kernel =", k)
-                    T = HyperbolicTiling(p, q, nl, kernel=k, center="vertex")
-                    T.generate()
-                    nbrs = find(T, which=which)
-                    for n in nbrs:
-                        self.assertFalse(len(n) > q)
-                        self.assertFalse(len(n) < 1)
 
 
         nlayer = 4
@@ -37,21 +31,14 @@ class TestCore(unittest.TestCase):
         for k in kernels:
             for which in nn_algorithms:
                 for nl in range(2,nlayer):
-                    print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = cell, kernel =", k)
-                    T = HyperbolicTiling(p, q, nl, kernel=k, center="cell")
-                    T.generate()
-                    nbrs = find(T, which=which)
-                    for n in nbrs:
-                        self.assertFalse(len(n) > p)
-                        self.assertFalse(len(n) < 1)
-
-                    print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = vertex, kernel =", k)
-                    T = HyperbolicTiling(p, q, nl, kernel=k, center="vertex")
-                    T.generate()
-                    nbrs = find(T, which=which)
-                    for n in nbrs:
-                        self.assertFalse(len(n) > q)
-                        self.assertFalse(len(n) < 1)
+                    for cen in ["cell", "vertex"]:
+                        print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = ", cen, ", kernel =", k)
+                        T = HyperbolicTiling(p, q, nl, kernel=k, center=cen)
+                        T.generate()
+                        nbrs = find(T, which=which)
+                        for n in nbrs:
+                            self.assertFalse(len(n) > p)
+                            self.assertFalse(len(n) < 1)
 
 
 if __name__ == '__main__':
