@@ -187,11 +187,11 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     for pgon in tiling.polygons:  # pick those polygons that are in sector 0, 1 or last (3 adjacent sectors)
         pgon.find_angle()
         if tiling.center == "cell":
-            pgon.find_sector(tiling.p)
+            pgon.find_sector(tiling.p, tiling.mangle)
             if pgon.sector in [0, 1, tiling.p-1]:
                 pgons.append(pgon)
         elif tiling.center == "vertex":
-            pgon.find_sector(tiling.q)
+            pgon.find_sector(tiling.q, tiling.mangle)
             if pgon.sector in [0, 1, tiling.q-1]:
                 pgons.append(pgon)
 
@@ -207,6 +207,7 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
 
     # prepare list
     retlist = []
+    indlist = []
     # loop over polygons
     for i, poly in enumerate(pgons):
         if poly.sector == 0:
@@ -218,11 +219,14 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
             indxs = np.delete(indxs, self)  # delete self
             nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
             retlist.append(nums)
+            indlist.append(i)
 
+            print(i, nums)
 
-    pps = int((len(pgons)-1)/3)  # polygons per sector, excl. center polygon
-    p = tiling.p  # number of edges of each polygon
-    total_num = p*pps+1  # total number of polygons
+    total_num = len(tiling)     # total number of polygons
+    p = tiling.p                # number of edges of each polygon
+    pps = int((total_num-1)/p)   # polygons per sector (excluding center)
+
 
     lst = np.zeros((pps+1, p+1), dtype=np.int32)  # fundamental nn-data of sector 0
     lst[:, 0] = np.linspace(1, pps+1, pps+1)  # writing no. of each polygon in the first column
