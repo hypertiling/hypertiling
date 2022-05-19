@@ -98,7 +98,7 @@ except ImportError:
             # Note to self, think of numpy in the alternative implementation
             self.maxlinlength = linlength# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches            
-            self.centers = SortedList([HTCenter(r, phi)])
+            self.centers = [HTCenter(r, phi)]
 
         def add(self, z):
             '''
