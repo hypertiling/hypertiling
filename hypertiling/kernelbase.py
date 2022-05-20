@@ -48,8 +48,13 @@ class HyperbolicTilingBase:
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
-        self.degtol = 1 # sector boundary tolerance during construction
-        self.mangle = self.degphi/math.sqrt(5) # angular offset, rotates the entire construction; must not be larger than 360-360/p!!!, math.sqrt(5) : magic fraction...
+        self.degtol = 1 # sector boundary tolerance
+        
+        # angular offset, rotates the entire construction by a bit during construction
+        if center == "cell":
+            self.mangle = self.degphi/math.sqrt(5) 
+        elif center == "vertex":
+            self.mangle = self.degqhi/math.sqrt(5)
 
 
         # fundamental polygon of the tiling

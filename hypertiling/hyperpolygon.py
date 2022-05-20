@@ -185,8 +185,8 @@ class HyperPolygon:
         self.angle += 360 if self.angle < 0 else 0
 
     # compute in which sector out of k sectors the polygon resides
-    def find_sector(self, k):
-        self.sector = floor(self.angle/(360/k))
+    def find_sector(self, k, offset=0):
+        self.sector = floor((self.angle-offset)/(360/k))
 
     # mirror on the x-axis
     def mirror(self):
