@@ -90,10 +90,10 @@ class HyperPolygon:
     -------
 
     centerP()
-        returns the center of the polygon in Poincare coordiantes
+        returns the center of the polygon in Poincare coordinates
 
     centerW()
-        returns the center of the polygon in Weierstrass coordiantes
+        returns the center of the polygon in Weierstrass coordinates
     
     __equal__()
         checks whether two polygons are equal by comparing centers and orientations
