@@ -184,8 +184,19 @@ class HyperPolygon:
         self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))
         self.angle += 360 if self.angle < 0 else 0
 
-    # compute in which sector out of k sectors the polygon resides
+
     def find_sector(self, k, offset=0):
+        """ 
+        compute in which sector out of k sectors the polygon resides
+
+        Arguments
+        ---------
+        k : int
+            number of equal-sized sectors
+        offset : float, optional
+            rotate sectors by an angle
+        """
+
         self.sector = floor((self.angle-offset)/(360/k))
 
     # mirror on the x-axis
