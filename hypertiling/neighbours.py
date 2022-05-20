@@ -184,74 +184,108 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
 # currently this is our fastest algorithm for large tessellations
 def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
 
-	totalnum = len(tiling)		# total number of polygons
-	p = tiling.p             	# number of edges of each polygon
-	pps = int((totalnum-1)/p)	# polygons per sector (excluding center)
-	
-	def shift(lst,times):
-		lst = sorted(lst)
-		haszero = (0 in lst)
-	   
-		if haszero:
-			lsta = np.array(lst[1:]) + times*pps
-			lsta[lsta>totalnum-1] -= (totalnum-1)
-			lsta[lsta<1] += (totalnum-1)
-			return sorted([0]+list(lsta))
-		else:
-			lsta = np.array(lst) + times*pps
-			lsta[lsta>totalnum-1] -= (totalnum-1)
-			lsta[lsta<1] += (totalnum-1)
-			return sorted(list(lsta))
+
+    if tiling.center == "vertex":
+        print("algorithm >optimized_slice< currently not available for vertex-centered tilings!")
+        print("falling back to >optimized<")
+        return find_nn_optimized(tiling, nn_dist)
+
+    totalnum = len(tiling)		# total number of polygons
+    p = tiling.p             	# number of edges of each polygon
+    q = tiling.q
+    if tiling.center == "cell":
+        pps = int((totalnum-1)/p)	# polygons per sector (excluding center)
+        inc = 1
+    elif tiling.center == "vertex":
+        pps = int(totalnum/q)
+        inc = 0
+    
+    
+    # shifts local neighbour list to another sector
+    def shift(lst,times):
+    	lst = sorted(lst)
+    	haszero = (0 in lst)
+       
+        # fundamental cell requires a little extra care
+    	if haszero:
+    		lsta = np.array(lst[1:]) + times*pps
+    		lsta[lsta>totalnum-1] -= (totalnum-1)
+    		lsta[lsta<1] += (totalnum-1)
+    		return sorted([0]+list(lsta))
+    	else:
+    		lsta = np.array(lst) + times*pps
+    		lsta[lsta>totalnum-1] -= (totalnum-1)
+    		lsta[lsta<1] += (totalnum-1)
+    		return sorted(list(lsta))
+    
+    # increment indices by one
+    def increment(lst):
+    	return list(np.array(lst)+1)
+
+    
+    
+    # slice the first three sectors
+    # we are gonna look for neighbours of polygons in the second sector 
+    pgons = tiling[:3*pps+inc]
+    # this is a place where the algorithm can be further improved, performance-wise
+    # we do not need the entire 1st and 3rd sectors, but only those cells close to 
+    # the boundary of the 2nd sector
+    
+    
+    v = np.zeros((len(pgons), 3))
+    for i, poly in enumerate(pgons):
+    	v[i] = poly.centerW()
+    
+    searchdist = nn_dist + eps
+    searchdist = np.cosh(searchdist)
         
-	def increment(lst):
-		return list(np.array(lst)+1)
+    # prepare list
+    nbrlst = []
+    # loop over polygons
+    for i, poly in enumerate(pgons[pps+inc:2*pps+inc]):
+    	w = poly.centerW()
+    	dists = lorentzian_distance(v, w)
+    	dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
+    	indxs = np.where(dists < searchdist)[0]  # radius search
+    	self = np.argwhere(indxs == poly.idx-1)  # find self
+    	indxs = np.delete(indxs, self)  # delete self
+    	nums = [pgons[ind].idx-1 for ind in indxs]  # replacing indices by actual polygon number
+    	nbrlst.append(nums)
+    
+    
+    # prepare full list
+    retlist = []
+    
+    
+    if tiling.center == "cell":
+        k = p
+    elif tiling.center == "vertex":
+        k = q
+    
+    
+    if tiling.center == "cell":
+        # fundamental cell
+        lstzero = []
+        for ps in range(0,k):
+        	lstzero.append(ps*pps+1)
+        retlist.append((increment(lstzero)))
+    
+    # first sector
+    for lst in nbrlst:
+    	retlist.append(increment(shift(lst, -1)))
+    
+    # second sector
+    for lst in nbrlst:
+    	retlist.append(increment(lst))
+    
+    # remaining sectors
+    for ps in range(2,k):
+    	for lst in nbrlst:
+    		retlist.append(increment(shift(lst, ps-1)))
+    
+    return retlist
 
-	pgons = tiling[:1+3*pps]
-	
-	v = np.zeros((len(pgons), 3))
-	for i, poly in enumerate(pgons):
-		v[i] = poly.centerW()
-	
-	searchdist = nn_dist + eps
-	searchdist = np.cosh(searchdist)
-	    
-	# prepare list
-	nbrlst = []
-	# loop over polygons
-	for i, poly in enumerate(pgons[1+pps:1+2*pps]):
-		w = poly.centerW()
-		dists = lorentzian_distance(v, w)
-		dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
-		indxs = np.where(dists < searchdist)[0]  # radius search
-		self = np.argwhere(indxs == poly.idx-1)  # find self
-		indxs = np.delete(indxs, self)  # delete self
-		nums = [pgons[ind].idx-1 for ind in indxs]  # replacing indices by actual polygon number
-		nbrlst.append(nums)
-	
-	
-	# prepare full list
-	retlist = []
-	
-	# fundamental cell
-	lstzero = []
-	for ps in range(0,p):
-		lstzero.append(ps*pps+1)
-	retlist.append((increment(lstzero)))
 
-	# first sector
-	for lst in nbrlst:
-		retlist.append(increment(shift(lst, -1)))
-
-	# second sector
-	for lst in nbrlst:
-		retlist.append(increment(lst))
-
-	# remaining sectors
-	for ps in range(2,p):
-		for lst in nbrlst:
-			retlist.append(increment(shift(lst, ps-1)))
-	
-	return retlist
 
 
 # finds nearest neighbors by exploiting the discrete rotational symmetry of the lattice
