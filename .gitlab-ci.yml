@@ -64,6 +64,7 @@ unit-test-plain:
         - echo "Testing without fancy packages..."
         - python3 -m tests.test_core 
         - python3 -m tests.test_neighbours 
+        - python3 -m tests.test_comp_nbrs 
 
 unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -74,6 +75,7 @@ unit-test-fancy:
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core 
         - python3 -m tests.test_neighbours 
+        - python3 -m tests.test_comp_nbrs 
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
