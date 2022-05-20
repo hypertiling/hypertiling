@@ -25,12 +25,19 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
         selects the construction algorithm
     """
 
+    if (p-2)*(q-2) <= 4:
+        raise AttributeError("[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+
+    if p>20 or q>20 and n>5:
+        print("[hypertiling] Warning: The lattice might become very large with your parameter choice!")
+
 
     kernels = { "manu":   KernelManu, # to-do: we need better names for the kernels ;)
                 "flo":    KernelFlo, 
                 "dunham": KernelDunham}
+
     if kernel not in kernels:
-       raise KeyError("no valid kernel specified")
+       raise KeyError("[hypertiling] Error: No valid kernel specified")
     if kernel == "dunham":
-        raise NotImplementedError("Dunham kernel is currently broken (fixme!)")
+        raise NotImplementedError("[hypertiling] Error: Dunham kernel is currently broken (fixme!)")
     return kernels[kernel](p, q, n, center)
