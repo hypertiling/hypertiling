@@ -179,10 +179,30 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     return retlist
 
 
-# combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
-# applying the neighbour search only to a p-sector of the tiling (done in "find_nn_slice")
-# currently this is our fastest algorithm for large tessellations
 def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
+    """
+    combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
+    applying the neighbour search only to a p-sector of the tiling (as done in "find_nn_slice")
+    currently this is our fastest algorithm for large tessellations
+
+    currently only working for cell-centered tilings (to do!)
+
+    Attributes
+    ----------
+
+    tiling : HyperbolicTiling
+        the tiling object in which adjacent cell are to be searched for
+    nn_dist : float
+        the expected distance between neighbours
+    eps : float
+        increase nn_dist a little in order to make it more stable
+
+    Returns
+    -------
+
+    List of lists, where sublist i contains the indices of the neighbour of vertex i in the tiling 
+
+    """
 
 
     if tiling.center == "vertex":
@@ -232,10 +252,12 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     # the boundary of the 2nd sector
     
     
+    # store center coordinates in array for faster access
     v = np.zeros((len(pgons), 3))
     for i, poly in enumerate(pgons):
     	v[i] = poly.centerW()
     
+    # the search distance (we are doing a radius search)
     searchdist = nn_dist + eps
     searchdist = np.cosh(searchdist)
         
@@ -253,7 +275,7 @@ def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
     	nbrlst.append(nums)
     
     
-    # prepare full list
+    # prepare full output list
     retlist = []
     
     
