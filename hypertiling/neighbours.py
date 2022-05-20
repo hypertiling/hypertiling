@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from .distance import weierstrass_distance, lorentzian_distance
 
 # wrapper to provide a nicer interface
@@ -161,7 +162,7 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     # add something to nn_dist to avoid rounding problems
     # does not need to be particularly small
     searchdist = nn_dist + eps
-    searchdist = np.cosh(searchdist)
+    searchdist = math.cosh(searchdist)
 
     # prepare list
     retlist = []
