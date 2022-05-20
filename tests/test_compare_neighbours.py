@@ -5,7 +5,7 @@ from hypertiling.neighbours import find
 
 print("Testing different neighbour search algorithms against each other")
 
-class TestCompareNeighbours(unittest.TestCase):
+class TestCore(unittest.TestCase):
     def test_comp_nbrs(self):
 
         kernel = "flo"
