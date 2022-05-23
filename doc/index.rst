@@ -16,7 +16,7 @@
 The hypertiling documentation
 =============================
 
-Welcome to the official documentation of Hypertiling!
+Welcome to the official documentation of the hypertiling package! This page is under construction and therefore may not contain the entire functionality of the package yet.
 
 
 .. toctree::
@@ -24,6 +24,7 @@ Welcome to the official documentation of Hypertiling!
    :caption: Contents
 
    installation
+   source
    changelog
    getting_started
 
