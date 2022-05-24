@@ -85,5 +85,10 @@ sphinx-doc:
       - doc/*
   script:
     - apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme
+    - python3 -m pip install nbsphinx
     - cd doc
-    - sphinx-build . html
+    - mkdir nbcopies
+    - cd nbcopies
+    - cp ../../examples/*.ipynb .
+    - cd ..
+    - python3 -m sphinx -v . html
