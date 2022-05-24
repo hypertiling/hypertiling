@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from .distance import weierstrass_distance, lorentzian_distance
 
 # wrapper to provide a nicer interface
@@ -161,7 +162,7 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     # add something to nn_dist to avoid rounding problems
     # does not need to be particularly small
     searchdist = nn_dist + eps
-    searchdist = np.cosh(searchdist)
+    searchdist = math.cosh(searchdist)
 
     # prepare list
     retlist = []
@@ -179,76 +180,134 @@ def find_nn_optimized(tiling, nn_dist, eps=1e-5):
     return retlist
 
 
-# combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
-# applying the neighbour search only to a p-sector of the tiling (done in "find_nn_slice")
-# currently this is our fastest algorithm for large tessellations
 def find_nn_optimized_slice(tiling, nn_dist, eps=1e-5):
-    pgons = []
-    for pgon in tiling.polygons:  # pick those polygons that are in sector 0, 1 or last (3 adjacent sectors)
-        pgon.find_angle()
-        pgon.find_sector()
-        if pgon.sector in [0, 1, tiling.polygons[0].p-1]:
-            pgons.append(pgon)
+    """
+    combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
+    applying the neighbour search only to a p-sector of the tiling (as done in "find_nn_slice")
+    currently this is our fastest algorithm for large tessellations
 
-    # prepare matrix containing all center coordiantes
+    currently only working for cell-centered tilings (to do!)
+
+    Attributes
+    ----------
+
+    tiling : HyperbolicTiling
+        the tiling object in which adjacent cell are to be searched for
+    nn_dist : float
+        the expected distance between neighbours
+    eps : float
+        increase nn_dist a little in order to make it more stable
+
+    Returns
+    -------
+
+    List of lists, where sublist i contains the indices of the neighbour of vertex i in the tiling 
+
+    """
+
+
+    if tiling.center == "vertex":
+        print("algorithm >optimized_slice< currently not available for vertex-centered tilings!")
+        print("falling back to >optimized<")
+        return find_nn_optimized(tiling, nn_dist)
+
+    totalnum = len(tiling)		# total number of polygons
+    p = tiling.p             	# number of edges of each polygon
+    q = tiling.q
+    if tiling.center == "cell":
+        pps = int((totalnum-1)/p)	# polygons per sector (excluding center)
+        inc = 1
+    elif tiling.center == "vertex":
+        pps = int(totalnum/q)
+        inc = 0
+    
+    
+    # shifts local neighbour list to another sector
+    def shift(lst,times):
+    	lst = sorted(lst)
+    	haszero = (0 in lst)
+       
+        # fundamental cell requires a little extra care
+    	if haszero:
+    		lsta = np.array(lst[1:]) + times*pps
+    		lsta[lsta>totalnum-1] -= (totalnum-1)
+    		lsta[lsta<1] += (totalnum-1)
+    		return sorted([0]+list(lsta))
+    	else:
+    		lsta = np.array(lst) + times*pps
+    		lsta[lsta>totalnum-1] -= (totalnum-1)
+    		lsta[lsta<1] += (totalnum-1)
+    		return sorted(list(lsta))
+    
+    # increment indices by one
+    def increment(lst):
+    	return list(np.array(lst)+1)
+
+    
+    
+    # slice the first three sectors
+    # we are gonna look for neighbours of polygons in the second sector 
+    pgons = tiling[:3*pps+inc]
+    # this is a place where the algorithm can be further improved, performance-wise
+    # we do not need the entire 1st and 3rd sectors, but only those cells close to 
+    # the boundary of the 2nd sector
+    
+    
+    # store center coordinates in array for faster access
     v = np.zeros((len(pgons), 3))
     for i, poly in enumerate(pgons):
-        v[i] = poly.centerW()
-
-    # add something to nn_dist to avoid rounding problems
-    # does not need to be particularly small
+    	v[i] = poly.centerW()
+    
+    # the search distance (we are doing a radius search)
     searchdist = nn_dist + eps
     searchdist = np.cosh(searchdist)
-
+        
     # prepare list
-    retlist = []
+    nbrlst = []
     # loop over polygons
-    for i, poly in enumerate(pgons):
-        if poly.sector == 0:
-            w = poly.centerW()
-            dists = lorentzian_distance(v, w)
-            dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
-            indxs = np.where(dists < searchdist)[0]  # radius search
-            self = np.argwhere(indxs == i)  # find self
-            indxs = np.delete(indxs, self)  # delete self
-            nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
-            retlist.append(nums)
+    for i, poly in enumerate(pgons[pps+inc:2*pps+inc]):
+    	w = poly.centerW()
+    	dists = lorentzian_distance(v, w)
+    	dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
+    	indxs = np.where(dists < searchdist)[0]  # radius search
+    	self = np.argwhere(indxs == poly.idx-1)  # find self
+    	indxs = np.delete(indxs, self)  # delete self
+    	nums = [pgons[ind].idx-1 for ind in indxs]  # replacing indices by actual polygon number
+    	nbrlst.append(nums)
+    
+    
+    # prepare full output list
+    retlist = []
+    
+    
+    if tiling.center == "cell":
+        k = p
+    elif tiling.center == "vertex":
+        k = q
+    
+    
+    if tiling.center == "cell":
+        # fundamental cell
+        lstzero = []
+        for ps in range(0,k):
+        	lstzero.append(ps*pps+1)
+        retlist.append((increment(lstzero)))
+    
+    # first sector
+    for lst in nbrlst:
+    	retlist.append(increment(shift(lst, -1)))
+    
+    # second sector
+    for lst in nbrlst:
+    	retlist.append(increment(lst))
+    
+    # remaining sectors
+    for ps in range(2,k):
+    	for lst in nbrlst:
+    		retlist.append(increment(shift(lst, ps-1)))
+    
+    return retlist
 
-
-    pps = int((len(pgons)-1)/3)  # polygons per sector, excl. center polygon
-    p = pgons[0].p  # number of edges of each polygon
-    total_num = p*pps+1  # total number of polygons
-
-    lst = np.zeros((pps+1, p+1), dtype=np.int32)  # fundamental nn-data of sector 0
-    lst[:, 0] = np.linspace(1, pps+1, pps+1)  # writing no. of each polygon in the first column
-    for ind, line in enumerate(retlist):  # padding retlist with zeros such that each array has the same length
-        lst[ind, 1:len(line)+1] = line
-
-    neighbors = np.zeros(shape=(total_num, p + 1), dtype=np.int32)  # this array stores nn-data of the whole tiling
-    neighbors[:pps+1] = lst
-    nn_of_first = [2]  # the first polygon has to be treated seperately
-    for n in range(1, p):
-        # the crucial steps of this function follow: increase both the number of the polygon and of its neighbors by the
-        # number of polygons in this sector to obtain the result for the adjacent sector. Done, p-1 times, this returns
-        # the neighbors of the whole tiling
-        lst[(lst > 0)] += pps  # increase each entry by pps if its non-zero
-        nn_of_first.append(nn_of_first[-1] + pps)  # increase last nn of first polygon by pps
-        for ind, row in enumerate(lst[1:]):  # iterate over every
-            row[1] = 1 if ind == 0 else row[1]  # taking care of second layer, special treatment for center polygon
-            row[:] = [elem % total_num+1 if elem > total_num else elem for elem in row]
-            neighbors[1+ind+n*pps] = row  # fill the corresponding row in the neighbors matrix
-
-    neighbors[0, 1:] = nn_of_first  # finally store the neighbors of center polygon
-
-    # transform to list and remove self
-    nbrs = []
-    for i, nb in enumerate(neighbors):
-        arr = np.array(nb)
-        arr = list(arr[(arr>0)])
-        arr.remove(i+1)
-        nbrs.append(arr)
-
-    return nbrs
 
 
 
