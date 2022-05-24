@@ -4,16 +4,18 @@ from numpy import array as nparray
 def ddkahan(x, y):
     """
     Transform the addition of two floating point numbers:
+
     .. math::
+
         x + y = r + e
-        
-        
+
+
     (Dekker1971) showed that this transform is exact, if abs(x) > abs(y).
-        
+
     Parameters:
         x (float): a floating point number.
         y (float): a floating point number with abs(y) < abs(x).
-        
+
     Returns:
         r (float): x + y
         e (float): the overflow
