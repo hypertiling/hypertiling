@@ -9,31 +9,7 @@ from .transformation import p2w, moeb_rotate_trafo
 from .distance import disk_distance
 
 class KernelManu(KernelCommon):
-    """
-    Tiling construction algorithm written by M. Schrauth and F. Dusel
-
-    Methods
-    -------
-    generate_sector()
-        construct all cells residing in one fundamental p or q-fold sector
-
-    angular_replicate()
-        replicate fundamental sector in order to tessellate the entire disk
-
-    generate()
-        executes generate_sector and angular_replicate
-
-    generate_adj_poly(polygon, ind, k)
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
-
-    numerically_unstable_upper(l, start, end, tolfactor=10, samplesize=10)
-        check whether the true "embedding" distance between cells in layer l 
-        is getting close to the rounding accuracy
-
-    numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100)
-        check whether the actual hyperbolic distance between points in layer l
-        is getting close the round accuracy
-    """
+    """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
     def __init__ (self, p, q, n, center):
         super(KernelManu, self).__init__(p, q, n, center)

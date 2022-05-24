@@ -21,12 +21,21 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Get Hypertiling
 
    installation
    source
    changelog
-   getting_started
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Examples
+
+   nbcopies/examples.ipynb
+   nbcopies/geodesics.ipynb
+   nbcopies/logo.ipynb
+   nbcopies/refinements.ipynb
 
 .. toctree::
    :maxdepth: 2

@@ -17,9 +17,9 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Hypertiling'
+project = 'hypertiling'
 copyright = '2022, The Hypertiling project'
-author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth'
+author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth, Jefferson S. E. Portela'
 
 
 # -- General configuration ---------------------------------------------------
@@ -27,7 +27,11 @@ author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx']
+nbsphinx_execute = 'never'
+nbsphinx_allow_errors = True
+source_suffix = ['.rst', '.md']
+# note: do not add .ipynb when nbspinx is enabled, otherwise you get the "missing title" error
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -35,7 +39,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'html']
 
 
 # -- Options for HTML output -------------------------------------------------
