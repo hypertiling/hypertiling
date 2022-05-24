@@ -1,5 +1,5 @@
 Hyperbolic Tiling
 =================
 
-.. autoclass:: hypertiling.core.HyperbolicTilingBase
+.. automodule:: hypertiling.core.HyperbolicTiling
     :members:

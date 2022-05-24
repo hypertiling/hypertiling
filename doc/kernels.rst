@@ -1,9 +1,11 @@
 Kernels
-=================
+=======
 
-.. autoclass:: hypertiling.core.KernelManu
+.. autoclass:: hypertiling.kernelbase.HyperbolicTilingBase
     :members:
-.. autoclass:: hypertiling.core.KernelFlo
+.. autoclass:: hypertiling.kernelmanu.KernelManu
     :members:
-.. autoclass:: hypertiling.core.KernelDunham
+.. autoclass:: hypertiling.kernelflo.KernelFlo
+    :members:
+.. autoclass:: hypertiling.kerneldunham.KernelDunham
     :members:
