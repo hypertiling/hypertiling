@@ -91,4 +91,5 @@ sphinx-doc:
     - cd nbcopies
     - cp ../../examples/*.ipynb .
     - cd ..
-    - python3 -m sphinx -v . html
+    - ls
+    - sphinx-build . html
