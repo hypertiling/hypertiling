@@ -3,15 +3,14 @@ from numpy import array as nparray
 
 def ddkahan(x, y):
     '''Transform the addition of two floating point numbers:
-        x + y = r + e
-        (Dekker1971) showed that this transform is exact, if |x|>|y|.
-        
+        (Dekker1971) showed that this transform is exact, if.
+
         Parameters:
             x (float): a floating point number.
-            y (float): a floating point number with |y| < |x|.
-        
+            y (float): a floating point number with.
+
         Returns:
-            r (float): x + y
+            r (float):
             e (float): the overflow
     '''
     r = x + y
