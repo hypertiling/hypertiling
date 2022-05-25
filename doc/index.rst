@@ -48,13 +48,6 @@ Welcome to the official documentation of the hypertiling package! This page is u
    geodesics
    neighbours
 
-.. toctree::
-   :caption: API reference
-   :maxdepth: 2
-
-   api/core
-   api/hyperpolygon
-
 
 Indices and tables
 ==================
