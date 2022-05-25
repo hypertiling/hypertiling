@@ -45,34 +45,34 @@ try:
             # Note to self, think of numpy in the alternative implementation
             self.maxlinlength = linlength# the maximum linear length
             self.dangle = 0.1 # controls the width of the angle interval and is adapted by repeated searches
-            
+
             self.centers = SortedList([HTCenter(r, phi)])
-        
+
         def add(self, z):
             '''
                 Add z to the container.
-                
+
                 Parameters:
-                    z (complex) A complex number. should not be 0+0*I...
+                    z (complex): A complex number. should not be 0+0*I...
             '''
             self.centers.add(HTCenter(z))
-        
+
         def __len__(self):
             '''
                 Returns the length of the container and should enable use of the len() builtin on this container.
             '''
             return len(self.centers)
-        
+
         def fp_has(self, z):
             '''
                 Checks whether a representative of z has already been stored.
-                
+
                 Parameter:
                     z (complex): the number to check.
-                    
+
                 Returns:
                     true if a number that is as close as 1E-12 to z has already been stored
-                    else false.
+                    else false. 1E-12 is deemed sufficient since on the hyperbolic lattice the numbers pile up near |z| ~ 1
             '''
             nangle = math.atan2(z.imag, z.real)
             centerarray_iterator = self.centers.irange(HTCenter(1, nangle*(1-self.dangle)), HTCenter(1, nangle*(1+self.dangle)))
@@ -105,7 +105,7 @@ except ImportError:
                 Add z to the container
                 
                 Parameters:
-                    z (complex) A complex number. should not be 0+0*I...
+                    z (complex): A complex number. It should not be 0+0*I...
             '''
             temp = HTCenter(z)
             pos = bisect.bisect_left(self.centers, temp)

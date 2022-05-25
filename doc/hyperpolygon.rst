@@ -1,5 +1,3 @@
 HyperPolygon
 ==================
-
-.. autoclass:: hypertiling.hyperpolygon.HyperPolygon
-    :members:
+Here you learn something about the HyperPolygon class.
