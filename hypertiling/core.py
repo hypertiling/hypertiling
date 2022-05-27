@@ -7,7 +7,7 @@ from .kerneldunham import KernelDunham
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="manu"):
+def HyperbolicTiling(p, q, n, center="cell", kernel="flo"):
     """
     The base function which invokes a hyperbolic tiling
 
