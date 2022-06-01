@@ -84,7 +84,7 @@ def border_variance(tiling):
 def n_cell_centered(p,q,n):
     retval = 1 # first layer always has one cell
     for j in range(1,n):
-        retval = retval + n_cell_centered_recursion(q,p,j) 
+        retval = retval + n_cell_centered_recursion(q,p,j) # note the exchange p<-->q
     return retval
 
 def n_cell_centered_recursion(p,q,l):
@@ -96,6 +96,22 @@ def n_cell_centered_recursion(p,q,l):
     else:
         return a*n_cell_centered_recursion(p,q,l-1)-n_cell_centered_recursion(p,q,l-2)
 
+    
+# Eq. A4 from Mertens & Moore, PRE 96, 042116 (2017)
+def n_vertex_centered(p,q,l):
+  if l==0:
+    retval = 0 # no faces in zeroth layer
+  else:
+    #retval = ( n_v(p,q,l)+n_v(p,q,l-1) )/(p-2)
+    retval = ( n_v_vertex_centered(p,q,l)+n_v_vertex_centered(p,q,l-1) )/(p-2)
+  return retval
+
+# Eq. A1, A2 from Mertens & Moore, PRE 96, 042116 (2017)
+def n_v_vertex_centered(p,q,n):
+    retval = 0  # no center vertex without polygons
+    for j in range(1,n+1):
+        retval = retval + n_cell_centered_recursion(p,q,j)
+    return retval
 
 
 
