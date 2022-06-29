@@ -8,6 +8,7 @@ from .hyperpolygon import HyperPolygon, mfull_point
 from .transformation import p2w, moeb_rotate_trafo
 from .distance import disk_distance
 
+
 class KernelManu(KernelCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
@@ -15,7 +16,6 @@ class KernelManu(KernelCommon):
         super(KernelManu, self).__init__(p, q, n, center)
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
-
 
     def generate_sector(self):
         """
@@ -49,13 +49,10 @@ class KernelManu(KernelCommon):
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
-
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
-
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
-
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
@@ -83,6 +80,7 @@ class KernelManu(KernelCommon):
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
+
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
@@ -93,7 +91,6 @@ class KernelManu(KernelCommon):
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-
             if self.numerically_unstable_upper(l, startpgon, endpgon):
                 print("Numerical accuracy exhausted;")
                 print("No more layers will be constructed; automatic shutdown")
@@ -103,7 +100,6 @@ class KernelManu(KernelCommon):
                 print("Accumulated numerical errors have become too large;")
                 print("No more layers will be constructed; automatic shutdown")
                 break
-
 
         # free mem of centerset
         del centerset
@@ -122,7 +118,51 @@ class KernelManu(KernelCommon):
 
         self.polygons = list(np.delete(self.polygons, deletelist))
 
+    def add_layer(self):
+        """ constructs all neighbours of the given polygons """
+        # TO DO: think about layer indices and check for numerical stability
+        print("Warning: This function does not check for numerical stability yet! Use with care!")
+        newpolygons = []
+        centerset = set()
+        for pgon in self.polygons:
+            center = np.round(pgon.centerP(), self.dgts)
+            centerset.add(center)
 
+        for pgon in self.polygons:
+            # iterate over every vertex of pgon
+            for vert_ind in range(self.p):
+                # iterate over all polygons touching this very vertex
+                for rot_ind in range(self.q):
+                    # compute center and angle
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.centerP())
+
+                    cangle = math.degrees(math.atan2(center.imag, center.real))
+                    cangle += 360 if cangle < 0 else 0
+
+                    # cut away cells outside the fundamental sector
+                    # allow some tolerance at the upper boundary
+                    # try adding to centerlist; it is a set() and takes care of duplicates
+                    lenA = len(centerset)
+                    center = np.round(center, self.dgts)  # CAUTION
+                    centerset.add(center)
+                    lenB = len(centerset)
+
+                    # this tells us whether an element has actually been added
+                    if lenB > lenA:
+                        # create copy
+                        polycopy = copy.deepcopy(pgon)
+
+                        # generate adjacent polygon
+                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon.find_angle()
+                        adj_pgon.layer = pgon.layer + 1  # this is error-prone
+
+                        # add corresponding poly to large list
+                        # tiling.polygons.append(adj_pgon)
+                        newpolygons.append(adj_pgon)
+
+        self.polygons += newpolygons
+        self.nlayers += 1  # loses its meaning in this context
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
         """
