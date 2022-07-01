@@ -3,35 +3,53 @@ import numpy as np
 from .transformation import *
 
 def morigin_py(p, z0, verticesP):
+    ''' Apply Moebius transform to all vertices.'''
     for i in range(p + 1):
         z = moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
 
 def morigin_inv_py(p, z0, verticesP):
+    ''' Apply inverse Moebius trafo to all vertices.'''
     for i in range(p + 1):
         z = moeb_origin_trafo_inverse(z0, verticesP[i])
         verticesP[i] = z
 
 def mrotate_py(p, phi, verticesP):
+    ''' Rotate all vertices.'''
     for i in range(p + 1):
         z = moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
 
 def mfull_point_py(z0, phi, p):
+    ''' Apply all transformations(origin, rotate, inv_origin) to a single vertex.'''
     z = moeb_origin_trafo(z0, p)
     z = moeb_rotate_trafo(z, -phi)
     return moeb_origin_trafo_inverse(z0, z)
 
 def mfull_py(p, phi, ind, verticesP):
-        z0 =  verticesP[ind]
-        dz0 = complex(0, 0)
-        
-        for i in range(p + 1):
-            z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
-            z, dz = moeb_rotate_trafodd(z, dz, -phi)
-            z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
-            verticesP[i] = z
-            #verticesdP[i] = dz
+    """ 
+    Apply all transformations(origin, rotate, inv_origin) in dd precision to the vertices of an entire polygon.
+
+    Arguements:
+    -----------
+    p : int
+        Number of outer vertices.
+    phi : float
+        Angle of roatation
+    ind : int
+        Index of vertex that defines the Moebius Transform
+    verticesP : Hyperpolygon
+        Array of vertices that make up the polygon.
+    """
+    z0 =  verticesP[ind]
+    dz0 = complex(0, 0)
+
+    for i in range(p + 1):
+        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
+        z, dz = moeb_rotate_trafodd(z, dz, -phi)
+        z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
+        verticesP[i] = z
+        #verticesdP[i] = dz
 
 # try to use numba
 try:
