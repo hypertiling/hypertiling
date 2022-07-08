@@ -3,7 +3,7 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w
+from .transformation import p2w, moeb_rotate_trafo_py, mymoeb_py
 from .util import fund_radius
 
 # the main object of this library
