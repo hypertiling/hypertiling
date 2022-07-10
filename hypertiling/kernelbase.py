@@ -3,7 +3,7 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w, moeb_rotate_trafo_py, mymoeb_py
+from .transformation import p2w, moeb_rotate_trafo, mymoeb
 from .util import fund_radius
 
 # the main object of this library
@@ -210,7 +210,7 @@ class KernelCommon(HyperbolicTilingBase):
         """
         
         for poly in self.polygons:
-            poly.verticesP = moeb_rotate_trafo_py(poly.verticesP, angle)
+            poly.verticesP = moeb_rotate_trafo(poly.verticesP, angle)
             
     def translate(self, z):
         """ 
@@ -225,5 +225,5 @@ class KernelCommon(HyperbolicTilingBase):
         """
         
         for poly in self.polygons:
-            poly.verticesP = mymoeb_py(-z, poly.verticesP)
+            poly.verticesP = mymoeb(-z, poly.verticesP)
 
