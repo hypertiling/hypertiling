@@ -197,7 +197,7 @@ class KernelCommon(HyperbolicTilingBase):
             poly.edges.append((verts[-1], verts[0]))
 
 
-    def rotate(self, angle):
+    def rotate(self, angle, deg=False):
         """
         Rotates the whole tiling around the origin.
         
@@ -205,9 +205,15 @@ class KernelCommon(HyperbolicTilingBase):
         ----------
         
         angle: float
-            Angle in rad by which the tiling is rotated.
+            Angle in radians by which the tiling is rotated.
         
+        deg: bool, default: False
+            If True, then angle is considered in units of degrees.
+            
         """
+
+        if deg:
+            angle = angle * math.pi / 180 
         
         for poly in self.polygons:
             poly.verticesP = moeb_rotate_trafo(poly.verticesP, angle)
@@ -220,7 +226,7 @@ class KernelCommon(HyperbolicTilingBase):
         ----------
         
         z: complex
-            The point which will be translated o the origin.
+            The point which will be translated to the origin.
             
         """
         
