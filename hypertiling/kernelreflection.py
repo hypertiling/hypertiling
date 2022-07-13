@@ -38,7 +38,7 @@ class ReflectTiling:
         # technical attributes
         if n > 1:
             # layer sizes of angular segment
-            self.sector_lengths = np.array([np.ceil(n / p) for n in self.get_ns()], dtype=np.uint32)
+            self.sector_lengths = np.ceil(self.get_ns() / p).astype(np.uint32)
         else:
             self.sector_lengths = np.array([1])
 
@@ -54,7 +54,7 @@ class ReflectTiling:
             self.roll_f = lambda z, i: np.roll(np.flip(z[1:]), i - 1 if i > 1 else 0)
 
         # if center is added it should be p+1
-        self.sector_polys = np.zeros((np.sum(self.sector_lengths), p + 1), dtype=np.complex)  # FIXME: empty
+        self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
         self.sector_non_fillers = np.ones(np.sum(self.sector_lengths), dtype=np.bool)
         self.generate()
 
@@ -111,10 +111,11 @@ class ReflectTiling:
                 z = moeb_origin_trafo(- vertex, z)
                 z[1:] = self.roll_f(z, i)
 
-                if np.angle(z[0]) > boundary:
+                angle = np.angle(z[0])
+                if angle > boundary:
                     break
 
-                elif 0 <= np.angle(z[0]):
+                elif 0 <= angle:
                     self.sector_polys[c, :] = z
                     # has to be before if because of the "break" in the if
                     c += 1
@@ -152,8 +153,8 @@ if __name__ == "__main__":
     print(len(hps))
     hp.plot_tiling(hps, [random.random() for i in range(len(hps))])
 
-    #for pgon in tiling.sector_polys:
-    #    to_vertex = pgon[1] - pgon[0]
-    #    plt.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(to_vertex), np.imag(to_vertex))
+    for pgon in tiling.sector_polys:
+        to_vertex = pgon[1] - pgon[0]
+        plt.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(to_vertex), np.imag(to_vertex))
 
     plt.show()
