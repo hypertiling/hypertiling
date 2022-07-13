@@ -38,7 +38,7 @@ class ReflectTiling:
         # technical attributes
         if n > 1:
             # layer sizes of angular segment
-            self.sector_lengths = np.array([np.ceil(n / p) for n in self.get_ns()], dtype=np.int16)
+            self.sector_lengths = np.array([np.ceil(n / p) for n in self.get_ns()], dtype=np.uint32)
         else:
             self.sector_lengths = np.array([1])
 
@@ -63,7 +63,7 @@ class ReflectTiling:
         Calculates the number of tildes the tiling will have.
         :return: np.array[int] = number of tildes per layer
         """
-        lengths = np.empty((self.geo_atts[2],), dtype=np.uint16)
+        lengths = np.empty((self.geo_atts[2],), dtype=np.uint32)
         lengths[0] = 0
         lengths[1] = (self.geo_atts[1] - 2) * self.geo_atts[0]
         fac = (self.geo_atts[1] - 2) * (self.geo_atts[0] - 2) - 2
@@ -133,6 +133,7 @@ if __name__ == "__main__":
     import hypertiling.plot as hp
     import matplotlib.pyplot as plt
     import time
+    import random
 
     p, q, n = 7, 3, 12
     # for numba to compile the functions
@@ -148,10 +149,11 @@ if __name__ == "__main__":
         newpoly.verticesP = np.array(pgon[1:].tolist() + [pgon[0]])
         hps.append(newpoly)
 
-    hp.plot_tiling(hps, [i / len(hps) for i in range(len(hps))])
+    print(len(hps))
+    hp.plot_tiling(hps, [random.random() for i in range(len(hps))])
 
-    for pgon in tiling.sector_polys:
-        to_vertex = pgon[1] - pgon[0]
-        plt.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(to_vertex), np.imag(to_vertex))
+    #for pgon in tiling.sector_polys:
+    #    to_vertex = pgon[1] - pgon[0]
+    #    plt.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(to_vertex), np.imag(to_vertex))
 
     plt.show()
