@@ -47,11 +47,11 @@ class ReflectTiling:
 
         # some magic functions... I do not understand it 100% yet
         if self.geo_atts[0] == 3:
-            self.roll_f = lambda z, i: np.roll(np.flip(z[1:]), i if i > 1 else 1)
+            self.roll_f = lambda z, i: np.roll(np.flip(z[1:]), i)
         elif self.geo_atts[0] == 4:
             raise ArithmeticError("I have no clue. This one is evil :(")
         else:
-            self.roll_f = lambda z, i: np.roll(np.flip(z[1:]), i - 1 if i > 1 else 0)
+            self.roll_f = lambda z, i: np.roll(np.flip(z[1:]), i - 1)
 
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
