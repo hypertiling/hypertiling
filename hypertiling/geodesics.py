@@ -134,24 +134,16 @@ def to_px(z):  # transforms complex number to px coordinates
 
 
 def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
-    pi2 = 2 * np.pi
-
-    closepath = True
-    # if not isinstance(fill_img, type(None)):  # paths need to be closed if filled with img
-    #     closepath = True
-    #     print("imgfill")
-    # else:
-    #     closepath = False
-
     os.remove(filename) if os.path.exists(filename) else None
-    head = f"<svg width='{sz}px' height='{sz}px' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'>" + "\r\n"
+    head = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
+           f"width='{sz}px' height='{sz}px' viewBox='0 0 200 200'>" + "\r\n"
     svg = open(filename, 'w')
     svg.write(head)
 
     # note to self: this is slow and the svg turns out to be huge -> improve
+    pi2 = 2 * np.pi
     vs = [_ for _ in range(1, t.p)] + [0]
     for pgon in t.polygons:
-        # print(pgon.verticesP[0:-1])
         start = f"   <path style='stroke:#000000; stroke-width:.5px; fill:{clr}' "
         svg.write(start + "\r")
         z0 = pgon.verticesP[0]
@@ -160,7 +152,6 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
         for v1, v2 in enumerate(vs):
             z1 = pgon.verticesP[v1]
             z2 = pgon.verticesP[v2]
-
             orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
@@ -181,7 +172,7 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
             x2, y2 = to_px(z2)
             r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
             path += f" A {r_px} {r_px} 0 0 {int(orientation)} {x2} {y2} "
-        path += "'/>\r"  # move cursor to first point, close path
+        path += "'/>\r"
         svg.write(path + "\r\n")
 
     svg.write("\r</svg>")
