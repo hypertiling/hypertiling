@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
-from .transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
-from .distance import disk_distance
+from transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
+from distance import disk_distance
 
 
 # returns the "minor" of a matrix
@@ -64,7 +64,7 @@ def circle_through_three_points(z1, z2, z3, verbose=False):
     return complex(x0, y0), radius
 
 
-# return the geodesic midpoint betwen z1 and z2
+# return the geodesic midpoint between z1 and z2
 def geodesic_midpoint(z1, z2):
     z2n = moeb_origin_trafo(z1, z2)  # move z1, z2 such that z0=0
     d = disk_distance(0, z2n)  # distance betwen 0 and z2new
@@ -133,7 +133,7 @@ def to_px(z):  # transforms complex number to px coordinates
     return x, y
 
 
-def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
+def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
     pi2 = 2 * np.pi
 
     closepath = True
@@ -150,21 +150,24 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
 
     # note to self: this is slow and the svg turns out to be huge -> improve
     vs = [_ for _ in range(1, t.p)] + [0]
-    for pgon in t:
-        start = "   <path style='stroke:#000000; stroke-width:.5px; fill:transparent' "
+    for pgon in t.polygons:
+        # print(pgon.verticesP[0:-1])
+        start = f"   <path style='stroke:#000000; stroke-width:.5px; fill:{clr}' "
         svg.write(start + "\r")
-        path = f"       d = '"
+        z0 = pgon.verticesP[0]
+        x0, y0 = to_px(z0)
+        path = f"       d = 'M {x0} {y0} "
         for v1, v2 in enumerate(vs):
             z1 = pgon.verticesP[v1]
             z2 = pgon.verticesP[v2]
+
+            orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
             if a2 < a1:  # if second point is left of first point: swap values
-                z1, z2 = z2, z1
+                orientation = np.invert(orientation)
             if np.imag(z1) * np.imag(z2) < 0 < np.real(z1):  # for edges that intersect the x-axis: swap values
-                z1, z2 = z2, z1
-            if closepath and v1 == 0:
-                z0 = z1
+                orientation = np.invert(orientation)
 
             # calculate svg data
             arc = geodesic_arc(z1, z2)
@@ -177,10 +180,9 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
             x1, y1 = to_px(z1)
             x2, y2 = to_px(z2)
             r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            path += f"M {x1} {y1} A {r_px} {r_px} 0 0 0 {x2} {y2} "
-        x1, y1 = to_px(z0) if closepath else 0, 0
-        path += f"M {x1} {y1} '/>\r" if closepath else f"'/>\r"  # move cursor to first point, close path
-        svg.write(path)
+            path += f" A {r_px} {r_px} 0 0 {int(orientation)} {x2} {y2} "
+        path += "'/>\r"  # move cursor to first point, close path
+        svg.write(path + "\r\n")
 
     svg.write("\r</svg>")
     svg.close()
