@@ -185,4 +185,3 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
     svg.write("\r</svg>")
     svg.close()
     print("Image saved as '" + filename + "'!")
-    
