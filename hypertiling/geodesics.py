@@ -119,13 +119,13 @@ def geodesic_arc(z1, z2, **kwargs):
     
     # draw hyperbolic arc connection z1 and z2 as a matplotlib.patch.Arc
     if dt1<dt2:
-        return mpatches.Arc([zc.real, zc.imag], 2*r, 2*r, 0, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
+        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
     else:
-        return mpatches.Arc([zc.real, zc.imag], 2*r, 2*r, 0, theta1=np.degrees(t2), theta2=np.degrees(t1), **kwargs)
+        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t2), theta2=np.degrees(t1), **kwargs)
 
 
 def to_px(z):  # transforms complex number to px coordinates
-    offset = 5  # makes all coords positive
+    offset = 5  # makes all coordinates positive
     x = np.real(z) + offset
     x *= 100  # some large scaling factor to conform to px scale
     y = np.imag(z) + offset
@@ -133,24 +133,27 @@ def to_px(z):  # transforms complex number to px coordinates
     return x, y
 
 
-def addgeo_svg(svg, x1, y1, x2, y2, r):
-    start = "<path style='stroke:#000000; stroke-width:.5px; fill:transparent' "
-    path = f"d = ' M {x1} {y1} A {r} {r} 0 0 0 {x2} {y2}'"
-    svg.write(start + path + "/>\r\n")
+def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
+    pi2 = 2 * np.pi
 
+    closepath = True
+    # if not isinstance(fill_img, type(None)):  # paths need to be closed if filled with img
+    #     closepath = True
+    #     print("imgfill")
+    # else:
+    #     closepath = False
 
-def save_as_svg(t, sz=500, filename=f"geodesicplot.svg"):
     os.remove(filename) if os.path.exists(filename) else None
     head = f"<svg width='{sz}px' height='{sz}px' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'>" + "\r\n"
     svg = open(filename, 'w')
     svg.write(head)
 
-    pi2 = 2 * np.pi
-    c = 0
-
     # note to self: this is slow and the svg turns out to be huge -> improve
     vs = [_ for _ in range(1, t.p)] + [0]
     for pgon in t:
+        start = "   <path style='stroke:#000000; stroke-width:.5px; fill:transparent' "
+        svg.write(start + "\r")
+        path = f"       d = '"
         for v1, v2 in enumerate(vs):
             z1 = pgon.verticesP[v1]
             z2 = pgon.verticesP[v2]
@@ -160,22 +163,26 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg"):
                 z1, z2 = z2, z1
             if np.imag(z1) * np.imag(z2) < 0 < np.real(z1):  # for edges that intersect the x-axis: swap values
                 z1, z2 = z2, z1
+            if closepath and v1 == 0:
+                z0 = z1
 
             # calculate svg data
             arc = geodesic_arc(z1, z2)
             if type(arc) == mlines.Line2D:  # if r -> \infty
-                c += 1
-                q = 1e9  # some large number
+                r = 1e9  # some large number
             else:
                 r = arc.get_width() / 2  # = height
-                q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
 
+            q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
             x1, y1 = to_px(z1)
             x2, y2 = to_px(z2)
-            d = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            d_px = q * d
-            addgeo_svg(svg, x1, y1, x2, y2, d_px)
+            r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+            path += f"M {x1} {y1} A {r_px} {r_px} 0 0 0 {x2} {y2} "
+        x1, y1 = to_px(z0) if closepath else 0, 0
+        path += f"M {x1} {y1} '/>\r" if closepath else f"'/>\r"  # move cursor to first point, close path
+        svg.write(path)
 
-    svg.write("</svg>")
+    svg.write("\r</svg>")
     svg.close()
     print("Image saved as '" + filename + "'!")
+    
