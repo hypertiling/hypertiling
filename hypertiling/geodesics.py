@@ -125,7 +125,7 @@ def geodesic_arc(z1, z2, **kwargs):
 
 
 def to_px(z):  # transforms complex number to px coordinates
-    offset = 5  # makes all coordinates positive
+    offset = 1  # makes all coords positive
     x = np.real(z) + offset
     x *= 100  # some large scaling factor to conform to px scale
     y = np.imag(z) + offset
@@ -144,7 +144,7 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", fill_img=None):
     #     closepath = False
 
     os.remove(filename) if os.path.exists(filename) else None
-    head = f"<svg width='{sz}px' height='{sz}px' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'>" + "\r\n"
+    head = f"<svg width='{sz}px' height='{sz}px' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'>" + "\r\n"
     svg = open(filename, 'w')
     svg.write(head)
 
