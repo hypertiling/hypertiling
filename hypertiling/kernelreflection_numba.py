@@ -325,15 +325,19 @@ class ReflectTiling:
     def check_integrity(self):
         # check if all layers are full
         # else: fill them
-        # remove non intresting stuff
-        pass
-
-    def brute_force_layers(self):
-        # assigns a layer to each polygon by brute force
+        # remove non interesting stuff
         pass
 
     def transform(self, function):
-        pass
+        if not isinstance(function, np.vectorize):
+            function = np.vectorize(function)
+        self.sector_polys = function(self.sector_polys)
+
+    def rotate(self, angle):
+        self.transform(lambda x:  moeb_rotate_trafo(x, angle))
+
+    def translate(self, z):
+        self.transform(lambda x: moeb_origin_trafo(x, z))
 
 
 if __name__ == "__main__":
