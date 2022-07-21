@@ -1,7 +1,6 @@
 import numpy as np
 from numba import njit
 
-
 PI2 = 2 * np.pi
 
 
@@ -42,7 +41,7 @@ def any_is_close(zs, z, tol=1e-12):
 
 
 @njit()
-def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fillers, degtol):
+def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, degtol):
     """
     Generates the tiling of the polygon
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
@@ -50,7 +49,6 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fille
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
     :param roll_f: callable = numba compiled callable for the correct ordering of the vertices in sector_polys
-    :param sector_non_fillers: np.array[bool] = describes for each polygon if it is a filler polygon
     :param degtol: float = tolerance at the boundary
     :return: void
     """
@@ -63,6 +61,7 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fille
 
     c = 1
     its = max(int(np.ceil(geo_atts[0])) - 1, 3)
+    its = its if abs(geo_atts[0] - geo_atts[1]) > 1 else its + 1
     stop = np.sum(sector_lengths)
     boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
     ngeohalf = - (geo_atts[0] // 2 + 1)
@@ -76,6 +75,7 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fille
             its_ = its - 1
         else:
             its_ = its
+
         for k, vertex in enumerate(poly[start:its_]):
             i = k + start
             """
@@ -94,10 +94,11 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fille
             z = moeb_origin_trafo(z, - vertex)
             z[1:] = roll_f(z, i)
 
+            angle = np.angle(z[0])
             if np.angle(z[0]) > boundary:
                 break
 
-            elif 0 <= np.angle(z[0]):
+            if 0 < angle:
                 sector_polys[c, :] = z
                 # has to be before if because of the "break" in the if
                 c += 1
@@ -107,8 +108,8 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, sector_non_fille
 
                 # check if filler (shares edge with next polygon)
                 if c > j + 2 and any_is_close(sector_polys[j + 1], z[its - 1]):
-                    sector_non_fillers[c - 1] = 0
                     break
+
 
 @njit()
 def generate_raw(poly):
@@ -117,7 +118,7 @@ def generate_raw(poly):
     :param poly: np.array[np.complex128][p + 1] = polygon to grow
     :return: np.array[np.complex128][p] = centers of the neigboring polygons
     """
-    reflection_centers = np.empty((poly.shape[0] - 1, 1), dtype=np.complex128)
+    reflection_centers = np.empty((poly.shape[0] - 1,), dtype=np.complex128)
     for k, vertex in enumerate(poly[1:]):
         z = moeb_origin_trafo(poly, vertex)
         phi = np.angle(z[1:][(k + 1) % (poly.shape[0] - 1)])
@@ -168,6 +169,10 @@ def f2(z, i):
     """
     return np.roll(np.flip(z[1:]), i - 1)
 
+@njit()
+def f3(z, i):
+    return  np.roll(np.flip(z[1:]), i)
+
 
 class ReflectTiling:
     """
@@ -191,26 +196,33 @@ class ReflectTiling:
         # technical attributes
         if n > 1:
             lengths = get_ns(self.geo_atts)
-            self.length = np.sum(lengths)
             self.sector_lengths = np.ceil(lengths / p).astype(np.uint32)
+            self.sector_commulated_length = np.empty((self.sector_lengths.shape[0],), dtype=np.uint32)
+            value = 0
+            for i, length in enumerate(self.sector_lengths):
+                self.sector_commulated_length[i] = value
+                value += length
+
         else:
             self.sector_lengths = np.array([1])
+            self.sector_commulated_length = np.array([0])
+        self.length = np.sum(lengths)
 
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
 
         # some magic functions... I do not understand it 100% yet
-        if self.geo_atts[0] == 3:
+        diff = self.geo_atts[0] - self.geo_atts[1]
+        if diff < - 1:
             self.roll_f = f1
-        elif self.geo_atts[0] == 4:
-            raise ArithmeticError("I have no clue. This one is evil :(")
+        elif abs(diff) == 1:
+            self.roll_f = f3
         else:
             self.roll_f = f2
 
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
-        self.sector_non_fillers = np.ones(np.sum(self.sector_lengths), dtype=np.bool)
         self.generate()
 
     def generate(self):
@@ -218,8 +230,7 @@ class ReflectTiling:
         Calculate the tilings polygons for an angular sector.
         :return: void
         """
-        generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.roll_f, self.sector_non_fillers,
-                 self.degtol)
+        generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.roll_f, self.degtol)
 
     def __len__(self):
         """
@@ -266,15 +277,15 @@ class ReflectTiling:
         """
         v = x + y * 1j
         angle = np.angle(v)
-        angle = angle if 0 <= angle else angle + PI2
-        factor = angle // (PI2 / self.geo_atts[0])
+        factor = (angle - self.degtol / 360 * PI2) // (PI2 / self.geo_atts[0])
+        factor = factor if factor >= 0 else factor + self.geo_atts[0]
         sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
 
         disk_distance = np.vectorize(
             lambda z: 2 * np.arctanh(np.abs(z - sector_proj) / np.abs(1 - z * sector_proj.conjugate())))
 
         index = np.argmin(disk_distance(self.sector_polys[:, 0]))
-        return int(index + (self.sector_polys.shape[0] - 1) * factor)
+        return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
     def get_layer(self, index):
         index %= (self.sector_polys.shape[0] - 1)
@@ -294,31 +305,45 @@ class ReflectTiling:
                 yield poly * np.exp(angle * 1j)
 
     def get_polys_in_layer(self, layer, generator=True):
-        start = np.sum(self.sector_lengths[:layer])
-        stop = np.sum(self.sector_lengths[:layer + 1])
         if generator:
-            return self._polygen(self.sector_polys[start:stop])
+            return self._polygen(
+                self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]])
         else:
-            return self.sector_polys[start:stop]
+            return self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]]
 
     def get_neighbors(self, index):
         # get equivalent poly in sector
+        sector_replica = index // (self.sector_polys.shape[0] - 1)
         index %= (self.sector_polys.shape[0] - 1)
-        neigbor_centers = generate_raw(self.sector_polys[index])
-        xs, ys = list(zip(*[(np.real(e), np.imag(e)) for e in neigbor_centers]))
-        plt.scatter(xs, ys)
+        jump = self.sector_polys.shape[0] - 1
+
         # quick and dirty solution
-        return [self.find(np.real(e), np.imag(e)) for e in neigbor_centers]
+        neigbor_centers = generate_raw(self.sector_polys[index])
+        indices = [self.find(np.real(e), np.imag(e)) for e in neigbor_centers]
+        return [(i + sector_replica * jump) % (self.length - 1) if i != 0 else 0 for i in indices]
 
+    def check_integrity(self):
+        # check if all layers are full
+        # else: fill them
+        # remove non intresting stuff
+        pass
 
+    def brute_force_layers(self):
+        # assigns a layer to each polygon by brute force
+        pass
+
+    def transform(self, function):
+        pass
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import matplotlib.animation as animation
     import time
 
-    p, q, n = 7, 3, 5
+    # p,q=4,5 ist problematisch
+    p, q, n = 7, 3, 3
 
     ReflectTiling(p, q, 2)  # for numba
 
@@ -331,28 +356,36 @@ if __name__ == "__main__":
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
     colors = ["red", "blue"]
-    print(tiling.sector_lengths)
-    for i, pgon in enumerate(tiling):
-        l = tiling.get_layer(i)
-        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5, color=colors[l % 2])
+
+    for pgon in tiling:
+        # l = tiling.get_layer(i)
+        # p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5, color=colors[l % 2])
+        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5)
         ax.add_patch(p)
-        # ax.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(pgon[1] - pgon[0]), np.imag(pgon[1] - pgon[0]), lw=1)
-        ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, fontsize=6, horizontalalignment='center',
-                verticalalignment='center')
+    """frames = []
+    for j in range(len(tiling)):
+        temp = []
+        for i, pgon in zip(range(j), tiling):
+            # l = tiling.get_layer(i)
+            # p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5, color=colors[l % 2])
+            p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5)
+            temp.append(ax.add_patch(p))
+            d = pgon[1] - pgon[0]
+            temp.append(ax.arrow(np.real(pgon[0]), np.imag(pgon[0]), np.real(d), np.imag(d)))
+            # ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, fontsize=6, horizontalalignment='center',
+            #        verticalalignment='center')
+        frames.append(temp)"""
 
-    # poly = tiling[199]
-    # p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5, color="black")
-    # ax.add_patch(p)
-    # print(tiling.find(np.real(poly[0]), np.imag(poly[0])))
-    """l = tiling.get_layer(103)
-    polys = tiling.get_polys_in_layer(l)
-    for poly in polys:
-        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5, color="black")
-        ax.add_patch(p)"""
-
-    neigbors = tiling.get_neighbors(199)
+    """neigbors = tiling.get_neighbors(199)  # 199
     for index in neigbors:
-        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in tiling[index][1:]]), alpha=0.5, color="black")
+        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in tiling[index][1:]]), alpha=0.5,
+                                color="black")
         ax.add_patch(p)
-
+    ani = animation.ArtistAnimation(fig, frames, interval=500, blit=False)"""
     plt.show()
+
+"""
+Arbeitsplan:
+    - check for duplicates in iterative sectors
+    - neighbour function fertig schreiben
+"""
