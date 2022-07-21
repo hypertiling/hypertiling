@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
-from transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
-from distance import disk_distance
+from .transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
+from .distance import disk_distance
 
 
 # returns the "minor" of a matrix
@@ -133,18 +133,45 @@ def to_px(z):  # transforms complex number to px coordinates
     return x, y
 
 
-def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
+def save_as_svg(t, filename="geodesicplot.svg",  color="transparent", lw=.5, edgecolor="black", link=''):
+    """
+        Saves a plot of the geodesic edges as a .svg-file.
+
+        Arguments:
+        -----------
+        t : HyperbolicTiling object
+            An object containing the tiling.
+        filename : string
+            The name the file is saved as.
+        color : string
+            The background color of each polygon
+        lw : float
+            The line width of each geodesic.
+        edgecolor : string
+            The color of each geodesic.
+        link : string
+            A hyperlink referencing an image to fill each polygon with.
+    """
+
     os.remove(filename) if os.path.exists(filename) else None
     head = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
-           f"width='{sz}px' height='{sz}px' viewBox='0 0 200 200'>" + "\r\n"
+           f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
     svg = open(filename, 'w')
     svg.write(head)
+
+    if link != '':  # if background image is provided
+        pattern = f"<defs>\r <pattern id='img1' width='5' height='5'>\r" \
+                  f"  <image href='{link}' " \
+                  "x='0' y='0' width='45' height='45'/>\r </pattern>\r</defs>"
+        svg.write(pattern + "\r\n")
+        if color == 'transparent':
+            color = ''
 
     # note to self: this is slow and the svg turns out to be huge -> improve
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, t.p)] + [0]
     for pgon in t.polygons:
-        start = f"   <path style='stroke:#000000; stroke-width:.5px; fill:{clr}' "
+        start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{color}' "
         svg.write(start + "\r")
         z0 = pgon.verticesP[0]
         x0, y0 = to_px(z0)
@@ -172,7 +199,7 @@ def save_as_svg(t, sz=500, filename=f"geodesicplot.svg", clr="transparent"):
             x2, y2 = to_px(z2)
             r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
             path += f" A {r_px} {r_px} 0 0 {int(orientation)} {x2} {y2} "
-        path += "'/>\r"
+        path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
 
     svg.write("\r</svg>")
