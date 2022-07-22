@@ -61,7 +61,7 @@ def generate(geo_atts, r, sector_polys, sector_lengths, roll_f, degtol):
 
     c = 1
     its = max(int(np.ceil(geo_atts[0])) - 1, 3)
-    its = its if abs(geo_atts[0] - geo_atts[1]) > 1 else its + 1
+    its = its if geo_atts[0] - geo_atts[1] != 1 else its + 1
     stop = np.sum(sector_lengths)
     boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
     ngeohalf = - (geo_atts[0] // 2 + 1)
@@ -169,9 +169,10 @@ def f2(z, i):
     """
     return np.roll(np.flip(z[1:]), i - 1)
 
+
 @njit()
 def f3(z, i):
-    return  np.roll(np.flip(z[1:]), i)
+    return np.roll(np.flip(z[1:]), i)
 
 
 class ReflectTiling:
@@ -214,11 +215,15 @@ class ReflectTiling:
 
         # some magic functions... I do not understand it 100% yet
         diff = self.geo_atts[0] - self.geo_atts[1]
-        if diff < - 1:
+        print(f"{p}, {q}: ", end="")
+        if self.geo_atts[0] == 3:
+            print("f1")
             self.roll_f = f1
         elif abs(diff) == 1:
+            print("f2")
             self.roll_f = f3
         else:
+            print("f3")
             self.roll_f = f2
 
         # if center is added it should be p+1
@@ -234,8 +239,8 @@ class ReflectTiling:
 
     def __len__(self):
         """
-        Return the number of created polygons
-        :return: int = number of created polygons
+        Return the number of polygons in the tiling
+        :return: int = number of polygons in the tiling
         """
         return self.length
 
@@ -248,11 +253,11 @@ class ReflectTiling:
         for poly in self.sector_polys:
             yield poly
 
-        dphi = PI2 / self.geo_atts[0]
+        """dphi = PI2 / self.geo_atts[0]
         phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
         for i, angle in enumerate(phis):
             for poly in self.sector_polys[1:]:
-                yield poly * np.exp(angle * 1j)
+                yield poly * np.exp(angle * 1j)"""
 
     def __getitem__(self, index):
         """
@@ -268,26 +273,33 @@ class ReflectTiling:
         poly = self.sector_polys[index % (self.sector_polys.shape[0] - 1)]
         return poly * np.exp(phi * 1j)
 
-    def find(self, x, y):
+    def find(self, v):
         """
-        Find the polygons index (x, y) belongs to. x, y are the scalar of real and imaginary part.
-        :param x: float = real part of the position
-        :param y: float = imaginary part of the position
+        Find the polygons index z belongs to.
+        :param z: complex = position to search polygon for
         :return: int = index of the corresponding polygon
         """
-        v = x + y * 1j
         angle = np.angle(v)
         factor = (angle - self.degtol / 360 * PI2) // (PI2 / self.geo_atts[0])
         factor = factor if factor >= 0 else factor + self.geo_atts[0]
         sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
 
-        disk_distance = np.vectorize(
-            lambda z: 2 * np.arctanh(np.abs(z - sector_proj) / np.abs(1 - z * sector_proj.conjugate())))
+        f_dist = lambda z, z_hat: 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
+        disk_distance = np.vectorize(lambda z: f_dist(z, sector_proj))
 
-        index = np.argmin(disk_distance(self.sector_polys[:, 0]))
+        dists = disk_distance(self.sector_polys[:, 0])
+        index = np.argmin(dists)
+        if dists[index] >= f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+            return False
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
     def get_layer(self, index):
+        """
+        Experimental! Get layer of the polygon at index.
+        The layer is determined by the number of polygons per layer. This causes problem in e.g. (3, 7).
+        :param index: int = index of the polygon
+        :return: int = layer the polygon belongs to
+        """
         index %= (self.sector_polys.shape[0] - 1)
         for l, length in enumerate(self.sector_lengths):
             index -= length
@@ -295,6 +307,12 @@ class ReflectTiling:
                 return l
 
     def _polygen(self, polys):
+        """
+        Protected(!)
+        Generator for iterating over polygons.
+        :param polys: np.array[n, 8] = segment the generator will create the rotations duplicates for and rotate over
+        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
+        """
         for poly in polys:
             yield poly
 
@@ -305,6 +323,13 @@ class ReflectTiling:
                 yield poly * np.exp(angle * 1j)
 
     def get_polys_in_layer(self, layer, generator=True):
+        """
+        Experimental! Get all polygons in a certain layer.
+        The layer is determined by the number of polygons per layer. This causes problem in e.g. (3, 7).
+        :param layer: int = index of the layer
+        :param generator: bool = determines if the rotational duplicates should be considered too (returns generator)
+        :return: Union[iterable, np.array] = generator or segment of all the polygons in the layer
+        """
         if generator:
             return self._polygen(
                 self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]])
@@ -312,6 +337,11 @@ class ReflectTiling:
             return self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]]
 
     def get_neighbors(self, index):
+        """
+        Get the neighbors of a polygon at index
+        :param index: int = index of the polygon
+        :return: np.array[p] = array containing the indices of the neighbors
+        """
         # get equivalent poly in sector
         sector_replica = index // (self.sector_polys.shape[0] - 1)
         index %= (self.sector_polys.shape[0] - 1)
@@ -319,24 +349,48 @@ class ReflectTiling:
 
         # quick and dirty solution
         neigbor_centers = generate_raw(self.sector_polys[index])
-        indices = [self.find(np.real(e), np.imag(e)) for e in neigbor_centers]
+        indices = [self.find(np.real(e), np.imag(e)) for e in neigbor_centers if not (e is False)]
         return [(i + sector_replica * jump) % (self.length - 1) if i != 0 else 0 for i in indices]
 
     def check_integrity(self):
-        # check if all layers are full
-        # else: fill them
-        # remove non interesting stuff
+        # check if one polygon is shifted in the range of another or if duplicates exist
+        for i in range(len(self.sector_polys)):
+            poly_center = self.sector_polys[i, 0]
+            self.sector_polys[i, 0] = 0
+            try:
+                if self.find(poly_center):
+                    raise AttributeError(f"Duplicate detected at index {i}")
+            finally:
+                self.sector_polys[i, 0] = poly_center
+
+        # TODO: check for rotational duplicates
+        # check if all edges have a partner
         pass
 
     def transform(self, function):
+        """
+        Applies function to each polygon
+        :param function: callable = function to apply on each polygon
+        :return: void
+        """
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
         self.sector_polys = function(self.sector_polys)
 
     def rotate(self, angle):
-        self.transform(lambda x:  moeb_rotate_trafo(x, angle))
+        """
+        Rotates the grid around angle
+        :param angle: float = angle to rotate the polygon
+        :return: void
+        """
+        self.transform(lambda x: moeb_rotate_trafo(x, - angle))
 
     def translate(self, z):
+        """
+        Translates the grid to z
+        :param z: complex = position of the new origin
+        :return: void
+        """
         self.transform(lambda x: moeb_origin_trafo(x, z))
 
 
@@ -345,15 +399,35 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.animation as animation
     import time
+    import random
 
-    # p,q=4,5 ist problematisch
-    p, q, n = 7, 3, 3
+    p, q, n = 4, 5, 4
+    combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
-    ReflectTiling(p, q, 2)  # for numba
+    for p, q in combis:
+        fig, ax = plt.subplots()
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        ax.set_title(f"{p} {q}")
+        tiling = ReflectTiling(p, q, 4)  # for numba
+        try:
+            tiling.check_integrity()
+            check = True
+        except:
+            check = False
+        ax.set_title(f"{p} {q} {check}")
+        for pgon in tiling:
+            # l = tiling.get_layer(i)
+            # p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5, color=colors[l % 2])
+            p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5)
+            ax.add_patch(p)
+        plt.show()
+    exit("stop")
 
     t1 = time.time()
     tiling = ReflectTiling(p, q, n)
     print(f"Creation of segment took: {time.time() - t1} s")
+    tiling.check_integrity()
 
     # hps = []
     fig, ax = plt.subplots()
@@ -361,11 +435,19 @@ if __name__ == "__main__":
     ax.set_ylim(-1, 1)
     colors = ["red", "blue"]
 
-    for pgon in tiling:
+    for i, pgon in enumerate(tiling):
         # l = tiling.get_layer(i)
         # p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5, color=colors[l % 2])
         p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), alpha=0.5)
         ax.add_patch(p)
+        ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, fontsize=6, horizontalalignment='center',
+                verticalalignment='center')
+    j = random.randint(0, i)
+    poly = tiling[j]
+    p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5)
+    ax.add_patch(p)
+    print(f"{j}: {tiling.find(poly[0])}")
+
     """frames = []
     for j in range(len(tiling)):
         temp = []
@@ -390,6 +472,6 @@ if __name__ == "__main__":
 
 """
 Arbeitsplan:
-    - check for duplicates in iterative sectors
+    - generate soll für alle funktionieren
     - neighbour function fertig schreiben
 """
