@@ -112,7 +112,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 
 @njit()
-def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
+def generate_old(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              roll_f: Callable, degtol: float):
     """
     Generates the tiling of the polygon
@@ -182,5 +182,84 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c > j + 2 and any_is_close(sector_polys[j + 1], z[its - 1]):
                     break
 
+
+# @njit()
+def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
+             roll_f: Callable, degtol: float):
+    """
+    Generates the tiling of the polygon
+    :param geo_atts: Tuple[int, int, int] = [p, q, n]
+    :param r: float = radius of the fundamental polygon
+    :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
+    :param sector_lengths: np.array[int] = length
+    :param roll_f: callable = numba compiled callable for the correct ordering of the vertices in sector_polys
+    :param degtol: float = tolerance at the boundary
+    :return: void
+    """
+    dphi = PI2 / geo_atts[0]
+    phis = np.array([dphi * i for i in range(geo_atts[0])])
+
+    # most inner polygon
+    sector_polys[0, 0] = 0
+    sector_polys[0, 1:] = r * np.exp(1j * phis)
+
+    # outer polygons
+    """
+    its = max(int(np.ceil(geo_atts[0])) - 1, 3)
+    its = its if geo_atts[0] - geo_atts[1] != 1 else its + 1
+    stop = np.sum(sector_lengths)
+    
+    ngeohalf = - (geo_atts[0] // 2 + 1)"""
+
+    # -1 for poly which created this one
+    its = geo_atts[0] - 1
+    boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
+    c = 1
+    stop = np.sum(sector_lengths)
+    for j, poly in enumerate(sector_polys[:-1]):
+        """if j > 2 and any_is_close(sector_polys[c - 1, ngeohalf:], poly[2]):
+            start = 2
+        else:
+            start = 1
+        if any_is_close(sector_polys[j + 1], poly[2]):
+            its_ = its - 1
+        else:
+            its_ = its"""
+
+        vertices = poly[1:]
+        for i, vertex in enumerate(vertices[:its]):
+            """
+            Algorithm:
+             1. shift vertex into origin
+             2. rotate poly such that two vertices are on the x-axis
+             3. reflection on the x-axis (inversion of the imaginary part)
+             4. rotate poly back to original orientation (it is now reflected)
+             5. shift poly back to original position
+            """
+            z = moeb_origin_trafo(poly, vertex)
+            phi = np.angle(vertices[i % geo_atts[0]])
+            z = moeb_rotate_trafo(z, - phi)
+            z = np.conjugate(z)
+            z = moeb_rotate_trafo(z, phi)
+            z = moeb_origin_trafo(z, - vertex)
+
+            # restore ordering in new array (flip and shift)
+            z[1:] = roll_f(z, i)
+
+            angle = np.angle(z[0])
+            if np.angle(z[0]) > boundary:
+                break
+
+            if 0 < angle:
+                sector_polys[c, :] = z
+                # has to be before if because of the "break" in the if
+                c += 1
+
+                if c == stop:
+                    return 0
+
+                # check if filler (shares edge with next polygon)
+                # if c > j + 2 and any_is_close(sector_polys[j + 1], z[its - 1]):
+                #    break
 
 # Methods ==============================================================================================================

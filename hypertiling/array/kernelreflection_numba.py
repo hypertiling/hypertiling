@@ -97,8 +97,16 @@ class ReflectTiling:
         if index == 0:
             return self.sector_polys[0]
 
+        # remove the first one from consideration
+        index -= 1
+
         phi = PI2 / self.geo_atts[0] * (index // (self.sector_polys.shape[0] - 1))
-        poly = self.sector_polys[index % (self.sector_polys.shape[0] - 1)]
+        # print(f"{index}, {phi}")
+        index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
+        # print(f"{index}, {self.sector_polys.shape[0]} -> {index}")
+
+        # +1 to ignore the first one
+        poly = self.sector_polys[index + 1]
         return poly * np.exp(phi * 1j)
 
     def find(self, v):
@@ -244,20 +252,50 @@ class ReflectTiling:
 if __name__ == "__main__":
     import plot
     import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    from matplotlib import animation
 
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
     for p, q in combis:
         tiling = ReflectTiling(p, q, 3)
-        fig, ax = plot.plot(tiling, numerate=True, alpha=0.5)
-        try:
+        # plot.plot(tiling, alpha=0.5)
+        # plt.show()
+
+        fig, ax = plt.subplots()
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+
+        patches = []
+
+        def animate(i):
+            print(i)
+            poly = tiling[i]
+            patches.append(ax.add_patch(mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5)))
+            patches.append(ax.text(np.real(poly[0]), np.imag(poly[0]), i, fontsize=6, horizontalalignment='center',
+                           verticalalignment='center'))
+            dp = poly[1] - poly[0]
+            patches.append(ax.arrow(np.real(poly[0]), np.imag(poly[0]), np.real(dp), np.imag(dp)))
+            return patches
+
+
+        def init():
+            global patches
+            patches = []
+            return patches
+
+
+        anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(tiling), interval=500, blit=True, repeat=False)
+        plt.show()
+        # fig, ax = plot.plot(tiling, numerate=True, alpha=0.5)
+        """try:
             tiling.check_integrity()
             check = True
         except Exception as error:
             check = str(error)
-        ax.set_title(f"{p} {q} {check}")
+        ax.set_title(f"{p} {q} {check}")"""
 
-        plt.show()
+
 """
 Arbeitsplan:
     - check integrity fertig machen
