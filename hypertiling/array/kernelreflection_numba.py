@@ -44,16 +44,6 @@ class ReflectTiling:
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
 
-        # some magic functions... I do not understand it 100% yet
-        diff = self.geo_atts[0] - self.geo_atts[1]
-        print(f"{p}, {q}: ", end="")
-        if self.geo_atts[0] == 3 or abs(diff) == 1:
-            print("f1")
-            self.roll_f = util.f1
-        else:
-            print("f3")
-            self.roll_f = util.f2
-
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
         self.generate()
@@ -63,7 +53,7 @@ class ReflectTiling:
         Calculate the tilings polygons for an angular sector.
         :return: void
         """
-        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.roll_f, self.degtol)
+        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.degtol)
 
     def __len__(self):
         """
@@ -125,7 +115,6 @@ class ReflectTiling:
 
         dists = disk_distance(self.sector_polys[:, 0])
         index = np.argmin(dists)
-
         if dists[index] >= f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
             return False
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
@@ -202,6 +191,8 @@ class ReflectTiling:
         Raises AttributeError if the grid seems to be invalid.
         :return: void
         """
+        # FIXME: check if it works
+        warnings.warn("check_integrity is not yet ready. Will cause problems in e.g. 3,7-grid with boundary")
         # check if one polygon is shifted in the range of another or if duplicates exist
         for i in range(len(self.sector_polys)):
             poly_center = self.sector_polys[i, 0]
@@ -214,11 +205,9 @@ class ReflectTiling:
 
         # check if all edges have a partner
         # FIXME: Check radial und melde "erstes loch in radius... found"
-        warnings.warn("check_integrity is not yet ready. Will cause problems in e.g. 3,7-grid with boundary")
         for i in range(len(self.sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
-            if (i >= self.sector_commulated_length[-1] and neighbor_counter >= 3) or neighbor_counter == self.geo_atts[
-                0]:
+            if neighbor_counter == self.geo_atts[0]:
                 continue
             raise AttributeError(f"A hole in the tiling was detected by {i}")
 
@@ -258,35 +247,44 @@ if __name__ == "__main__":
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
     for p, q in combis:
-        tiling = ReflectTiling(p, q, 3)
-        # plot.plot(tiling, alpha=0.5)
-        # plt.show()
+        tiling = ReflectTiling(p, q, 4)
+        try:
+            fig, ax = plt.subplots()
+            tiling.check_integrity()
+        except Exception as error:
+            plt.title(f"{p} {q}: {error}")
+            ax.set_xlim(-1, 1)
+            ax.set_ylim(-1, 1)
 
-        fig, ax = plt.subplots()
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-1, 1)
-
-        patches = []
-
-        def animate(i):
-            print(i)
-            poly = tiling[i]
-            patches.append(ax.add_patch(mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5)))
-            patches.append(ax.text(np.real(poly[0]), np.imag(poly[0]), i, fontsize=6, horizontalalignment='center',
-                           verticalalignment='center'))
-            dp = poly[1] - poly[0]
-            patches.append(ax.arrow(np.real(poly[0]), np.imag(poly[0]), np.real(dp), np.imag(dp)))
-            return patches
-
-
-        def init():
-            global patches
             patches = []
-            return patches
 
 
-        anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(tiling), interval=500, blit=True, repeat=False)
-        plt.show()
+            def animate(i):
+                poly = tiling[i]
+                patches.append(ax.add_patch(
+                    mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5)))
+                patches.append(ax.text(np.real(poly[0]), np.imag(poly[0]), i, fontsize=6, horizontalalignment='center',
+                                       verticalalignment='center'))
+                dp = poly[1] - poly[0]
+                patches.append(ax.arrow(np.real(poly[0]), np.imag(poly[0]), np.real(dp), np.imag(dp)))
+                return patches
+
+
+            def init():
+                global patches
+                patches = []
+                return patches
+
+
+            anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(tiling), interval=500, blit=True)
+            arrow = np.array([1, 0])
+            plt.arrow(0, 0, arrow[0], arrow[1])
+            theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
+            rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+            arrow = rot @ arrow
+            plt.arrow(0, 0, arrow[0], arrow[1])
+
+            plt.show()
         # fig, ax = plot.plot(tiling, numerate=True, alpha=0.5)
         """try:
             tiling.check_integrity()
@@ -294,7 +292,6 @@ if __name__ == "__main__":
         except Exception as error:
             check = str(error)
         ax.set_title(f"{p} {q} {check}")"""
-
 
 """
 Arbeitsplan:
