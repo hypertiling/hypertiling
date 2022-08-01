@@ -29,15 +29,8 @@ class ReflectTiling:
         if n > 1:
             lengths = util.get_ns(self.geo_atts)
             self.sector_lengths = np.ceil(lengths / p).astype(np.uint32)
-            self.sector_commulated_length = np.empty((self.sector_lengths.shape[0],), dtype=np.uint32)
-            value = 0
-            for i, length in enumerate(self.sector_lengths):
-                self.sector_commulated_length[i] = value
-                value += length
-
         else:
             self.sector_lengths = np.array([1])
-            self.sector_commulated_length = np.array([0])
         self.length = np.sum(lengths)
 
         fac = np.pi / (p * q)
@@ -91,9 +84,7 @@ class ReflectTiling:
         index -= 1
 
         phi = PI2 / self.geo_atts[0] * (index // (self.sector_polys.shape[0] - 1))
-        # print(f"{index}, {phi}")
         index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
-        # print(f"{index}, {self.sector_polys.shape[0]} -> {index}")
 
         # +1 to ignore the first one
         poly = self.sector_polys[index + 1]
@@ -110,28 +101,22 @@ class ReflectTiling:
         factor = factor if factor >= 0 else factor + self.geo_atts[0]
         sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
 
-        f_dist = lambda z, z_hat: 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
-        disk_distance = np.vectorize(lambda z: f_dist(z, sector_proj))
+        # f_dist = lambda z, z_hat: 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
+        disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
 
         dists = disk_distance(self.sector_polys[:, 0])
         index = np.argmin(dists)
-        if dists[index] >= f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+        if dists[index] >= util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
             return False
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
-    def get_layer(self, index):
-        """
-        Experimental! Get layer of the polygon at index.
-        The layer is determined by the number of polygons per layer. This causes problem in e.g. (3, 7).
-        :param index: int = index of the polygon
-        :return: int = layer the polygon belongs to
-        """
-        warnings.warn("Experimental method! This might not work for certain grids")
-        index %= (self.sector_polys.shape[0] - 1)
-        for l, length in enumerate(self.sector_lengths):
-            index -= length
-            if index < 0:
-                return l
+    def map_layers(self):
+        # start with most inner poly
+        # check all vertices
+            # all added polys are part of next layer
+            # check for all these polys the next layer
+                # controll if sibling
+        pass
 
     def _polygen(self, polys):
         """
@@ -148,21 +133,6 @@ class ReflectTiling:
         for i, angle in enumerate(phis):
             for poly in polys:
                 yield poly * np.exp(angle * 1j)
-
-    def get_polys_in_layer(self, layer, generator=True):
-        """
-        Experimental! Get all polygons in a certain layer.
-        The layer is determined by the number of polygons per layer. This causes problem in e.g. (3, 7).
-        :param layer: int = index of the layer
-        :param generator: bool = determines if the rotational duplicates should be considered too (returns generator)
-        :return: Union[iterable, np.array] = generator or segment of all the polygons in the layer
-        """
-        warnings.warn("Experimental method! This might not work for certain grids")
-        if generator:
-            return self._polygen(
-                self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]])
-        else:
-            return self.sector_polys[self.sector_commulated_length[layer]:self.sector_commulated_length[layer + 1]]
 
     def get_neighbors(self, index):
         """
@@ -247,9 +217,10 @@ if __name__ == "__main__":
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
     for p, q in combis:
+        fig, ax = plt.subplots()
         tiling = ReflectTiling(p, q, 4)
+        print(tiling.get_layer(2))
         try:
-            fig, ax = plt.subplots()
             tiling.check_integrity()
         except Exception as error:
             plt.title(f"{p} {q}: {error}")
@@ -260,9 +231,11 @@ if __name__ == "__main__":
 
 
             def animate(i):
+                colors = ["blue", "red"]
                 poly = tiling[i]
                 patches.append(ax.add_patch(
-                    mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5)))
+                    mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5,
+                               color=colors[tiling.get_layer(i) % 2])))
                 patches.append(ax.text(np.real(poly[0]), np.imag(poly[0]), i, fontsize=6, horizontalalignment='center',
                                        verticalalignment='center'))
                 dp = poly[1] - poly[0]
@@ -285,7 +258,7 @@ if __name__ == "__main__":
             plt.arrow(0, 0, arrow[0], arrow[1])
 
             plt.show()
-        # fig, ax = plot.plot(tiling, numerate=True, alpha=0.5)
+
         """try:
             tiling.check_integrity()
             check = True
@@ -295,7 +268,7 @@ if __name__ == "__main__":
 
 """
 Arbeitsplan:
+    - doublicate in höhren combis durch rotation
     - check integrity fertig machen
-    - generate soll für alle funktionieren
-    - find function fertig machen
+    - layer
 """

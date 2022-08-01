@@ -61,6 +61,11 @@ def generate_raw(poly: np.array) -> np.array:
     return reflection_centers
 
 
+@njit()
+def f_dist(z: np.complex128, z_hat: np.complex128):
+    return 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
+
+
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
@@ -90,7 +95,6 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
-    :param roll_f: callable = numba compiled callable for the correct ordering of the vertices in sector_polys
     :param degtol: float = tolerance at the boundary
     :return: void
     """
