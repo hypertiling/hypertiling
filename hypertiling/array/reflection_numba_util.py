@@ -82,7 +82,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-# @njit()
+@njit()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array, degtol: float):
     """
     Generates the tiling of the polygon
@@ -106,10 +106,11 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
     # prepare edge_array
 
-    edge_array = np.empty((stop,), dtype=np.uint8)  # FIXME: numba compatible function np.min_scalar_type(geo_atts[0])
-    edges = int("1" * geo_atts[0], 2)
+    edge_array = np.empty((stop,), dtype=np.uint8)
+    edges = int(2 ** geo_atts[0] - 1)
+
     # eliminate parent edge
-    edges ^= 1 << (geo_atts[0] - 1)  # FIXME: numba compatible function
+    edges ^= 1 << (geo_atts[0] - 1)
 
     edge_array.fill(edges)
     # for first poly create only one neighbor
