@@ -11,7 +11,7 @@ class ReflectTiling:
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p, q, n, degtol=1, mangle=12.15135):
+    def __init__(self, p, q, n, degtol=0, mangle=12.15135):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         :param p: int = number of vertices per cells
@@ -101,6 +101,19 @@ class ReflectTiling:
         poly = self.sector_polys[index + 1]
         return poly * np.exp(phi * 1j)
 
+    def get_layer(self, index):
+        if self.layers is None:
+            warnings.warn("Layers are not yet mapped. Start mapping")
+            self.map_layers()
+
+        if index == 0:
+            return self.layers[0]
+
+        # remove the first one from consideration
+        index -= 1
+        index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
+        return self.layers[index + 1]
+
     def find(self, v):
         """
         Find the polygons index z belongs to.
@@ -112,7 +125,6 @@ class ReflectTiling:
         factor = factor if factor >= 0 else factor + self.geo_atts[0]
         sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
 
-        # f_dist = lambda z, z_hat: 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
         disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
 
         dists = disk_distance(self.sector_polys[:, 0])
@@ -122,13 +134,28 @@ class ReflectTiling:
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
     def map_layers(self):
+        verticess = [[] for i in range(self.geo_atts[2] + 1)]
+        verticess[0] = self.sector_polys[0, 1:]
         self.layers = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
-        # start with most inner poly
-        # check all vertices
-        # all added polys are part of next layer
-        # check for all these polys the next layer
-        # controll if sibling
-        pass
+        self.layers.fill(self.geo_atts[2])
+        self.layers[0] = 0
+
+        for i, poly in enumerate(self.sector_polys[1:], start=1):
+            blocked = []
+            for j, vertices in enumerate(verticess):
+                if len(vertices) == 0:
+                    break
+
+                conn = util.any_close_matrix(np.array(vertices), poly[1:])
+                if conn.shape[0] != 0:
+                    self.layers[i] = j + 1 if self.layers[i] >= j + 1 else self.layers[i]
+                blocked += conn[:, 0].tolist()
+
+            for k, vertex in enumerate(poly[1:]):
+                if k in blocked:
+                    continue
+                else:
+                    verticess[self.layers[i]].append(vertex)
 
     def _polygen(self, polys):
         """
@@ -173,7 +200,6 @@ class ReflectTiling:
         Raises AttributeError if the grid seems to be invalid.
         :return: void
         """
-        warnings.warn("check_integrity is not yet ready. Will cause problems in e.g. 3,7-grid with boundary")
         # check if one polygon is shifted in the range of another or if duplicates exist
         for i in range(len(self.sector_polys)):
             poly_center = self.sector_polys[i, 0]
@@ -185,13 +211,15 @@ class ReflectTiling:
                 self.sector_polys[i, 0] = poly_center
 
         # check if all edges have a partner
+        if self.layers is None:
+            self.map_layers()
+
         for i in range(len(self.sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
             if neighbor_counter == self.geo_atts[0]:
                 continue
-            poly = self[i]
-            warnings.warn(f"A hole in the tiling was detected by {i}" +
-                          f"\n\tradius{util.f_dist(poly[0], 0)}\n\teuclidean{np.real(poly[0]), np.imag(poly[0])}")
+            print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
+            return
 
     def transform(self, function):
         """
@@ -224,14 +252,20 @@ if __name__ == "__main__":
     import plot
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-    from matplotlib import animation
 
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
     for p, q in combis:
-        tiling = ReflectTiling(p, q, 4)
-        tiling.map_layers()
-        fig, ax = plot.plot(tiling, alpha=0.5)
+        tiling = ReflectTiling(p, q, 8)
+        plot.plot(tiling, alpha=0.5)
+        # tiling.map_layers()
+        # fig, ax = plt.subplots()
+
+        """colors = ["blue", "red"]
+        for i, pgon in enumerate(tiling):
+            p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), color=colors[tiling.get_layer(i) % 2])
+            ax.add_patch(p)
+        """
 
         try:
             tiling.check_integrity()
@@ -256,6 +290,5 @@ if __name__ == "__main__":
 
 """
 Arbeitsplan:
-    - layer
-    - check integrity fertig machen
+    - neighbors fast
 """
