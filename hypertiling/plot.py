@@ -35,6 +35,37 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
 
 # convert list of HyperPolygon objects to matplotlib PatchCollection
 def poly2patch(polygons, colors=None, lazy=False, cutoff=0.001, **kwargs):
+    """
+    Returns a PatchCollection, containing all polygons that are to be drawn.
+
+    Parameters
+    ----------
+
+    polygons: list
+        A list of hyperpolygon classes which are to be added to the PatchCollection. Usually, coming from HyperTiling.polygons.
+
+    colors: array-like
+        Used for colormapping the PatchCollection. Must have same length as polygons.
+
+    lazy: Bool, default: False
+        If True, only polygons whose edges are all longer than the parameter cutoff will be added to the PatchCollection.
+
+    cutoff: float, default: 0.001
+        Only active, if lazy is True. Sets the minimal edge length for lazy plotting.
+
+    Returns
+    -------
+
+    pgonpatches: PatchCollection
+        Contains all the polygon patches.
+
+    Other Parameters:
+    -----------------
+
+    **kwargs
+        Patch properties.
+
+    """
     patches = []
     accepted_polys = []
         
@@ -42,7 +73,7 @@ def poly2patch(polygons, colors=None, lazy=False, cutoff=0.001, **kwargs):
     for idx, poly in enumerate(polygons):
         # extract vertex coordinates
         u = poly.verticesP[0:-1]
-        if lazy and abs(u[0]-u[1]) < cutoff:
+        if lazy and np.any(abs(np.diff(u)) < cutoff):
             continue
         # transform to matplotlib Polygon format
         stack = np.column_stack((u.real,u.imag))
@@ -93,6 +124,49 @@ def edges2matplotlib(T, **kwargs):
 # simple plot function for hyperbolic tiling with colors
 def plot_tiling(polygons, colors, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
     fig, ax = plt.subplots(figsize=(10,7), dpi=120)
+    """
+    Plots a hyperbolic tiling.
+
+    Parameters
+    ----------
+
+    polygons: list
+        A list of hyperpolygon classes which are to be added to the PatchCollection. Usually, coming from HyperTiling.polygons.
+
+    colors: array-like
+        Used for colormapping the PatchCollection. Must have same length as polygons.
+
+    symmetric_colors: Bool, default: False
+        If True, sets the colormap so that the center of the colormap corresponds to the center of colors.
+
+    plot_colorbar: Bool, default: False
+        If True, plots a colorbar.
+
+    lazy: Bool, default: False
+        If True, only polygons whose edges are all longer than the parameter cutoff will be added to the PatchCollection.
+
+    cutoff: float, default: 0.001
+        Only active, if lazy is True. Sets the minimal edge length for lazy plotting.
+
+    xcrange: (2,) array-like, default: (-1,1)
+        Sets the x limits of the plot.
+
+    ycrange: (2,) array-like, default: (-1,1)
+        Sets the y limits of the plot.
+
+    Returns
+    -------
+
+    out: Axes
+        Axes object containing the hyperbolic tiling plot.
+
+    Other Parameters:
+    -----------------
+
+    **kwargs
+        Patch properties.
+
+    """
 
     # convert to matplotlib format
     pgons = poly2patch(polygons, colors, lazy, cutoff, **kwargs)
