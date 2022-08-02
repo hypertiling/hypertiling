@@ -11,13 +11,16 @@ class ReflectTiling:
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p, q, n, degtol=1):
+    def __init__(self, p, q, n, degtol=1, mangle=12.15135):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         :param p: int = number of vertices per cells
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
-        :param degtol: int = tolerance at boundary in degrees (1 for (3,7), (7, 3) but 15 for (5, 4))
+        :param degtol: int = tolerance at boundary in degrees
+        :param mangle: float = rotation of the center polygon in degrees
+                               (prevents boundaries from being along symmetry axis)
+                               Magic number: random number with is unlikely to get by 360 / n, n \in \doubleN
         """
 
         # grid attributes
@@ -37,16 +40,24 @@ class ReflectTiling:
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
 
+        # FIXME: use random number and check if ok or calculate something
+        self.mangle = mangle / 360 * PI2
+
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
+        self.edge_array = np.empty(self.sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
         self.generate()
+
+        # possible to fill
+        self.layers = None
 
     def generate(self):
         """
         Calculate the tilings polygons for an angular sector.
         :return: void
         """
-        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.degtol)
+        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array, self.degtol,
+                      self.mangle)
 
     def __len__(self):
         """
@@ -111,11 +122,12 @@ class ReflectTiling:
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
     def map_layers(self):
+        self.layers = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
         # start with most inner poly
         # check all vertices
-            # all added polys are part of next layer
-            # check for all these polys the next layer
-                # controll if sibling
+        # all added polys are part of next layer
+        # check for all these polys the next layer
+        # controll if sibling
         pass
 
     def _polygen(self, polys):
@@ -161,7 +173,6 @@ class ReflectTiling:
         Raises AttributeError if the grid seems to be invalid.
         :return: void
         """
-        # FIXME: check if it works
         warnings.warn("check_integrity is not yet ready. Will cause problems in e.g. 3,7-grid with boundary")
         # check if one polygon is shifted in the range of another or if duplicates exist
         for i in range(len(self.sector_polys)):
@@ -174,12 +185,13 @@ class ReflectTiling:
                 self.sector_polys[i, 0] = poly_center
 
         # check if all edges have a partner
-        # FIXME: Check radial und melde "erstes loch in radius... found"
         for i in range(len(self.sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
             if neighbor_counter == self.geo_atts[0]:
                 continue
-            raise AttributeError(f"A hole in the tiling was detected by {i}")
+            poly = self[i]
+            warnings.warn(f"A hole in the tiling was detected by {i}" +
+                          f"\n\tradius{util.f_dist(poly[0], 0)}\n\teuclidean{np.real(poly[0]), np.imag(poly[0])}")
 
     def transform(self, function):
         """
@@ -217,58 +229,33 @@ if __name__ == "__main__":
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
 
     for p, q in combis:
-        fig, ax = plt.subplots()
         tiling = ReflectTiling(p, q, 4)
-        print(tiling.get_layer(2))
+        tiling.map_layers()
+        fig, ax = plot.plot(tiling, alpha=0.5)
+
         try:
             tiling.check_integrity()
+            plt.title(f"{p} {q}")
         except Exception as error:
             plt.title(f"{p} {q}: {error}")
-            ax.set_xlim(-1, 1)
-            ax.set_ylim(-1, 1)
 
-            patches = []
+        plt.xlim(-1, 1)
+        plt.ylim(-1, 1)
 
+        arrow = np.array([1, 0])
+        # lower boundary
+        plt.arrow(0, 0, arrow[0], arrow[1])
 
-            def animate(i):
-                colors = ["blue", "red"]
-                poly = tiling[i]
-                patches.append(ax.add_patch(
-                    mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), alpha=0.5,
-                               color=colors[tiling.get_layer(i) % 2])))
-                patches.append(ax.text(np.real(poly[0]), np.imag(poly[0]), i, fontsize=6, horizontalalignment='center',
-                                       verticalalignment='center'))
-                dp = poly[1] - poly[0]
-                patches.append(ax.arrow(np.real(poly[0]), np.imag(poly[0]), np.real(dp), np.imag(dp)))
-                return patches
+        # upper boundary
+        theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
+        rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+        arrow = rot @ arrow
+        plt.arrow(0, 0, arrow[0], arrow[1])
 
-
-            def init():
-                global patches
-                patches = []
-                return patches
-
-
-            anim = animation.FuncAnimation(fig, animate, init_func=init, frames=len(tiling), interval=500, blit=True)
-            arrow = np.array([1, 0])
-            plt.arrow(0, 0, arrow[0], arrow[1])
-            theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
-            rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-            arrow = rot @ arrow
-            plt.arrow(0, 0, arrow[0], arrow[1])
-
-            plt.show()
-
-        """try:
-            tiling.check_integrity()
-            check = True
-        except Exception as error:
-            check = str(error)
-        ax.set_title(f"{p} {q} {check}")"""
+        plt.show()
 
 """
 Arbeitsplan:
-    - doublicate in höhren combis durch rotation
-    - check integrity fertig machen
     - layer
+    - check integrity fertig machen
 """

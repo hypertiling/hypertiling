@@ -88,18 +88,22 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 
 @njit()
-def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array, degtol: float):
+def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
+             edge_array: np.array, degtol: float, mangle: float):
     """
     Generates the tiling of the polygon
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
+    :param edge_array: np.array[np.uint8] = binary of number represents which edges are free
+    (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
     :param degtol: float = tolerance at the boundary
+    :param mangle: float = rotation of the center polygon
     :return: void
     """
     dphi = PI2 / geo_atts[0]
-    phis = np.array([dphi * i for i in range(geo_atts[0])])
+    phis = np.array([dphi * i + mangle for i in range(geo_atts[0])])
 
     # most inner polygon
     sector_polys[0, 0] = 0
@@ -109,13 +113,9 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     stop = np.sum(sector_lengths)
 
     # prepare edge_array
-
-    edge_array = np.empty((stop,), dtype=np.uint8)
     edges = int(2 ** geo_atts[0] - 1)
-
     # eliminate parent edge
     edges ^= 1 << (geo_atts[0] - 1)
-
     edge_array.fill(edges)
     # for first poly create only one neighbor
     edge_array[0] = 1
@@ -143,6 +143,8 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
             angle = np.angle(z[0])
             if angle > boundary:
+                # set edge_break
+                edge_array[j] ^= 1 << i
                 break
 
             if angle >= 0:
@@ -169,4 +171,6 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 c += 1
                 if c == stop:
                     return 0
+            else:
+                edge_array[j] ^= 1 << i
 # Methods ==============================================================================================================
