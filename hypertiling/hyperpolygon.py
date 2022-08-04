@@ -41,7 +41,7 @@ def mfull_py(p, phi, ind, verticesP):
     verticesP : Hyperpolygon
         Array of vertices that make up the polygon.
     """
-    z0 =  verticesP[ind]
+    z0 = verticesP[ind]
     dz0 = complex(0, 0)
 
     for i in range(p + 1):

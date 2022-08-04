@@ -1,6 +1,7 @@
-from typing import Tuple, Callable
+from typing import Tuple
 from numba import njit
 import numpy as np
+import hypertiling.hyperpolygon as hyper
 
 # Variables ============================================================================================================
 
@@ -36,6 +37,18 @@ def moeb_rotate_trafo(z: np.array, phi: float) -> np.array:
 
 # Transformations ======================================================================================================
 # Assistance ===========================================================================================================
+
+# @njit()
+def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array:
+    """
+    Compares if the complex z is in the array zs, with tolerance tol
+    :param zs: np.array[complex] = array with the floats to compare
+    :param z: complex = the value to search for
+    :param tol: float = tolerance of the comparison (absolut)
+    :result: bool = True if float is in array else False
+    """
+    return np.any(np.abs(zs - z) <= tol)
+
 
 @njit()
 def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
@@ -96,7 +109,7 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
-    :param edge_array: np.array[np.uint8] = binary of number represents which edges are free
+    :param edge_array: np.array[int] = binary of number represents which edges are free
     (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
     :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
@@ -134,12 +147,21 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
             if not (edge_array[j] & 1 << i):
                 continue
 
+            z = poly.copy()
+            hyper.morigin(geo_atts[0], vertex, z)
+            phi = np.angle(z[1:][(i + 1) % geo_atts[0]])
+            hyper.mrotate(geo_atts[0], phi, z)
+            z = np.conjugate(z)
+            hyper.mrotate(geo_atts[0], - phi, z)
+            hyper.morigin(geo_atts[0], - vertex, z)
+
+            """
             z = moeb_origin_trafo(poly, vertex)
             phi = np.angle(z[1:][(i + 1) % geo_atts[0]])
             z = moeb_rotate_trafo(z, - phi)
             z = np.conjugate(z)
             z = moeb_rotate_trafo(z, phi)
-            z = moeb_origin_trafo(z, - vertex)
+            z = moeb_origin_trafo(z, - vertex)"""
 
             angle = np.angle(z[0])
             if angle > boundary:

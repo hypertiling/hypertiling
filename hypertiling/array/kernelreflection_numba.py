@@ -5,13 +5,16 @@ from reflection_numba_util import PI2
 # FIXME: remove me later
 import warnings
 
+# Magic number: real irrational number \Gamma(\frac{1}{4})
+MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
+
 
 class ReflectTiling:
     """
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p, q, n, degtol=0, mangle=12.15135):
+    def __init__(self, p, q, n, degtol=0, mangle=MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         :param p: int = number of vertices per cells
@@ -20,7 +23,6 @@ class ReflectTiling:
         :param degtol: int = tolerance at boundary in degrees
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
-                               Magic number: random number with is unlikely to get by 360 / n, n \in \doubleN
         """
 
         # grid attributes
@@ -32,19 +34,23 @@ class ReflectTiling:
         if n > 1:
             lengths = util.get_ns(self.geo_atts)
             self.sector_lengths = np.ceil(lengths / p).astype(np.uint32)
+            self.length = np.sum(lengths)
         else:
             self.sector_lengths = np.array([1])
-        self.length = np.sum(lengths)
+            self.length = 1
 
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
-
-        # FIXME: use random number and check if ok or calculate something
         self.mangle = mangle / 360 * PI2
 
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
+        """
+        edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
+        within a number in the array. Each polygon has its own number where the index is equal in edge_array and 
+        the tiling
+        """
         self.edge_array = np.empty(self.sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
         self.generate()
 
@@ -102,6 +108,11 @@ class ReflectTiling:
         return poly * np.exp(phi * 1j)
 
     def get_layer(self, index):
+        """
+        Returns the layer, the polygon at index refers to.
+        :param index: int = index of the polygon
+        :return: int = number of the layer
+        """
         if self.layers is None:
             warnings.warn("Layers are not yet mapped. Start mapping")
             self.map_layers()
@@ -134,7 +145,12 @@ class ReflectTiling:
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
     def map_layers(self):
-        verticess = [[] for i in range(self.geo_atts[2] + 1)]
+        """
+        This function is numerically expensive!
+        Calculates the layer to each polygon.
+        :return: void
+        """
+        verticess = [[] for i in range(self.geo_atts[2] + 2)]
         verticess[0] = self.sector_polys[0, 1:]
         self.layers = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
         self.layers.fill(self.geo_atts[2])
@@ -147,8 +163,15 @@ class ReflectTiling:
                     break
 
                 conn = util.any_close_matrix(np.array(vertices), poly[1:])
-                if conn.shape[0] != 0:
-                    self.layers[i] = j + 1 if self.layers[i] >= j + 1 else self.layers[i]
+                if conn.shape[0] != 0 and len(blocked) == 0:
+                    self.layers[i] = j + 1
+                    if self.layers[i - 1] != 0 and self.layers[i] != self.layers[i - 1]:
+                        # last vertex for layers[i - 1] set
+                        # replicate vertices of sector into next one to prevent boundary problems
+                        for k in range(len(verticess[self.layers[i - 1]])):
+                            replicate = verticess[self.layers[i - 1]][k] * np.exp(PI2 / self.geo_atts[0] * 1j)
+                            verticess[self.layers[i - 1]].append(replicate)
+
                 blocked += conn[:, 0].tolist()
 
             for k, vertex in enumerate(poly[1:]):
@@ -192,10 +215,15 @@ class ReflectTiling:
 
     def get_neighbors_fast(self, index):
         warnings.warn("NOT YET IMPLEMENTED")
+        neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
+        # parent
+        # siblings (nur bei q == 3?) ja und q - 3 children sind dazwischen
+        # children
         pass
 
     def check_integrity(self):
         """
+        This function is numerically expensive!
         Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
         Raises AttributeError if the grid seems to be invalid.
         :return: void
@@ -210,10 +238,15 @@ class ReflectTiling:
             finally:
                 self.sector_polys[i, 0] = poly_center
 
-        # check if all edges have a partner
+        # check if each layer has the correct size
         if self.layers is None:
             self.map_layers()
 
+        for i, length in enumerate(self.sector_lengths):
+            if np.count_nonzero(self.layers == i) != length:
+                print(f"Layer {i} is not complete")
+
+        # check if all edges have a partner
         for i in range(len(self.sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
             if neighbor_counter == self.geo_atts[0]:
@@ -250,28 +283,31 @@ class ReflectTiling:
 
 if __name__ == "__main__":
     import plot
+    import time
     import matplotlib.pyplot as plt
     import matplotlib as mpl
 
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
+    ReflectTiling(3, 7, 2)
 
     for p, q in combis:
-        tiling = ReflectTiling(p, q, 8)
-        plot.plot(tiling, alpha=0.5)
+        print("\n\n")
+        t1 = time.time()
+        tiling = ReflectTiling(p, q, 4)
+        print(time.time() - t1)
+        # plot.plot(tiling, alpha=0.5)
         # tiling.map_layers()
-        # fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-        """colors = ["blue", "red"]
+        colors = ["#0000FFAA", "#FF0000AA"]
         for i, pgon in enumerate(tiling):
-            p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), color=colors[tiling.get_layer(i) % 2])
-            ax.add_patch(p)
-        """
+            p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
+                                     fc = colors[tiling.get_layer(i) % 2])
+            ax.add_patch(p_)
+            # ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
 
-        try:
-            tiling.check_integrity()
-            plt.title(f"{p} {q}")
-        except Exception as error:
-            plt.title(f"{p} {q}: {error}")
+        tiling.check_integrity()
+        plt.title(f"{p} {q}")
 
         plt.xlim(-1, 1)
         plt.ylim(-1, 1)
@@ -291,4 +327,6 @@ if __name__ == "__main__":
 """
 Arbeitsplan:
     - neighbors fast
+    - non numba version
+    - speed tests
 """
