@@ -4,8 +4,9 @@ import copy
 
 # relative imports
 from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon, mfull_point
+from .hyperpolygon import HyperPolygon
 from .transformation import p2w, moeb_rotate_trafo
+from .arraytransformation import mfull_point
 from .distance import disk_distance
 
 class KernelManu(KernelCommon):

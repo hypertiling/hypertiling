@@ -4,8 +4,9 @@ import copy
 
 # relative imports
 from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon, mfull_point
+from .hyperpolygon import HyperPolygon
 from .transformation import moeb_rotate_trafo
+from .arraytransformation import mfull_point
 from .util import fund_radius
 from .CenterContainer import CenterContainer
 
