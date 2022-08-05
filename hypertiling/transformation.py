@@ -194,7 +194,7 @@ def moeb_origin_trafo_inverse_py(z0, z):
     return ret
 
  # rotates z by phi counter-clockwise about the origin
-def moeb_rotate_trafo_py(z, phi): 
+def moeb_rotate_trafo_py(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
 def mymoebddint_py(z0, z):

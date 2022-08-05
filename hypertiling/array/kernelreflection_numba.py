@@ -1,6 +1,7 @@
 import numpy as np
 import reflection_numba_util as util
 from reflection_numba_util import PI2
+import hypertiling.arraytransformation as trans
 
 # FIXME: remove me later
 import warnings
@@ -127,8 +128,8 @@ class ReflectTiling:
 
     def find(self, v):
         """
-        Find the polygons index z belongs to.
-        :param z: complex = position to search polygon for
+        Find the polygons index v belongs to.
+        :param v: complex = position to search polygon for
         :return: int = index of the corresponding polygon
         """
         angle = np.angle(v)
@@ -215,11 +216,39 @@ class ReflectTiling:
 
     def get_neighbors_fast(self, index):
         warnings.warn("NOT YET IMPLEMENTED")
+
+        if index == 0:
+            return np.array([1 + i * (self.sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
+
+        # placeholder for the neighbors
         neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
+
+        # map index to sector
+        sector_index = index - 1
+        sector_index = sector_index if sector_index < (self.sector_polys.shape[0] - 1) else sector_index % (
+                    self.sector_polys.shape[0] - 1)
+        c = 0
+
         # parent
-        # siblings (nur bei q == 3?) ja und q - 3 children sind dazwischen
+        """
+        Kann einen oder zwei parents geben
+        2 nur, wenn es zwischen diesen liegt. Wenn es das tut, dann ist in edge_array die letzte ecke gesperrt
+        """
+
+        # siblings
+        # only for q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between
+        if self.geo_atts[1] == 3:
+            neighbors[c] = self[sector_index - 1]
+            neighbors[c + 1] = self[sector_index + 1]
+            c += 2
+
         # children
-        pass
+        """
+        offset der kinder bestimmen
+        mit edge array bestimmen welche kinder noch involviert sind. 
+        """
+
+        return neighbors
 
     def check_integrity(self):
         """
@@ -262,7 +291,7 @@ class ReflectTiling:
         """
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
-        self.sector_polys = function(self.sector_polys)
+        function(self.sector_polys)
 
     def rotate(self, angle):
         """
@@ -270,7 +299,7 @@ class ReflectTiling:
         :param angle: float = angle to rotate the polygon
         :return: void
         """
-        self.transform(lambda x: util.moeb_rotate_trafo(x, - angle))
+        self.transform(lambda x: trans.moeb_rotate_trafo(-angle, x))
 
     def translate(self, z):
         """
@@ -278,11 +307,10 @@ class ReflectTiling:
         :param z: complex = position of the new origin
         :return: void
         """
-        self.transform(lambda x: util.moeb_origin_trafo(x, z))
+        self.transform(lambda x: trans.moeb_origin_trafo(x, z))
 
 
 if __name__ == "__main__":
-    import plot
     import time
     import matplotlib.pyplot as plt
     import matplotlib as mpl
@@ -302,9 +330,9 @@ if __name__ == "__main__":
         colors = ["#0000FFAA", "#FF0000AA"]
         for i, pgon in enumerate(tiling):
             p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
-                                     fc = colors[tiling.get_layer(i) % 2])
+                                     fc=colors[tiling.get_layer(i) % 2])
             ax.add_patch(p_)
-            # ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
+            ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
 
         tiling.check_integrity()
         plt.title(f"{p} {q}")

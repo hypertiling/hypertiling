@@ -1,4 +1,5 @@
-from .transformation import *
+import transformation as trans
+
 
 def morigin_py(p, z0, verticesP):
     """
@@ -15,7 +16,7 @@ def morigin_py(p, z0, verticesP):
     """
 
     for i in range(p + 1):
-        z = moeb_origin_trafo(z0, verticesP[i])
+        z = trans.moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
 
 def morigin_inv_py(p, z0, verticesP):
@@ -33,7 +34,7 @@ def morigin_inv_py(p, z0, verticesP):
     """
 
     for i in range(p + 1):
-        z = moeb_origin_trafo_inverse(z0, verticesP[i])
+        z = trans.moeb_origin_trafo_inverse(z0, verticesP[i])
         verticesP[i] = z
 
 def mrotate_py(p, phi, verticesP):
@@ -50,7 +51,7 @@ def mrotate_py(p, phi, verticesP):
         Array of vertices + the center that make up the polygon.
     """
     for i in range(p + 1):
-        z = moeb_rotate_trafo(verticesP[i], -phi)
+        z = trans.moeb_rotate_trafo(verticesP[i], -phi)
         verticesP[i] = z
 
 def mfull_point_py(z0, phi, p):
@@ -67,9 +68,9 @@ def mfull_point_py(z0, phi, p):
         The vertex that we want to fully transform.
     """
     
-    z = moeb_origin_trafo(z0, p)
-    z = moeb_rotate_trafo(z, -phi)
-    return moeb_origin_trafo_inverse(z0, z)
+    z = trans.moeb_origin_trafo(z0, p)
+    z = trans.moeb_rotate_trafo(z, -phi)
+    return trans.moeb_origin_trafo_inverse(z0, z)
 
 def mfull_py(p, phi, ind, verticesP):
     """ 
@@ -90,9 +91,9 @@ def mfull_py(p, phi, ind, verticesP):
     dz0 = complex(0, 0)
 
     for i in range(p + 1):
-        z, dz = moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
-        z, dz = moeb_rotate_trafodd(z, dz, -phi)
-        z, dz = moeb_origin_trafo_inversedd(z0, dz0, z, dz)
+        z, dz = trans.moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
+        z, dz = trans.moeb_rotate_trafodd(z, dz, -phi)
+        z, dz = trans.moeb_origin_trafo_inversedd(z0, dz0, z, dz)
         verticesP[i] = z
         #verticesdP[i] = dz
 

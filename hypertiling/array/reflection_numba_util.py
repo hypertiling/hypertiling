@@ -1,7 +1,7 @@
 from typing import Tuple
 from numba import njit
 import numpy as np
-import hypertiling.hyperpolygon as hyper
+import hypertiling.arraytransformation as trans
 
 # Variables ============================================================================================================
 
@@ -148,20 +148,12 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 continue
 
             z = poly.copy()
-            hyper.morigin(geo_atts[0], vertex, z)
+            trans.morigin(geo_atts[0], vertex, z)
             phi = np.angle(z[1:][(i + 1) % geo_atts[0]])
-            hyper.mrotate(geo_atts[0], phi, z)
+            trans.mrotate(geo_atts[0], phi, z)
             z = np.conjugate(z)
-            hyper.mrotate(geo_atts[0], - phi, z)
-            hyper.morigin(geo_atts[0], - vertex, z)
-
-            """
-            z = moeb_origin_trafo(poly, vertex)
-            phi = np.angle(z[1:][(i + 1) % geo_atts[0]])
-            z = moeb_rotate_trafo(z, - phi)
-            z = np.conjugate(z)
-            z = moeb_rotate_trafo(z, phi)
-            z = moeb_origin_trafo(z, - vertex)"""
+            trans.mrotate(geo_atts[0], - phi, z)
+            trans.morigin(geo_atts[0], - vertex, z)
 
             angle = np.angle(z[0])
             if angle > boundary:
