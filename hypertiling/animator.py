@@ -1,4 +1,7 @@
 from matplotlib import animation
+from hypertiling.plot import poly2patch
+from hypertiling.transformation import mymoeb
+
 
 """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
@@ -87,3 +90,41 @@ class hyperanimator_list:
     def save(self, path, fps=5, codec=None):
         writer = animation.FFMpegWriter(fps, codec)
         self.anim.save(path, writer)
+
+""""
+    doc to follow
+"""
+class hyperanimator_path:
+    def __init__(self, data, fig, ax, tiling, path, smoothness=32):
+        # if "frames" in animargs:
+        #     if animargs["frames"] > len(data):
+        #         animargs["frames"] = len(data)
+        # else:
+        #     animargs["frames"] = len(data)
+
+        self.anim = animation.FuncAnimation(fig, self._update, frames=len(data), blit=True)
+        self.data = data
+        self.tiling = tiling
+        self.path = path
+        self.smoothness = smoothness
+        self.ax = ax
+
+
+        ### check whether path has entries of type int, or complex/2d float
+        ### if int: entries correspond to polygon id's
+        ### if complex or 2d float: entries correspond to coordinates
+
+    def _update(self, i):
+        self.ax.clear()
+        self.tiling.translate(self.path[i])
+        self.path = mymoeb(-self.path[i], self.path)
+        #pgons = poly2patch(self.tiling, fancy_colors(stretched_colors[i], layer_color), lazy=True, cutoff=0.003, **kwargs)
+        pgons = poly2patch(self.tiling, self.data[i])
+        self.ax.add_collection(pgons)
+
+        self.ax.set_xlim(-1, 1)
+        self.ax.set_ylim(-1, 1)
+        self.ax.axis("off")
+        self.ax.set_aspect('equal')
+
+        return self.ax
