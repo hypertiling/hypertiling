@@ -80,7 +80,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 @njit()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
-             edge_array: np.array, reflection_levels: np.array, degtol: float, mangle: float):
+             edge_array: np.array, degtol: float, mangle: float):
     """
     Generates the tiling of the polygon
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
@@ -89,10 +89,9 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     :param sector_lengths: np.array[int] = length
     :param edge_array: np.array[int] = binary of number represents which edges are free
     (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
-    :param reflection_levels: np.array[np.uint8] = stores for every polygon which reflection level it has
     :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
-    :return: void
+    :return: np.array[np.uint8] = stores for every polygon which reflection level it has
     """
     dphi = PI2 / geo_atts[0]
     phis = np.array([dphi * i + mangle for i in range(geo_atts[0])])
@@ -105,6 +104,7 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     stop = np.sum(sector_lengths)
 
     # prepare reflection array
+    reflection_levels = np.empty(sector_polys.shape[0], dtype=np.uint8)
     reflection_levels[0] = 0
 
     # prepare edge_array
@@ -169,7 +169,7 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 """
                 c += 1
                 if c == stop:
-                    return 0
+                    return reflection_levels
             else:
                 edge_array[j] ^= 1 << i
 # Methods ==============================================================================================================

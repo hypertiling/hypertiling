@@ -47,14 +47,16 @@ class ReflectTiling:
 
         # if center is added it should be p+1
         self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
+
         """
         edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
         within a number in the array. Each polygon has its own number where the index is equal in edge_array and 
         the tiling
         """
         self.edge_array = np.empty(self.sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
-        self.reflection_levels = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
-        self.generate()
+
+        rf = self.generate()
+        self.reflection_levels = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)])
 
         # possible to fill
         self.layers = None
@@ -64,8 +66,9 @@ class ReflectTiling:
         Calculate the tilings polygons for an angular sector.
         :return: void
         """
-        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array,
-                      self.reflection_levels, self.degtol, self.mangle)
+        return util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array,
+                             self.degtol,
+                             self.mangle)
 
     def __len__(self):
         """
@@ -216,8 +219,6 @@ class ReflectTiling:
         return [(i + sector_replica * jump) % (self.length - 1) if i != 0 else 0 for i in indices]
 
     def get_neighbors_fast(self, index):
-        warnings.warn("NOT YET IMPLEMENTED")
-
         if index == 0:
             return np.array([1 + i * (self.sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
 
@@ -232,6 +233,11 @@ class ReflectTiling:
 
         # parent
         """
+        rausfinden welcher layer man ist
+        relativen wert im layer darunter nehmen
+        """
+        print(self.reflection_levels)
+        """
         Kann einen oder zwei parents geben
         2 nur, wenn es zwischen diesen liegt. Wenn es das tut, dann ist in edge_array die letzte ecke gesperrt
         """
@@ -239,8 +245,8 @@ class ReflectTiling:
         # siblings
         # only for q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
         if self.geo_atts[1] == 3:
-            neighbors[c] = self[sector_index - 1]
-            neighbors[c + 1] = self[sector_index + 1]
+            neighbors[c] = sector_index - 1
+            neighbors[c + 1] = sector_index + 1
             c += 2
 
         # children
@@ -300,7 +306,7 @@ class ReflectTiling:
         :param angle: float = angle to rotate the polygon
         :return: void
         """
-        self.transform(lambda x: trans.moeb_rotate_trafo(-angle, x))
+        self.transform(lambda x: trans.mrotate(x.shape[0], -angle, x))
 
     def translate(self, z):
         """
@@ -308,7 +314,7 @@ class ReflectTiling:
         :param z: complex = position of the new origin
         :return: void
         """
-        self.transform(lambda x: trans.moeb_origin_trafo(x, z))
+        self.transform(lambda x: trans.morigin(x.shape[0], z, x))
 
 
 if __name__ == "__main__":
@@ -324,6 +330,7 @@ if __name__ == "__main__":
         t1 = time.time()
         tiling = ReflectTiling(p, q, 4)
         print(time.time() - t1)
+        tiling.get_neighbors_fast(1)
         # plot.plot(tiling, alpha=0.5)
         # tiling.map_layers()
         fig, ax = plt.subplots()
@@ -356,6 +363,6 @@ if __name__ == "__main__":
 """
 Arbeitsplan:
     - neighbors fast
-    - non numba version
+    - non numba version (?), check which functions are actually faster with numba to what extend
     - speed tests
 """
