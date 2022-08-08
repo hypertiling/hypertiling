@@ -98,7 +98,7 @@ class KernelFlo(KernelCommon):
 
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg - self.degtol + self.mangle:
-                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
