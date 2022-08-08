@@ -1,7 +1,8 @@
 from typing import Tuple
 from numba import njit
 import numpy as np
-import hypertiling.arraytransformation as trans
+import hypertiling.arraytransformation as array_trans
+import hypertiling.transformation as trans
 
 # Variables ============================================================================================================
 
@@ -9,36 +10,9 @@ PI2 = 2 * np.pi
 
 
 # Variables ============================================================================================================
-# Transformations ======================================================================================================
-
-@njit()
-def moeb_origin_trafo(z: np.array, z0: np.complex128) -> np.array:
-    """
-    Shifts the origin of the points in z such that z0 -> 0. Leaves boundary |z| = 1 circle invariant
-    :param z: np.array[complex] = array of points to shift
-    :param z0: complex = new origin in the disc
-    :result: np.array[complex] = array of shifted points
-    """
-    num = z - z0
-    denom = 1 - z * np.conjugate(z0)
-    return num / denom
-
-
-@njit()
-def moeb_rotate_trafo(z: np.array, phi: float) -> np.array:
-    """
-    Rotate the points described in z around the angle phi
-    :param z: np.array[complex] = array of points to rotate
-    :param phi: float = angle for the rotation
-    :result: np.array[complex] = array of the rotated points
-    """
-    return z * np.exp(complex(0, phi))
-
-
-# Transformations ======================================================================================================
 # Assistance ===========================================================================================================
 
-# @njit()
+@njit()
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array:
     """
     Compares if the complex z is in the array zs, with tolerance tol
@@ -64,12 +38,16 @@ def generate_raw(poly: np.array) -> np.array:
     """
     reflection_centers = np.empty((poly.shape[0] - 1,), dtype=np.complex128)
     for k, vertex in enumerate(poly[1:]):
-        z = moeb_origin_trafo(poly, vertex)
-        phi = np.angle(z[1:][(k + 1) % (poly.shape[0] - 1)])
-        z = moeb_rotate_trafo(z[0], - phi)
+        z = poly.copy()
+        array_trans.morigin(z.shape[0], vertex, z)
+        phi = np.angle(z[1:][(k + 1) % (z.shape[0] - 1)])
+
+        # from here: only use the center point
+        z = trans.moeb_rotate_trafo(-phi, z[0])
         z = np.conjugate(z)
-        z = moeb_rotate_trafo(z, phi)
-        z = moeb_origin_trafo(z, - vertex)
+        z = trans.moeb_rotate_trafo(phi, z)
+        z = trans.moeb_origin_trafo(- vertex, z)
+
         reflection_centers[k] = z
     return reflection_centers
 
@@ -102,7 +80,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 @njit()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
-             edge_array: np.array, degtol: float, mangle: float):
+             edge_array: np.array, reflection_levels: np.array, degtol: float, mangle: float):
     """
     Generates the tiling of the polygon
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
@@ -111,6 +89,7 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     :param sector_lengths: np.array[int] = length
     :param edge_array: np.array[int] = binary of number represents which edges are free
     (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
+    :param reflection_levels: np.array[np.uint8] = stores for every polygon which reflection level it has
     :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
     :return: void
@@ -124,6 +103,9 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
     c = 1
     stop = np.sum(sector_lengths)
+
+    # prepare reflection array
+    reflection_levels[0] = 0
 
     # prepare edge_array
     edges = int(2 ** geo_atts[0] - 1)
@@ -148,12 +130,12 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 continue
 
             z = poly.copy()
-            trans.morigin(geo_atts[0], vertex, z)
+            array_trans.morigin(geo_atts[0], vertex, z)
             phi = np.angle(z[1:][(i + 1) % geo_atts[0]])
-            trans.mrotate(geo_atts[0], phi, z)
+            array_trans.mrotate(geo_atts[0], phi, z)
             z = np.conjugate(z)
-            trans.mrotate(geo_atts[0], - phi, z)
-            trans.morigin(geo_atts[0], - vertex, z)
+            array_trans.mrotate(geo_atts[0], - phi, z)
+            array_trans.morigin(geo_atts[0], - vertex, z)
 
             angle = np.angle(z[0])
             if angle > boundary:
@@ -164,6 +146,9 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
             if angle >= 0:
                 sector_polys[c, 0] = z[0]
                 sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)
+
+                # save level of polygons
+                reflection_levels[c] = reflection_levels[j] + 1
 
                 # shares edge with former polygon (sibling)
                 connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])

@@ -53,6 +53,7 @@ class ReflectTiling:
         the tiling
         """
         self.edge_array = np.empty(self.sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
+        self.reflection_levels = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
         self.generate()
 
         # possible to fill
@@ -63,8 +64,8 @@ class ReflectTiling:
         Calculate the tilings polygons for an angular sector.
         :return: void
         """
-        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array, self.degtol,
-                      self.mangle)
+        util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array,
+                      self.reflection_levels, self.degtol, self.mangle)
 
     def __len__(self):
         """
@@ -226,7 +227,7 @@ class ReflectTiling:
         # map index to sector
         sector_index = index - 1
         sector_index = sector_index if sector_index < (self.sector_polys.shape[0] - 1) else sector_index % (
-                    self.sector_polys.shape[0] - 1)
+                self.sector_polys.shape[0] - 1)
         c = 0
 
         # parent
@@ -236,7 +237,7 @@ class ReflectTiling:
         """
 
         # siblings
-        # only for q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between
+        # only for q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
         if self.geo_atts[1] == 3:
             neighbors[c] = self[sector_index - 1]
             neighbors[c + 1] = self[sector_index + 1]

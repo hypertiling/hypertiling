@@ -1,4 +1,4 @@
-import transformation as trans
+import hypertiling.transformation as trans
 
 
 def morigin_py(p, z0, verticesP):
@@ -19,6 +19,7 @@ def morigin_py(p, z0, verticesP):
         z = trans.moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
 
+
 def morigin_inv_py(p, z0, verticesP):
     """
     Apply inverse Moebius trafo to an array of length (p+1) of vertices.
@@ -37,6 +38,7 @@ def morigin_inv_py(p, z0, verticesP):
         z = trans.moeb_origin_trafo_inverse(z0, verticesP[i])
         verticesP[i] = z
 
+
 def mrotate_py(p, phi, verticesP):
     """
     Rotate an array of length (p + 1) of complex vertices.
@@ -51,8 +53,10 @@ def mrotate_py(p, phi, verticesP):
         Array of vertices + the center that make up the polygon.
     """
     for i in range(p + 1):
-        z = trans.moeb_rotate_trafo(verticesP[i], -phi)
+        # FIXME: I do not like the - in front of phi as it makes the behaviour more hidden
+        z = trans.moeb_rotate_trafo(-phi, verticesP[i])
         verticesP[i] = z
+
 
 def mfull_point_py(z0, phi, p):
     """
@@ -67,10 +71,11 @@ def mfull_point_py(z0, phi, p):
     p : complex128
         The vertex that we want to fully transform.
     """
-    
+
     z = trans.moeb_origin_trafo(z0, p)
-    z = trans.moeb_rotate_trafo(z, -phi)
+    z = trans.moeb_rotate_trafo(-phi, z)
     return trans.moeb_origin_trafo_inverse(z0, z)
+
 
 def mfull_py(p, phi, ind, verticesP):
     """ 
@@ -95,11 +100,13 @@ def mfull_py(p, phi, ind, verticesP):
         z, dz = trans.moeb_rotate_trafodd(z, dz, -phi)
         z, dz = trans.moeb_origin_trafo_inversedd(z0, dz0, z, dz)
         verticesP[i] = z
-        #verticesdP[i] = dz
+        # verticesdP[i] = dz
+
 
 # try to use numba
 try:
     import numba
+
     morigin = numba.njit(morigin_py)
     morigin_inv = numba.njit(morigin_inv_py)
     mrotate = numba.njit(mrotate_py)
