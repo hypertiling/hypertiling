@@ -1,0 +1,5 @@
+matplotlib~=3.3.3
+numpy~=1.19.5
+numba~=0.55.2
+setuptools~=49.2.1
+sortedcontainers~=2.3.0
