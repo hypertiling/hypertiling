@@ -80,7 +80,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 @njit()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
-             edge_array: np.array, degtol: float, mangle: float):
+             edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
     Generates the tiling of the polygon
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
