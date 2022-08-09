@@ -181,7 +181,7 @@ def w2p_py(point):
 def mymoeb_py(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
-    return (z+z0) / (1+z*z0.conjugate)#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
+    return (z+z0) / (1+z*z0.conjugate())#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
 
