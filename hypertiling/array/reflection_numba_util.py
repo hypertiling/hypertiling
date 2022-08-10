@@ -16,7 +16,8 @@ PI2 = 2 * np.pi
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array:
     """
     Compares if the complex z is in the array zs, with tolerance tol
-    :param zs: np.array[complex] = array with the floats to compare
+    Time-complexity: O(p)
+    :param zs: np.array[complex] = array with p floats to compare
     :param z: complex = the value to search for
     :param tol: float = tolerance of the comparison (absolut)
     :result: bool = True if float is in array else False
@@ -26,6 +27,14 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array
 
 @njit()
 def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
+    """
+    Returns which points of zs1 and zs2 are closer (equal) to tol.
+    Time-complexity: O(pq)
+    :param zs1: np.array[complex] = array with p floats to compare
+    :param zs2: np.array[complex] = array with q floats to compare
+    :param tol: float = tolerance of the comparison (absolut)
+    :result: np.array = positions where the points match
+    """
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
 
@@ -33,7 +42,8 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
 def generate_raw(poly: np.array) -> np.array:
     """
     Generates the neigboring polygons for a single polygon poly
-    :param poly: np.array[np.complex128][p + 1] = polygon to grow
+    Time-complexity: O(p^2)
+    :param poly: np.array[np.complex128][p + 1] = polygon to grow with p vertices
     :return: np.array[np.complex128][p] = centers of the neigboring polygons
     """
     reflection_centers = np.empty((poly.shape[0] - 1,), dtype=np.complex128)
@@ -53,7 +63,14 @@ def generate_raw(poly: np.array) -> np.array:
 
 
 @njit()
-def f_dist(z: np.complex128, z_hat: np.complex128):
+def f_dist(z: np.complex128, z_hat: np.complex128) -> float:
+    """
+    Calculates the distance between the points z and z_hat.
+    Time-complexity: O(1)
+    :param z: np.complex128 = first point
+    :param z_hat: np.complex128 = second point
+    :return: float = distance on disk
+    """
     return 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
 
 
@@ -64,6 +81,7 @@ def f_dist(z: np.complex128, z_hat: np.complex128):
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
+    Time-complexity: O(n)
     :param geo_atts: Tuple[int, int, int] = (p, q, n)
     :return: np.array[np.uint32] = number of tildes per layer
     """
@@ -83,6 +101,7 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
     Generates the tiling of the polygon
+    Time-complexity: O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
@@ -139,8 +158,6 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
             angle = np.angle(z[0])
             if angle > boundary:
-                # set edge_break
-                edge_array[j] ^= 1 << i
                 break
 
             if angle >= 0:
@@ -170,6 +187,4 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 c += 1
                 if c == stop:
                     return reflection_levels
-            else:
-                edge_array[j] ^= 1 << i
 # Methods ==============================================================================================================

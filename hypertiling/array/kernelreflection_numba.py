@@ -1,11 +1,8 @@
 from typing import Callable
 import numpy as np
-import reflection_numba_util as util
-from reflection_numba_util import PI2
+import hypertiling.array.reflection_numba_util as util
+from hypertiling.array.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
-
-# FIXME: remove me later
-import warnings
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -19,6 +16,7 @@ class ReflectTiling:
     def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
+        Time-complexity: O(n) + O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
         :param p: int = number of vertices per cells
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
@@ -60,9 +58,9 @@ class ReflectTiling:
 
         rf = self.generate()
         self.reflection_levels = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
-        self.reflection_levels_cumulated = np.empty_like(self.reflection_levels, dtype=np.uint32)
+        self.reflection_levels_cumulated = np.empty((self.reflection_levels.shape[0] + 1,), dtype=np.uint32)
         self.reflection_levels_cumulated[0] = 0
-        for i, element in enumerate(self.reflection_levels[:-1]):
+        for i, element in enumerate(self.reflection_levels):
             self.reflection_levels_cumulated[i + 1] = element + self.reflection_levels_cumulated[i]
 
         # possible to fill
@@ -71,6 +69,7 @@ class ReflectTiling:
     def generate(self):
         """
         Calculate the tilings polygons for an angular sector.
+        Time-complexity: O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
         :return: void
         """
         return util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array,
@@ -80,6 +79,7 @@ class ReflectTiling:
     def __len__(self):
         """
         Return the number of polygons in the tiling
+        Time-complexity: O(1)
         :return: int = number of polygons in the tiling
         """
         return self.length
@@ -87,6 +87,7 @@ class ReflectTiling:
     def __iter__(self):
         """
         Iterates over the whole grid. As only one sector is stored in the memory, the others are generated when needed.
+        Time-complexity (single polygon): O(p)
         :yield: np.array[8] = [center, vertices]
         """
         # check for duplicates
@@ -103,8 +104,9 @@ class ReflectTiling:
         """
         Returns the center and vertices of the polygon at index. As only one sector is stored,
         the corresponding polygon is calculated if necessary.
+        Time-complexity: O(p)
         :param index: int = index of the polygon
-        :return: np.array[8] = [center, vertices]
+        :return: np.array[p + 1] = [center, vertices]
         """
         if index == 0:
             return self.sector_polys[0]
@@ -121,6 +123,12 @@ class ReflectTiling:
         return poly * np.exp(phi * 1j)
 
     def _get_reflection_level_in_sector(self, index: int) -> int:
+        """
+        Returns the reflection level the polygon at index belongs to.
+        Time-complexity: O(log(n + 1))
+        :param index: int = index of the polygon
+        :return: int = reflection level
+        """
         pos = np.searchsorted(self.reflection_levels_cumulated, index)
         if self.reflection_levels_cumulated[pos] > index:
             return pos - 1
@@ -129,11 +137,13 @@ class ReflectTiling:
     def get_layer(self, index: int) -> int:
         """
         Returns the layer, the polygon at index refers to.
+        Time-complexity (with mapping): O(m p^3 index)
+        Time-complexity (without map.): O(index m)
         :param index: int = index of the polygon
         :return: int = number of the layer
         """
         if self.layers is None:
-            warnings.warn("Layers are not yet mapped. Start mapping")
+            print("Layers are not yet mapped. Start mapping")
             self.map_layers()
 
         if index == 0:
@@ -164,6 +174,7 @@ class ReflectTiling:
     def find(self, v: np.complex128) -> int:
         """
         Find the polygons index v belongs to.
+        Time-complexity: O(m)
         :param v: complex = position to search polygon for
         :return: int = index of the corresponding polygon
         """
@@ -184,6 +195,7 @@ class ReflectTiling:
         """
         This function is numerically expensive!
         Calculates the layer to each polygon.
+        Time-complexity: O(m p^3)
         :return: void
         """
         verticess = [[] for i in range(self.geo_atts[2] + 2)]
@@ -220,6 +232,7 @@ class ReflectTiling:
         """
         Protected(!)
         Generator for iterating over polygons.
+        Time-complexity (single polygon): O(p)
         :param polys: np.array[n, 8] = segment the generator will create the rotations duplicates for and rotate over
         :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
         """
@@ -235,6 +248,7 @@ class ReflectTiling:
     def get_neighbors(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
+        Time-complexity: O(index m)
         :param index: int = index of the polygon
         :return: np.array[p] = array containing the indices of the neighbors
         """
@@ -250,6 +264,7 @@ class ReflectTiling:
         return [(i + sector_replica * jump) % (self.length - 1) if i != 0 else 0 for i in indices]
 
     def get_neighbors_fast(self, index: int) -> np.array:
+        # FIXME: at first for sector... Rotate later
         if index == 0:
             return np.array([1 + i * (self.sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
 
@@ -258,45 +273,65 @@ class ReflectTiling:
 
         # map index to sector
         sector_index = index - 1
-        sector_index = sector_index if sector_index < (self.sector_polys.shape[0] - 1) else sector_index % (
-                self.sector_polys.shape[0] - 1)
-        c = 0
+        sector_index = sector_index + 1 if sector_index < (self.sector_polys.shape[0] - 1) else sector_index % (
+                self.sector_polys.shape[0] - 1) + 1
 
-        layer = self._get_reflection_level_in_sector(sector_index + 1)
-        pos_in_layer = sector_index + 1 - self.reflection_levels_cumulated[layer]
+        c = 0
+        jump = (self.sector_polys.shape[0] - 1)
+
+        layer = self._get_reflection_level_in_sector(sector_index)
+        pos_in_layer = sector_index - self.reflection_levels_cumulated[layer]
+        ratio = pos_in_layer / self.reflection_levels[layer]
+
+        # siblings
+        # For q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
+        if self.geo_atts[1] == 3:
+            neighbors[c] = sector_index - 1 if sector_index - 1 >= self.reflection_levels_cumulated[layer] else \
+                self.reflection_levels_cumulated[layer] + self.reflection_levels[layer] + (
+                        self.geo_atts[0] - 1) * jump - 1
+
+            neighbors[c + 1] = sector_index + 1 \
+                if sector_index <= self.reflection_levels[layer] else \
+                self.reflection_levels_cumulated[layer] + jump
+
+            c += 2
+        #  For q is odd follows (q - 3) is even. If (q - 3) is even, a polygon can connect exact one other sibling
+        pass
 
         # parent
-        print(bin(self.edge_array[sector_index + 1]))
-        # FIXME: pos in layer muss noch auf den niedrigeren angepasst werden
-        neighbors[c] = self.reflection_levels_cumulated[layer - 1] + pos_in_layer
-        print()
-        print("\n\n")
+        neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(ratio * self.reflection_levels[layer - 1])
+        c += 1
 
+        print(bin(self.edge_array[c]))
+        print(bin(1 << (self.geo_atts[0] - 1)))
+        if not (self.edge_array[c] & 1 << (self.geo_atts[0] - 1)):
+            neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(ratio * self.reflection_levels[layer - 1]) + 1
+            if neighbors[c] >= self.reflection_levels_cumulated[layer]:
+                neighbors[c] = self.reflection_levels_cumulated[layer - 1] + jump
+            c += 1
         """
         Kann einen oder zwei parents geben
         2 nur, wenn es zwischen diesen liegt. Wenn es das tut, dann ist in edge_array die letzte ecke gesperrt
         """
 
-        # siblings
-        # only for q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
-        if self.geo_atts[1] == 3:
-            neighbors[c] = self.reflection_levels_cumulated[layer] + sector_index - 1 if sector_index == 0 else \
-                self.reflection_levels_cumulated[layer] + sector_index - 1 + (self.geo_atts[0] - 1) * self.sector_polys.shape[0]
-
-            """neighbors[c + 1] = self.reflection_levels_cumulated[layer] + sector_index + 1 \
-                if sector_index + 1 < self.reflection_levels_cumulated[layer] + self.reflection_levels[layer] else \
-                self.reflection_levels_cumulated[layer] + self.sector_polys.shape[0] - 1"""
-            print(neighbors[c])
-            c += 2
-
         # children
         if layer + 1 == self.geo_atts[2]:
             return neighbors[:c]
-        neighbors[c] = self.reflection_levels_cumulated[layer + 1] + pos_in_layer
-        """
-        offset der kinder bestimmen
-        mit edge array bestimmen welche kinder noch involviert sind. 
-        """
+
+        neighbors[c] = self.reflection_levels_cumulated[layer + 1] + int(ratio * self.reflection_levels[layer + 1])
+        c += 1
+
+        up = 1
+        while c < self.geo_atts[0]:
+            neighbors[c] = self.reflection_levels_cumulated[layer + 1] + int(
+                ratio * self.reflection_levels[layer + 1]) + up
+            if neighbors[c] < self.reflection_levels_cumulated[layer + 1]:
+                neighbors[c] = self.reflection_levels_cumulated[layer + 1] + self.reflection_levels[layer + 1] + (
+                        self.geo_atts[0] - 1) * jump - 1
+            elif neighbors[c] >= self.reflection_levels_cumulated[layer + 2]:
+                neighbors[c] = self.reflection_levels_cumulated[layer] + jump
+            c += 1
+            up = - up if np.sign(up) == 1 else - up + 1
 
         return neighbors
 
@@ -305,6 +340,7 @@ class ReflectTiling:
         This function is numerically expensive!
         Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
         Raises AttributeError if the grid seems to be invalid.
+        Time-complexity: O(m p^3 n)
         :return: void
         """
         # check if one polygon is shifted in the range of another or if duplicates exist
@@ -337,6 +373,7 @@ class ReflectTiling:
         """
         Applies function to each polygon
         :param function: callable = function to apply on each polygon
+        Time-complexity: O(m)
         :return: void
         """
         if not isinstance(function, np.vectorize):
@@ -347,6 +384,7 @@ class ReflectTiling:
         """
         Rotates the grid around angle
         :param angle: float = angle to rotate the polygon
+        Time-complexity: O(m)
         :return: void
         """
         self.transform(lambda x: trans.mrotate(x.shape[0], -angle, x))
@@ -355,6 +393,7 @@ class ReflectTiling:
         """
         Translates the grid to z
         :param z: complex = position of the new origin
+        Time-complexity: O(m)
         :return: void
         """
         self.transform(lambda x: trans.morigin(x.shape[0], z, x))
@@ -402,12 +441,12 @@ if __name__ == "__main__":
         plt.arrow(0, 0, arrow[0], arrow[1])
 
         # TODO:
-        """neighbors = tiling.get_neighbors_fast(1)
+        neighbors = tiling.get_neighbors_fast(12)
         print(neighbors)
         for index in neighbors:
             pgon = tiling[index]
             p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), fc="#AAAAAADD")
-            ax.add_patch(p_)"""
+            ax.add_patch(p_)
 
         plt.show()
 
