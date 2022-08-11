@@ -4,6 +4,19 @@ import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
 
+
+"""
+p: Number of edges/vertices of a polygon
+q: Number of polygons that meet at a vertex
+n: Number of layers (classical definition)
+m: Number of polygons
+
+Assumption on time-complexity:
+division: O(1)
+modulo: O(j k)
+"""
+
+
 # Variables ============================================================================================================
 
 PI2 = 2 * np.pi

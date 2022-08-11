@@ -4,6 +4,19 @@ import hypertiling.array.reflection_numba_util as util
 from hypertiling.array.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
 
+
+"""
+p: Number of edges/vertices of a polygon
+q: Number of polygons that meet at a vertex
+n: Number of layers (classical definition)
+m: Number of polygons
+
+Assumption on time-complexity:
+division: O(1)
+modulo: O(j k)
+"""
+
+
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
@@ -114,12 +127,15 @@ class ReflectTiling:
         # remove the first one from consideration
         index -= 1
 
-        # TODO: split it up to fasten it up a bit (if before, than do not rotate everything (phi = 0))
         phi = PI2 / self.geo_atts[0] * (index // (self.sector_polys.shape[0] - 1))
         index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
 
         # +1 to ignore the first one
         poly = self.sector_polys[index + 1]
+
+        if phi == 0:
+            return poly
+
         return poly * np.exp(phi * 1j)
 
     def _get_reflection_level_in_sector(self, index: int) -> int:
@@ -155,20 +171,44 @@ class ReflectTiling:
         return self.layers[index + 1]
 
     def get_sector(self, index: int) -> int:
-        # TODO: teste mich
+        """
+        Returns the sector, the polygon at index refers to.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: int = number of the sector
+        """
         if index == 0:
             return 0
         else:
             index -= 1
-            return index // (self.geo_atts[0] - 1)
+            return index // (self.sector_polys.shape[0] - 1)
 
-    def get_center(self, index: int) -> int:
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
         return self[index][0]
 
-    def get_vertices(self, index: int) -> int:
+    def get_vertices(self, index: int) -> np.array:
+        """
+        Returns the p vertices of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.array[np.complex128][p] = vertices of the polygon
+        """
         return self[index][1:]
 
     def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+        Time-complexity: ?
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
+        # FIXME: add time complexity
         return np.angle(self[index][0])
 
     def find(self, v: np.complex128) -> int:
@@ -403,6 +443,7 @@ if __name__ == "__main__":
     import time
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import random
 
     combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
     ReflectTiling(3, 7, 2)
@@ -417,10 +458,13 @@ if __name__ == "__main__":
         # tiling.map_layers()
         fig, ax = plt.subplots()
 
-        colors = ["#0000FFAA", "#FF0000AA"]
+        colors = [(random.random(), random.random(), random.random(), 0.5) for i in range(p)]
         for i, pgon in enumerate(tiling):
+            pgon = tiling[i]
+            center = tiling.get_vertices(i)
+            plt.scatter(np.real(center), np.imag(center))
             p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
-                                     fc=colors[tiling.get_layer(i) % 2])
+                                     fc=colors[tiling.get_sector(i)])
             ax.add_patch(p_)
             ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
 
@@ -440,13 +484,13 @@ if __name__ == "__main__":
         arrow = rot @ arrow
         plt.arrow(0, 0, arrow[0], arrow[1])
 
-        # TODO:
+        """# TODO:
         neighbors = tiling.get_neighbors_fast(12)
         print(neighbors)
         for index in neighbors:
             pgon = tiling[index]
             p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), fc="#AAAAAADD")
-            ax.add_patch(p_)
+            ax.add_patch(p_)"""
 
         plt.show()
 
