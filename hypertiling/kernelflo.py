@@ -37,11 +37,11 @@ class KernelFlo(KernelCommon):
         if self.center == "vertex":
             sect_angle     = self.qhi
             sect_angle_deg = self.degqhi
-            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), math.atan2(self.fund_poly.centerP().imag, self.fund_poly.centerP().real))
-            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), math.atan2(self.fund_poly.centerP().imag, self.fund_poly.centerP().real))
+            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real))
+            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real))
         else:
-            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), self.phi/2) # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.centerP()), self.phi/2)
+            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), self.phi/2) # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
+            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), self.phi/2)
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
     
@@ -62,7 +62,7 @@ class KernelFlo(KernelCommon):
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.verticesP[self.p])
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
@@ -77,7 +77,6 @@ class KernelFlo(KernelCommon):
 
                                 # generate adjacent polygon
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                                adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
@@ -97,8 +96,10 @@ class KernelFlo(KernelCommon):
         deletelist = []
 
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg - self.degtol + self.mangle:
-                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
+            angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
+            angle += 360 if angle < 0 else 0
+            if angle > sect_angle_deg - self.degtol + self.mangle:
+                center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))

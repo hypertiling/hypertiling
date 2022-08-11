@@ -3,6 +3,7 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
+from .arraytransformation import mfull
 from .transformation import p2w, moeb_rotate_trafo, mymoeb
 from .util import fund_radius
 
@@ -155,7 +156,7 @@ class KernelCommon(HyperbolicTilingBase):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
-        polygon.tf_full(ind, k*self.qhi)
+        mfull(self.p, k*self.qhi, ind, polygon.verticesP)
         return polygon
 
 
