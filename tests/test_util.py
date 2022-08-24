@@ -10,6 +10,7 @@ class PrintTest:
     """
 
     def __init__(self):
+        self.__std_out = sys.stdout
         self._capturedOutput = io.StringIO()
 
     def __enter__(self):
@@ -17,7 +18,7 @@ class PrintTest:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        sys.stdout = sys.__stdout__
+        sys.stdout = self.__std_out
 
     def get(self):
         """
@@ -35,3 +36,4 @@ if __name__ == "__main__":
 
     print("Outside now:")
     print(values)
+    raise ValueError("test")

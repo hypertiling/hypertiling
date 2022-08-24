@@ -3,7 +3,7 @@ import numpy as np
 import hypertiling.array.reflection_numba_util as util
 from hypertiling.array.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
-
+import hypertiling.geodesics as geos
 
 """
 p: Number of edges/vertices of a polygon
@@ -15,7 +15,6 @@ Assumption on time-complexity:
 division: O(1)
 modulo: O(j k)
 """
-
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -227,7 +226,8 @@ class ReflectTiling:
 
         dists = disk_distance(self.sector_polys[:, 0])
         index = np.argmin(dists)
-        if dists[index] >= util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+        if dists[index] >= util.f_dist(self.sector_polys[0, 0],
+                                       geos.geodesic_midpoint(self.sector_polys[1, 0], self.sector_polys[0, 0])):
             return False
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
@@ -345,7 +345,8 @@ class ReflectTiling:
         print(bin(self.edge_array[c]))
         print(bin(1 << (self.geo_atts[0] - 1)))
         if not (self.edge_array[c] & 1 << (self.geo_atts[0] - 1)):
-            neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(ratio * self.reflection_levels[layer - 1]) + 1
+            neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(
+                ratio * self.reflection_levels[layer - 1]) + 1
             if neighbors[c] >= self.reflection_levels_cumulated[layer]:
                 neighbors[c] = self.reflection_levels_cumulated[layer - 1] + jump
             c += 1
@@ -400,6 +401,7 @@ class ReflectTiling:
         for i, length in enumerate(self.sector_lengths):
             if np.count_nonzero(self.layers == i) != length:
                 print(f"Layer {i} is not complete")
+                break
 
         # check if all edges have a partner
         for i in range(len(self.sector_polys)):
