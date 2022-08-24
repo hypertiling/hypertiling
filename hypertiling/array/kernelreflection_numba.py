@@ -221,13 +221,15 @@ class ReflectTiling:
         factor = (angle - self.degtol / 360 * PI2) // (PI2 / self.geo_atts[0])
         factor = factor if factor >= 0 else factor + self.geo_atts[0]
         sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
-
         disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
 
+        # FIXME: problemes on boundary 
         dists = disk_distance(self.sector_polys[:, 0])
         index = np.argmin(dists)
-        if dists[index] >= util.f_dist(self.sector_polys[0, 0],
-                                       geos.geodesic_midpoint(self.sector_polys[1, 0], self.sector_polys[0, 0])):
+
+        print(index)
+        if dists[index] >= util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+            # util.f_dist(self.sector_polys[0, 0], geos.geodesic_midpoint(self.sector_polys[1, 0], self.sector_polys[0, 0]))
             return False
         return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
 
@@ -292,16 +294,25 @@ class ReflectTiling:
         :param index: int = index of the polygon
         :return: np.array[p] = array containing the indices of the neighbors
         """
+        if index == 0:
+            neigbor_centers = util.generate_raw(self.sector_polys[index])
+            indices = [self.find(e) for e in neigbor_centers]
+            indices = [e for e in indices if not (e is False)]
+            return [i % (self.length - 1) if i != 0 else 0 for i in indices]
+
         # get equivalent poly in sector
+        index -= 1
         sector_replica = index // (self.sector_polys.shape[0] - 1)
         index %= (self.sector_polys.shape[0] - 1)
+        index += 1
         jump = self.sector_polys.shape[0] - 1
 
         # quick and dirty solution
         neigbor_centers = util.generate_raw(self.sector_polys[index])
         indices = [self.find(e) for e in neigbor_centers]
         indices = [e for e in indices if not (e is False)]
-        return [(i + sector_replica * jump) % (self.length - 1) if i != 0 else 0 for i in indices]
+        indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
+        return [i if i < self.length else i % self.length + 1 for i in indices]
 
     def get_neighbors_fast(self, index: int) -> np.array:
         # FIXME: at first for sector... Rotate later
