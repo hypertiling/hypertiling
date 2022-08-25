@@ -18,7 +18,7 @@ RATIOOFDUPLICATES = 0.1
 RATIOOFHOLES = 0.1
 
 # test find/get_neighbors
-SHIFTTOL = 1e-8
+SHIFTTOL = 1e-5
 
 
 class TestReflectTiling(unittest.TestCase):
@@ -41,12 +41,12 @@ class TestReflectTiling(unittest.TestCase):
                 self.assertEqual(tiling.find(center), index)
 
                 # test boundary of findings
-                """neighbor_centers = util.generate_raw(tiling[index])
+                neighbor_centers = util.generate_raw(tiling[index])
                 for neighbor in neighbor_centers:
                     midpoint = geos.geodesic_midpoint(neighbor, center)
                     v = (center - midpoint) * SHIFTTOL
                     test_point = midpoint + v
-                    self.assertEqual(tiling.find(test_point), index)"""
+                    self.assertEqual(tiling.find(test_point), index)
 
                 # test non finding
                 if 1 < index < len(tiling.sector_polys): # 0 and 1 are excluded as they are used as reference in find
@@ -60,7 +60,6 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors(self):
         for combi in COMBIS:
             tiling = ReflectTiling(*combi, n=LAYERS)
-            dist = util.f_dist(tiling[1][0], tiling[0][0]) / 2
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
 
@@ -69,43 +68,20 @@ class TestReflectTiling(unittest.TestCase):
                         continue
 
                     midpoint = geos.geodesic_midpoint(tiling[index][0], poly[0])
-                    v = (tiling[index][0] - midpoint) * 0.5#SHIFTTOL
+                    v = (tiling[index][0] - midpoint) * SHIFTTOL
                     testpoint = midpoint + v
                     found = tiling.find(testpoint)
 
                     if j in neighbors:
-                        try:
-                            self.assertEqual(index, found)
-                        except Exception as error:
-                            import hypertiling.array.plot as plot
-                            import matplotlib.pyplot as plt
-                            print("neighbor")
-                            print(testpoint)
-                            print(index, j, found, neighbors)
-                            print(util.f_dist(tiling[index][0], testpoint))
-                            print(dist)
+                        self.assertEqual(index, found)
 
-                            neighbors_ = np.array([tiling[k][0] for k in neighbors])
-                            plot.plot(tiling, numerate=True, alpha=0.5)
-                            plt.scatter(np.real(testpoint), np.imag(testpoint), color="#FF0000", marker="x")
-                            plt.scatter(np.real(midpoint), np.imag(midpoint))
-                            plt.scatter(np.real(neighbors_), np.imag(neighbors_))
-                            plt.show()
-                            raise error
-
-                    """elif found is not False:
-                        try:
-                            self.assertNotEqual(index, found)
-                        except Exception as error:
-                            import hypertiling.array.plot as plot
-                            import matplotlib.pyplot as plt
-                            print(index, found)
-                            print(index, j, neighbors)
-                            neighbors_ = np.array([tiling[k][0] for k in neighbors])
-                            plot.plot(tiling, numerate=True, alpha=0.5)
-                            plt.scatter(np.real(neighbors_), np.imag(neighbors_))
-                            plt.show()
-                            raise error"""
+                    elif found is not False:
+                        """
+                        If the polygons are not neighbors, the algorithm will either 
+                        1. find no polygon when searching close to the middle of both (return False)
+                        2. Will return another polygon which should not be index
+                        """
+                        self.assertNotEqual(index, found)
 
     def test_check_integrity(self):
         for combi in COMBIS:

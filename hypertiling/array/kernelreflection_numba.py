@@ -3,7 +3,6 @@ import numpy as np
 import hypertiling.array.reflection_numba_util as util
 from hypertiling.array.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
-import hypertiling.geodesics as geos
 
 """
 p: Number of edges/vertices of a polygon
@@ -210,6 +209,15 @@ class ReflectTiling:
         # FIXME: add time complexity
         return np.angle(self[index][0])
 
+    def _find(self, sector_proj) -> int:
+        disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
+        dists = disk_distance(self.sector_polys[:, 0])
+        index = np.argmin(dists)
+
+        if dists[index] < util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+            return index
+        return False
+
     def find(self, v: np.complex128) -> int:
         """
         Find the polygons index v belongs to.
@@ -218,20 +226,19 @@ class ReflectTiling:
         :return: int = index of the corresponding polygon
         """
         angle = np.angle(v)
-        factor = (angle - self.degtol / 360 * PI2) // (PI2 / self.geo_atts[0])
+        factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.geo_atts[0])))
         factor = factor if factor >= 0 else factor + self.geo_atts[0]
-        sector_proj = v * np.exp(-(factor * PI2 / self.geo_atts[0]) * 1j)
-        disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
 
-        # FIXME: problemes on boundary 
-        dists = disk_distance(self.sector_polys[:, 0])
-        index = np.argmin(dists)
+        for modi in [0, 1, -1]:
+            sector_proj = v * np.exp(-((factor + modi) * PI2 / self.geo_atts[0]) * 1j)
+            index = self._find(sector_proj)
+            if index:
+                index = int(index + (self.sector_polys.shape[0] - 1) * (factor + modi))
+                return (index + self.length - 1) % (self.length - 1)
+            elif not (index is False):
+                return 0
 
-        print(index)
-        if dists[index] >= util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
-            # util.f_dist(self.sector_polys[0, 0], geos.geodesic_midpoint(self.sector_polys[1, 0], self.sector_polys[0, 0]))
-            return False
-        return int(index + (self.sector_polys.shape[0] - 1) * factor if index != 0 else 0)
+        return False
 
     def map_layers(self):
         """
@@ -308,8 +315,8 @@ class ReflectTiling:
         jump = self.sector_polys.shape[0] - 1
 
         # quick and dirty solution
-        neigbor_centers = util.generate_raw(self.sector_polys[index])
-        indices = [self.find(e) for e in neigbor_centers]
+        neighbor_centers = util.generate_raw(self.sector_polys[index])
+        indices = [self.find(e) for e in neighbor_centers]
         indices = [e for e in indices if not (e is False)]
         indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
         return [i if i < self.length else i % self.length + 1 for i in indices]
@@ -453,6 +460,15 @@ class ReflectTiling:
 
 
 if __name__ == "__main__":
+    import hypertiling.array.plot as plot
+    import matplotlib.pyplot as plt
+
+    index = 1
+    tiling = ReflectTiling(7, 3, 4)
+    print(tiling.find(0.4226123612074364+0.026776006635462042j))
+
+
+    exit("stop")
     import time
     import matplotlib.pyplot as plt
     import matplotlib as mpl
@@ -510,7 +526,6 @@ if __name__ == "__main__":
 """
 Arbeitsplan:
     - neighbors fast
-    - non numba version (?), check which functions are actually faster with numba to what extend
     - unittests
     - speed tests
 """
