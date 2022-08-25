@@ -44,10 +44,10 @@ class ReflectTiling:
         # technical attributes
         if n > 1:
             lengths = util.get_ns(self.geo_atts)
-            self.sector_lengths = np.ceil(lengths / p).astype(np.uint32)
+            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)
             self.length = np.sum(lengths)
         else:
-            self.sector_lengths = np.array([1])
+            self._sector_lengths = np.array([1])
             self.length = 1
 
         fac = np.pi / (p * q)
@@ -56,7 +56,7 @@ class ReflectTiling:
         self.mangle = mangle / 360 * PI2
 
         # if center is added it should be p+1
-        self.sector_polys = np.empty((np.sum(self.sector_lengths), p + 1), dtype=np.complex)
+        self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex)
 
         """
         edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
@@ -65,17 +65,17 @@ class ReflectTiling:
         
         This is saved for the possibility to expand the grid later (not yet implemented)
         """
-        self.edge_array = np.empty(self.sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
+        self._edge_array = np.empty(self._sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
 
         rf = self.generate()
-        self.reflection_levels = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
-        self.reflection_levels_cumulated = np.empty((self.reflection_levels.shape[0] + 1,), dtype=np.uint32)
-        self.reflection_levels_cumulated[0] = 0
-        for i, element in enumerate(self.reflection_levels):
-            self.reflection_levels_cumulated[i + 1] = element + self.reflection_levels_cumulated[i]
+        self._reflection_levels = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
+        self._reflection_levels_cumulated = np.empty((self._reflection_levels.shape[0] + 1,), dtype=np.uint32)
+        self._reflection_levels_cumulated[0] = 0
+        for i, element in enumerate(self._reflection_levels):
+            self._reflection_levels_cumulated[i + 1] = element + self._reflection_levels_cumulated[i]
 
         # possible to fill
-        self.layers = None
+        self._layers = None
 
     def generate(self):
         """
@@ -83,7 +83,7 @@ class ReflectTiling:
         Time-complexity: O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
         :return: void
         """
-        return util.generate(self.geo_atts, self.r, self.sector_polys, self.sector_lengths, self.edge_array,
+        return util.generate(self.geo_atts, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.degtol,
                              self.mangle)
 
@@ -102,13 +102,13 @@ class ReflectTiling:
         :yield: np.array[8] = [center, vertices]
         """
         # check for duplicates
-        for poly in self.sector_polys:
+        for poly in self._sector_polys:
             yield poly
 
         dphi = PI2 / self.geo_atts[0]
         phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
         for i, angle in enumerate(phis):
-            for poly in self.sector_polys[1:]:
+            for poly in self._sector_polys[1:]:
                 yield poly * np.exp(angle * 1j)
 
     def __getitem__(self, index: int) -> np.array:
@@ -120,16 +120,16 @@ class ReflectTiling:
         :return: np.array[p + 1] = [center, vertices]
         """
         if index == 0:
-            return self.sector_polys[0]
+            return self._sector_polys[0]
 
         # remove the first one from consideration
         index -= 1
 
-        phi = PI2 / self.geo_atts[0] * (index // (self.sector_polys.shape[0] - 1))
-        index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
+        phi = PI2 / self.geo_atts[0] * (index // (self._sector_polys.shape[0] - 1))
+        index = index if index < (self._sector_polys.shape[0] - 1) else index % (self._sector_polys.shape[0] - 1)
 
         # +1 to ignore the first one
-        poly = self.sector_polys[index + 1]
+        poly = self._sector_polys[index + 1]
 
         if phi == 0:
             return poly
@@ -143,8 +143,8 @@ class ReflectTiling:
         :param index: int = index of the polygon
         :return: int = reflection level
         """
-        pos = np.searchsorted(self.reflection_levels_cumulated, index)
-        if self.reflection_levels_cumulated[pos] > index:
+        pos = np.searchsorted(self._reflection_levels_cumulated, index)
+        if self._reflection_levels_cumulated[pos] > index:
             return pos - 1
         return pos
 
@@ -156,17 +156,17 @@ class ReflectTiling:
         :param index: int = index of the polygon
         :return: int = number of the layer
         """
-        if self.layers is None:
+        if self._layers is None:
             print("Layers are not yet mapped. Start mapping")
             self.map_layers()
 
         if index == 0:
-            return self.layers[0]
+            return self._layers[0]
 
         # remove the first one from consideration
         index -= 1
-        index = index if index < (self.sector_polys.shape[0] - 1) else index % (self.sector_polys.shape[0] - 1)
-        return self.layers[index + 1]
+        index = index if index < (self._sector_polys.shape[0] - 1) else index % (self._sector_polys.shape[0] - 1)
+        return self._layers[index + 1]
 
     def get_sector(self, index: int) -> int:
         """
@@ -179,7 +179,7 @@ class ReflectTiling:
             return 0
         else:
             index -= 1
-            return index // (self.sector_polys.shape[0] - 1)
+            return index // (self._sector_polys.shape[0] - 1)
 
     def get_center(self, index: int) -> np.complex128:
         """
@@ -211,10 +211,10 @@ class ReflectTiling:
 
     def _find(self, sector_proj) -> int:
         disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
-        dists = disk_distance(self.sector_polys[:, 0])
+        dists = disk_distance(self._sector_polys[:, 0])
         index = np.argmin(dists)
 
-        if dists[index] < util.f_dist(self.sector_polys[0, 0], self.sector_polys[1, 0]) / 2:
+        if dists[index] < util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
             return index
         return False
 
@@ -233,7 +233,7 @@ class ReflectTiling:
             sector_proj = v * np.exp(-((factor + modi) * PI2 / self.geo_atts[0]) * 1j)
             index = self._find(sector_proj)
             if index:
-                index = int(index + (self.sector_polys.shape[0] - 1) * (factor + modi))
+                index = int(index + (self._sector_polys.shape[0] - 1) * (factor + modi))
                 return (index + self.length - 1) % (self.length - 1)
             elif not (index is False):
                 return 0
@@ -248,12 +248,12 @@ class ReflectTiling:
         :return: void
         """
         verticess = [[] for i in range(self.geo_atts[2] + 2)]
-        verticess[0] = self.sector_polys[0, 1:]
-        self.layers = np.empty(self.sector_polys.shape[0], dtype=np.uint8)
-        self.layers.fill(self.geo_atts[2])
-        self.layers[0] = 0
+        verticess[0] = self._sector_polys[0, 1:]
+        self._layers = np.empty(self._sector_polys.shape[0], dtype=np.uint8)
+        self._layers.fill(self.geo_atts[2])
+        self._layers[0] = 0
 
-        for i, poly in enumerate(self.sector_polys[1:], start=1):
+        for i, poly in enumerate(self._sector_polys[1:], start=1):
             blocked = []
             for j, vertices in enumerate(verticess):
                 if len(vertices) == 0:
@@ -261,13 +261,13 @@ class ReflectTiling:
 
                 conn = util.any_close_matrix(np.array(vertices), poly[1:])
                 if conn.shape[0] != 0 and len(blocked) == 0:
-                    self.layers[i] = j + 1
-                    if self.layers[i - 1] != 0 and self.layers[i] != self.layers[i - 1]:
+                    self._layers[i] = j + 1
+                    if self._layers[i - 1] != 0 and self._layers[i] != self._layers[i - 1]:
                         # last vertex for layers[i - 1] set
                         # replicate vertices of sector into next one to prevent boundary problems
-                        for k in range(len(verticess[self.layers[i - 1]])):
-                            replicate = verticess[self.layers[i - 1]][k] * np.exp(PI2 / self.geo_atts[0] * 1j)
-                            verticess[self.layers[i - 1]].append(replicate)
+                        for k in range(len(verticess[self._layers[i - 1]])):
+                            replicate = verticess[self._layers[i - 1]][k] * np.exp(PI2 / self.geo_atts[0] * 1j)
+                            verticess[self._layers[i - 1]].append(replicate)
 
                 blocked += conn[:, 0].tolist()
 
@@ -275,7 +275,7 @@ class ReflectTiling:
                 if k in blocked:
                     continue
                 else:
-                    verticess[self.layers[i]].append(vertex)
+                    verticess[self._layers[i]].append(vertex)
 
     def _polygen(self, polys: np.array) -> np.array:
         """
@@ -302,20 +302,20 @@ class ReflectTiling:
         :return: np.array[p] = array containing the indices of the neighbors
         """
         if index == 0:
-            neigbor_centers = util.generate_raw(self.sector_polys[index])
+            neigbor_centers = util.generate_raw(self._sector_polys[index])
             indices = [self.find(e) for e in neigbor_centers]
             indices = [e for e in indices if not (e is False)]
             return [i % (self.length - 1) if i != 0 else 0 for i in indices]
 
         # get equivalent poly in sector
         index -= 1
-        sector_replica = index // (self.sector_polys.shape[0] - 1)
-        index %= (self.sector_polys.shape[0] - 1)
+        sector_replica = index // (self._sector_polys.shape[0] - 1)
+        index %= (self._sector_polys.shape[0] - 1)
         index += 1
-        jump = self.sector_polys.shape[0] - 1
+        jump = self._sector_polys.shape[0] - 1
 
         # quick and dirty solution
-        neighbor_centers = util.generate_raw(self.sector_polys[index])
+        neighbor_centers = util.generate_raw(self._sector_polys[index])
         indices = [self.find(e) for e in neighbor_centers]
         indices = [e for e in indices if not (e is False)]
         indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
@@ -324,49 +324,49 @@ class ReflectTiling:
     def get_neighbors_fast(self, index: int) -> np.array:
         # FIXME: at first for sector... Rotate later
         if index == 0:
-            return np.array([1 + i * (self.sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
+            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
 
         # placeholder for the neighbors
         neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
 
         # map index to sector
         sector_index = index - 1
-        sector_index = sector_index + 1 if sector_index < (self.sector_polys.shape[0] - 1) else sector_index % (
-                self.sector_polys.shape[0] - 1) + 1
+        sector_index = sector_index + 1 if sector_index < (self._sector_polys.shape[0] - 1) else sector_index % (
+                self._sector_polys.shape[0] - 1) + 1
 
         c = 0
-        jump = (self.sector_polys.shape[0] - 1)
+        jump = (self._sector_polys.shape[0] - 1)
 
         layer = self._get_reflection_level_in_sector(sector_index)
-        pos_in_layer = sector_index - self.reflection_levels_cumulated[layer]
-        ratio = pos_in_layer / self.reflection_levels[layer]
+        pos_in_layer = sector_index - self._reflection_levels_cumulated[layer]
+        ratio = pos_in_layer / self._reflection_levels[layer]
 
         # siblings
         # For q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
         if self.geo_atts[1] == 3:
-            neighbors[c] = sector_index - 1 if sector_index - 1 >= self.reflection_levels_cumulated[layer] else \
-                self.reflection_levels_cumulated[layer] + self.reflection_levels[layer] + (
+            neighbors[c] = sector_index - 1 if sector_index - 1 >= self._reflection_levels_cumulated[layer] else \
+                self._reflection_levels_cumulated[layer] + self._reflection_levels[layer] + (
                         self.geo_atts[0] - 1) * jump - 1
 
             neighbors[c + 1] = sector_index + 1 \
-                if sector_index <= self.reflection_levels[layer] else \
-                self.reflection_levels_cumulated[layer] + jump
+                if sector_index <= self._reflection_levels[layer] else \
+                self._reflection_levels_cumulated[layer] + jump
 
             c += 2
         #  For q is odd follows (q - 3) is even. If (q - 3) is even, a polygon can connect exact one other sibling
         pass
 
         # parent
-        neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(ratio * self.reflection_levels[layer - 1])
+        neighbors[c] = self._reflection_levels_cumulated[layer - 1] + int(ratio * self._reflection_levels[layer - 1])
         c += 1
 
-        print(bin(self.edge_array[c]))
+        print(bin(self._edge_array[c]))
         print(bin(1 << (self.geo_atts[0] - 1)))
-        if not (self.edge_array[c] & 1 << (self.geo_atts[0] - 1)):
-            neighbors[c] = self.reflection_levels_cumulated[layer - 1] + int(
-                ratio * self.reflection_levels[layer - 1]) + 1
-            if neighbors[c] >= self.reflection_levels_cumulated[layer]:
-                neighbors[c] = self.reflection_levels_cumulated[layer - 1] + jump
+        if not (self._edge_array[c] & 1 << (self.geo_atts[0] - 1)):
+            neighbors[c] = self._reflection_levels_cumulated[layer - 1] + int(
+                ratio * self._reflection_levels[layer - 1]) + 1
+            if neighbors[c] >= self._reflection_levels_cumulated[layer]:
+                neighbors[c] = self._reflection_levels_cumulated[layer - 1] + jump
             c += 1
         """
         Kann einen oder zwei parents geben
@@ -377,18 +377,18 @@ class ReflectTiling:
         if layer + 1 == self.geo_atts[2]:
             return neighbors[:c]
 
-        neighbors[c] = self.reflection_levels_cumulated[layer + 1] + int(ratio * self.reflection_levels[layer + 1])
+        neighbors[c] = self._reflection_levels_cumulated[layer + 1] + int(ratio * self._reflection_levels[layer + 1])
         c += 1
 
         up = 1
         while c < self.geo_atts[0]:
-            neighbors[c] = self.reflection_levels_cumulated[layer + 1] + int(
-                ratio * self.reflection_levels[layer + 1]) + up
-            if neighbors[c] < self.reflection_levels_cumulated[layer + 1]:
-                neighbors[c] = self.reflection_levels_cumulated[layer + 1] + self.reflection_levels[layer + 1] + (
+            neighbors[c] = self._reflection_levels_cumulated[layer + 1] + int(
+                ratio * self._reflection_levels[layer + 1]) + up
+            if neighbors[c] < self._reflection_levels_cumulated[layer + 1]:
+                neighbors[c] = self._reflection_levels_cumulated[layer + 1] + self._reflection_levels[layer + 1] + (
                         self.geo_atts[0] - 1) * jump - 1
-            elif neighbors[c] >= self.reflection_levels_cumulated[layer + 2]:
-                neighbors[c] = self.reflection_levels_cumulated[layer] + jump
+            elif neighbors[c] >= self._reflection_levels_cumulated[layer + 2]:
+                neighbors[c] = self._reflection_levels_cumulated[layer] + jump
             c += 1
             up = - up if np.sign(up) == 1 else - up + 1
 
@@ -403,26 +403,26 @@ class ReflectTiling:
         :return: void
         """
         # check if one polygon is shifted in the range of another or if duplicates exist
-        for i in range(len(self.sector_polys)):
-            poly_center = self.sector_polys[i, 0]
-            self.sector_polys[i, 0] = 0
+        for i in range(len(self._sector_polys)):
+            poly_center = self._sector_polys[i, 0]
+            self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):
                     raise AttributeError(f"Duplicate detected at index {i}")
             finally:
-                self.sector_polys[i, 0] = poly_center
+                self._sector_polys[i, 0] = poly_center
 
         # check if each layer has the correct size
-        if self.layers is None:
+        if self._layers is None:
             self.map_layers()
 
-        for i, length in enumerate(self.sector_lengths):
-            if np.count_nonzero(self.layers == i) != length:
+        for i, length in enumerate(self._sector_lengths):
+            if np.count_nonzero(self._layers == i) != length:
                 print(f"Layer {i} is not complete")
                 break
 
         # check if all edges have a partner
-        for i in range(len(self.sector_polys)):
+        for i in range(len(self._sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
             if neighbor_counter == self.geo_atts[0]:
                 continue
@@ -438,7 +438,7 @@ class ReflectTiling:
         """
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
-        function(self.sector_polys)
+        function(self._sector_polys)
 
     def rotate(self, angle: float):
         """
@@ -526,6 +526,5 @@ if __name__ == "__main__":
 """
 Arbeitsplan:
     - neighbors fast
-    - unittests
     - speed tests
 """

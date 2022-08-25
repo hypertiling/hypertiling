@@ -49,13 +49,10 @@ class TestReflectTiling(unittest.TestCase):
                     self.assertEqual(tiling.find(test_point), index)
 
                 # test non finding
-                if 1 < index < len(tiling.sector_polys): # 0 and 1 are excluded as they are used as reference in find
-                    tiling.sector_polys[index, 0] = 0 if index != 0 else 0.999999999999j
+                if 1 < index < len(tiling._sector_polys): # 0 and 1 are excluded as they are used as reference in find
+                    tiling._sector_polys[index, 0] = 0 if index != 0 else 0.999999999999j
                     self.assertFalse(tiling.find(center))
-                    tiling.sector_polys[index, 0] = center
-
-    def test_map_layers(self):
-        self.fail()
+                    tiling._sector_polys[index, 0] = center
 
     def test_get_neighbors(self):
         for combi in COMBIS:
@@ -63,7 +60,7 @@ class TestReflectTiling(unittest.TestCase):
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
 
-                for j, poly in enumerate(tiling.sector_polys):
+                for j, poly in enumerate(tiling._sector_polys):
                     if j == index:
                         continue
 
@@ -88,14 +85,14 @@ class TestReflectTiling(unittest.TestCase):
             tiling = ReflectTiling(*combi, n=LAYERS)
 
             # check for duplicates
-            old = tiling.sector_polys[-1, 0]
-            for i in range(int(RATIOOFDUPLICATES * len(tiling.sector_polys))):
-                index = random.randint(2, len(tiling.sector_polys) - 2)
-                tiling.sector_polys[-1, 0] = tiling.sector_polys[index, 0]
+            old = tiling._sector_polys[-1, 0]
+            for i in range(int(RATIOOFDUPLICATES * len(tiling._sector_polys))):
+                index = random.randint(2, len(tiling._sector_polys) - 2)
+                tiling._sector_polys[-1, 0] = tiling._sector_polys[index, 0]
                 with self.assertRaises(AttributeError, msg=f"Duplicate at index {index} was not detected") as error:
                     tiling.check_integrity()
                 self.assertEqual(f"Duplicate detected at index {index}", str(error.exception))
-            tiling.sector_polys[-1, 0] = old
+            tiling._sector_polys[-1, 0] = old
 
             # check layer completeness
             # get testing boundary for tiling
@@ -110,28 +107,28 @@ class TestReflectTiling(unittest.TestCase):
 
             # obscure layer l and check if layer is considered incomplete
             for l in range(boundary_layer):
-                index = np.where(tiling.layers == l)
-                tiling.layers[index] += 1
+                index = np.where(tiling._layers == l)
+                tiling._layers[index] += 1
                 with PrintTest() as stream:
                     tiling.check_integrity()
-                tiling.layers[index] -= 1
+                tiling._layers[index] -= 1
                 values = stream.get()
                 messages = values[:-1].split("\n")
                 self.assertEqual(f"Layer {l} is not complete", messages[0])
 
             # check layer boundary/holes
-            indices = np.argwhere(tiling.layers < boundary_layer)[1:]  # eliminate fist polygon
-            for i in range(int(RATIOOFHOLES * len(tiling.sector_polys))):
+            indices = np.argwhere(tiling._layers < boundary_layer)[1:]  # eliminate fist polygon
+            for i in range(int(RATIOOFHOLES * len(tiling._sector_polys))):
                 index = random.choice(indices)[0]
-                old = tiling.sector_polys[index, 0]
-                tiling.sector_polys[index, 0] = 0
+                old = tiling._sector_polys[index, 0]
+                tiling._sector_polys[index, 0] = 0
                 with PrintTest() as stream:
                     tiling.check_integrity()
-                tiling.sector_polys[index, 0] = old
+                tiling._sector_polys[index, 0] = old
                 values = stream.get()
                 messages = values[:-1].split("\n")
                 last_layer = int(messages[-1].split(" ")[-1])
-                self.assertIn(last_layer, [tiling.layers[index] - 1, tiling.layers[index]])
+                self.assertIn(last_layer, [tiling._layers[index] - 1, tiling._layers[index]])
 
 
 if __name__ == '__main__':
