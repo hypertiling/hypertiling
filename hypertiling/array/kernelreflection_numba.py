@@ -14,6 +14,7 @@ Assumption on time-complexity:
 division: O(1)
 modulo: O(j k)
 """
+# TODO: time complexity (besonders modulo) checken
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -227,14 +228,15 @@ class ReflectTiling:
         """
         angle = np.angle(v)
         factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.geo_atts[0])))
-        factor = factor if factor >= 0 else factor + self.geo_atts[0]
 
-        for modi in [0, 1, -1]:
-            sector_proj = v * np.exp(-((factor + modi) * PI2 / self.geo_atts[0]) * 1j)
+        for modify in [0, 1, -1]:
+            modi = factor + modify
+            modi = modi if modi >= 0 else modi + self.geo_atts[0]
+            sector_proj = v * np.exp(-(modi * PI2 / self.geo_atts[0]) * 1j) if modi != 0 else v
             index = self._find(sector_proj)
             if index:
-                index = int(index + (self._sector_polys.shape[0] - 1) * (factor + modi))
-                return (index + self.length - 1) % (self.length - 1)
+                index = int(index + (self._sector_polys.shape[0] - 1) * modi)
+                return (index + self.length) % self.length
             elif not (index is False):
                 return 0
 
@@ -462,66 +464,57 @@ class ReflectTiling:
 if __name__ == "__main__":
     import hypertiling.array.plot as plot
     import matplotlib.pyplot as plt
-
-    index = 1
-    tiling = ReflectTiling(7, 3, 4)
-    print(tiling.find(0.4226123612074364+0.026776006635462042j))
-
-
-    exit("stop")
     import time
-    import matplotlib.pyplot as plt
-    import matplotlib as mpl
     import random
+    import matplotlib as mpl
 
-    combis = [(7, 3), (3, 7), (5, 4), (4, 5), (6, 4), (7, 4), (7, 5), (7, 6), (7, 7)]
-    ReflectTiling(3, 7, 2)
+    tiling = ReflectTiling(7, 3, 2)
 
-    for p, q in combis:
-        print("\n\n")
-        t1 = time.time()
-        tiling = ReflectTiling(p, q, 5)
-        print(f"{time.time() - t1} s")
+    p, q, = 3, 7
+    print("\n\n")
+    t1 = time.time()
+    tiling = ReflectTiling(p, q, 4)
+    print(f"{time.time() - t1} s")
 
-        # plot.plot(tiling, alpha=0.5)
-        # tiling.map_layers()
-        fig, ax = plt.subplots()
+    # plot.plot(tiling, alpha=0.5)
+    # tiling.map_layers()
+    fig, ax = plt.subplots()
 
-        colors = [(random.random(), random.random(), random.random(), 0.5) for i in range(p)]
-        for i, pgon in enumerate(tiling):
-            pgon = tiling[i]
-            center = tiling.get_vertices(i)
-            plt.scatter(np.real(center), np.imag(center))
-            p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
-                                     fc=colors[tiling.get_sector(i)])
-            ax.add_patch(p_)
-            ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
+    colors = [(random.random(), random.random(), random.random(), 0.5) for i in range(5)]
+    for i, pgon in enumerate(tiling):
+        pgon = tiling[i]
+        center = tiling.get_vertices(i)
+        plt.scatter(np.real(center), np.imag(center))
+        p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
+                                 fc=colors[tiling.get_layer(i)])
+        ax.add_patch(p_)
+        ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
 
-        tiling.check_integrity()
-        plt.title(f"{p} {q}")
+    tiling.check_integrity()
+    plt.title(f"{p} {q}")
 
-        plt.xlim(-1, 1)
-        plt.ylim(-1, 1)
+    plt.xlim(-1, 1)
+    plt.ylim(-1, 1)
 
-        arrow = np.array([1, 0])
-        # lower boundary
-        plt.arrow(0, 0, arrow[0], arrow[1])
+    arrow = np.array([1, 0])
+    # lower boundary
+    plt.arrow(0, 0, arrow[0], arrow[1])
 
-        # upper boundary
-        theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
-        rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-        arrow = rot @ arrow
-        plt.arrow(0, 0, arrow[0], arrow[1])
+    # upper boundary
+    theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
+    rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+    arrow = rot @ arrow
+    plt.arrow(0, 0, arrow[0], arrow[1])
 
-        """# TODO:
-        neighbors = tiling.get_neighbors_fast(12)
-        print(neighbors)
-        for index in neighbors:
-            pgon = tiling[index]
-            p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), fc="#AAAAAADD")
-            ax.add_patch(p_)"""
+    """# TODO:
+    neighbors = tiling.get_neighbors_fast(12)
+    print(neighbors)
+    for index in neighbors:
+        pgon = tiling[index]
+        p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), fc="#AAAAAADD")
+        ax.add_patch(p_)"""
 
-        plt.show()
+    plt.show()
 
 """
 Arbeitsplan:
