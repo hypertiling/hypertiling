@@ -7,10 +7,10 @@ import random
 import numpy as np
 
 # overall
-COMBIS = [(7, 3, 6),
+COMBIS = [(7, 3, 5),
           (3, 7, 4),
-          (5, 4, 6),
-          (4, 5, 6),
+          (5, 4, 4),
+          (4, 5, 4),
           (6, 4, 4),
           (7, 4, 4),
           (7, 5, 3),

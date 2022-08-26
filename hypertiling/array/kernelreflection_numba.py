@@ -10,6 +10,7 @@ q: Number of polygons that meet at a vertex
 n: Number of layers (classical definition)
 m: Number of polygons
 """
+# FIXME: habe ich die m/p bedacht???? glaube nicht... Muss die Time complexity nochmal abändern
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -333,16 +334,11 @@ class ReflectTiling:
         # placeholder for the neighbors
         neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
 
-        # map index to sector
-        sector_index = index - 1
-        sector_index = sector_index + 1 if sector_index < (self._sector_polys.shape[0] - 1) else sector_index % (
-                self._sector_polys.shape[0] - 1) + 1
-
         c = 0
         jump = (self._sector_polys.shape[0] - 1)
 
-        layer = self._get_reflection_level_in_sector(sector_index)
-        pos_in_layer = sector_index - self._reflection_levels_cumulated[layer]
+        layer = self._get_reflection_level_in_sector(index)
+        pos_in_layer = index - self._reflection_levels_cumulated[layer]
         ratio = pos_in_layer / self._reflection_levels[layer]
 
         # siblings
@@ -464,50 +460,35 @@ class ReflectTiling:
 
 
 if __name__ == "__main__":
+    import time
     import hypertiling.array.plot as plot
     import matplotlib.pyplot as plt
-    import time
-    import random
     import matplotlib as mpl
 
-    tiling = ReflectTiling(7, 3, 2)
+    ReflectTiling(7, 3, 2)
 
-    p, q, = 3, 7
-    print("\n\n")
+    index = 1
+    fontsize: int = 6
     t1 = time.time()
-    tiling = ReflectTiling(p, q, 4)
-    print(f"{time.time() - t1} s")
+    tiling = ReflectTiling(7, 3, 4)
+    assert (0 <= index <= len(tiling._sector_polys))
+    print(f"Generation took: {time.time() - t1} s")
 
-    # plot.plot(tiling, alpha=0.5)
-    # tiling.map_layers()
-    fig, ax = plt.subplots()
+    # neighbors = tiling.get_neighbors_fast(index)
+    fig_ax = plt.subplots()
+    fig_ax[1].set_xlim(-1, 1)
+    fig_ax[1].set_ylim(-1, 1)
 
-    colors = [(random.random(), random.random(), random.random(), 0.5) for i in range(5)]
-    for i, pgon in enumerate(tiling):
-        pgon = tiling[i]
-        center = tiling.get_vertices(i)
-        plt.scatter(np.real(center), np.imag(center))
-        p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), lw=1, edgecolor="#FFFFFF",
-                                 fc=colors[tiling.get_layer(i)])
-        ax.add_patch(p_)
-        ax.text(np.real(pgon[0]), np.imag(pgon[0]), i, horizontalalignment='center', verticalalignment='center')
+    colors = ["#FF0000", "#00FF00", "#0000FF"]
+    for i, pgon in enumerate(tiling._sector_polys):
+        layer = tiling._get_reflection_level_in_sector(i)
+        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), color=colors[layer % 3])
+        fig_ax[1].add_patch(p)
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), i, fontsize=fontsize, horizontalalignment='center',
+                           verticalalignment='center')
 
-    tiling.check_integrity()
-    plt.title(f"{p} {q}")
-
-    plt.xlim(-1, 1)
-    plt.ylim(-1, 1)
-
-    arrow = np.array([1, 0])
-    # lower boundary
-    plt.arrow(0, 0, arrow[0], arrow[1])
-
-    # upper boundary
-    theta = PI2 / tiling.geo_atts[0] + (tiling.degtol / 360 * PI2)
-    rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-    arrow = rot @ arrow
-    plt.arrow(0, 0, arrow[0], arrow[1])
-
+    # plt.scatter(np.real(tiling[index][0]), np.imag(tiling[index][0]))
+    # plt.scatter(np.real(neighbors), np.imag(neighbors))
     plt.show()
 
 """
