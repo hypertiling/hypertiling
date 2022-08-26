@@ -9,8 +9,9 @@ p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
 n: Number of layers (classical definition)
 m: Number of polygons
+
+m = m(p, q, n)
 """
-# FIXME: habe ich die m/p bedacht???? glaube nicht... Muss die Time complexity nochmal abändern
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -24,7 +25,7 @@ class ReflectTiling:
     def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
-        Time-complexity: O(n) + O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
+        Time-complexity: O(n) + O(p^2 m)
         :param p: int = number of vertices per cells
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
@@ -77,7 +78,7 @@ class ReflectTiling:
     def generate(self):
         """
         Calculate the tilings polygons for an angular sector.
-        Time-complexity: O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
+        Time-complexity: O(p^2 m)
         :return: void
         """
         return util.generate(self.geo_atts, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
@@ -136,7 +137,7 @@ class ReflectTiling:
     def _get_reflection_level_in_sector(self, index: int) -> int:
         """
         Returns the reflection level the polygon at index belongs to.
-        Time-complexity: O(log(n + 1))
+        Time-complexity: O(log(m / p + 1))
         :param index: int = index of the polygon
         :return: int = reflection level
         """
@@ -210,7 +211,7 @@ class ReflectTiling:
         Protected(!)
         Find the polygons index sector_projection belongs to.
         However, sector_projection has to be in the fundamental sector.
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :param sector_proj: complex = position to search polygon for
         :return: int = index of the corresponding polygon
         """
@@ -225,7 +226,7 @@ class ReflectTiling:
     def find(self, v: np.complex128) -> int:
         """
         Find the polygons index v belongs to.
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :param v: complex = position to search polygon for
         :return: int = index of the corresponding polygon
         """
@@ -249,7 +250,7 @@ class ReflectTiling:
         """
         This function is numerically expensive!
         Calculates the layer to each polygon.
-        Time-complexity: O(m p^3)
+        Time-complexity: O(m p^2)
         :return: void
         """
         verticess = [[] for i in range(self.geo_atts[2] + 2)]
@@ -302,7 +303,7 @@ class ReflectTiling:
     def get_neighbors(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :param index: int = index of the polygon
         :return: np.array[p] = array containing the indices of the neighbors
         """
@@ -326,80 +327,12 @@ class ReflectTiling:
         indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
         return [i if i < self.length else i % self.length + 1 for i in indices]
 
-    def get_neighbors_fast(self, index: int) -> np.array:
-        # FIXME: at first for sector... Rotate later
-        if index == 0:
-            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
-
-        # placeholder for the neighbors
-        neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
-
-        c = 0
-        jump = (self._sector_polys.shape[0] - 1)
-
-        layer = self._get_reflection_level_in_sector(index)
-        pos_in_layer = index - self._reflection_levels_cumulated[layer]
-        ratio = pos_in_layer / self._reflection_levels[layer]
-
-        # siblings
-        # For q == 3, the polys have direct contact to their siblings. Otherwise q - 3 elements are between them
-        if self.geo_atts[1] == 3:
-            neighbors[c] = sector_index - 1 if sector_index - 1 >= self._reflection_levels_cumulated[layer] else \
-                self._reflection_levels_cumulated[layer] + self._reflection_levels[layer] + (
-                        self.geo_atts[0] - 1) * jump - 1
-
-            neighbors[c + 1] = sector_index + 1 \
-                if sector_index <= self._reflection_levels[layer] else \
-                self._reflection_levels_cumulated[layer] + jump
-
-            c += 2
-        #  For q is odd follows (q - 3) is even. If (q - 3) is even, a polygon can connect exact one other sibling
-        pass
-
-        # parent
-        neighbors[c] = self._reflection_levels_cumulated[layer - 1] + int(ratio * self._reflection_levels[layer - 1])
-        c += 1
-
-        print(bin(self._edge_array[c]))
-        print(bin(1 << (self.geo_atts[0] - 1)))
-        if not (self._edge_array[c] & 1 << (self.geo_atts[0] - 1)):
-            neighbors[c] = self._reflection_levels_cumulated[layer - 1] + int(
-                ratio * self._reflection_levels[layer - 1]) + 1
-            if neighbors[c] >= self._reflection_levels_cumulated[layer]:
-                neighbors[c] = self._reflection_levels_cumulated[layer - 1] + jump
-            c += 1
-        """
-        Kann einen oder zwei parents geben
-        2 nur, wenn es zwischen diesen liegt. Wenn es das tut, dann ist in edge_array die letzte ecke gesperrt
-        """
-
-        # children
-        if layer + 1 == self.geo_atts[2]:
-            return neighbors[:c]
-
-        neighbors[c] = self._reflection_levels_cumulated[layer + 1] + int(ratio * self._reflection_levels[layer + 1])
-        c += 1
-
-        up = 1
-        while c < self.geo_atts[0]:
-            neighbors[c] = self._reflection_levels_cumulated[layer + 1] + int(
-                ratio * self._reflection_levels[layer + 1]) + up
-            if neighbors[c] < self._reflection_levels_cumulated[layer + 1]:
-                neighbors[c] = self._reflection_levels_cumulated[layer + 1] + self._reflection_levels[layer + 1] + (
-                        self.geo_atts[0] - 1) * jump - 1
-            elif neighbors[c] >= self._reflection_levels_cumulated[layer + 2]:
-                neighbors[c] = self._reflection_levels_cumulated[layer] + jump
-            c += 1
-            up = - up if np.sign(up) == 1 else - up + 1
-
-        return neighbors
-
     def check_integrity(self):
         """
         This function is numerically expensive!
         Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
         Raises AttributeError if the grid seems to be invalid.
-        Time-complexity: O(m p^3 n)
+        Time-complexity: O(m p^2 n)
         :return: void
         """
         # check if one polygon is shifted in the range of another or if duplicates exist
@@ -433,7 +366,7 @@ class ReflectTiling:
         """
         Applies function to each polygon
         :param function: callable = function to apply on each polygon
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :return: void
         """
         if not isinstance(function, np.vectorize):
@@ -444,7 +377,7 @@ class ReflectTiling:
         """
         Rotates the grid around angle
         :param angle: float = angle to rotate the polygon
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :return: void
         """
         self.transform(lambda x: trans.mrotate(x.shape[0], -angle, x))
@@ -453,7 +386,7 @@ class ReflectTiling:
         """
         Translates the grid to z
         :param z: complex = position of the new origin
-        Time-complexity: O(m)
+        Time-complexity: O(m / p)
         :return: void
         """
         self.transform(lambda x: trans.morigin(x.shape[0], z, x))
