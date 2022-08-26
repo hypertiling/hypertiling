@@ -9,12 +9,7 @@ p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
 n: Number of layers (classical definition)
 m: Number of polygons
-
-Assumption on time-complexity:
-division: O(1)
-modulo: O(j k)
 """
-# TODO: time complexity (besonders modulo) checken
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -152,8 +147,8 @@ class ReflectTiling:
     def get_layer(self, index: int) -> int:
         """
         Returns the layer, the polygon at index refers to.
-        Time-complexity (with mapping): O(m p^3 index)
-        Time-complexity (without map.): O(index m)
+        Time-complexity (with mapping): O(p^3)
+        Time-complexity (without map.): O(1)
         :param index: int = index of the polygon
         :return: int = number of the layer
         """
@@ -299,7 +294,7 @@ class ReflectTiling:
     def get_neighbors(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
-        Time-complexity: O(index m)
+        Time-complexity: O(m)
         :param index: int = index of the polygon
         :return: np.array[p] = array containing the indices of the neighbors
         """
@@ -506,18 +501,11 @@ if __name__ == "__main__":
     arrow = rot @ arrow
     plt.arrow(0, 0, arrow[0], arrow[1])
 
-    """# TODO:
-    neighbors = tiling.get_neighbors_fast(12)
-    print(neighbors)
-    for index in neighbors:
-        pgon = tiling[index]
-        p_ = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), fc="#AAAAAADD")
-        ax.add_patch(p_)"""
-
     plt.show()
 
 """
 Arbeitsplan:
     - neighbors fast
+    - time complexities
     - speed tests
 """
