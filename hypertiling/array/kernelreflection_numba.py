@@ -198,14 +198,21 @@ class ReflectTiling:
     def get_angle(self, index: int) -> float:
         """
         Returns the angle to the center of the polygon at index.
-        Time-complexity: ?
+        Time-complexity: O(1)
         :param index: int = index of the polygon
         :return: np.complex128 = center of the polygon
         """
-        # FIXME: add time complexity
         return np.angle(self[index][0])
 
     def _find(self, sector_proj) -> int:
+        """
+        Protected(!)
+        Find the polygons index sector_projection belongs to.
+        However, sector_projection has to be in the fundamental sector.
+        Time-complexity: O(m)
+        :param sector_proj: complex = position to search polygon for
+        :return: int = index of the corresponding polygon
+        """
         disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])
         index = np.argmin(dists)
@@ -506,6 +513,5 @@ if __name__ == "__main__":
 """
 Arbeitsplan:
     - neighbors fast
-    - time complexities
     - speed tests
 """
