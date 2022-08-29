@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Any
 import numpy as np
 import hypertiling.array.reflection_numba_util as util
 from hypertiling.array.reflection_numba_util import PI2
@@ -75,6 +75,107 @@ class ReflectTiling:
         # possible to fill
         self._layers = None
 
+    # Helper ###########################################################################################################
+
+    def _get_reflection_level_in_sector(self, index: int) -> int:
+        """
+        Protected(!)
+        Returns the reflection level the polygon at index belongs to.
+        Time-complexity: O(log(m / p + 1))
+        :param index: int = index of the polygon
+        :return: int = reflection level
+        """
+        pos = np.searchsorted(self._reflection_levels_cumulated, index)
+        if self._reflection_levels_cumulated[pos] > index:
+            return pos - 1
+        return pos
+
+    def _polygen(self, polys: np.array) -> np.array:
+        """
+        Protected(!)
+        Generator for iterating over polygons.
+        Time-complexity (single polygon): O(p)
+        :param polys: np.array[n, 8] = segment the generator will create the rotations duplicates for and rotate over
+        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
+        """
+        for poly in polys:
+            yield poly
+
+        dphi = PI2 / self.geo_atts[0]
+        phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
+        for i, angle in enumerate(phis):
+            for poly in polys:
+                yield poly * np.exp(angle * 1j)
+
+    def _wiggle_index(self, index1: int, index2: int, tol: int = 1) -> int:
+        """
+        Protected(!)
+        Changes the position of index2 until the polygon shares a boundary with index 1.
+        Time-complexity (single polygon): O(tol p^2)
+        :param index1: int = index of primary polygon
+        :param index2: int = index of searched polygon
+        :return: int = index of searched polygon
+        """
+        layer = self._get_reflection_level_in_sector(index2)
+        connection = util.any_close_matrix(self._sector_polys[index1], self._sector_polys[index2])
+        index_wiggled = index2
+        side = 1
+        while connection.shape[0] != 2:
+            index_wiggled += side
+            side += 1 if side > 0 else -1
+            side *= -1
+            if (index_wiggled - index2) > tol:
+                return False
+
+            connection = util.any_close_matrix(self._sector_polys[index1],
+                                               self[self._index_from_ref_layer_index(index_wiggled, layer)])
+        return index_wiggled
+
+    def _index_from_ref_layer_index(self, index: int, ref_layer: int) -> int:
+        """
+        Protected(!)
+        Calculates the index in the tiling a polygon in ref_layer would have when the reference layer would have been
+        created circular.
+        Time-complexity: O(1)
+        :param index: int = index the polygon would have if ref_layer would have been created circular
+        :param ref_layer: int = index of the reflection layer the polygons are created in
+        :return: int = index of the polygon in the tiling
+        """
+        if index < self._reflection_levels_cumulated[ref_layer]:
+            index += self._reflection_levels[ref_layer]
+            index += (self._sector_polys.shape[0] - 1) * (self.geo_atts[0] - 1)
+        elif index >= self._reflection_levels_cumulated[ref_layer + 1]:
+            index -= self._reflection_levels[ref_layer]
+            index += self._sector_polys.shape[0] - 1
+        return index
+
+    def _generative_index(self, index: int, f: Callable) -> Any:
+        """
+        Protected(!)
+        Takes an index (for the tiling) and a function defined in the fundamental sector.
+        Calculates the corresponding sector_index, applies function f, and corrects the result to index.
+        Time-complexity (single polygon): O(1)
+        :param index: int = index of a polygon in the tiling
+        :param f: Callable = function to apply on sector_index
+        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
+        """
+        if index != 0:
+            # get equivalent poly in sector
+            index -= 1
+            sector_replica = index // (self._sector_polys.shape[0] - 1)
+            index %= (self._sector_polys.shape[0] - 1)
+            index += 1
+            jump = self._sector_polys.shape[0] - 1
+
+            # quick and dirty solution
+            indices = f(index)
+            indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
+            return [i if i < self.length else i % self.length + 1 for i in indices]
+        return f(index)
+
+    # Helper ###########################################################################################################
+    # Basics ###########################################################################################################
+
     def generate(self):
         """
         Calculate the tilings polygons for an angular sector.
@@ -85,6 +186,81 @@ class ReflectTiling:
                              self.degtol,
                              self.mangle)
 
+    def map_layers(self):
+        """
+        This function is numerically expensive!
+        Calculates the layer to each polygon.
+        Time-complexity: O(m p)
+        :return: void
+        """
+        self._layers = np.empty(self._sector_polys.shape[0], dtype=np.uint8)
+        self._layers.fill(self.geo_atts[2])
+        self._layers[0] = 0
+
+        vertices = {np.round(vertex, 12): [np.uint8(1), 0] for vertex in self._sector_polys[0, 1:]}
+
+        for i, poly in enumerate(self._sector_polys[1:], start=1):
+            to_add = []
+            for vertex_ in poly[1:]:
+                vertex = np.round(vertex_, 12)
+                vertex__ = np.round(vertex_ * np.exp(- PI2 / self.geo_atts[0] * 1j), 12)
+                if vertex in vertices:
+                    vertices[vertex][0] += 1
+                    if vertices[vertex] == self.geo_atts[1]:
+                        del vertices[vertex]
+
+                    v = vertices[vertex][1] + 1
+                    self._layers[i] = v if v < self._layers[i] else self._layers[i]
+
+                elif vertex__ in vertices:
+                    vertices[vertex__][0] += 1
+                    if vertices[vertex__] == self.geo_atts[1]:
+                        del vertices[vertex__]
+
+                    v = vertices[vertex__][1] + 1
+                    self._layers[i] = v if v < self._layers[i] else self._layers[i]
+
+                else:
+                    to_add.append(vertex)
+
+            for vertex in to_add:
+                vertices[vertex] = [np.uint8(1), self._layers[i]]
+
+    def check_integrity(self):
+        """
+        This function is numerically expensive!
+        Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
+        Raises AttributeError if the grid seems to be invalid.
+        Time-complexity: O(m p^2 n)
+        :return: void
+        """
+        # check if one polygon is shifted in the range of another or if duplicates exist
+        for i in range(len(self._sector_polys)):
+            poly_center = self._sector_polys[i, 0]
+            self._sector_polys[i, 0] = 0
+            try:
+                if self.find(poly_center):
+                    raise AttributeError(f"Duplicate detected at index {i}")
+            finally:
+                self._sector_polys[i, 0] = poly_center
+
+        # check if each layer has the correct size
+        if self._layers is None:
+            self.map_layers()
+
+        for i, length in enumerate(self._sector_lengths):
+            if np.count_nonzero(self._layers == i) != length:
+                print(f"Layer {i} is not complete")
+                break
+
+        # check if all edges have a partner
+        for i in range(len(self._sector_polys)):
+            neighbor_counter = len(self.get_neighbors(i))
+            if neighbor_counter == self.geo_atts[0]:
+                continue
+            print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
+            return
+
     def __len__(self):
         """
         Return the number of polygons in the tiling
@@ -93,7 +269,7 @@ class ReflectTiling:
         """
         return self.length
 
-    def __iter__(self):
+    def __iter__(self) -> np.array:
         """
         Iterates over the whole grid. As only one sector is stored in the memory, the others are generated when needed.
         Time-complexity (single polygon): O(p)
@@ -134,17 +310,8 @@ class ReflectTiling:
 
         return poly * np.exp(phi * 1j)
 
-    def _get_reflection_level_in_sector(self, index: int) -> int:
-        """
-        Returns the reflection level the polygon at index belongs to.
-        Time-complexity: O(log(m / p + 1))
-        :param index: int = index of the polygon
-        :return: int = reflection level
-        """
-        pos = np.searchsorted(self._reflection_levels_cumulated, index)
-        if self._reflection_levels_cumulated[pos] > index:
-            return pos - 1
-        return pos
+    # Basics ###########################################################################################################
+    # API ##############################################################################################################
 
     def get_layer(self, index: int) -> int:
         """
@@ -206,22 +373,144 @@ class ReflectTiling:
         """
         return np.angle(self[index][0])
 
-    def _find(self, sector_proj) -> int:
+    # API ##############################################################################################################
+    # Sector only ######################################################################################################
+
+    def _find(self, sector_proj: np.complex128) -> int:
         """
         Protected(!)
         Find the polygons index sector_projection belongs to.
         However, sector_projection has to be in the fundamental sector.
         Time-complexity: O(m / p)
-        :param sector_proj: complex = position to search polygon for
+        :param sector_proj: np.complex128 = position to search polygon for
         :return: int = index of the corresponding polygon
         """
         disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])
-        index = np.argmin(dists)
+        index = int(np.argmin(dists))
 
         if dists[index] < util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
             return index
         return False
+
+    def _get_neighbors(self, sector_index: int) -> np.array:
+        """
+        Protected(!)
+        Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+        Time-complexity (single polygon): O(p)
+        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        if sector_index == 0:
+            neigbor_centers = util.generate_raw(self._sector_polys[sector_index])
+            indices = [self.find(e) for e in neigbor_centers]
+            indices = [e for e in indices if not (e is False)]
+            return [i % (self.length - 1) if i != 0 else 0 for i in indices]
+
+        neighbor_centers = util.generate_raw(self._sector_polys[sector_index])
+        indices = [self.find(e) for e in neighbor_centers]
+        return [e for e in indices if not (e is False)]
+
+    def _get_neighbors_experimental(self, sector_index: int) -> np.array:
+        """
+        Protected(!)
+        # FIXME: for even numbers of (q - 3) // 2 the boundary can mess everything up as a "child"-neighbor is created
+        # as grand-child on the other side of the sector
+        Get the neighbors of the polygon at sector_index using an experimental method.
+        Has to be in the fundamental sector!
+        Time-complexity: O(?)
+        :param sector_index: int = index of the polygon
+        :return: np.array = array containing the indices of the neighbors
+        """
+        if sector_index == 0:
+            return [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
+
+        neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
+        c = 0
+
+        ref_layer = self._get_reflection_level_in_sector(sector_index)
+        pos_in_layer = sector_index - self._reflection_levels_cumulated[ref_layer]
+        ratio = pos_in_layer / self._reflection_levels[ref_layer]
+
+        # 1. parents
+        wiggle_tol = int(self._reflection_levels[ref_layer - 1])
+        wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
+        parent_index_candidate = self._reflection_levels_cumulated[ref_layer - 1] + int(
+            ratio * self._reflection_levels[ref_layer - 1])
+        parent_index = self._wiggle_index(sector_index, parent_index_candidate, tol=wiggle_tol)
+        neighbors[c] = parent_index
+        c += 1
+
+        # 2. check if next is parent too
+        for shift in [1, -1]:
+            parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
+            connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])
+            if connection.shape[0] == 2:
+                neighbors[c] = parent2_candidate
+                c += 1
+                break
+
+        # 3. siblings / cousins
+        if self.geo_atts[1] == 3:
+            # siblings
+            neighbors[c] = self._index_from_ref_layer_index(sector_index + 1, ref_layer)
+            c += 1
+            neighbors[c] = self._index_from_ref_layer_index(sector_index - 1, ref_layer)
+            c += 1
+        elif self.geo_atts[1] & 1:
+            # if number is even, it is not a cousin but a nephew and will be find along with the children
+            # exactly one cousin should be found. It is either the next polygon or the before
+            for shift in [1, -1]:
+                cousin_candidate = self._index_from_ref_layer_index(sector_index + shift, ref_layer)
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[cousin_candidate])
+                if connection.shape[0] == 2:
+                    neighbors[c] = cousin_candidate
+                    c += 1
+                    break
+
+        # 4. children
+        if ref_layer + 1 == len(self._reflection_levels):
+            return neighbors[:c]
+
+        wiggle_tol = int(self._reflection_levels[ref_layer - int((self.geo_atts[1] - 3) // 2)])
+        wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
+        child_index_candidate = self._reflection_levels_cumulated[ref_layer + 1] + int(
+            ratio * self._reflection_levels[ref_layer + 1])
+        child_index = self._wiggle_index(sector_index, child_index_candidate,
+                                         tol=wiggle_tol)
+        if child_index is False:
+            return neighbors[:c]
+
+        neighbors[c] = child_index
+
+        side = 1
+        start = neighbors[c]
+        current = neighbors[c] + side
+        c += 1
+
+        left = self.geo_atts[0] - c
+        steps = 2 * left
+        step = 0
+        while c < self.geo_atts[0] and step < steps:
+            current_index = self._index_from_ref_layer_index(current, ref_layer + 1)
+            connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])
+            if connection.shape[0] == 2:
+                neighbors[c] = current_index
+                c += 1
+            elif side == 1:
+                # change search direction
+                current = start
+                side = -1
+                current += side
+                continue
+
+            current += side
+            step += 1
+
+        return neighbors[:c]
+
+    # Sector only ######################################################################################################
+    # Generative #######################################################################################################
 
     def find(self, v: np.complex128) -> int:
         """
@@ -246,121 +535,28 @@ class ReflectTiling:
 
         return False
 
-    def map_layers(self):
-        """
-        This function is numerically expensive!
-        Calculates the layer to each polygon.
-        Time-complexity: O(m p^2)
-        :return: void
-        """
-        verticess = [[] for i in range(self.geo_atts[2] + 2)]
-        verticess[0] = self._sector_polys[0, 1:]
-        self._layers = np.empty(self._sector_polys.shape[0], dtype=np.uint8)
-        self._layers.fill(self.geo_atts[2])
-        self._layers[0] = 0
-
-        for i, poly in enumerate(self._sector_polys[1:], start=1):
-            blocked = []
-            for j, vertices in enumerate(verticess):
-                if len(vertices) == 0:
-                    break
-
-                conn = util.any_close_matrix(np.array(vertices), poly[1:])
-                if conn.shape[0] != 0 and len(blocked) == 0:
-                    self._layers[i] = j + 1
-                    if self._layers[i - 1] != 0 and self._layers[i] != self._layers[i - 1]:
-                        # last vertex for layers[i - 1] set
-                        # replicate vertices of sector into next one to prevent boundary problems
-                        for k in range(len(verticess[self._layers[i - 1]])):
-                            replicate = verticess[self._layers[i - 1]][k] * np.exp(PI2 / self.geo_atts[0] * 1j)
-                            verticess[self._layers[i - 1]].append(replicate)
-
-                blocked += conn[:, 0].tolist()
-
-            for k, vertex in enumerate(poly[1:]):
-                if k in blocked:
-                    continue
-                else:
-                    verticess[self._layers[i]].append(vertex)
-
-    def _polygen(self, polys: np.array) -> np.array:
-        """
-        Protected(!)
-        Generator for iterating over polygons.
-        Time-complexity (single polygon): O(p)
-        :param polys: np.array[n, 8] = segment the generator will create the rotations duplicates for and rotate over
-        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
-        """
-        for poly in polys:
-            yield poly
-
-        dphi = PI2 / self.geo_atts[0]
-        phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
-        for i, angle in enumerate(phis):
-            for poly in polys:
-                yield poly * np.exp(angle * 1j)
-
     def get_neighbors(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
         Time-complexity: O(m / p)
         :param index: int = index of the polygon
-        :return: np.array[p] = array containing the indices of the neighbors
+        :return: np.array = array containing the indices of the neighbors
         """
-        if index == 0:
-            neigbor_centers = util.generate_raw(self._sector_polys[index])
-            indices = [self.find(e) for e in neigbor_centers]
-            indices = [e for e in indices if not (e is False)]
-            return [i % (self.length - 1) if i != 0 else 0 for i in indices]
+        return self._generative_index(index, self._get_neighbors)
 
-        # get equivalent poly in sector
-        index -= 1
-        sector_replica = index // (self._sector_polys.shape[0] - 1)
-        index %= (self._sector_polys.shape[0] - 1)
-        index += 1
-        jump = self._sector_polys.shape[0] - 1
-
-        # quick and dirty solution
-        neighbor_centers = util.generate_raw(self._sector_polys[index])
-        indices = [self.find(e) for e in neighbor_centers]
-        indices = [e for e in indices if not (e is False)]
-        indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
-        return [i if i < self.length else i % self.length + 1 for i in indices]
-
-    def check_integrity(self):
+    def get_neighbors_experimental(self, index) -> np.array:
         """
-        This function is numerically expensive!
-        Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
-        Raises AttributeError if the grid seems to be invalid.
-        Time-complexity: O(m p^2 n)
-        :return: void
+        # FIXME: for even numbers of (q - 3) // 2 the boundary can mess everything up as a "child"-neighbor is created
+        # as grand-child on the other side of the sector
+        Get the neighbors of the polygon at index using an experimental method.
+        Time-complexity: O(?)
+        :param index: int = index of the polygon
+        :return: np.array = array containing the indices of the neighbors
         """
-        # check if one polygon is shifted in the range of another or if duplicates exist
-        for i in range(len(self._sector_polys)):
-            poly_center = self._sector_polys[i, 0]
-            self._sector_polys[i, 0] = 0
-            try:
-                if self.find(poly_center):
-                    raise AttributeError(f"Duplicate detected at index {i}")
-            finally:
-                self._sector_polys[i, 0] = poly_center
+        return self._generative_index(index, self._get_neighbors_experimental)
 
-        # check if each layer has the correct size
-        if self._layers is None:
-            self.map_layers()
-
-        for i, length in enumerate(self._sector_lengths):
-            if np.count_nonzero(self._layers == i) != length:
-                print(f"Layer {i} is not complete")
-                break
-
-        # check if all edges have a partner
-        for i in range(len(self._sector_polys)):
-            neighbor_counter = len(self.get_neighbors(i))
-            if neighbor_counter == self.geo_atts[0]:
-                continue
-            print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
-            return
+    # Generative #######################################################################################################
+    # Transformations ##################################################################################################
 
     def transform(self, function: Callable):
         """
@@ -391,41 +587,30 @@ class ReflectTiling:
         """
         self.transform(lambda x: trans.morigin(x.shape[0], z, x))
 
+    # Transformations ##################################################################################################
+
 
 if __name__ == "__main__":
-    import time
-    import hypertiling.array.plot as plot
     import matplotlib.pyplot as plt
     import matplotlib as mpl
 
     ReflectTiling(7, 3, 2)
 
-    index = 1
-    fontsize: int = 6
-    t1 = time.time()
-    tiling = ReflectTiling(7, 3, 4)
-    assert (0 <= index <= len(tiling._sector_polys))
-    print(f"Generation took: {time.time() - t1} s")
-
-    # neighbors = tiling.get_neighbors_fast(index)
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-
-    colors = ["#FF0000", "#00FF00", "#0000FF"]
-    for i, pgon in enumerate(tiling._sector_polys):
-        layer = tiling._get_reflection_level_in_sector(i)
-        p = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]), color=colors[layer % 3])
-        fig_ax[1].add_patch(p)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), i, fontsize=fontsize, horizontalalignment='center',
-                           verticalalignment='center')
-
-    # plt.scatter(np.real(tiling[index][0]), np.imag(tiling[index][0]))
-    # plt.scatter(np.real(neighbors), np.imag(neighbors))
+    tiling = ReflectTiling(6, 4, 5)
+    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    tiling.map_layers()
+    for polygon_index, pgon in enumerate(tiling):
+        poly_layer = tiling.get_layer(polygon_index)
+        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
+                                    color=colors[poly_layer % len(colors)])
+        fig_ax[1].add_patch(patch)
     plt.show()
 
 """
 Arbeitsplan:
-    - neighbors fast
+    - map neighbor schreiben
     - speed tests
 """

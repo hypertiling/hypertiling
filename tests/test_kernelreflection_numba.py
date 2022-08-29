@@ -90,6 +90,20 @@ class TestReflectTiling(unittest.TestCase):
                         """
                         self.assertNotEqual(index, found)
 
+    def test_get_neighbors_experimental(self):
+        for combi in COMBIS:
+            tiling = ReflectTiling(*combi)
+            for index in range(tiling.length):
+                neighbors = tiling.get_neighbors(index)
+                neighbors2 = tiling.get_neighbors_experimental(index)
+                try:
+                    self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
+                except Exception as error:
+                    print(combi, index)
+                    print(np.sort(neighbors2), np.sort(neighbors))
+                    print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
+                    raise error
+
     def test_check_integrity(self):
         for combi in COMBIS:
             tiling = ReflectTiling(*combi)
