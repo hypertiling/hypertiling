@@ -168,8 +168,8 @@ class ReflectTiling:
             index += 1
             jump = self._sector_polys.shape[0] - 1
 
-            # quick and dirty solution
             indices = f(index)
+
             indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
             return [i if i < self.length else i % self.length + 1 for i in indices]
         return f(index)
