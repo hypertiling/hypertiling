@@ -519,18 +519,20 @@ class ReflectTiling:
         :return: np.array = array containing the indices of the neighbors
         """
         if sector_index == 0:
-            return [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
+            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
 
         neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
         c = 0
 
         ref_layer = self._get_reflection_level_in_sector(sector_index)
         pos_in_layer = sector_index - self._reflection_levels_cumulated[ref_layer]
+        # relative position in the reflection layer
         ratio = pos_in_layer / self._reflection_levels[ref_layer]
 
         # 1. parents
         wiggle_tol = int(self._reflection_levels[ref_layer - 1])
         wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
+        # calculate position of parent through relative position
         parent_index_candidate = self._reflection_levels_cumulated[ref_layer - 1] + int(
             ratio * self._reflection_levels[ref_layer - 1])
         parent_index = self._wiggle_index(sector_index, parent_index_candidate, tol=wiggle_tol)
@@ -573,6 +575,7 @@ class ReflectTiling:
             child_index = self._wiggle_index(sector_index, child_index_candidate,
                                              tol=wiggle_tol)
 
+            # if on boundary no children exist
             if child_index is False:
                 return neighbors[:c]
 
@@ -598,11 +601,13 @@ class ReflectTiling:
                     side = -1
                     current += side
                     continue
+                elif side == -1:
+                    break
 
                 current += side
                 step += 1
 
-        # control boundary child->nephew artifact
+        # control boundary child->grand-nephew artifact
         ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
             if c == self.geo_atts[0]:
