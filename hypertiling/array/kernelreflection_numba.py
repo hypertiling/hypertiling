@@ -74,6 +74,7 @@ class ReflectTiling:
 
         # possible to fill
         self._layers = None
+        self._neighbors = None
 
     # Helper ###########################################################################################################
 
@@ -225,6 +226,103 @@ class ReflectTiling:
 
             for vertex in to_add:
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
+
+    def map_neighbors(self):
+        """
+        This function is numerically expensive!
+        Calculates the neighbors for each polygon.
+        Time-complexity: O(?)
+        :return: void
+        """
+        self._neighbors = np.empty((self._sector_polys.shape[0], self.geo_atts[0]), dtype=np.uint32)
+        self._neighbors.fill(- 1)  # creates a nice little overflow to 4294967295
+        self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
+
+        ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
+        for i, poly in enumerate(self._sector_polys[1:], start=1):
+            ref_layer = self._get_reflection_level_in_sector(i)
+            disk_distance = np.vectorize(lambda z: util.f_dist(z, poly[0]))
+            c = 0
+
+            # parents
+            dists = disk_distance(self._sector_polys[
+                                  self._reflection_levels_cumulated[ref_layer - 1]:self._reflection_levels_cumulated[
+                                      ref_layer], 0])
+
+            if ref_layer > 2 and len(dists) > 2:
+                indices = np.argpartition(dists, 2)[:2]
+                allowed = util.any_close_matrix(dists[indices], np.array([ref_dist]))
+                self._neighbors[i, c] = indices[allowed[0, 1]] + self._reflection_levels_cumulated[ref_layer - 1]
+                c += 1
+
+                if allowed.shape[0] == 2:
+                    self._neighbors[i, c] = indices[allowed[1, 1]] + self._reflection_levels_cumulated[ref_layer - 1]
+                    c += 1
+            else:
+                self._neighbors[i, c] = np.argmin(dists) + self._reflection_levels_cumulated[ref_layer - 1]
+                c += 1
+
+            if c != 2:
+                # control boundary
+                for index_ in [self._reflection_levels_cumulated[ref_layer],
+                               self._reflection_levels_cumulated[ref_layer - 1] - 1]:
+                    index_b = self._index_from_ref_layer_index(index_, ref_layer - 1)
+                    dist = util.f_dist(self[index_b][0], poly[0])
+                    if util.is_close(dist, ref_dist):
+                        self._neighbors[i, c] = index_b
+                        c += 1
+                        break
+
+            # siblings
+            for index_ in [i - 1, i + 1]:
+                index = self._index_from_ref_layer_index(index_, ref_layer)
+                dist = util.f_dist(self[index][0], poly[0])
+                if util.is_close(dist, ref_dist):
+                    self._neighbors[i, c] = index
+                    c += 1
+
+            # children
+            if ref_layer + 2 != len(self._reflection_levels_cumulated):
+                dists = disk_distance(self._sector_polys[
+                                      self._reflection_levels_cumulated[ref_layer + 1]:
+                                      self._reflection_levels_cumulated[
+                                          ref_layer + 2], 0])
+
+                n = self.geo_atts[0] - c
+                if n < len(dists):
+                    indices = np.argpartition(dists, n)[:n]
+                    allowed = util.any_close_matrix(dists[indices], np.array([ref_dist]))
+                    allowed_indices = indices[allowed[:, 1]] + self._reflection_levels_cumulated[ref_layer + 1]
+                    self._neighbors[i, c: c + len(allowed_indices)] = allowed_indices
+                    c += len(allowed_indices)
+                else:
+                    allowed_indices = np.argwhere(util.is_close(dists, ref_dist)).flatten() + \
+                                      self._reflection_levels_cumulated[ref_layer + 1]
+                    self._neighbors[i, c: c + len(allowed_indices)] = allowed_indices
+
+                    c += len(dists)
+
+                # control boundary
+                for index_ in [self._reflection_levels_cumulated[ref_layer + 2],
+                               self._reflection_levels_cumulated[ref_layer + 1] - 1]:
+                    index_b = self._index_from_ref_layer_index(index_, ref_layer + 1)
+                    dist = util.f_dist(self[index_b][0], poly[0])
+                    if util.is_close(dist, ref_dist):
+                        self._neighbors[i, c] = index_b
+                        c += 1
+                        break
+
+            # control boundary child->nephew artifact
+            for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
+                if c == self.geo_atts[0]:
+                    break
+                for index_ in [self._reflection_levels_cumulated[layer_index] - 1,
+                               self._reflection_levels_cumulated[layer_index + 1]]:
+                    index_b = self._index_from_ref_layer_index(index_, layer_index)
+                    dist = util.f_dist(self[index_b][0], poly[0])
+                    if util.is_close(dist, ref_dist) and index_b not in self._neighbors[i]:
+                        self._neighbors[i, c] = index_b
+                        c += 1
 
     def check_integrity(self):
         """
@@ -414,8 +512,6 @@ class ReflectTiling:
     def _get_neighbors_experimental(self, sector_index: int) -> np.array:
         """
         Protected(!)
-        # FIXME: for even numbers of (q - 3) // 2 the boundary can mess everything up as a "child"-neighbor is created
-        # as grand-child on the other side of the sector
         Get the neighbors of the polygon at sector_index using an experimental method.
         Has to be in the fundamental sector!
         Time-complexity: O(?)
@@ -459,7 +555,7 @@ class ReflectTiling:
             c += 1
         elif self.geo_atts[1] & 1:
             # if number is even, it is not a cousin but a nephew and will be find along with the children
-            # exactly one cousin should be found. It is either the next polygon or the before
+            # if odd, exactly one cousin should be found. It is either the next polygon or the before
             for shift in [1, -1]:
                 cousin_candidate = self._index_from_ref_layer_index(sector_index + shift, ref_layer)
                 connection = util.any_close_matrix(self._sector_polys[sector_index], self[cousin_candidate])
@@ -469,45 +565,72 @@ class ReflectTiling:
                     break
 
         # 4. children
-        if ref_layer + 1 == len(self._reflection_levels):
-            return neighbors[:c]
+        if ref_layer + 1 != len(self._reflection_levels):
+            wiggle_tol = int(self._reflection_levels[ref_layer + 1])
+            wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
+            child_index_candidate = self._reflection_levels_cumulated[ref_layer + 1] + int(
+                ratio * self._reflection_levels[ref_layer + 1])
+            child_index = self._wiggle_index(sector_index, child_index_candidate,
+                                             tol=wiggle_tol)
 
-        wiggle_tol = int(self._reflection_levels[ref_layer - int((self.geo_atts[1] - 3) // 2)])
-        wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
-        child_index_candidate = self._reflection_levels_cumulated[ref_layer + 1] + int(
-            ratio * self._reflection_levels[ref_layer + 1])
-        child_index = self._wiggle_index(sector_index, child_index_candidate,
-                                         tol=wiggle_tol)
-        if child_index is False:
-            return neighbors[:c]
+            if child_index is False:
+                return neighbors[:c]
 
-        neighbors[c] = child_index
+            neighbors[c] = child_index
 
-        side = 1
-        start = neighbors[c]
-        current = neighbors[c] + side
-        c += 1
+            side = 1
+            start = neighbors[c]
+            current = neighbors[c] + side
+            c += 1
 
-        left = self.geo_atts[0] - c
-        steps = 2 * left
-        step = 0
-        while c < self.geo_atts[0] and step < steps:
-            current_index = self._index_from_ref_layer_index(current, ref_layer + 1)
-            connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])
-            if connection.shape[0] == 2:
-                neighbors[c] = current_index
-                c += 1
-            elif side == 1:
-                # change search direction
-                current = start
-                side = -1
+            left = self.geo_atts[0] - c
+            steps = 2 * left
+            step = 0
+            while c < self.geo_atts[0] and step < steps:
+                current_index = self._index_from_ref_layer_index(current, ref_layer + 1)
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])
+                if connection.shape[0] == 2:
+                    neighbors[c] = current_index
+                    c += 1
+                elif side == 1:
+                    # change search direction
+                    current = start
+                    side = -1
+                    current += side
+                    continue
+
                 current += side
-                continue
+                step += 1
 
-            current += side
-            step += 1
+        # control boundary child->nephew artifact
+        ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
+        for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
+            if c == self.geo_atts[0]:
+                break
+            for index_ in [self._reflection_levels_cumulated[layer_index] - 1,
+                           self._reflection_levels_cumulated[layer_index + 1]]:
+                index_b = self._index_from_ref_layer_index(index_, layer_index)
+                dist = util.f_dist(self[index_b][0], self._sector_polys[sector_index, 0])
+                if util.is_close(dist, ref_dist) and index_b not in neighbors:
+                    neighbors[c] = index_b
+                    c += 1
 
         return neighbors[:c]
+
+    def _get_neighbors_mapping(self, sector_index: int) -> np.array:
+        """
+        Protected(!)
+        Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+        Time-complexity (single polygon): O(p) (if mapped)
+        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        if self._neighbors is None:
+            print("start mapping neighbors")
+            self.map_neighbors()
+        neighbor_indices = self._neighbors[sector_index]
+        # creates a nice little overflow to 4294967295
+        return neighbor_indices[np.argwhere(neighbor_indices != np.uint32(-1))].flatten()
 
     # Sector only ######################################################################################################
     # Generative #######################################################################################################
@@ -544,16 +667,23 @@ class ReflectTiling:
         """
         return self._generative_index(index, self._get_neighbors)
 
-    def get_neighbors_experimental(self, index) -> np.array:
+    def get_neighbors_experimental(self, index: int) -> np.array:
         """
-        # FIXME: for even numbers of (q - 3) // 2 the boundary can mess everything up as a "child"-neighbor is created
-        # as grand-child on the other side of the sector
         Get the neighbors of the polygon at index using an experimental method.
         Time-complexity: O(?)
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
         return self._generative_index(index, self._get_neighbors_experimental)
+
+    def get_neighbors_mapping(self, index: int) -> np.array:
+        """
+        Get neighbor of the polygon at index.
+        Time-complexity (single polygon): O(p)
+        :param index: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        return self._generative_index(index, self._get_neighbors_mapping)
 
     # Generative #######################################################################################################
     # Transformations ##################################################################################################
@@ -599,18 +729,11 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = ReflectTiling(6, 4, 5)
+    tiling = ReflectTiling(7, 3, 8)
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    tiling.map_layers()
     for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
     plt.show()
-
-"""
-Arbeitsplan:
-    - map neighbor schreiben
-    - speed tests
-"""

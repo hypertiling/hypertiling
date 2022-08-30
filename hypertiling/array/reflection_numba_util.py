@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 from numba import njit
 import numpy as np
 import hypertiling.arraytransformation as array_trans
@@ -22,7 +22,7 @@ PI2 = 2 * np.pi
 # Assistance ===========================================================================================================
 
 @njit()
-def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array:
+def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
     Time-complexity: O(p)
@@ -32,6 +32,19 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> np.array
     :result: bool = True if float is in array else False
     """
     return np.any(np.abs(zs - z) <= tol)
+
+
+@njit()
+def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol: float = 1e-12) -> bool:
+    """
+    Compares if the complex z1 is equal to z2 up to tol
+    Time-complexity: O(p)
+    :param z1: Union[complex, float, int] = first value
+    :param z2: Union[complex, float, int] = second value
+    :param tol: float = tolerance of the comparison (absolut)
+    :result: bool = True if both are equal up to tol
+    """
+    return np.abs(z1 - z2) <= tol
 
 
 @njit()
