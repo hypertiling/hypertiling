@@ -238,7 +238,7 @@ class ReflectTiling:
         self._neighbors.fill(- 1)  # creates a nice little overflow to 4294967295
         self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
 
-        ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
+        # ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for i, poly in enumerate(self._sector_polys[1:], start=1):
             ref_layer = self._get_reflection_level_in_sector(i)
             disk_distance = np.vectorize(lambda z: util.f_dist(z, poly[0]))
@@ -249,6 +249,10 @@ class ReflectTiling:
                                   self._reflection_levels_cumulated[ref_layer - 1]:self._reflection_levels_cumulated[
                                       ref_layer], 0])
 
+
+            min_index = np.argmin(dists)
+            # necessary to compensate the cumulated uncertainty in the last layer
+            ref_dist = dists[min_index]
             if ref_layer > 2 and len(dists) > 2:
                 indices = np.argpartition(dists, 2)[:2]
                 allowed = util.any_close_matrix(dists[indices], np.array([ref_dist]))
@@ -259,7 +263,7 @@ class ReflectTiling:
                     self._neighbors[i, c] = indices[allowed[1, 1]] + self._reflection_levels_cumulated[ref_layer - 1]
                     c += 1
             else:
-                self._neighbors[i, c] = np.argmin(dists) + self._reflection_levels_cumulated[ref_layer - 1]
+                self._neighbors[i, c] = min_index + self._reflection_levels_cumulated[ref_layer - 1]
                 c += 1
 
             if c != 2:
@@ -729,6 +733,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
 
+    # numba compile stuff
     ReflectTiling(7, 3, 2)
 
     fig_ax = plt.subplots()
