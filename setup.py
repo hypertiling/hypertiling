@@ -24,7 +24,7 @@ setup(
     url='https://gitpages.physik.uni-wuerzburg.de/hypertiling/hyperweb',
     license='MIT',
     keywords='hyperbolic tessellation tiling curvature poincare',
-    packages=[package_name],
+    packages=[package_name, f"{package_name}.generative"],
     classifiers = [
          'Topic :: Scientific/Engineering :: Mathematics',
          'Topic :: Scientific/Engineering :: Visualization',

@@ -1,7 +1,7 @@
 from typing import Callable, Any
 import numpy as np
-import hypertiling.array.reflection_numba_util as util
-from hypertiling.array.reflection_numba_util import PI2
+import hypertiling.generative.reflection_numba_util as util
+from hypertiling.generative.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
 
 """
@@ -77,19 +77,6 @@ class ReflectTiling:
         self._neighbors = None
 
     # Helper ###########################################################################################################
-
-    def _get_reflection_level_in_sector(self, index: int) -> int:
-        """
-        Protected(!)
-        Returns the reflection level the polygon at index belongs to.
-        Time-complexity: O(log(m / p + 1))
-        :param index: int = index of the polygon
-        :return: int = reflection level
-        """
-        pos = np.searchsorted(self._reflection_levels_cumulated, index)
-        if self._reflection_levels_cumulated[pos] > index:
-            return pos - 1
-        return pos
 
     def _polygen(self, polys: np.array) -> np.array:
         """
@@ -172,6 +159,7 @@ class ReflectTiling:
 
             indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
             return [i if i < self.length else i % self.length + 1 for i in indices]
+
         return f(index)
 
     # Helper ###########################################################################################################
@@ -495,6 +483,19 @@ class ReflectTiling:
             return index
         return False
 
+    def _get_reflection_level_in_sector(self, sector_index: int) -> int:
+        """
+        Protected(!)
+        Returns the reflection level the polygon at index belongs to.
+        Time-complexity: O(log(m / p + 1))
+        :param index: int = index of the polygon
+        :return: int = reflection level
+        """
+        pos = np.searchsorted(self._reflection_levels_cumulated, sector_index)
+        if self._reflection_levels_cumulated[pos] > sector_index:
+            return pos - 1
+        return pos
+
     def _get_neighbors(self, sector_index: int) -> np.array:
         """
         Protected(!)
@@ -667,6 +668,18 @@ class ReflectTiling:
 
         return False
 
+    def get_reflection_level(self, index) -> int:
+        """
+        Get the neighbors of a polygon at index
+        Time-complexity: O(m / p)
+        :param index: int = index of the polygon
+        :return: np.array = array containing the indices of the neighbors
+        """
+        index -= 1
+        index %= (self._sector_polys.shape[0] - 1)
+        index += 1
+        return self._get_reflection_level_in_sector(index)
+
     def get_neighbors(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
@@ -739,11 +752,16 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = ReflectTiling(7, 3, 8)
+    tiling = ReflectTiling(3, 7, 12)
+    tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
-        poly_layer = tiling.get_layer(polygon_index)
+        # poly_layer = tiling.get_layer(polygon_index)
+        poly_layer = tiling.get_reflection_level(polygon_index)
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
+        if polygon_index == 1472:
+            fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), polygon_index, fontsize=6, horizontalalignment='center',
+                       verticalalignment='center')
         fig_ax[1].add_patch(patch)
     plt.show()

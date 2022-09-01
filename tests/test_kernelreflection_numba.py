@@ -1,8 +1,8 @@
 import unittest
 from tests.test_util import *
-from hypertiling.array.kernelreflection_numba import ReflectTiling
+from hypertiling.generative.kernelreflection_numba import ReflectTiling
 import hypertiling.geodesics as geos
-import hypertiling.array.reflection_numba_util as util
+import hypertiling.generative.reflection_numba_util as util
 import random
 import numpy as np
 
