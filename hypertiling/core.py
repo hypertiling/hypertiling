@@ -39,6 +39,7 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SP"):
 
     if kernel not in KERNELS:
         raise KeyError("[hypertiling] Error: No valid kernel specified")
+
     if kernel == "dunham":
         print("Caution: This kernel is slow and error-prone. Use at own risk!")
         if center == "vertex":
