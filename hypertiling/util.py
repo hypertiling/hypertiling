@@ -3,8 +3,7 @@ import numpy as np
 import math
 
 from .distance import weierstrass_distance
-from .hyperpolygon import HyperPolygon
-from .transformation import p2w
+from .static.hyperpolygon import HyperPolygon
 from .geodesics import geodesic_midpoint
 
 
