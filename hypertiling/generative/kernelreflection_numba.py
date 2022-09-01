@@ -675,6 +675,9 @@ class ReflectTiling:
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if index == 0:
+            return 0
+
         index -= 1
         index %= (self._sector_polys.shape[0] - 1)
         index += 1
@@ -752,7 +755,7 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = ReflectTiling(3, 7, 12)
+    tiling = ReflectTiling(3, 7, 5)
     tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
@@ -760,8 +763,5 @@ if __name__ == "__main__":
         poly_layer = tiling.get_reflection_level(polygon_index)
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
-        if polygon_index == 1472:
-            fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), polygon_index, fontsize=6, horizontalalignment='center',
-                       verticalalignment='center')
         fig_ax[1].add_patch(patch)
     plt.show()
