@@ -57,25 +57,27 @@ test-pip:
 
 
 unit-test-plain:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    script:
-        - pip3 install .
-        - echo "Testing without fancy packages..."
-        - python3 -m tests.test_core 
-        - python3 -m tests.test_neighbours 
-        - python3 -m tests.test_compare_neighbours 
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  stage: test
+  script:
+    - pip3 install .
+    - echo "Testing without fancy packages..."
+    - python3 -m tests.test_core
+    - python3 -m tests.test_neighbours
+    - python3 -m tests.test_compare_neighbours
+    - python3 -m tests.test_kernelreflection_numba
 
 unit-test-fancy:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    script:
-        - apt-get install -y python3-sortedcontainers python3-numba
-        - pip3 install .
-        - echo "Testing with numba and sortedcontainers..."
-        - python3 -m tests.test_core 
-        - python3 -m tests.test_neighbours 
-        - python3 -m tests.test_compare_neighbours 
+  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  stage: test
+  script:
+    - apt-get install -y python3-sortedcontainers python3-numba
+    - pip3 install .
+    - echo "Testing with numba and sortedcontainers..."
+    - python3 -m tests.test_core
+    - python3 -m tests.test_neighbours
+    - python3 -m tests.test_compare_neighbours
+    - python3 -m tests.test_kernelreflection_numba
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
