@@ -4,18 +4,19 @@ import copy
 
 # relative imports
 from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon
-from .transformation import moeb_rotate_trafo
-from .arraytransformation import mfull_point
-from .util import fund_radius
-from .CenterContainer import CenterContainer
+from ..transformation import moeb_rotate_trafo
+from ..arraytransformation import mfull_point
+from ..util import fund_radius
+from .kernelstaticprecise_util import CenterContainer
 
-class KernelFlo(KernelCommon):
+
+class KernelStaticPrecise(KernelCommon):
     """
     High precision kernel written by F. Goth
     """
-    def __init__ (self, p, q, n, center):
-        super(KernelFlo, self).__init__(p, q, n, center)
+
+    def __init__(self, p, q, n, center):
+        super(KernelStaticPrecise, self).__init__(p, q, n, center)
 
     def generate_sector(self):
         """
@@ -32,24 +33,28 @@ class KernelFlo(KernelCommon):
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
-        sect_angle     = self.phi
+        sect_angle = self.phi
         sect_angle_deg = self.degphi
         if self.center == "vertex":
-            sect_angle     = self.qhi
+            sect_angle = self.qhi
             sect_angle_deg = self.degqhi
-            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real))
-            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real))
+            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+                                              math.atan2(self.fund_poly.verticesP[self.p].imag,
+                                                         self.fund_poly.verticesP[self.p].real))
+            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
+                                                     self.fund_poly.verticesP[self.p].real))
         else:
-            centerset_extra = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), self.phi/2) # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            centerarray = CenterContainer(self.p*self.q, abs(self.fund_poly.verticesP[self.p]), self.phi/2)
+            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+                                              self.phi / 2)  # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
+            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
-    
 
         startpgon = 0
         endpgon = 1
 
-        fr = fund_radius(self.p, self.q)/2
+        fr = fund_radius(self.p, self.q) / 2
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -62,13 +67,13 @@ class KernelFlo(KernelCommon):
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.verticesP[self.p])
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if (self.mangle <= cangle < sect_angle_deg+self.degtol+self.mangle) and (abs(center) > fr):
+                        if (self.mangle <= cangle < sect_angle_deg + self.degtol + self.mangle) and (abs(center) > fr):
                             if not centerarray.fp_has(center):
                                 centerarray.add(center)
 
@@ -77,12 +82,12 @@ class KernelFlo(KernelCommon):
 
                                 # generate adjacent polygon
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                                adj_pgon.layer = l+1
+                                adj_pgon.layer = l + 1
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if self.mangle <= cangle <= self.degtol+self.mangle:
+                                if self.mangle <= cangle <= self.degtol + self.mangle:
                                     if not centerset_extra.fp_has(center):
                                         centerset_extra.add(center)
 

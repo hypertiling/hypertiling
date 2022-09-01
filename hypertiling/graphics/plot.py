@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection, PolyCollection
-from .geodesics import geodesic_arc
+from ..geodesics import geodesic_arc
 
 
 # taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html

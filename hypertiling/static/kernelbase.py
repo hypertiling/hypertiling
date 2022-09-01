@@ -3,9 +3,9 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .arraytransformation import mfull, mrotate, morigin
-from .transformation import p2w, moeb_rotate_trafo, mymoeb
-from .util import fund_radius
+from ..arraytransformation import mfull, mrotate, morigin
+from ..transformation import p2w, moeb_rotate_trafo, mymoeb
+from ..util import fund_radius
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice

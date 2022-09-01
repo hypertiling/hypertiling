@@ -17,7 +17,7 @@ m = m(p, q, n)
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
-class ReflectTiling:
+class KernelGenerativeReflection:
     """
     Creates the hyperbolic tiling.
     """
@@ -750,12 +750,12 @@ if __name__ == "__main__":
     import matplotlib as mpl
 
     # numba compile stuff
-    ReflectTiling(7, 3, 2)
+    KernelGenerativeReflection(7, 3, 2)
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = ReflectTiling(3, 7, 5)
+    tiling = KernelGenerativeReflection(3, 7, 5)
     tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):

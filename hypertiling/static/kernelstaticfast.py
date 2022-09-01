@@ -5,15 +5,15 @@ import copy
 # relative imports
 from .kernelbase import KernelCommon
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w, moeb_rotate_trafo
-from .arraytransformation import mfull_point
-from .distance import disk_distance
+from ..transformation import p2w, moeb_rotate_trafo
+from ..arraytransformation import mfull_point
+from ..distance import disk_distance
 
-class KernelManu(KernelCommon):
+class KernelStaticFast(KernelCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
     def __init__ (self, p, q, n, center):
-        super(KernelManu, self).__init__(p, q, n, center)
+        super(KernelStaticFast, self).__init__(p, q, n, center)
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
