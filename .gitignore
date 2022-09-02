@@ -2,7 +2,7 @@
 /hypertiling.egg-info
 /dist
 /.ipynb_checkpoints
-/working
+/benchmark
 /.idea
 *.pyc
 hypertiling/generative/__pycache__

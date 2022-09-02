@@ -298,6 +298,8 @@ class KernelGenerativeReflection:
                 for index_ in [self._reflection_levels_cumulated[ref_layer + 2],
                                self._reflection_levels_cumulated[ref_layer + 1] - 1]:
                     index_b = self._index_from_ref_layer_index(index_, ref_layer + 1)
+                    if index_b >= len(self._sector_polys):
+                        continue
                     dist = util.f_dist(self[index_b][0], poly[0])
                     if util.is_close(dist, ref_dist):
                         self._neighbors[i, c] = index_b
