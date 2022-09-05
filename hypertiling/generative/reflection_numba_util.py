@@ -4,7 +4,6 @@ import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
 
-
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
@@ -12,8 +11,8 @@ n: Number of layers (classical definition)
 m: Number of polygons
 """
 
-
 # Variables ============================================================================================================
+
 
 PI2 = 2 * np.pi
 
@@ -85,7 +84,7 @@ def generate_raw(poly: np.array) -> np.array:
 
 
 @njit()
-def f_dist(z: np.complex128, z_hat: np.complex128) -> float:
+def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
     """
     Calculates the distance between the points z and z_hat.
     Time-complexity: O(1)

@@ -3,6 +3,7 @@ import numpy as np
 import hypertiling.generative.reflection_numba_util as util
 from hypertiling.generative.reflection_numba_util import PI2
 import hypertiling.arraytransformation as trans
+import hypertiling.distance as distance
 
 """
 p: Number of edges/vertices of a polygon
@@ -162,6 +163,19 @@ class KernelGenerativeReflection:
 
         return f(index)
 
+    @staticmethod
+    def _to_weierstrass(polygons):
+        weierstrass = np.empty((len(polygons), 3), dtype=np.float64)
+        weierstrass[:, 0] = 1
+        weierstrass[:, 1] = np.real(polygons[:, 0])
+        weierstrass[:, 2] = np.imag(polygons[:, 0])
+        xx, yy = weierstrass[:, 1] * weierstrass[:, 1], weierstrass[:, 2] * weierstrass[:, 2]
+        weierstrass[:, 0] += xx + yy
+        weierstrass /= (1 - (xx + yy))[:, None]
+        weierstrass[:, 1] *= 2
+        weierstrass[:, 2] *= 2
+        return weierstrass
+
     # Helper ###########################################################################################################
     # Basics ###########################################################################################################
 
@@ -215,7 +229,7 @@ class KernelGenerativeReflection:
             for vertex in to_add:
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
 
-    def map_neighbors(self):
+    def map_neighbors(self, tol=1e-5):
         """
         This function is numerically expensive!
         Calculates the neighbors for each polygon.
@@ -226,97 +240,90 @@ class KernelGenerativeReflection:
         self._neighbors.fill(- 1)  # creates a nice little overflow to 4294967295
         self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
 
-        # ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
+        # fundamental sector
+        weierstrass = self._to_weierstrass(self._sector_polys)
+
+        # boundary
+        boundary_polys_indices = np.empty((2 * (len(self._reflection_levels) - 1), 1), dtype=np.uint32)
+        boundary_polys = np.empty((2 * (len(self._reflection_levels) - 1), 1), dtype=np.complex128)
+        for i in range(1, len(self._reflection_levels)):
+            i1 = 2 * i - 2
+            i2 = i1 + 1
+            boundary_polys_indices[i1] = self._index_from_ref_layer_index(
+                self._reflection_levels_cumulated[i] - 1, i)
+            boundary_polys[i1, 0] = self[boundary_polys_indices[i1, 0]][0]
+            boundary_polys_indices[i2] = self._index_from_ref_layer_index(
+                self._reflection_levels_cumulated[i + 1], i)
+            boundary_polys[i2, 0] = self[boundary_polys_indices[i2, 0]][0]
+        boundary_weierstrass = self._to_weierstrass(boundary_polys)
+        del boundary_polys
+
         for i, poly in enumerate(self._sector_polys[1:], start=1):
             ref_layer = self._get_reflection_level_in_sector(i)
-            disk_distance = np.vectorize(lambda z: util.f_dist(z, poly[0]))
-            c = 0
 
             # parents
-            dists = disk_distance(self._sector_polys[
-                                  self._reflection_levels_cumulated[ref_layer - 1]:self._reflection_levels_cumulated[
-                                      ref_layer], 0])
+            dists = distance.lorentzian_distance(weierstrass[
+                                                 self._reflection_levels_cumulated[ref_layer - 1]:
+                                                 self._reflection_levels_cumulated[
+                                                     ref_layer]], weierstrass[i])
 
-
-            min_index = np.argmin(dists)
+            indices = np.argpartition(dists, 2)[:2] if len(dists) > 2 else np.arange(len(dists))
             # necessary to compensate the cumulated uncertainty in the last layer
-            ref_dist = dists[min_index]
-            if ref_layer > 2 and len(dists) > 2:
-                indices = np.argpartition(dists, 2)[:2]
-                allowed = util.any_close_matrix(dists[indices], np.array([ref_dist]))
-                self._neighbors[i, c] = indices[allowed[0, 1]] + self._reflection_levels_cumulated[ref_layer - 1]
-                c += 1
-
-                if allowed.shape[0] == 2:
-                    self._neighbors[i, c] = indices[allowed[1, 1]] + self._reflection_levels_cumulated[ref_layer - 1]
-                    c += 1
-            else:
-                self._neighbors[i, c] = min_index + self._reflection_levels_cumulated[ref_layer - 1]
-                c += 1
-
-            if c != 2:
-                # control boundary
-                for index_ in [self._reflection_levels_cumulated[ref_layer],
-                               self._reflection_levels_cumulated[ref_layer - 1] - 1]:
-                    index_b = self._index_from_ref_layer_index(index_, ref_layer - 1)
-                    dist = util.f_dist(self[index_b][0], poly[0])
-                    if util.is_close(dist, ref_dist):
-                        self._neighbors[i, c] = index_b
-                        c += 1
-                        break
+            ref_dist = np.min(dists[indices])
+            allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
+            c = len(allowed)
+            self._neighbors[i, :c] = indices[allowed].flatten() + self._reflection_levels_cumulated[ref_layer - 1]
 
             # siblings
-            for index_ in [i - 1, i + 1]:
-                index = self._index_from_ref_layer_index(index_, ref_layer)
-                dist = util.f_dist(self[index][0], poly[0])
-                if util.is_close(dist, ref_dist):
-                    self._neighbors[i, c] = index
+            if self.geo_atts[1] == 3:
+                self._neighbors[i, c] = self._index_from_ref_layer_index(i + 1, ref_layer)
+                c += 1
+                self._neighbors[i, c] = self._index_from_ref_layer_index(i - 1, ref_layer)
+                c += 1
+            else:
+                next_ = i + 1
+                if next_ < self._reflection_levels_cumulated[ref_layer + 1] and \
+                    util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist, tol=tol):
+                    self._neighbors[i, c] = next_
+                    c += 1
+
+                before = i - 1
+                if before >= self._reflection_levels_cumulated[ref_layer] and \
+                    util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist, tol=tol):
+                    self._neighbors[i, c] = before
                     c += 1
 
             # children
-            if ref_layer + 2 != len(self._reflection_levels_cumulated):
-                dists = disk_distance(self._sector_polys[
-                                      self._reflection_levels_cumulated[ref_layer + 1]:
-                                      self._reflection_levels_cumulated[
-                                          ref_layer + 2], 0])
+            if len(self._reflection_levels) > ref_layer + 1:
+                dists = distance.lorentzian_distance(weierstrass[
+                                                     self._reflection_levels_cumulated[ref_layer + 1]:
+                                                     self._reflection_levels_cumulated[
+                                                         ref_layer + 1] + self._reflection_levels[ref_layer + 1]],
+                                                     weierstrass[i])
 
-                n = self.geo_atts[0] - c
-                if n < len(dists):
-                    indices = np.argpartition(dists, n)[:n]
-                    allowed = util.any_close_matrix(dists[indices], np.array([ref_dist]))
-                    allowed_indices = indices[allowed[:, 1]] + self._reflection_levels_cumulated[ref_layer + 1]
-                    self._neighbors[i, c: c + len(allowed_indices)] = allowed_indices
-                    c += len(allowed_indices)
-                else:
-                    allowed_indices = np.argwhere(util.is_close(dists, ref_dist)).flatten() + \
-                                      self._reflection_levels_cumulated[ref_layer + 1]
-                    self._neighbors[i, c: c + len(allowed_indices)] = allowed_indices
-
-                    c += len(dists)
-
-                # control boundary
-                for index_ in [self._reflection_levels_cumulated[ref_layer + 2],
-                               self._reflection_levels_cumulated[ref_layer + 1] - 1]:
-                    index_b = self._index_from_ref_layer_index(index_, ref_layer + 1)
-                    if index_b >= len(self._sector_polys):
-                        continue
-                    dist = util.f_dist(self[index_b][0], poly[0])
-                    if util.is_close(dist, ref_dist):
-                        self._neighbors[i, c] = index_b
-                        c += 1
-                        break
+                to_get = self.geo_atts[0] - c
+                indices = np.argpartition(dists, to_get)[:to_get] if len(dists) > to_get else np.arange(len(dists))
+                # necessary to compensate the cumulated uncertainty in the last layer
+                allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
+                c_ = len(allowed)
+                self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._reflection_levels_cumulated[
+                    ref_layer + 1]
+                c += c_
 
             # control boundary child->nephew artifact
-            for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
-                if c == self.geo_atts[0]:
-                    break
-                for index_ in [self._reflection_levels_cumulated[layer_index] - 1,
-                               self._reflection_levels_cumulated[layer_index + 1]]:
-                    index_b = self._index_from_ref_layer_index(index_, layer_index)
-                    dist = util.f_dist(self[index_b][0], poly[0])
-                    if util.is_close(dist, ref_dist) and index_b not in self._neighbors[i]:
-                        self._neighbors[i, c] = index_b
-                        c += 1
+            # boundary
+            rest = self.geo_atts[0] - c
+            if rest == 0:
+                continue
+
+            dists = distance.lorentzian_distance(boundary_weierstrass, weierstrass[i])
+            indices = np.argsort(dists)
+            allowed = np.argwhere(util.is_close(dists[indices], ref_dist))
+            for index in boundary_polys_indices[indices[allowed]].flatten():
+                if index in self._neighbors[i]:
+                    continue
+                self._neighbors[i, c] = index
+                c += 1
 
     def check_integrity(self):
         """
@@ -477,11 +484,11 @@ class KernelGenerativeReflection:
         :param sector_proj: np.complex128 = position to search polygon for
         :return: int = index of the corresponding polygon
         """
-        disk_distance = np.vectorize(lambda z: util.f_dist(z, sector_proj))
+        disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])
         index = int(np.argmin(dists))
 
-        if dists[index] < util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
+        if dists[index] < util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
             return index
         return False
 
@@ -615,14 +622,14 @@ class KernelGenerativeReflection:
                 step += 1
 
         # control boundary child->grand-nephew artifact
-        ref_dist = util.f_dist(self._sector_polys[0, 0], self._sector_polys[1, 0])
+        ref_dist = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
             if c == self.geo_atts[0]:
                 break
             for index_ in [self._reflection_levels_cumulated[layer_index] - 1,
                            self._reflection_levels_cumulated[layer_index + 1]]:
                 index_b = self._index_from_ref_layer_index(index_, layer_index)
-                dist = util.f_dist(self[index_b][0], self._sector_polys[sector_index, 0])
+                dist = util.f_dist_disc(self[index_b][0], self._sector_polys[sector_index, 0])
                 if util.is_close(dist, ref_dist) and index_b not in neighbors:
                     neighbors[c] = index_b
                     c += 1
@@ -757,7 +764,7 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = KernelGenerativeReflection(3, 7, 5)
+    tiling = KernelGenerativeReflection(3, 7, 10)
     tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
@@ -766,4 +773,5 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
+
     plt.show()
