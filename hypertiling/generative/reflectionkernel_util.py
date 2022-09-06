@@ -122,7 +122,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
-    Generates the tiling of the polygon
+    Generates the tiling with the given parameters p, q, n.
     Time-complexity: O(p^3 m(p, q, n)), with m(p, q, n) is the number of polygons
     :param geo_atts: Tuple[int, int, int] = [p, q, n]
     :param r: float = radius of the fundamental polygon
