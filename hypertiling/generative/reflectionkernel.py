@@ -55,7 +55,7 @@ class KernelGenerativeReflection:
         self.mangle = mangle / 360 * PI2
 
         # if center is added it should be p+1
-        self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex)
+        self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex128)
 
         """
         edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
@@ -84,8 +84,8 @@ class KernelGenerativeReflection:
         Protected(!)
         Generator for iterating over polygons.
         Time-complexity (single polygon): O(p)
-        :param polys: np.array[n, 8] = segment the generator will create the rotations duplicates for and rotate over
-        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
+        :param polys: np.array[n, p + 1] = segment the generator will create the rotations duplicates for and rotate over
+        :yield: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
         """
         for poly in polys:
             yield poly
@@ -146,7 +146,7 @@ class KernelGenerativeReflection:
         Time-complexity (single polygon): O(1)
         :param index: int = index of a polygon in the tiling
         :param f: Callable = function to apply on sector_index
-        :yield: np.array[8] = polygon of the segment polys or its rotational duplicates
+        :yield: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
         """
         if index != 0:
             # get equivalent poly in sector
@@ -397,7 +397,7 @@ class KernelGenerativeReflection:
         if index == 0:
             return self._sector_polys[0]
 
-        # remove the first one from consideration
+        # remove the first one (the central polygon) from consideration
         index -= 1
 
         phi = PI2 / self.geo_atts[0] * (index // (self._sector_polys.shape[0] - 1))
