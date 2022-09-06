@@ -1,8 +1,8 @@
 import unittest
 from tests.test_util import *
-from hypertiling.generative.kernelreflection_numba import KernelGenerativeReflection
+from hypertiling.generative.reflectionkernel import KernelGenerativeReflection
 import hypertiling.geodesics as geos
-import hypertiling.generative.reflection_numba_util as util
+import hypertiling.generative.reflectionkernel_util as util
 import random
 import numpy as np
 
@@ -33,14 +33,14 @@ SHIFTTOL = 1e-5
 class TestReflectTiling(unittest.TestCase):
 
     def test_generate(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(combi[0], combi[1], n=MAXLAYERS)
             # this is basically the only test we can do and it only will scream when duplicates are found
             with PrintTest() as stream:
                 tiling.check_integrity()
 
     def test_find(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
 
             for index in range(tiling.length - 1):
@@ -64,7 +64,7 @@ class TestReflectTiling(unittest.TestCase):
                     tiling._sector_polys[index, 0] = center
 
     def test_get_neighbors(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
@@ -91,7 +91,7 @@ class TestReflectTiling(unittest.TestCase):
                         self.assertNotEqual(index, found)
 
     def test_get_neighbors_experimental(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
@@ -105,10 +105,11 @@ class TestReflectTiling(unittest.TestCase):
                     raise error
 
     def test_get_neighbors_mapping(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
                 try:
+                    tiling.map_neighbors()
                     neighbors = tiling.get_neighbors(index)
                     neighbors2 = tiling.get_neighbors_mapping(index)
                     self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
@@ -119,7 +120,7 @@ class TestReflectTiling(unittest.TestCase):
                     raise error
 
     def test_check_integrity(self):
-        for combi in COMBIS:
+        for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
 
             # check for duplicates

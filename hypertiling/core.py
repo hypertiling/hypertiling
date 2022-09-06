@@ -2,17 +2,17 @@
 from .static.kernelstaticprecise import KernelStaticPrecise
 from .static.kernelstaticfast import KernelStaticFast
 from .static.kernellegacydunham import KernelLegacyDunham
-from .generative.kernelreflection_numba import KernelGenerativeReflection
+from .generative.reflectionkernel import KernelGenerativeReflection
 
 
-KERNELS = {"SF": KernelStaticFast,
-           "SP": KernelStaticPrecise,
+KERNELS = {"SFK": KernelStaticFast,
+           "SPK": KernelStaticPrecise,
            "Dunham": KernelLegacyDunham,
            "GRK": KernelGenerativeReflection}
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SP"):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SPK"):
     """
     The base function which invokes a hyperbolic tiling
 

@@ -1,7 +1,7 @@
 from typing import Callable, Any
 import numpy as np
-import hypertiling.generative.reflection_numba_util as util
-from hypertiling.generative.reflection_numba_util import PI2
+import hypertiling.generative.reflectionkernel_util as util
+from hypertiling.generative.reflectionkernel_util import PI2
 import hypertiling.arraytransformation as trans
 import hypertiling.distance as distance
 
@@ -236,8 +236,10 @@ class KernelGenerativeReflection:
         Time-complexity: O(?)
         :return: void
         """
-        self._neighbors = np.empty((self._sector_polys.shape[0], self.geo_atts[0]), dtype=np.uint32)
-        self._neighbors.fill(- 1)  # creates a nice little overflow to 4294967295
+
+        dtype = np.min_scalar_type(self.length)
+        self._neighbors = np.empty((self._sector_polys.shape[0], self.geo_atts[0]), dtype=dtype)
+        self._neighbors.fill(- 1)  # creates a nice little overflow
         self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]
 
         # fundamental sector
@@ -648,8 +650,10 @@ class KernelGenerativeReflection:
             print("start mapping neighbors")
             self.map_neighbors()
         neighbor_indices = self._neighbors[sector_index]
-        # creates a nice little overflow to 4294967295
-        return neighbor_indices[np.argwhere(neighbor_indices != np.uint32(-1))].flatten()
+
+        # get value from nice little overflow
+        overflow = np.iinfo(neighbor_indices.dtype).max
+        return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()
 
     # Sector only ######################################################################################################
     # Generative #######################################################################################################

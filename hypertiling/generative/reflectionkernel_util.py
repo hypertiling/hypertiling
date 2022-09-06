@@ -3,6 +3,7 @@ from numba import njit
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
+from hypertiling.check_numba import check_numba
 
 """
 p: Number of edges/vertices of a polygon
@@ -20,7 +21,7 @@ PI2 = 2 * np.pi
 # Variables ============================================================================================================
 # Assistance ===========================================================================================================
 
-@njit()
+@check_numba
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
@@ -33,7 +34,7 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     return np.any(np.abs(zs - z) <= tol)
 
 
-@njit()
+@check_numba
 def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol: float = 1e-12) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
@@ -46,7 +47,7 @@ def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol
     return np.abs(z1 - z2) <= tol
 
 
-@njit()
+@check_numba
 def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
@@ -59,7 +60,7 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
 
-@njit()
+@check_numba
 def generate_raw(poly: np.array) -> np.array:
     """
     Generates the neigboring polygons for a single polygon poly
@@ -83,7 +84,7 @@ def generate_raw(poly: np.array) -> np.array:
     return reflection_centers
 
 
-@njit()
+@check_numba
 def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
     """
     Calculates the distance between the points z and z_hat.
@@ -98,7 +99,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@njit()
+@check_numba
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
@@ -117,7 +118,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@njit()
+@check_numba
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
