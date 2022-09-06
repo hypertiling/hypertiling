@@ -138,7 +138,7 @@ class KernelGenerativeReflection:
             index += self._sector_polys.shape[0] - 1
         return index
 
-    def _generative_index(self, index: int, f: Callable) -> Any:
+    def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
         """
         Protected(!)
         Takes an index (for the tiling) and a function defined in the fundamental sector.
@@ -164,7 +164,14 @@ class KernelGenerativeReflection:
         return f(index)
 
     @staticmethod
-    def _to_weierstrass(polygons):
+    def _to_weierstrass(polygons: np.array) -> np.array:
+        """
+        Protected(!)
+        Calculates the weierstrass coordinates for an array of polygons in poincare disks.
+        Time-complexity (single polygon): O(p)
+        :param polygons: np.array[n, p + 1] = polygons to calculate weierstrass coordinates for
+        :yield: np.array[p + 1, 3] = polygons in weierstrass coordinates
+        """
         weierstrass = np.empty((len(polygons), 3), dtype=np.float64)
         weierstrass[:, 0] = 1
         weierstrass[:, 1] = np.real(polygons[:, 0])
@@ -703,7 +710,7 @@ class KernelGenerativeReflection:
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._generative_index(index, self._get_neighbors)
+        return self._expand_sector_index_to_tiling(index, self._get_neighbors)
 
     def get_neighbors_experimental(self, index: int) -> np.array:
         """
@@ -712,7 +719,7 @@ class KernelGenerativeReflection:
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._generative_index(index, self._get_neighbors_experimental)
+        return self._expand_sector_index_to_tiling(index, self._get_neighbors_experimental)
 
     def get_neighbors_mapping(self, index: int) -> np.array:
         """
@@ -721,7 +728,7 @@ class KernelGenerativeReflection:
         :param index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        return self._generative_index(index, self._get_neighbors_mapping)
+        return self._expand_sector_index_to_tiling(index, self._get_neighbors_mapping)
 
     # Generative #######################################################################################################
     # Transformations ##################################################################################################
