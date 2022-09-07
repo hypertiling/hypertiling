@@ -1,7 +1,9 @@
 import hypertiling.transformation as trans
+from hypertiling.check_numba import check_numba
 
 
-def morigin_py(p, z0, verticesP):
+@check_numba
+def morigin(p, z0, verticesP):
     """
     Apply Moebius transform to an array of length (p+1) of vertices.
     
@@ -19,8 +21,8 @@ def morigin_py(p, z0, verticesP):
         z = trans.moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
 
-
-def morigin_inv_py(p, z0, verticesP):
+@check_numba
+def morigin_inv(p, z0, verticesP):
     """
     Apply inverse Moebius trafo to an array of length (p+1) of vertices.
     
@@ -38,8 +40,8 @@ def morigin_inv_py(p, z0, verticesP):
         z = trans.moeb_origin_trafo_inverse(z0, verticesP[i])
         verticesP[i] = z
 
-
-def mrotate_py(p, phi, verticesP):
+@check_numba
+def mrotate(p, phi, verticesP):
     """
     Rotate an array of length (p + 1) of complex vertices.
     
@@ -57,8 +59,8 @@ def mrotate_py(p, phi, verticesP):
         z = trans.moeb_rotate_trafo(-phi, verticesP[i])
         verticesP[i] = z
 
-
-def mfull_point_py(z0, phi, p):
+@check_numba
+def mfull_point(z0, phi, p):
     """
     Apply all transformations(origin, rotate, inv_origin) to a single vertex.
     
@@ -76,8 +78,8 @@ def mfull_point_py(z0, phi, p):
     z = trans.moeb_rotate_trafo(-phi, z)
     return trans.moeb_origin_trafo_inverse(z0, z)
 
-
-def mfull_py(p, phi, ind, verticesP):
+@check_numba
+def mfull(p, phi, ind, verticesP):
     """ 
     Apply all transformations(origin, rotate, inv_origin) in dd precision to the vertices of an entire polygon.
 
@@ -102,19 +104,3 @@ def mfull_py(p, phi, ind, verticesP):
         verticesP[i] = z
         # verticesdP[i] = dz
 
-
-# try to use numba
-try:
-    import numba
-
-    morigin = numba.njit(morigin_py)
-    morigin_inv = numba.njit(morigin_inv_py)
-    mrotate = numba.njit(mrotate_py)
-    mfull_point = numba.njit(mfull_point_py)
-    mfull = numba.njit(mfull_py)
-except ImportError:
-    morigin = morigin_py
-    morigin_inv = morigin_inv_py
-    mrotate = mrotate_py
-    mfull_point = mfull_point_py
-    mfull = mfull_py
