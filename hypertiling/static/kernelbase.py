@@ -89,6 +89,46 @@ class HyperbolicTilingBase:
 
     def __len__(self):
         return len(self.polygons)
+        
+
+
+
+    def get_vertices(self, index: int) -> np.array:
+        """
+        Returns the p vertices of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.array[np.complex128][p] = vertices of the polygon
+        """
+        return self.polygons[index].verticesP[:self.p]
+
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
+        return self.polygons[index].verticesP[-1]
+
+    def get_sector(self, index: int) -> int:
+        """
+        Returns the sector, the polygon at index refers to.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: int = number of the sector
+        """
+        return self.polygons[index].sector
+
+    def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
+        return self.polygons[index].angle
+
 
 
     def create_fundamental_polygon(self, center='cell'):
