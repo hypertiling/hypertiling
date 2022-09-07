@@ -3,8 +3,9 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w, moeb_rotate_trafo, mymoeb
-from .util import fund_radius
+from ..arraytransformation import mfull, mrotate, morigin
+from ..transformation import p2w, moeb_rotate_trafo, mymoeb
+from ..util import fund_radius
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -114,13 +115,13 @@ class HyperbolicTilingBase:
 
         # if centered around a vertex, shift one vertex to origin
         if center == 'vertex':
-            polygon.moeb_origin(complex(r, 0))
-            polygon.find_angle()
+            morigin(self.p, complex(r, 0), polygon.verticesP)
             vertangle = math.atan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
-            polygon.moeb_rotate(vertangle)
-            polygon.find_angle()
+            mrotate(self.p, vertangle, polygon.verticesP)
+            polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
+            polygon.angle += 360 if polygon.angle < 0 else 0
 
-        polygon.moeb_rotate(-2*math.pi/360*self.mangle)
+        mrotate(self.p, -2*math.pi/360*self.mangle, polygon.verticesP)
 
         return polygon
 
@@ -155,7 +156,7 @@ class KernelCommon(HyperbolicTilingBase):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
-        polygon.tf_full(ind, k*self.qhi)
+        mfull(self.p, k*self.qhi, ind, polygon.verticesP)
         return polygon
 
 
@@ -172,9 +173,10 @@ class KernelCommon(HyperbolicTilingBase):
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                pgon.moeb_rotate(-p*angle)
-                pgon.find_angle()
-                pgon.find_sector(k)
+                mrotate(self.p, -p*angle, pgon.verticesP)
+                pgon.angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
+                pgon.angle += 360 if pgon.angle < 0 else 0
+                pgon.sector = math.floor(pgon.angle/(360/k))
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
@@ -216,7 +218,7 @@ class KernelCommon(HyperbolicTilingBase):
             angle = angle * math.pi / 180 
         
         for poly in self.polygons:
-            poly.verticesP = moeb_rotate_trafo(poly.verticesP, angle)
+            mrotate(self.p, angle, poly.verticesP)
             
     def translate(self, z):
         """ 
@@ -231,5 +233,5 @@ class KernelCommon(HyperbolicTilingBase):
         """
         
         for poly in self.polygons:
-            poly.verticesP = mymoeb(-z, poly.verticesP)
+            morigin(self.p, -z, poly.verticesP)
 

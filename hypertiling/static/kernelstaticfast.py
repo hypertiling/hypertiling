@@ -4,15 +4,16 @@ import copy
 
 # relative imports
 from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon, mfull_point
-from .transformation import p2w, moeb_rotate_trafo
-from .distance import disk_distance
+from .hyperpolygon import HyperPolygon
+from ..transformation import p2w, moeb_rotate_trafo
+from ..arraytransformation import mfull_point
+from ..distance import disk_distance
 
-class KernelManu(KernelCommon):
+class KernelStaticFast(KernelCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
     def __init__ (self, p, q, n, center):
-        super(KernelManu, self).__init__(p, q, n, center)
+        super(KernelStaticFast, self).__init__(p, q, n, center)
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
@@ -113,7 +114,7 @@ class KernelManu(KernelCommon):
         for kk, pgon in enumerate(self.polygons):
             if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
 
-                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
 
                 center = np.round(center, self.dgts) # better use simple distance?
 
