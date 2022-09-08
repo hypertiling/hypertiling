@@ -7,20 +7,18 @@ import random
 import numpy as np
 
 # overall
-COMBIS = [(7, 3, 5),
+COMBIS = [(7, 3, 4),
           (3, 7, 4),
-          (5, 4, 4),
-          (4, 5, 4),
-          (6, 4, 4),
-          (7, 4, 4),
+          (5, 4, 3),
+          (4, 5, 3),
+          (6, 4, 3),
+          (7, 4, 3),
           (7, 5, 3),
-          (7, 6, 3),
-          (7, 7, 3),
-          (3, 8, 4),
-          (8, 3, 4)]
+          (3, 8, 3)]
+
 
 # test generate
-MAXLAYERS = 10
+MAXLAYERS = 4
 
 # test check_integrity
 RATIOOFDUPLICATES = 0.1
@@ -90,7 +88,7 @@ class TestReflectTiling(unittest.TestCase):
                         """
                         self.assertNotEqual(index, found)
 
-    def test_get_neighbors_experimental(self):
+    """def test_get_neighbors_experimental(self):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
@@ -102,22 +100,16 @@ class TestReflectTiling(unittest.TestCase):
                     print(combi, index)
                     print(np.sort(neighbors2), np.sort(neighbors))
                     print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                    raise error
+                    raise error"""
 
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
-                try:
-                    tiling.map_neighbors()
-                    neighbors = tiling.get_neighbors(index)
-                    neighbors2 = tiling.get_neighbors_mapping(index)
-                    self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                except Exception as error:
-                    print(combi, index)
-                    print(np.sort(neighbors2), np.sort(neighbors))
-                    print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                    raise error
+                tiling.map_neighbors()
+                neighbors = tiling.get_neighbors(index)
+                neighbors2 = tiling.get_neighbors_mapping(index)
+                self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
@@ -178,4 +170,5 @@ class TestReflectTiling(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    tiling = KernelGenerativeReflection(7, 3, 2)
     unittest.main()

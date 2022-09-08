@@ -71,7 +71,7 @@ def generate_raw(poly: np.array) -> np.array:
     reflection_centers = np.empty((poly.shape[0] - 1,), dtype=np.complex128)
     for k, vertex in enumerate(poly[1:]):
         z = poly.copy()
-        array_trans.morigin(z.shape[0], vertex, z)
+        array_trans.morigin(z.shape[0] - 1, vertex, z)
         phi = np.angle(z[1:][(k + 1) % (z.shape[0] - 1)])
 
         # from here: only use the center point
@@ -209,4 +209,5 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 c += 1
                 if c == stop:
                     return reflection_levels
+    return reflection_levels
 # Methods ==============================================================================================================
