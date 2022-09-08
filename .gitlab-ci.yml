@@ -86,7 +86,6 @@ unit-test-plain:
         - python3 -m tests.test_core
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-        -
 
 unit-test-reflection-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
