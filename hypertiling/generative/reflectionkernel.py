@@ -775,8 +775,8 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = KernelGenerativeReflection(3, 7, 10)
-    tiling.check_integrity()
+    tiling = KernelGenerativeReflection(3, 7, 6)
+    # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
         # poly_layer = tiling.get_layer(polygon_index)

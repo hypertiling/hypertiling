@@ -111,7 +111,6 @@ class TestReflectTiling(unittest.TestCase):
                 neighbors2 = tiling.get_neighbors_mapping(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
-
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
