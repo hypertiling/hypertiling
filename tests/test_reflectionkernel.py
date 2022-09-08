@@ -14,11 +14,11 @@ COMBIS = [(7, 3, 4),
           (6, 4, 3),
           (7, 4, 3),
           (7, 5, 3),
-          (3, 8, 3),
-          (8, 3, 3)]
+          (3, 8, 3)]
+
 
 # test generate
-MAXLAYERS = 10
+MAXLAYERS = 4
 
 # test check_integrity
 RATIOOFDUPLICATES = 0.1
@@ -88,7 +88,7 @@ class TestReflectTiling(unittest.TestCase):
                         """
                         self.assertNotEqual(index, found)
 
-    def test_get_neighbors_experimental(self):
+    """def test_get_neighbors_experimental(self):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
@@ -100,7 +100,7 @@ class TestReflectTiling(unittest.TestCase):
                     print(combi, index)
                     print(np.sort(neighbors2), np.sort(neighbors))
                     print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                    raise error
+                    raise error"""
 
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
@@ -176,4 +176,5 @@ class TestReflectTiling(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    tiling = KernelGenerativeReflection(7, 3, 2)
     unittest.main()
