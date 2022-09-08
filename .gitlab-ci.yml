@@ -55,7 +55,6 @@ test-pip:
   script:
     - pip3 install hypertiling
 
-<<<<<<< Updated upstream
 
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -77,8 +76,6 @@ unit-test-fancy:
         - python3 -m tests.test_core
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-=======
->>>>>>> Stashed changes
 
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
