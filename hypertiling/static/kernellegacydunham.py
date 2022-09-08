@@ -3,12 +3,13 @@ import copy
 
 # relative imports
 from .kernelbase import HyperbolicTilingBase
-from .hyperpolygon import HyperPolygon, mfull_point
-from .transformation import p2w
-from .util import fund_radius
+from .hyperpolygon import HyperPolygon
+from ..transformation import p2w
+from ..arraytransformation import mfull_point
+from ..util import fund_radius
 
 
-class KernelDunham(HyperbolicTilingBase):
+class KernelLegacyDunham(HyperbolicTilingBase):
     """
     Original construction algorithm by D. Dunham (1982)
     works for every valid combination {p,q}
@@ -18,7 +19,7 @@ class KernelDunham(HyperbolicTilingBase):
     """
 
     def __init__ (self, p, q, n, center="cell"):
-        super(KernelDunham, self).__init__(p, q, n, center="cell")
+        super(KernelLegacyDunham, self).__init__(p, q, n, center="cell")
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
