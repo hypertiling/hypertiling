@@ -44,7 +44,7 @@ class KernelGenerativeReflection:
         if n > 1:
             lengths = util.get_ns(self.geo_atts)
             self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)
-            self.length = np.sum(lengths)
+            self.length = int(np.sum(lengths))
         else:
             self._sector_lengths = np.array([1])
             self.length = 1

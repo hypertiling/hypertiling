@@ -106,16 +106,11 @@ class TestReflectTiling(unittest.TestCase):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
             for index in range(tiling.length):
-                try:
-                    tiling.map_neighbors()
-                    neighbors = tiling.get_neighbors(index)
-                    neighbors2 = tiling.get_neighbors_mapping(index)
-                    self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                except Exception as error:
-                    print(combi, index)
-                    print(np.sort(neighbors2), np.sort(neighbors))
-                    print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                    raise error
+                tiling.map_neighbors()
+                neighbors = tiling.get_neighbors(index)
+                neighbors2 = tiling.get_neighbors_mapping(index)
+                self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
+
 
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
