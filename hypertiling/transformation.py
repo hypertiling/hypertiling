@@ -1,8 +1,10 @@
 import math
 from numpy import array as nparray
+from hypertiling.check_numba import check_numba
 
 
-def ddkahan(x, y):
+@check_numba
+def kahan(x, y):
     """
     Transform the addition of two floating point numbers:
 
@@ -25,24 +27,24 @@ def ddkahan(x, y):
     e = y - (r - x)
     return r, e
 
-
-def ddtwosum(x, y):
+@check_numba
+def twosum(x, y):
     '''branch free transformation of addition by Knuth'''
     r = x + y
     t = r - x
     e = (x - (r - t)) + (y - t)
     return r, e
 
-
-def ddtwodiff(x, y):
+@check_numba
+def twodiff(x, y):
     '''branch free transformation of subtraction'''
     r = x - y
     t = r - x
     e = (x - (r - t)) - (y + t)
     return r, e
 
-
-def ddtwoproduct(x, y):
+@check_numba
+def twoproduct(x, y):
     '''Product of two numbers: x*y = r + e. See Ogita et al. 2005'''
     u = x * 134217729.0  # Split input x
     v = y * 134217729.0  # Split input y
@@ -54,32 +56,32 @@ def ddtwoproduct(x, y):
     e = ((s * t - r) + s * g + f * t) + f * g
     return r, e
 
-
-def ddadd(x, dx, y, dy):  # double double add
+@check_numba
+def htadd(x, dx, y, dy):  # double double add
     '''perform addition of numbers given in double double representation '''
     r, e = twosum(x, y)
     e += dx + dy
     r, e = kahan(r, e)
     return r, e
 
-
-def dddiff(x, dx, y, dy):
+@check_numba
+def htdiff(x, dx, y, dy):
     '''perform subtraction of numbers given in double double representation '''
     r, e = twodiff(x, y)
     e += dx - dy
     r, e = kahan(r, e)
     return r, e
 
-
-def ddprod(x, dx, y, dy):
+@check_numba
+def htprod(x, dx, y, dy):
     '''perform multplication of numbers given in double double representation '''
     r, e = twoproduct(x, y)
     e += x * dy + y * dx
     r, e = kahan(r, e)
     return r, e
 
-
-def dddiv(x, dx, y, dy):
+@check_numba
+def htdiv(x, dx, y, dy):
     '''perform division of numbers given in double double representation '''
     r = x / y
     s, f = twoproduct(r, y)
@@ -87,8 +89,8 @@ def dddiv(x, dx, y, dy):
     r, e = kahan(r, e)
     return r, e
 
-
-def ddcplxprod(a, da, b, db):
+@check_numba
+def htcplxprod(a, da, b, db):
     '''perform multiplication of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -109,8 +111,8 @@ def ddcplxprod(a, da, b, db):
     r, dr = htdiff(r, dr, i, di)
     return complex(r, imacc), complex(dr, dimacc)
 
-
-def ddcplxprodconjb(a, da, b, db):
+@check_numba
+def htcplxprodconjb(a, da, b, db):
     '''perform multiplication of complex double double numbers: a * b^* '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -131,8 +133,8 @@ def ddcplxprodconjb(a, da, b, db):
     r, dr = htadd(r, dr, i, di)
     return complex(r, imacc), complex(dr, dimacc)
 
-
-def ddcplxadd(a, da, b, db):
+@check_numba
+def htcplxadd(a, da, b, db):
     '''perform addition of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -143,8 +145,8 @@ def ddcplxadd(a, da, b, db):
     i, di = htadd(ima, dima, imb, dimb)
     return complex(r, i), complex(dr, di)
 
-
-def ddcplxdiff(a, da, b, db):
+@check_numba
+def htcplxdiff(a, da, b, db):
     '''perform subtraction of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -155,8 +157,8 @@ def ddcplxdiff(a, da, b, db):
     i, di = htdiff(ima, dima, imb, dimb)
     return complex(r, i), complex(dr, di)
 
-
-def ddcplxdiv(a, da, b, db):
+@check_numba
+def htcplxdiv(a, da, b, db):
     '''perform division of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -177,8 +179,8 @@ def ddcplxdiv(a, da, b, db):
 
     return complex(r, i), complex(dr, di)
 
-
-def p2w_py(z):
+@check_numba
+def p2w(z):
     '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
     xx = x * x
@@ -186,15 +188,15 @@ def p2w_py(z):
     factor = 1 / (1 - xx - yy)
     return factor * nparray([(1 + xx + yy), 2 * x, 2 * y])
 
-
-def w2p_py(point):
+@check_numba
+def w2p(point):
     '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
     factor = 1 / (1 + t)
     return complex(x * factor, y * factor)
 
-
-def mymoeb_py(z0, z):
+@check_numba
+def mymoeb(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
     return (z + z0) / (
@@ -202,23 +204,24 @@ def mymoeb_py(z0, z):
 
 
 # maps all points z such that z0 -> 0, respecting the Poincare projection
-
-def moeb_origin_trafo_py(z0, z):
+@check_numba
+def moeb_origin_trafo(z0, z):
     ret, dret = mymoebint(-z0, z)
     return ret
 
-
-def moeb_origin_trafo_inverse_py(z0, z):
+@check_numba
+def moeb_origin_trafo_inverse(z0, z):
     ret, dret = mymoebint(z0, z)
     return ret
 
 
 # rotates z by phi counter-clockwise about the origin
-def moeb_rotate_trafo_py(phi, z):
+@check_numba
+def moeb_rotate_trafo(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
-
-def mymoebddint_py(z0, z):
+@check_numba
+def mymoebint(z0, z):
     dz0 = complex(0, 0)
     dz = complex(0, 0)
     one = complex(1, 0)
@@ -230,7 +233,8 @@ def mymoebddint_py(z0, z):
     return ret, dret
 
 
-def moeb_origin_trafodd_py(z0, dz0, z, dz):
+@check_numba
+def moeb_origin_trafodd(z0, dz0, z, dz):
     '''Möbius transform to the origin in double double representation'''
     one = complex(1, 0)
     done = complex(0, 0)
@@ -241,7 +245,8 @@ def moeb_origin_trafodd_py(z0, dz0, z, dz):
     return ret, dret
 
 
-def moeb_rotate_trafodd_py(z, dz, phi):
+@check_numba
+def moeb_rotate_trafodd(z, dz, phi):
     '''Rotation of a complex number'''
     ep = complex(math.cos(phi), math.sin(phi))
     ep = ep / abs(ep)  # We calculated sin and cos separately. We can't be sure that |ep| == 1
@@ -250,7 +255,8 @@ def moeb_rotate_trafodd_py(z, dz, phi):
     return ret, dret
 
 
-def moeb_origin_trafo_inversedd_py(z0, dz0, z, dz):
+@check_numba
+def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
     '''Inverse Möbius transform to the origin in double double representation'''
     one = complex(1, 0)
     done = complex(0, 0)
@@ -261,57 +267,7 @@ def moeb_origin_trafo_inversedd_py(z0, dz0, z, dz):
     return ret, dret
 
 
-# If numba is present we use the numba compiled functions, else the plain ones.
-try:
-    import numba
 
-    p2w = numba.njit(p2w_py)
-    w2p = numba.njit(w2p_py)
-    moeb_origin_trafo = numba.njit(moeb_origin_trafo_py)
-    moeb_origin_trafo_inverse = numba.njit(moeb_origin_trafo_inverse_py)
-    moeb_rotate_trafo = numba.njit(moeb_rotate_trafo_py)
-    mymoebint = numba.njit(mymoebddint_py)
-    mymoeb = numba.njit(mymoeb_py)
-    moeb_origin_trafodd = numba.njit(moeb_origin_trafodd_py)
-    moeb_rotate_trafodd = numba.njit(moeb_rotate_trafodd_py)
-    moeb_origin_trafo_inversedd = numba.njit(moeb_origin_trafo_inversedd_py)
-    htcplxadd = numba.njit(ddcplxadd)
-    htcplxdiv = numba.njit(ddcplxdiv)
-    htcplxdiff = numba.njit(ddcplxdiff)
-    htcplxprodconjb = numba.njit(ddcplxprodconjb)
-    htcplxprod = numba.njit(ddcplxprod)
-    htdiv = numba.njit(dddiv)
-    htadd = numba.njit(ddadd)
-    htprod = numba.njit(ddprod)
-    htdiff = numba.njit(dddiff)
-    twoproduct = numba.njit(ddtwoproduct)
-    twosum = numba.njit(ddtwosum)
-    twodiff = numba.njit(ddtwodiff)
-    kahan = numba.njit(ddkahan)
-except ImportError:
-    p2w = p2w_py
-    w2p = w2p_py
-    mymoeb = mymoeb_py
-    moeb_origin_trafo = moeb_origin_trafo_py
-    moeb_origin_trafo_inverse = moeb_origin_trafo_inverse_py
-    moeb_rotate_trafo = moeb_rotate_trafo_py
-    mymoebint = mymoebddint_py
-    moeb_origin_trafodd = moeb_origin_trafodd_py
-    moeb_rotate_trafodd = moeb_rotate_trafodd_py
-    moeb_origin_trafo_inversedd = moeb_origin_trafo_inversedd_py
-    htcplxadd = ddcplxadd
-    htcplxdiv = ddcplxdiv
-    htcplxdiff = ddcplxdiff
-    htcplxprodconjb = ddcplxprodconjb
-    htcplxprod = ddcplxprod
-    htdiv = dddiv
-    htadd = ddadd
-    htprod = ddprod
-    htdiff = dddiff
-    twoproduct = ddtwoproduct
-    twosum = ddtwosum
-    twodiff = ddtwodiff
-    kahan = ddkahan
 
 
 def moeb_translate_trafo(z, s):
@@ -321,6 +277,7 @@ def moeb_translate_trafo(z, s):
 
 
 # reverses the previous three transformations at once
+
 def moeb_inverse_trafo(z, z0, phi, s):
     exp = complex(math.cos(phi), math.sin(phi))
     z0c = z0.conjugate()
