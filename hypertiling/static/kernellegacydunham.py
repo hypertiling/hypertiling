@@ -8,6 +8,18 @@ from ..transformation import p2w
 from ..arraytransformation import mfull_point
 from ..util import fund_radius
 
+from ..representations import p2w_xyt, w2p_xyt
+
+
+
+
+def transformW_poly(polygon, transformation):
+    for pointP in polygon.verticesP:
+        pointP = transformW_site(pointP, transformation)
+
+def transformW_site(pointP, transformation):
+    return w2p_xyt(transformation @ p2w_xyt(pointP))
+
 
 class KernelLegacyDunham(HyperbolicTilingBase):
     """
@@ -41,18 +53,24 @@ class KernelLegacyDunham(HyperbolicTilingBase):
         self.RotCenterG = np.eye(3)  # G for usage in generate()
         self.RotCenterR = np.eye(3)   # R for usage in replicate(...)
 
-        self.fund_poly = self.create_fundamental_polygon()
-        self.polygons = [self.fund_poly]
+        #self.fund_poly = self.create_fundamental_polygon()
 
-    def create_fundamental_polygon(self):  # constructs the verticesP of the fundamental hyperbolic {p,q} polygon
-        r = fund_radius(self.p, self.q)
-        polygon = HyperPolygon(self.p)
-        angle = np.pi / self.p
-        for i in range(self.p):  # for every corner of the polygon
-            z = complex(r * np.cos(angle + 2 * np.pi * i / self.p), r * np.sin(angle + 2 * np.pi * i / self.p))
-            polygon.verticesP[i] = z
-            polygon.verticesW[:, i] = p2w(z)
-        return polygon
+
+
+
+
+        
+        
+
+    # def create_fundamental_polygon(self):  # constructs the verticesP of the fundamental hyperbolic {p,q} polygon
+    #     r = fund_radius(self.p, self.q)
+    #     polygon = HyperPolygon(self.p)
+    #     angle = np.pi / self.p
+    #     for i in range(self.p):  # for every corner of the polygon
+    #         z = complex(r * np.cos(angle + 2 * np.pi * i / self.p), r * np.sin(angle + 2 * np.pi * i / self.p))
+    #         polygon.verticesP[i] = z
+    #         polygon.verticesW[:, i] = p2w(z)
+        #return polygon
 
     def generate(self):
         if self.nlayers == 1:
@@ -69,7 +87,8 @@ class KernelLegacyDunham(HyperbolicTilingBase):
 
     def replicate(self, Polygons, InitialTran, LayersToDo, AdjacencyType):
         poly = copy.deepcopy(self.fund_poly)
-        poly.transform(InitialTran)
+        #poly.transform(InitialTran)
+        transformW_poly(poly,InitialTran)
         Polygons.append(poly)  # appending anything and removing duplicates afterwards is faster
         ExposedEdges = 0
         VertexPgons = 0
