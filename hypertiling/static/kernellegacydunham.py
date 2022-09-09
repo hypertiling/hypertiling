@@ -14,8 +14,11 @@ from ..representations import p2w_xyt, w2p_xyt
 
 
 def transformW_poly(polygon, transformation):
-    for pointP in polygon.verticesP:
-        pointP = transformW_site(pointP, transformation)
+    new_verts = np.zeros_like(polygon.verticesP)
+    for i, pointP in enumerate(polygon.verticesP):
+        new_verts[i] = transformW_site(pointP, transformation)
+    polygon.verticesP = new_verts
+
 
 def transformW_site(pointP, transformation):
     return w2p_xyt(transformation @ p2w_xyt(pointP))
@@ -53,7 +56,8 @@ class KernelLegacyDunham(HyperbolicTilingBase):
         self.RotCenterG = np.eye(3)  # G for usage in generate()
         self.RotCenterR = np.eye(3)   # R for usage in replicate(...)
 
-        #self.fund_poly = self.create_fundamental_polygon()
+        # fundamental polygon of the tiling
+        self.fund_poly = self.create_fundamental_polygon(center, rotate_by=360/p/2)
 
 
 

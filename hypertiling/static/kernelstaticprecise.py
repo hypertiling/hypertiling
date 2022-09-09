@@ -8,6 +8,7 @@ from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull_point
 from ..util import fund_radius
 from .kernelstaticprecise_util import CenterContainer
+from .kernelbase import MANGLE
 
 
 class KernelStaticPrecise(KernelCommon):
@@ -17,6 +18,8 @@ class KernelStaticPrecise(KernelCommon):
 
     def __init__(self, p, q, n, center):
         super(KernelStaticPrecise, self).__init__(p, q, n, center)
+        self.center = center
+
 
     def generate_sector(self):
         """
@@ -30,6 +33,7 @@ class KernelStaticPrecise(KernelCommon):
         self.polygons = []
 
         # add fundamental polygon to list
+        self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
@@ -73,7 +77,7 @@ class KernelStaticPrecise(KernelCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if (self.mangle <= cangle < sect_angle_deg + self.degtol + self.mangle) and (abs(center) > fr):
+                        if (MANGLE <= cangle < sect_angle_deg + self.degtol + MANGLE) and (abs(center) > fr):
                             if not centerarray.fp_has(center):
                                 centerarray.add(center)
 
@@ -87,7 +91,7 @@ class KernelStaticPrecise(KernelCommon):
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if self.mangle <= cangle <= self.degtol + self.mangle:
+                                if MANGLE <= cangle <= self.degtol + MANGLE:
                                     if not centerset_extra.fp_has(center):
                                         centerset_extra.add(center)
 
@@ -103,7 +107,7 @@ class KernelStaticPrecise(KernelCommon):
         for kk, pgon in enumerate(self.polygons):
             angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
             angle += 360 if angle < 0 else 0
-            if angle > sect_angle_deg - self.degtol + self.mangle:
+            if angle > sect_angle_deg - self.degtol + MANGLE:
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
