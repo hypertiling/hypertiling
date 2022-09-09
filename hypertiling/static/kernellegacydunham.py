@@ -10,17 +10,27 @@ from ..util import fund_radius
 
 from ..representations import p2w_xyt, w2p_xyt
 
+# NOTE: This kernel implements the "original" construction algorithm of D. Dunham (1982)
+# The algorithm uses Weierstraß (hyperboloid) coordinates; since those are not natively supported
+# by our HyperPolygon class we need the following two transformation functions:
 
-
-
-def transformW_poly(polygon, transformation):
+def transformW_poly(polygon: HyperPolygon, transformation):
+    """
+    Apply Weierstraß transformation matrix to entire HyperPolygon, i.e. vertices and center coordiantes
+    """
     new_verts = np.zeros_like(polygon.verticesP)
     for i, pointP in enumerate(polygon.verticesP):
         new_verts[i] = transformW_site(pointP, transformation)
     polygon.verticesP = new_verts
 
 
-def transformW_site(pointP, transformation):
+def transformW_site(pointP: np.complex128, transformation):
+    """
+    Apply Weierstraß transformation to Poincare site
+    1. Transform site from Poincare to Weierstraß
+    2. Apply Weierstraß transformation
+    3. Transform back
+    """
     return w2p_xyt(transformation @ p2w_xyt(pointP))
 
 
