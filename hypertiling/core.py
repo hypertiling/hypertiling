@@ -8,7 +8,7 @@ from .generative.reflectionkernel import KernelGenerativeReflection
 KERNELS = {"SFK": KernelStaticFast,
            "SPK": KernelStaticPrecise,
            "Dunham": KernelLegacyDunham,
-           "GRK": KernelGenerativeReflection}
+           "GRK": lambda p, q, n, center: KernelGenerativeReflection(p, q, n)}
 
 
 # factory pattern allows to select between kernels
