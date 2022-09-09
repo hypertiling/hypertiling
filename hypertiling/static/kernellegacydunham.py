@@ -29,8 +29,6 @@ class KernelLegacyDunham(HyperbolicTilingBase):
     Original construction algorithm by D. Dunham (1982)
     works for every valid combination {p,q}
     however produces a lot of duplicates
-    
-    currently broken! fixme
     """
 
     def __init__ (self, p, q, n, center="cell"):
