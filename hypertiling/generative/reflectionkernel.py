@@ -435,8 +435,9 @@ class KernelGenerativeReflection:
 
         part = np.copy(self._neighbors)[1:]
         overflow = np.iinfo(part.dtype).max
-        rotate = np.vectorize(lambda x: overflow if x == overflow else 0 if x == 0 else x + jump)
-        jump = self._sector_polys.shape[0] - 1
+
+        rotate = np.vectorize(lambda x: x if x == overflow else x if x == 0 else x + jump)
+        jump = np.uint32(self._sector_polys.shape[0] - 1)
         neighbors = [[element for element in line if element != overflow] for line in self._neighbors.tolist()]
 
         for sector_i in range(1, self.geo_atts[0]):
