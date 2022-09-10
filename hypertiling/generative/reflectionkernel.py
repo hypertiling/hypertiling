@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable, Any, List
 import numpy as np
 import hypertiling.generative.reflectionkernel_util as util
 from hypertiling.generative.reflectionkernel_util import PI2
@@ -236,11 +236,12 @@ class KernelGenerativeReflection:
             for vertex in to_add:
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
 
-    def map_neighbors(self, tol=1e-5):
+    def map_neighbors(self, tol: float = 1e-5):
         """
         This function is numerically expensive!
         Calculates the neighbors for each polygon.
         Time-complexity: O(?)
+        :param tol: float = tolerance to search neighbors in
         :return: void
         """
 
@@ -292,13 +293,15 @@ class KernelGenerativeReflection:
             else:
                 next_ = i + 1
                 if next_ < self._reflection_levels_cumulated[ref_layer + 1] and \
-                    util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist, tol=tol):
+                        util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
+                                      tol=tol):
                     self._neighbors[i, c] = next_
                     c += 1
 
                 before = i - 1
                 if before >= self._reflection_levels_cumulated[ref_layer] and \
-                    util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist, tol=tol):
+                        util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
+                                      tol=tol):
                     self._neighbors[i, c] = before
                     c += 1
 
@@ -420,6 +423,27 @@ class KernelGenerativeReflection:
 
     # Basics ###########################################################################################################
     # API ##############################################################################################################
+
+    def get_neighbors_list(self, tol: float = 1e-5) -> List[int]:
+        """
+        Create and return list of all neighbors
+        :param tol: float = tolerance to search neighbors in
+        :return: List[int] = list of all neighbors for all polygons
+        """
+        if self._neighbors is None:
+            self.map_neighbors(tol=tol)
+
+        part = np.copy(self._neighbors)[1:]
+        overflow = np.iinfo(part.dtype).max
+        rotate = np.vectorize(lambda x: overflow if x == overflow else 0 if x == 0 else x + jump)
+        jump = self._sector_polys.shape[0] - 1
+        neighbors = [[element for element in line if element != overflow] for line in self._neighbors.tolist()]
+
+        for sector_i in range(1, self.geo_atts[0]):
+            part = rotate(part)
+            neighbors += [[i if i < self.length else i % self.length + 1 for i in line if i != overflow] for line in
+                          part.tolist()]
+        return neighbors
 
     def get_layer(self, index: int) -> int:
         """
@@ -775,7 +799,7 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = KernelGenerativeReflection(3, 7, 6)
+    tiling = KernelGenerativeReflection(7, 3, 5)
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
@@ -784,5 +808,5 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
-
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
     plt.show()

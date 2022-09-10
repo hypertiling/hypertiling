@@ -105,9 +105,18 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
             tiling = KernelGenerativeReflection(*combi)
+            tiling.map_neighbors()
             for index in range(tiling.length):
-                tiling.map_neighbors()
                 neighbors = tiling.get_neighbors(index)
+                neighbors2 = tiling.get_neighbors_mapping(index)
+                self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
+
+    def test_get_neighbors_list(self):
+        for combi in Progress(COMBIS):
+            tiling = KernelGenerativeReflection(*combi)
+            neighbors_list = tiling.get_neighbors_list()  # calls tiling.map_neighbors
+            for index in range(tiling.length):
+                neighbors = neighbors_list[index]
                 neighbors2 = tiling.get_neighbors_mapping(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
