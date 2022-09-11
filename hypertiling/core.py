@@ -40,11 +40,8 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SPK"):
     if kernel not in KERNELS:
         raise KeyError("[hypertiling] Error: No valid kernel specified")
 
-    if kernel == "dunham":
-        print("Caution: This kernel is slow and error-prone. Use at own risk!")
+    if kernel == "Dunham":
+        print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
         if center == "vertex":
-            print(
-                "KernelDunham doesn't support vertex-centered tilings yet. " +
-                "A cell-centered tiling will be generated instead...")
-        # raise NotImplementedError("[hypertiling] Error: Dunham kernel is currently broken (fixme!)")
+            print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
     return KERNELS[kernel](p, q, n, center)

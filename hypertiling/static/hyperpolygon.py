@@ -75,10 +75,7 @@ class HyperPolygon:
 
         # Poincare disk coordinates
         self.verticesP = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
-        # self.verticesdP = np.zeros(shape=self.p+1, dtype=np.complex128)
 
-        # List of edges (untested, compare self.populate_edge_list)
-        self.edges = []
 
     def centerP(self):
         return self.verticesP[self.p]

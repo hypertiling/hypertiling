@@ -7,6 +7,10 @@ from ..arraytransformation import mfull, mrotate, morigin
 from ..transformation import p2w, moeb_rotate_trafo, mymoeb
 from ..util import fund_radius
 
+# Magic number: real irrational number \Gamma(\frac{1}{4})
+# used as an angular offset, rotates the entire construction by a bit during construction
+MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
+
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
 class HyperbolicTilingBase:
@@ -50,16 +54,9 @@ class HyperbolicTilingBase:
         # technical parameters 
         # do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance
-        
-        # angular offset, rotates the entire construction by a bit during construction
-        if center == "cell":
-            self.mangle = self.degphi/math.sqrt(5) 
-        elif center == "vertex":
-            self.mangle = self.degqhi/math.sqrt(5)
 
-
-        # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon(center)
+        # # fundamental polygon of the tiling
+        # self.fund_poly = self.create_fundamental_polygon(center)
 
         # prepare list to store polygons 
         self.polygons = []
@@ -131,7 +128,7 @@ class HyperbolicTilingBase:
 
 
 
-    def create_fundamental_polygon(self, center='cell'):
+    def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -161,7 +158,7 @@ class HyperbolicTilingBase:
             polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
             polygon.angle += 360 if polygon.angle < 0 else 0
 
-        mrotate(self.p, -2*math.pi/360*self.mangle, polygon.verticesP)
+        mrotate(self.p, -2*math.pi/360*rotate_by, polygon.verticesP)
 
         return polygon
 
