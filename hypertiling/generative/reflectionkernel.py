@@ -424,26 +424,27 @@ class KernelGenerativeReflection:
     # Basics ###########################################################################################################
     # API ##############################################################################################################
 
-    def get_neighbors_list(self, tol: float = 1e-5) -> List[int]:
+    def get_neighbors_list(self, tol: float = 1e-5) -> List[List[int]]:
         """
         Create and return list of all neighbors
         :param tol: float = tolerance to search neighbors in
-        :return: List[int] = list of all neighbors for all polygons
+        :return: List[List[int]] = list of all neighbors for all polygons
         """
         if self._neighbors is None:
             self.map_neighbors(tol=tol)
 
-        part = np.copy(self._neighbors)[1:]
-        overflow = np.iinfo(part.dtype).max
+        part = np.copy(self._neighbors)[1:].astype(np.uint32)
+        overflow = np.iinfo(self._neighbors.dtype).max
 
-        rotate = np.vectorize(lambda x: x if x == overflow else x if x == 0 else x + jump)
         jump = np.uint32(self._sector_polys.shape[0] - 1)
+        rotate = np.vectorize(lambda x: x if x == overflow else x if x == 0 else x + jump)
         neighbors = [[element for element in line if element != overflow] for line in self._neighbors.tolist()]
 
         for sector_i in range(1, self.geo_atts[0]):
             part = rotate(part)
             neighbors += [[i if i < self.length else i % self.length + 1 for i in line if i != overflow] for line in
                           part.tolist()]
+
         return neighbors
 
     def get_layer(self, index: int) -> int:
