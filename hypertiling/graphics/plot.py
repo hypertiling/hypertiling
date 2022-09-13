@@ -27,7 +27,6 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
     plt.fill(x, y, facecolor='None', edgecolor=c, linewidth=.1)
     label = f"{{{tiling.p},{tiling.q}}}-{tiling.nlayers} tessellation," \
             f" {len(tiling)} polygons"
-    label += "s" if refs != 1 else ""  # grammar
     plt.title(label)
     plt.savefig(path, dpi=dpi) if save_img else None  # max dpi ca. 4000
     plt.show()
