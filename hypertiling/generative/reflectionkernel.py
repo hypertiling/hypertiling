@@ -40,6 +40,10 @@ class KernelGenerativeReflection:
             raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
         self.geo_atts = (p, q, n)
 
+        self.p = p
+        self.q = q
+        self.nlayers = n
+
         # technical attributes
         if n > 1:
             lengths = util.get_ns(self.geo_atts)
