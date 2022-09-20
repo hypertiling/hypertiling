@@ -4,16 +4,18 @@ import copy
 
 # relative imports
 from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon, mfull_point
-from .transformation import p2w, moeb_rotate_trafo
-from .distance import disk_distance
+from .hyperpolygon import HyperPolygon
+from ..transformation import p2w, moeb_rotate_trafo
+from ..arraytransformation import mfull_point
+from ..distance import disk_distance
+from .kernelbase import MANGLE
 
-
-class KernelManu(KernelCommon):
+class KernelStaticFast(KernelCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
     def __init__ (self, p, q, n, center):
-        super(KernelManu, self).__init__(p, q, n, center)
+        super(KernelStaticFast, self).__init__(p, q, n, center)
+        self.center = center
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
@@ -29,6 +31,7 @@ class KernelManu(KernelCommon):
         self.polygons = []
 
         # add fundamental polygon to list
+        self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
@@ -63,7 +66,7 @@ class KernelManu(KernelCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle-1e-14 <= cangle < sect_angle_deg+self.degtol+self.mangle:
+                        if MANGLE-1e-14 <= cangle < sect_angle_deg+self.degtol+MANGLE:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             center = np.round(center, self.dgts)
@@ -85,7 +88,7 @@ class KernelManu(KernelCommon):
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if self.mangle-1e-14 <= cangle <= self.degtol+self.mangle:
+                                if MANGLE-1e-14 <= cangle <= self.degtol+MANGLE:
                                     centerset_extra.add(center)
 
             startpgon = endpgon
@@ -107,9 +110,9 @@ class KernelManu(KernelCommon):
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
+            if pgon.angle > sect_angle_deg-self.degtol+MANGLE:
 
-                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
 
                 center = np.round(center, self.dgts) # better use simple distance?
 

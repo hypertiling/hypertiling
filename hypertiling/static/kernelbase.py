@@ -3,8 +3,13 @@ import math
 import copy
 # relative imports
 from .hyperpolygon import HyperPolygon
-from .transformation import p2w
-from .util import fund_radius
+from ..arraytransformation import mfull, mrotate, morigin
+from ..transformation import p2w, moeb_rotate_trafo, mymoeb
+from ..util import fund_radius
+
+# Magic number: real irrational number \Gamma(\frac{1}{4})
+# used as an angular offset, rotates the entire construction by a bit during construction
+MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -49,16 +54,9 @@ class HyperbolicTilingBase:
         # technical parameters 
         # do not change, unless you know what you are doing!)
         self.degtol = 1 # sector boundary tolerance
-        
-        # angular offset, rotates the entire construction by a bit during construction
-        if center == "cell":
-            self.mangle = self.degphi/math.sqrt(5) 
-        elif center == "vertex":
-            self.mangle = self.degqhi/math.sqrt(5)
 
-
-        # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon(center)
+        # # fundamental polygon of the tiling
+        # self.fund_poly = self.create_fundamental_polygon(center)
 
         # prepare list to store polygons 
         self.polygons = []
@@ -88,9 +86,49 @@ class HyperbolicTilingBase:
 
     def __len__(self):
         return len(self.polygons)
+        
 
 
-    def create_fundamental_polygon(self, center='cell'):
+
+    def get_vertices(self, index: int) -> np.array:
+        """
+        Returns the p vertices of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.array[np.complex128][p] = vertices of the polygon
+        """
+        return self.polygons[index].verticesP[:self.p]
+
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
+        return self.polygons[index].verticesP[-1]
+
+    def get_sector(self, index: int) -> int:
+        """
+        Returns the sector, the polygon at index refers to.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: int = number of the sector
+        """
+        return self.polygons[index].sector
+
+    def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: np.complex128 = center of the polygon
+        """
+        return self.polygons[index].angle
+
+
+
+    def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -114,13 +152,13 @@ class HyperbolicTilingBase:
 
         # if centered around a vertex, shift one vertex to origin
         if center == 'vertex':
-            polygon.moeb_origin(complex(r, 0))
-            polygon.find_angle()
+            morigin(self.p, complex(r, 0), polygon.verticesP)
             vertangle = math.atan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
-            polygon.moeb_rotate(vertangle)
-            polygon.find_angle()
+            mrotate(self.p, vertangle, polygon.verticesP)
+            polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
+            polygon.angle += 360 if polygon.angle < 0 else 0
 
-        polygon.moeb_rotate(-2*math.pi/360*self.mangle)
+        mrotate(self.p, -2*math.pi/360*rotate_by, polygon.verticesP)
 
         return polygon
 
@@ -155,7 +193,7 @@ class KernelCommon(HyperbolicTilingBase):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
-        polygon.tf_full(ind, k*self.qhi)
+        mfull(self.p, k*self.qhi, ind, polygon.verticesP)
         return polygon
 
 
@@ -172,9 +210,10 @@ class KernelCommon(HyperbolicTilingBase):
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                pgon.moeb_rotate(-p*angle)
-                pgon.find_angle()
-                pgon.find_sector(k)
+                mrotate(self.p, -p*angle, pgon.verticesP)
+                pgon.angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
+                pgon.angle += 360 if pgon.angle < 0 else 0
+                pgon.sector = math.floor(pgon.angle/(360/k))
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
@@ -195,4 +234,41 @@ class KernelCommon(HyperbolicTilingBase):
             for i, vert in enumerate(verts[:-1]):
                 poly.edges.append((verts[i], verts[i+1]))
             poly.edges.append((verts[-1], verts[0]))
+
+
+    def rotate(self, angle, deg=False):
+        """
+        Rotates the whole tiling around the origin.
+        
+        Parameters
+        ----------
+        
+        angle: float
+            Angle in radians by which the tiling is rotated.
+        
+        deg: bool, default: False
+            If True, then angle is considered in units of degrees.
+            
+        """
+
+        if deg:
+            angle = angle * math.pi / 180 
+        
+        for poly in self.polygons:
+            mrotate(self.p, angle, poly.verticesP)
+            
+    def translate(self, z):
+        """ 
+        Translates the whole tiling so that the point z lays in the origin.
+        
+        Parameters
+        ----------
+        
+        z: complex
+            The point which will be translated to the origin.
+            
+        """
+        
+        for poly in self.polygons:
+            morigin(self.p, -z, poly.verticesP)
 
