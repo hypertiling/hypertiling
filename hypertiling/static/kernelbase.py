@@ -11,6 +11,7 @@ from ..util import fund_radius
 # used as an angular offset, rotates the entire construction by a bit during construction
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
+
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
 class HyperbolicTilingBase:
@@ -53,7 +54,7 @@ class HyperbolicTilingBase:
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
-        self.degtol = 1 # sector boundary tolerance
+        self.degtol = 1  # sector boundary tolerance
 
         # # fundamental polygon of the tiling
         # self.fund_poly = self.create_fundamental_polygon(center)
@@ -64,16 +65,13 @@ class HyperbolicTilingBase:
         if center not in ['cell', 'vertex']:
             raise ValueError('Invalid value for argument "center"!')
 
-
     def __getitem__(self, idx):
         return self.polygons[idx]
-
 
     def __iter__(self):
         self.iterctr = 0
         self.itervar = self.polygons[self.iterctr]
         return self
-
 
     def __next__(self):
         if self.iterctr < len(self.polygons):
@@ -83,12 +81,8 @@ class HyperbolicTilingBase:
         else:
             raise StopIteration
 
-
     def __len__(self):
         return len(self.polygons)
-        
-
-
 
     def get_vertices(self, index: int) -> np.array:
         """
@@ -126,8 +120,6 @@ class HyperbolicTilingBase:
         """
         return self.polygons[index].angle
 
-
-
     def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
@@ -138,9 +130,10 @@ class HyperbolicTilingBase:
         center : str
             decides whether the fundamental cell is construct centered at the origin ("cell", default) 
             or with the origin being one of its vertices ("vertex")
-
-
+        rotate_by : float
+            angle of rotation of the fundamental polygon, default is the magic angle mangle
         """
+
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
@@ -162,12 +155,13 @@ class HyperbolicTilingBase:
 
         return polygon
 
+
 class KernelCommon(HyperbolicTilingBase):
     """
     Commonalities
     """
 
-    def __init__ (self, p, q, n, center):
+    def __init__(self, p, q, n, center):
         super(KernelCommon, self).__init__(p, q, n, center)
 
     def replicate(self):
@@ -179,7 +173,6 @@ class KernelCommon(HyperbolicTilingBase):
         elif self.center == 'vertex':
             self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
-
     def generate(self):
         """
         do full construction
@@ -187,15 +180,12 @@ class KernelCommon(HyperbolicTilingBase):
         self.generate_sector()
         self.replicate()
 
-
-
     def generate_adj_poly(self, polygon, ind, k):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
         mfull(self.p, k*self.qhi, ind, polygon.verticesP)
         return polygon
-
 
     # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
     def angular_replicate(self, polygons, k):
@@ -220,7 +210,6 @@ class KernelCommon(HyperbolicTilingBase):
         for num, poly in enumerate(self.polygons):
             poly.idx = num + 1
 
-
     # populate the "edges" list of all polygons in the tiling
     # untested!!
     def populate_edge_list(self, digits=12):
@@ -234,7 +223,6 @@ class KernelCommon(HyperbolicTilingBase):
             for i, vert in enumerate(verts[:-1]):
                 poly.edges.append((verts[i], verts[i+1]))
             poly.edges.append((verts[-1], verts[0]))
-
 
     def rotate(self, angle, deg=False):
         """
@@ -272,3 +260,90 @@ class KernelCommon(HyperbolicTilingBase):
         for poly in self.polygons:
             morigin(self.p, -z, poly.verticesP)
 
+    def add_layer(self):
+        """ constructs an additional layer for a given tiling object. Not implemented for GRK and Legacy Kernel yet. """
+
+        if kernel not in ['GRK', 'Dunham']:
+            print('This function has not been implemented for this kernel yet. We are working on this!')
+            return
+
+        newpolygons = []
+
+        if kernel == 'SFK':  # former 'kernelmanu'
+            centerset = set()
+            for pgon in tiling:
+                center = np.round(pgon.centerP(), tiling.dgts)
+                centerset.add(center)
+
+            for pgon in tiling:
+                # iterate over every vertex of pgon
+                for vert_ind in range(tiling.p):
+                    # iterate over all polygons touching this very vertex
+                    for rot_ind in range(tiling.q):
+                        # compute center and angle
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * tiling.qhi, pgon.centerP())
+
+                        cangle = math.degrees(math.atan2(center.imag, center.real))
+                        cangle += 360 if cangle < 0 else 0
+
+                        # cut away cells outside the fundamental sector
+                        # allow some tolerance at the upper boundary
+                        # try adding to centerlist; it is a set() and takes care of duplicates
+                        lenA = len(centerset)
+                        center = np.round(center, tiling.dgts)  # CAUTION
+                        centerset.add(center)
+                        lenB = len(centerset)
+
+                        # this tells us whether an element has actually been added
+                        if lenB > lenA:
+                            # create copy
+                            polycopy = copy.deepcopy(pgon)
+
+                            # generate adjacent polygon
+                            adj_pgon = tiling.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                            adj_pgon.find_angle()
+
+                            # add corresponding poly to large list
+                            newpolygons.append(adj_pgon)
+
+            tiling.polygons += newpolygons
+
+        elif kernel == 'SPK':  # former 'kernelflo'
+            # prepare sets which will contain the center coordinates
+            # this is used for uniqueness checks later
+            if self.center == "vertex":
+
+                centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+                                              math.atan2(self.fund_poly.verticesP[self.p].imag,
+                                                         self.fund_poly.verticesP[self.p].real))
+            else:
+                centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
+
+            # fill the centerarray with already existing centers
+            for pgon in tiling:
+                center = np.round(pgon.centerP(), tiling.dgts)
+                centerarray.add(center)
+
+            for pgon in tiling:
+                # iterate over every vertex of pgon
+                for vert_ind in range(tiling.p):
+                    # iterate over all polygons touching this very vertex
+                    for rot_ind in range(tiling.q):
+                        # compute center and angle
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
+                        cangle = math.degrees(math.atan2(center.imag, center.real))
+                        cangle += 360 if cangle < 0 else 0
+                        if not centerarray.fp_has(center):  # if it's a new polygon
+                            centerarray.add(center)
+
+                            # create copy
+                            polycopy = copy.deepcopy(pgon)
+
+                            # generate adjacent polygon
+                            adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                            adj_pgon.find_angle()
+
+                            # add corresponding poly to large list
+                            newpolygons.append(adj_pgon)
+
+            tiling.polygons += newpolygons
