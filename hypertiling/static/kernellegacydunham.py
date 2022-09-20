@@ -126,3 +126,7 @@ class KernelLegacyDunham(HyperbolicTilingBase):
                     self.replicate(Polygons, RotVertex, LayersToDo - 1, "Vertex")
 
                 self.RotCenterR = self.RotCenterR @ self.RotP
+
+    def add_layer(self):
+        print('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
+        return

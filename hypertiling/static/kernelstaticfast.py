@@ -121,23 +121,24 @@ class KernelStaticFast(KernelCommon):
 
         self.polygons = list(np.delete(self.polygons, deletelist))
 
+
     def add_layer(self):
-        """ constructs all neighbours of the given polygons """
-        # TO DO: think about layer indices and check for numerical stability
-        print("Warning: This function does not check for numerical stability yet! Use with care!")
+        """ constructs an additional layer for an existing tiling """
+
         newpolygons = []
+
         centerset = set()
-        for pgon in self.polygons:
-            center = np.round(pgon.centerP(), self.dgts)
+        for pgon in tiling:
+            center = np.round(pgon.centerP(), tiling.dgts)
             centerset.add(center)
 
-        for pgon in self.polygons:
+        for pgon in tiling:
             # iterate over every vertex of pgon
-            for vert_ind in range(self.p):
+            for vert_ind in range(tiling.p):
                 # iterate over all polygons touching this very vertex
-                for rot_ind in range(self.q):
+                for rot_ind in range(tiling.q):
                     # compute center and angle
-                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.centerP())
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * tiling.qhi, pgon.centerP())
 
                     cangle = math.degrees(math.atan2(center.imag, center.real))
                     cangle += 360 if cangle < 0 else 0
@@ -146,7 +147,7 @@ class KernelStaticFast(KernelCommon):
                     # allow some tolerance at the upper boundary
                     # try adding to centerlist; it is a set() and takes care of duplicates
                     lenA = len(centerset)
-                    center = np.round(center, self.dgts)  # CAUTION
+                    center = np.round(center, tiling.dgts)  # CAUTION
                     centerset.add(center)
                     lenB = len(centerset)
 
@@ -156,16 +157,16 @@ class KernelStaticFast(KernelCommon):
                         polycopy = copy.deepcopy(pgon)
 
                         # generate adjacent polygon
-                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon = tiling.generate_adj_poly(polycopy, vert_ind, rot_ind)
                         adj_pgon.find_angle()
-                        adj_pgon.layer = pgon.layer + 1  # this is error-prone
 
                         # add corresponding poly to large list
-                        # tiling.polygons.append(adj_pgon)
                         newpolygons.append(adj_pgon)
 
-        self.polygons += newpolygons
-        self.nlayers += 1  # loses its meaning in this context
+        tiling.polygons += newpolygons
+
+
+        
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
         """

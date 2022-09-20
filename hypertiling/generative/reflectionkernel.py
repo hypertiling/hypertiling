@@ -200,6 +200,11 @@ class KernelGenerativeReflection:
                              self.degtol,
                              self.mangle)
 
+
+    def add_layer(self):
+        print('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
+        return
+
     def map_layers(self):
         """
         This function is numerically expensive!
