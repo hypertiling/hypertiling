@@ -4,15 +4,14 @@ from .static.kernelstaticfast import KernelStaticFast
 from .static.kernellegacydunham import KernelLegacyDunham
 from .generative.reflectionkernel import KernelGenerativeReflection
 
-
 KERNELS = {"SFK": KernelStaticFast,
            "SPK": KernelStaticPrecise,
            "Dunham": KernelLegacyDunham,
-           "GRK": lambda p, q, n, center: KernelGenerativeReflection(p, q, n)}
+           "GRK": lambda p, q, n, center, **kwargs: KernelGenerativeReflection(p, q, n, **kwargs)}
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SPK"):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SPK", **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 
@@ -41,7 +40,8 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SPK"):
         raise KeyError("[hypertiling] Error: No valid kernel specified")
 
     if kernel == "Dunham":
-        print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
+        print(
+            "[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
         if center == "vertex":
             print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
-    return KERNELS[kernel](p, q, n, center)
+    return KERNELS[kernel](p, q, n, center, **kwargs)
