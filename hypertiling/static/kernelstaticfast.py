@@ -19,7 +19,6 @@ class KernelStaticFast(KernelCommon):
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
-
     def generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
@@ -53,13 +52,10 @@ class KernelStaticFast(KernelCommon):
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
-
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
-
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
-
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
@@ -87,6 +83,7 @@ class KernelStaticFast(KernelCommon):
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
+
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
@@ -97,7 +94,6 @@ class KernelStaticFast(KernelCommon):
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-
             if self.numerically_unstable_upper(l, startpgon, endpgon):
                 print("Numerical accuracy exhausted;")
                 print("No more layers will be constructed; automatic shutdown")
@@ -107,7 +103,6 @@ class KernelStaticFast(KernelCommon):
                 print("Accumulated numerical errors have become too large;")
                 print("No more layers will be constructed; automatic shutdown")
                 break
-
 
         # free mem of centerset
         del centerset
@@ -127,6 +122,51 @@ class KernelStaticFast(KernelCommon):
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
+    def add_layer(self):
+        """ constructs an additional layer for an existing tiling """
+
+        newpolygons = []
+
+        centerset = set()
+        for pgon in tiling:
+            center = np.round(pgon.centerP(), tiling.dgts)
+            centerset.add(center)
+
+        for pgon in tiling:
+            # iterate over every vertex of pgon
+            for vert_ind in range(tiling.p):
+                # iterate over all polygons touching this very vertex
+                for rot_ind in range(tiling.q):
+                    # compute center and angle
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * tiling.qhi, pgon.centerP())
+
+                    cangle = math.degrees(math.atan2(center.imag, center.real))
+                    cangle += 360 if cangle < 0 else 0
+
+                    # cut away cells outside the fundamental sector
+                    # allow some tolerance at the upper boundary
+                    # try adding to centerlist; it is a set() and takes care of duplicates
+                    lenA = len(centerset)
+                    center = np.round(center, tiling.dgts)  # CAUTION
+                    centerset.add(center)
+                    lenB = len(centerset)
+
+                    # this tells us whether an element has actually been added
+                    if lenB > lenA:
+                        # create copy
+                        polycopy = copy.deepcopy(pgon)
+
+                        # generate adjacent polygon
+                        adj_pgon = tiling.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon.find_angle()
+
+                        # add corresponding poly to large list
+                        newpolygons.append(adj_pgon)
+
+        tiling.polygons += newpolygons
+
+
+        
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
         """

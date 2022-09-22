@@ -189,6 +189,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
         weierstrass[:, 2] *= 2
         return weierstrass
 
+
+
+
     # Helper ###########################################################################################################
     # Basics ###########################################################################################################
 
@@ -201,6 +204,11 @@ class KernelGenerativeReflection(AbstractKernelBase):
         return util.generate(self.geo_atts, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.degtol,
                              self.mangle)
+
+
+    def add_layer(self):
+        raise NotImplementedError('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
+
 
     def map_layers(self):
         """
@@ -241,6 +249,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
             for vertex in to_add:
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
+
 
     def map_neighbors(self, tol: float = 1e-5):
         """
@@ -342,6 +351,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                     continue
                 self._neighbors[i, c] = index
                 c += 1
+
 
     def check_integrity(self):
         """

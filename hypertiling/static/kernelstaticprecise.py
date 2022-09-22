@@ -112,3 +112,49 @@ class KernelStaticPrecise(KernelCommon):
                 if centerset_extra.fp_has(center):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
+
+
+
+    def add_layer(self):
+        """ constructs an additional layer for an existing tiling """
+
+        newpolygons = []
+
+        # prepare sets which will contain the center coordinates
+        # this is used for uniqueness checks later
+        if self.center == "vertex":
+
+            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+                                            math.atan2(self.fund_poly.verticesP[self.p].imag,
+                                                        self.fund_poly.verticesP[self.p].real))
+        else:
+            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
+
+        # fill the centerarray with already existing centers
+        for pgon in tiling:
+            center = np.round(pgon.centerP(), tiling.dgts)
+            centerarray.add(center)
+
+        for pgon in tiling:
+            # iterate over every vertex of pgon
+            for vert_ind in range(tiling.p):
+                # iterate over all polygons touching this very vertex
+                for rot_ind in range(tiling.q):
+                    # compute center and angle
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
+                    cangle = math.degrees(math.atan2(center.imag, center.real))
+                    cangle += 360 if cangle < 0 else 0
+                    if not centerarray.fp_has(center):  # if it's a new polygon
+                        centerarray.add(center)
+
+                        # create copy
+                        polycopy = copy.deepcopy(pgon)
+
+                        # generate adjacent polygon
+                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon.find_angle()
+
+                        # add corresponding poly to large list
+                        newpolygons.append(adj_pgon)
+
+        tiling.polygons += newpolygons

@@ -141,9 +141,10 @@ class HyperbolicTilingBase(AbstractKernelBase):
         center : str
             decides whether the fundamental cell is construct centered at the origin ("cell", default) 
             or with the origin being one of its vertices ("vertex")
-
-
+        rotate_by : float
+            angle of rotation of the fundamental polygon, default is the magic angle mangle
         """
+
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
