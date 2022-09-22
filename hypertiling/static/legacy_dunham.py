@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 # relative imports
-from .kernelbase import HyperbolicTilingBase
+from .static_base import KernelStaticBase
 from .hyperpolygon import HyperPolygon
 from ..transformation import p2w
 from ..arraytransformation import mfull_point
@@ -34,7 +34,7 @@ def transformW_site(pointP: np.complex128, transformation):
     return w2p_xyt(transformation @ p2w_xyt(pointP))
 
 
-class KernelLegacyDunham(HyperbolicTilingBase):
+class KernelLegacyDunham(KernelStaticBase):
     """
     Original construction algorithm by D. Dunham (1982)
     works for every valid combination {p,q}

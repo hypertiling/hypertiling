@@ -1,7 +1,7 @@
 from typing import Callable, Any, List
 import numpy as np
-import hypertiling.generative.reflectionkernel_util as util
-from hypertiling.generative.reflectionkernel_util import PI2
+import hypertiling.generative.generative_reflection_util as util
+from hypertiling.generative.generative_reflection_util import PI2
 from hypertiling.kernel_abc import AbstractKernelBase
 import hypertiling.arraytransformation as trans
 import hypertiling.distance as distance

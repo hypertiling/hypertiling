@@ -1,13 +1,13 @@
 # relative imports
-from .static.kernelstaticprecise import KernelStaticPrecise
-from .static.kernelstaticfast import KernelStaticFast
-from .static.kernellegacydunham import KernelLegacyDunham
-from .generative.reflectionkernel import KernelGenerativeReflection
+from .static.static_rotational_improved import KernelStaticRotationalImproved
+from .static.static_rotational import KernelStaticRotational
+from .static.legacy_dunham import KernelLegacyDunham
+from .generative.generative_reflection import KernelGenerativeReflection
 
-KERNELS = {"SFK": KernelStaticFast,
-           "SPK": KernelStaticPrecise,
-           "Dunham": KernelLegacyDunham,
-           "GRK": lambda p, q, n, center, **kwargs: KernelGenerativeReflection(p, q, n, **kwargs)}
+KERNELS = {"SR": KernelStaticRotational,
+           "SRI": KernelStaticRotationalImproved,
+           "DUN": KernelLegacyDunham,
+           "GR": lambda p, q, n, center, **kwargs: KernelGenerativeReflection(p, q, n, **kwargs)}
 
 
 # factory pattern allows to select between kernels

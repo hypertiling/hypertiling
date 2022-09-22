@@ -32,14 +32,14 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_generate(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel="GRK")
+            tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel="GR")
             # this is basically the only test we can do and it only will scream when duplicates are found
             with PrintTest() as stream:
                 tiling.check_integrity()
 
     def test_find(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GRK")
+            tiling = HyperbolicTiling(*combi, kernel="GR")
 
             for index in range(tiling.length - 1):
                 center = tiling[index][0]
@@ -63,7 +63,7 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GRK")
+            tiling = HyperbolicTiling(*combi, kernel="GR")
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
 
@@ -104,7 +104,7 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GRK")
+            tiling = HyperbolicTiling(*combi, kernel="GR")
             tiling.map_neighbors()
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
@@ -113,7 +113,7 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors_list(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GRK")
+            tiling = HyperbolicTiling(*combi, kernel="GR")
             neighbors_list = tiling.get_neighbors_list()  # calls tiling.map_neighbors
             for index in range(tiling.length):
                 neighbors = neighbors_list[index]
@@ -122,7 +122,7 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GRK")
+            tiling = HyperbolicTiling(*combi, kernel="GR")
 
             # check for duplicates
             old = tiling._sector_polys[-1, 0]
@@ -179,5 +179,5 @@ class TestReflectTiling(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    tiling = HyperbolicTiling(7, 3, 2, kernel="GRK")
+    tiling = HyperbolicTiling(7, 3, 2, kernel="GR")
     unittest.main()

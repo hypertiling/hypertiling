@@ -3,21 +3,21 @@ import math
 import copy
 
 # relative imports
-from .kernelbase import KernelCommon
+from .static_base import KernelRotationalCommon
 from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull_point
 from ..util import fund_radius
-from .kernelstaticprecise_util import CenterContainer
-from .kernelbase import MANGLE
+from .static_rotational_improved_util import CenterContainer
+from .static_base import MANGLE
 
 
-class KernelStaticPrecise(KernelCommon):
+class KernelStaticRotationalImproved(KernelRotationalCommon):
     """
     High precision kernel written by F. Goth
     """
 
     def __init__(self, p, q, n, center):
-        super(KernelStaticPrecise, self).__init__(p, q, n, center)
+        super(KernelStaticRotationalImproved, self).__init__(p, q, n, center)
         self.center = center
 
 

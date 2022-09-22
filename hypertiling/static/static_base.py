@@ -15,7 +15,7 @@ MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
-class HyperbolicTilingBase(AbstractKernelBase):
+class KernelStaticBase(AbstractKernelBase):
     """
     Base class of a hyperbolic tiling object
 
@@ -166,13 +166,13 @@ class HyperbolicTilingBase(AbstractKernelBase):
         return polygon
 
 
-class KernelCommon(HyperbolicTilingBase):
+class KernelRotationalCommon(KernelStaticBase):
     """
     Commonalities
     """
 
     def __init__(self, p, q, n, center):
-        super(KernelCommon, self).__init__(p, q, n, center)
+        super(KernelRotationalCommon, self).__init__(p, q, n, center)
 
     def replicate(self):
         """
