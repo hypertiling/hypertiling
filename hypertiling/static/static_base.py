@@ -5,7 +5,6 @@ import copy
 from ..kernel_abc import AbstractKernelBase
 from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
-from ..transformation import p2w, moeb_rotate_trafo, mymoeb
 from ..util import fund_radius
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})

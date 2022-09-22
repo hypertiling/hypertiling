@@ -4,9 +4,6 @@ import copy
 # relative imports
 from .static_base import KernelStaticBase
 from .hyperpolygon import HyperPolygon
-from ..transformation import p2w
-from ..arraytransformation import mfull_point
-from ..util import fund_radius
 
 from ..representations import p2w_xyt, w2p_xyt
 
