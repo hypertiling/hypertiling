@@ -2,6 +2,7 @@ import numpy as np
 import math
 import copy
 # relative imports
+from ..kernel_abc import AbstractKernelBase
 from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
 from ..transformation import p2w, moeb_rotate_trafo, mymoeb
@@ -14,7 +15,7 @@ MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
-class HyperbolicTilingBase:
+class HyperbolicTilingBase(AbstractKernelBase):
     """
     Base class of a hyperbolic tiling object
 
@@ -39,18 +40,19 @@ class HyperbolicTilingBase:
     """
 
     def __init__(self, p, q, nlayers, center="cell"):
+        super().__init__()
 
         # main attributes
-        self.p = p                  # number of edges (and thus number of vertices) per polygon
-        self.q = q                  # number of polygons that meet at each vertex
-        self.nlayers = nlayers      # layers of the tessellation
-        self.center = center        # tiling can be centered around a "cell" (default) or a "vertex"
+        self.p = p  # number of edges (and thus number of vertices) per polygon
+        self.q = q  # number of polygons that meet at each vertex
+        self.nlayers = nlayers  # layers of the tessellation
+        self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
 
         # symmetry angles
-        self.phi = 2*math.pi/self.p  # angle of rotation that leaves the lattice invariant when cell centered
-        self.qhi = 2*math.pi/self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-        self.degphi = 360/self.p   # self.phi in degrees
-        self.degqhi = 360/self.q   # self.qhi in degrees
+        self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
+        self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
+        self.degphi = 360 / self.p  # self.phi in degrees
+        self.degqhi = 360 / self.q  # self.qhi in degrees
 
         # technical parameters 
         # do not change, unless you know what you are doing!)
@@ -116,9 +118,18 @@ class HyperbolicTilingBase:
         Returns the angle to the center of the polygon at index.
         Time-complexity: O(1)
         :param index: int = index of the polygon
-        :return: np.complex128 = center of the polygon
+        :return: float = angle of the polygon
         """
         return self.polygons[index].angle
+
+    def get_layer(self, index: int) -> int:
+        """
+        Returns the layer to the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: int = layer of the polygon
+        """
+        return self.polygons[index].layer
 
     def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
         """
@@ -138,8 +149,8 @@ class HyperbolicTilingBase:
         polygon = HyperPolygon(self.p)
 
         for i in range(self.p):
-            z = complex(math.cos(i*self.phi), math.sin(i*self.phi))  # = exp(i*phi)
-            z = z/abs(z)
+            z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
+            z = z / abs(z)
             z = r * z
             polygon.verticesP[i] = z
 
@@ -151,7 +162,7 @@ class HyperbolicTilingBase:
             polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
             polygon.angle += 360 if polygon.angle < 0 else 0
 
-        mrotate(self.p, -2*math.pi/360*rotate_by, polygon.verticesP)
+        mrotate(self.p, -2 * math.pi / 360 * rotate_by, polygon.verticesP)
 
         return polygon
 
@@ -184,7 +195,7 @@ class KernelCommon(HyperbolicTilingBase):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
-        mfull(self.p, k*self.qhi, ind, polygon.verticesP)
+        mfull(self.p, k * self.qhi, ind, polygon.verticesP)
         return polygon
 
     # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
@@ -200,10 +211,10 @@ class KernelCommon(HyperbolicTilingBase):
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                mrotate(self.p, -p*angle, pgon.verticesP)
+                mrotate(self.p, -p * angle, pgon.verticesP)
                 pgon.angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
                 pgon.angle += 360 if pgon.angle < 0 else 0
-                pgon.sector = math.floor(pgon.angle/(360/k))
+                pgon.sector = math.floor(pgon.angle / (360 / k))
                 self.polygons.append(pgon)
 
         # assign each polygon a unique number
@@ -218,10 +229,10 @@ class KernelCommon(HyperbolicTilingBase):
         for poly in self.polygons:
             poly.edges = []
             verts = round(poly.verticesP[0:-1], digits)
-        
+
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):
-                poly.edges.append((verts[i], verts[i+1]))
+                poly.edges.append((verts[i], verts[i + 1]))
             poly.edges.append((verts[-1], verts[0]))
 
     def rotate(self, angle, deg=False):
@@ -240,11 +251,11 @@ class KernelCommon(HyperbolicTilingBase):
         """
 
         if deg:
-            angle = angle * math.pi / 180 
-        
+            angle = angle * math.pi / 180
+
         for poly in self.polygons:
             mrotate(self.p, angle, poly.verticesP)
-            
+
     def translate(self, z):
         """ 
         Translates the whole tiling so that the point z lays in the origin.
@@ -256,6 +267,6 @@ class KernelCommon(HyperbolicTilingBase):
             The point which will be translated to the origin.
             
         """
-        
+
         for poly in self.polygons:
             morigin(self.p, -z, poly.verticesP)

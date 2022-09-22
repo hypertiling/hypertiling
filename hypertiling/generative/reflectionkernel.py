@@ -2,6 +2,7 @@ from typing import Callable, Any, List
 import numpy as np
 import hypertiling.generative.reflectionkernel_util as util
 from hypertiling.generative.reflectionkernel_util import PI2
+from hypertiling.kernel_abc import AbstractKernelBase
 import hypertiling.arraytransformation as trans
 import hypertiling.distance as distance
 
@@ -18,7 +19,7 @@ m = m(p, q, n)
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
-class KernelGenerativeReflection:
+class KernelGenerativeReflection(AbstractKernelBase):
     """
     Creates the hyperbolic tiling.
     """
@@ -34,6 +35,7 @@ class KernelGenerativeReflection:
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
         """
+        super().__init__()
 
         # grid attributes
         if not ((p - 2) * (q - 2) > 4):
