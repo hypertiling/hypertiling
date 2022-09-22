@@ -259,5 +259,3 @@ class KernelCommon(HyperbolicTilingBase):
         
         for poly in self.polygons:
             morigin(self.p, -z, poly.verticesP)
-
-

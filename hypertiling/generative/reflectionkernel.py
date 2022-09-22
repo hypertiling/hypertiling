@@ -187,6 +187,9 @@ class KernelGenerativeReflection:
         weierstrass[:, 2] *= 2
         return weierstrass
 
+
+
+
     # Helper ###########################################################################################################
     # Basics ###########################################################################################################
 
@@ -202,8 +205,8 @@ class KernelGenerativeReflection:
 
 
     def add_layer(self):
-        print('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
-        return
+        raise NotImplementedError('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
+
 
     def map_layers(self):
         """
@@ -244,6 +247,7 @@ class KernelGenerativeReflection:
 
             for vertex in to_add:
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
+
 
     def map_neighbors(self, tol: float = 1e-5):
         """
@@ -345,6 +349,7 @@ class KernelGenerativeReflection:
                     continue
                 self._neighbors[i, c] = index
                 c += 1
+
 
     def check_integrity(self):
         """
