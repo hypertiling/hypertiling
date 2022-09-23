@@ -1,11 +1,11 @@
 import numpy as np
 import math
 import copy
-# relative imports
 from ..kernel_abc import AbstractKernelBase
 from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
 from ..util import fund_radius
+from ..geodesics import geodesic_midpoint
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 # used as an angular offset, rotates the entire construction by a bit during construction
@@ -268,3 +268,62 @@ class KernelRotationalCommon(KernelStaticBase):
 
         for poly in self.polygons:
             morigin(self.p, -z, poly.verticesP)
+
+
+
+
+
+
+    def refine_lattice(self, iterations):
+        """ 
+        Refine a triangular lattice, by subdividing each triangle into four new polygons
+        Note that new polygon are not congruent anymore!
+        
+        Parameters
+        ----------
+        
+        iterations: int
+            Determines how many times the lattice will be refined; for each iteration the
+            total number of polygons will be multiplied by a factor of four
+            
+        """
+
+        if self.p > 3:
+            raise ValueError("[hypertiling] Error: Refinements only work for triangular tilings!")
+        
+        for _ in range(iterations):
+            p = self.p # we use this quite frequently, hence the short form
+            newpolygons = []  # stores the new polygons
+            for num, pgon in enumerate(self.polygons):  # find the new vertices of each polygon
+                ref_vertices = []  # stores newly found vertices through refinement
+                # loop through polygon edges
+                for vrtx in range(p):
+                    # find geodesic midpoint
+                    zm = geodesic_midpoint( pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p] )
+                    ref_vertices.append(zm)
+
+
+                # one "mother" triangle bears 4 "children" triangles, one in its mid
+                # and three that each share one vertex with their mother
+
+                child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
+                for i in range(p):
+                    child.verticesP[i] = ref_vertices[i]
+                child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
+                child.idx = 4*num+1  # assigning a unique number
+                newpolygons.append(child)
+
+                for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
+                    child = HyperPolygon(p)  # these are the non-center children
+                    vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
+                    for i in range(p):
+                        child.verticesP[i] = vP[i]
+                    center_x = np.sum(np.real(child.verticesP[:p]))/p  # trick: average over the xs and ys of the vertices to get
+                    center_y = np.sum(np.imag(child.verticesP[:p]))/p  # ... an approximate value for centerP
+                    child.verticesP[-1] = complex(center_x, center_y)
+                    child.idx = (4*num+1)+1+vrtx  # assign a unique number
+                    newpolygons.append(child)
+
+            self.polygons = newpolygons
+        return
+
