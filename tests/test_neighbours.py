@@ -7,7 +7,7 @@ class TestCore(unittest.TestCase):
     def test_num_neighbours(self):
         nlayer = 4
         p, q = 3, 7
-        kernels = ["SFK", "SPK"]
+        kernels = ["SR", "SRI"]
         nn_algorithms = ["optimized"]
         for k in kernels:
             for which in nn_algorithms:
@@ -23,7 +23,7 @@ class TestCore(unittest.TestCase):
 
         nlayer = 4
         p, q = 7, 3
-        kernels = ["SFK", "SPK"]
+        kernels = ["SR", "SRI"]
         nn_algorithms = ["optimized"]
         for k in kernels:
             for which in nn_algorithms:

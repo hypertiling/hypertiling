@@ -7,7 +7,7 @@ class TestCore(unittest.TestCase):
     def test_num_cells_cell_centered(self):
         l = 5
         p, q = 3, 7
-        kernels = ["SFK", "SPK"]
+        kernels = ["SR", "SRI"]
         for k in kernels:
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
