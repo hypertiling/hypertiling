@@ -2,7 +2,7 @@ import unittest
 from tests.test_util import *
 from hypertiling.core import HyperbolicTiling
 import hypertiling.geodesics as geos
-import hypertiling.generative.reflectionkernel_util as util
+import hypertiling.generative.generative_reflectionkernel_util as util
 import random
 import numpy as np
 
