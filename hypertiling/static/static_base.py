@@ -64,7 +64,7 @@ class KernelStaticBase(AbstractKernelBase):
         self.polygons = []
 
         if center not in ['cell', 'vertex']:
-            raise ValueError('Invalid value for argument "center"!')
+            raise ValueError('[hypertiling] Error: Invalid value for argument "center"!')
 
     def __getitem__(self, idx):
         return self.polygons[idx]

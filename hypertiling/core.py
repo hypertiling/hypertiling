@@ -11,7 +11,7 @@ KERNELS = {"SR": KernelStaticRotational,
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SPK", **kwargs):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 
