@@ -7,7 +7,7 @@ from .generative.generative_reflection import KernelGenerativeReflection
 KERNELS = {"SR": KernelStaticRotational,
            "SRI": KernelStaticRotationalImproved,
            "DUN": KernelLegacyDunham,
-           "GR": lambda p, q, n, center, **kwargs: KernelGenerativeReflection(p, q, n, **kwargs)}
+           "GR": KernelGenerativeReflection}
 
 
 # factory pattern allows to select between kernels
@@ -36,12 +36,33 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", **kwargs):
     if p > 20 or q > 20 and n > 5:
         print("[hypertiling] Warning: The lattice might become very large with your parameter choice!")
 
-    if kernel not in KERNELS:
-        raise KeyError("[hypertiling] Error: No valid kernel specified")
 
-    if kernel == "Dunham":
-        print(
-            "[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
+    if "radius" in kwargs and kwargs["radius"] is not None:
+        print("you have defined a cut-off radius ... make sure you set n large enough ...")
+
+
+
+
+    if kernel == "GR":
+        print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
+        return KERNELS[kernel](p, q, n, **kwargs)
+
+    elif kernel == "SR" or kernel == "SRI":
+        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        return KERNELS[kernel](p, q, n, center, **kwargs)
+
+    elif kernel == "DUN":
+        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
         if center == "vertex":
             print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
-    return KERNELS[kernel](p, q, n, center, **kwargs)
+        return KERNELS[kernel](p, q, n, center, **kwargs)     
+
+    #elif ... (further kernels)
+    
+    else:
+        raise KeyError("[hypertiling] Error: No valid kernel specified")
+
+    
+    
+

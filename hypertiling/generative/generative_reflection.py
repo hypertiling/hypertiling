@@ -35,7 +35,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
         """
-        super().__init__()
+        super().__init__(p, q, n)
 
         # grid attributes
         if not ((p - 2) * (q - 2) > 4):

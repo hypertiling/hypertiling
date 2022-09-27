@@ -38,14 +38,15 @@ class KernelStaticBase(AbstractKernelBase):
 
     """
 
-    def __init__(self, p, q, nlayers, center="cell"):
-        super().__init__()
+    def __init__(self, p, q, nlayers, center="cell", radius=None):
+        super().__init__(p, q, nlayers)
 
         # main attributes
         self.p = p  # number of edges (and thus number of vertices) per polygon
         self.q = q  # number of polygons that meet at each vertex
         self.nlayers = nlayers  # layers of the tessellation
         self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
+        self.radius = radius # a cut-off radius (implement me!)
 
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
@@ -56,9 +57,6 @@ class KernelStaticBase(AbstractKernelBase):
         # technical parameters 
         # do not change, unless you know what you are doing!)
         self.degtol = 1  # sector boundary tolerance
-
-        # # fundamental polygon of the tiling
-        # self.fund_poly = self.create_fundamental_polygon(center)
 
         # prepare list to store polygons 
         self.polygons = []
@@ -171,8 +169,8 @@ class KernelRotationalCommon(KernelStaticBase):
     Commonalities
     """
 
-    def __init__(self, p, q, n, center):
-        super(KernelRotationalCommon, self).__init__(p, q, n, center)
+    def __init__(self, p, q, n, center, radius):
+        super(KernelRotationalCommon, self).__init__(p, q, n, center, radius)
 
     def replicate(self):
         """

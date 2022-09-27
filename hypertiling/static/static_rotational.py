@@ -13,9 +13,9 @@ from .static_base import MANGLE
 class KernelStaticRotational(KernelRotationalCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
-    def __init__ (self, p, q, n, center):
-        super(KernelStaticRotational, self).__init__(p, q, n, center)
-        self.center = center
+    def __init__ (self, p, q, n, center, radius=None):
+        super(KernelStaticRotational, self).__init__(p, q, n, center, radius)
+        #self.center = center # automatically assigned from super class?
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 

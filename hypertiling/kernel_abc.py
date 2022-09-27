@@ -1,8 +1,14 @@
 import abc
 import numpy as np
-
+from typing import Optional
 
 class AbstractKernelBase(abc.ABC):
+
+    @abc.abstractmethod
+    def __init__(self, p: int, q: int, n: int, radius: Optional[float] = None):
+        pass
+
+
 
     @abc.abstractmethod
     def get_layer(self, index: int) -> int:
