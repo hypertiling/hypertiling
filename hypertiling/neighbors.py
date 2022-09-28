@@ -9,24 +9,16 @@ from hypertiling.transformation import p2w
 
 
 # wrapper to provide a nicer interface
-def find(tiling, nn_dist=None, which="optimized", index_from_zero=True, verbose=False):
-    if nn_dist == None:
-        print("[hypertiling] No search radius given;\
-            Assuming lattice spacing of the tessellation!")
-        nn_dist = lattice_spacing_weierstrass(self.p, self.q)
+def find(tiling, radius=None, which="radius-optimized", index_from_zero=True, verbose=False):
+    if radius == None:
+        print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
+        radius = lattice_spacing_weierstrass(tiling.p, tiling.q)
 
-    if which == "optimized_slice":
-        retval = find_nn_optimized_slice(tiling, nn_dist)  # fastest
-    elif which == "optimized":
-        retval = find_nn_optimized(tiling, nn_dist)
-    elif which == "brute_force":
-        retval = find_nn_brute_force(tiling, nn_dist)  # use for debug
-    elif which == "slice":
-        retval = find_nn_slice(tiling, nn_dist)
-    elif which == "edge_map":
-        retval = find_nn_edge_map_optimized(tiling)
-    elif which == "edge_map_brute_force":
-        retval = find_nn_edge_map_brute_force(tiling)
+    if which == "radius-optimized" or which == "RO":
+        retval = find_ro(tiling, radius)
+    elif which == "brute-force-radius" or which == "BFR":
+        retval = find_bfr(tiling, radius)
+
 
     else:
         print("[Hypertiling] Error:", which, " is not a valid algorithm!")
@@ -109,7 +101,7 @@ def find_ro(tiling, radius, eps=1e-5):
 
     # prepare matrix containing all center coordinates
     ncells = len(tiling)
-    v = np.zeros(ncells, 3))
+    v = np.zeros((ncells, 3))
     for i in range(ncells):
         v[i] = p2w(tiling.get_center(i))
 
