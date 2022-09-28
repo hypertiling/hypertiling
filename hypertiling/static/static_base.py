@@ -644,19 +644,19 @@ class KernelRotationalCommon(KernelStaticBase):
             print("[hypertiling] No search radius given; Assuming fundamental edge distance of the tessellation!")
             nn_dist = lattice_spacing_weierstrass(self.p, self.q)
 
-
+        # Brute Force Radius (BFR)
         if which == "brute-force-radius" or which == "BFR":
             return self._get_nbrs_bfr(nn_dist)
 
-
+        # Radius Optimized (RO)
         elif which == "radius-optimized" or which == "RO":
             return self._get_nbrs_ro(nn_dist)
 
-
+        # Radius Slice (RS)
         elif which == "radius-slice" or which == "RS":
             return self._get_nbrs_rs(nn_dist)
 
-
+        # Radius Optimized Slice (ROS)
         elif which == "radius-optimized-slice" or which == "ROS" or which == "default":
             if self.center == "vertex":
                 print("[hypertiling] Warning: Algorithm \"radius-optimized-slice\" (ROS) is currently not available for vertex-centered tilings!")
@@ -665,11 +665,12 @@ class KernelRotationalCommon(KernelStaticBase):
             else:
                 return self._get_nbrs_ros(nn_dist)
 
-
+        # Edge Map Optimized (EMO)
         elif which == "edge-map-optimized" or which == "EMO":
             return self._get_nbrs_emo()
 
 
+        # Edge Map Brute Force (EMBF)
         elif which == "edge-map-brute-force" or which == "EMBF":
             return self._get_nbrs_embf()
 
