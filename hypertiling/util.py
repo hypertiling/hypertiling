@@ -5,11 +5,24 @@ from .distance import weierstrass_distance
 
 
 
-# radius of the fundamental (and every other) polygon
+# return the hyperbolic/geodesic lattice spacing, i.e. the edge length of any cell
+def lattice_spacing_weierstrass(p, q):
+    num = math.cos(math.pi/q)
+    denom = math.sin(math.pi/p)
+    return 2*math.acosh(num / denom)
+
+# radius of the fundamental polygon in the Poincare disk
 def fund_radius(p, q):
-    num = math.cos(math.pi*(p+q)/p/q) #np.cos(np.pi / p + np.pi / q)
-    denom = math.cos(math.pi*(q-p)/p/q)#np.cos(np.pi / p - np.pi / q)
+    num = math.cos(math.pi*(p+q)/p/q)  #np.cos(np.pi / p + np.pi / q)
+    denom = math.cos(math.pi*(q-p)/p/q) #np.cos(np.pi / p - np.pi / q)
     return np.sqrt(num / denom)
+
+# geodesic radius (i.e. distance between center and any vertex) of cells in a regular p,q tiling
+def cell_radius_weierstrass(p,q):
+    # is nothing but the lattice spacing of the dual lattice
+    return lattice_spacing_weierstrass(q,p)
+
+
 
 
 # computes the variance of the centers of the polygons in the outmost layer
