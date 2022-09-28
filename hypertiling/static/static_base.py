@@ -335,20 +335,6 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
-    def _get_nbrs_bfr(self, nn_dist, eps=1e-8):
-
-        retlist = []  # prepare list
-        for poly1 in self.polygons:  # loop over polygons
-            sublist = []
-            for poly2 in self.polygons:
-                dist = weierstrass_distance(poly1.centerW(), poly2.centerW())  # compare distances
-                if dist < nn_dist + eps:  # add something to nn_dist to avoid rounding problems
-                    if poly1.idx is not poly2.idx:  # avoiding finding A as neighbor of A
-                        sublist.append(poly2.idx)
-            retlist.append(sublist)
-        return retlist
-
-
 
 
     def _get_nbrs_ros(self, nn_dist, eps=1e-5):
@@ -471,74 +457,6 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
-    # finds nearest neighbours by comparing all-to-all distances
-    # however, making sure everything can be fully vectorized by numpy we gain a significant speed-up
-    def _get_nbrs_ro(self, nn_dist, eps=1e-5):
-        # prepare matrix containing all center coordiantes
-        v = np.zeros((len(self.polygons), 3))
-        for i, poly in enumerate(self.polygons):
-            v[i] = poly.centerW()
-
-        # add something to nn_dist to avoid rounding problems
-        # does not need to be particularly small
-        searchdist = nn_dist + eps
-        searchdist = math.cosh(searchdist)
-
-        # prepare list
-        retlist = []
-
-        # loop over polygons
-        for i, poly in enumerate(self.polygons):
-            w = poly.centerW()
-            dists = lorentzian_distance(v, w)
-            dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
-            indxs = np.where(dists < searchdist)[0]  # radius search
-            selff = np.argwhere(indxs == i)  # find self
-            indxs = np.delete(indxs, selff)  # delete self
-            nums = [self.polygons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
-            retlist.append(nums)
-        return retlist
-
-
-
-
-    # finds nearest neighbors by exploiting the discrete rotational symmetry of the lattice
-    # the neighbors of a polygon in some sector s can be found by adding the number of polygons 
-    # in that sector to the corresponding number of each neighbor of the polygon at the same position 
-    # in sector-s. Thus, only in sector one has to find neighbors, the neighbors of every other polygon can be calculated
-    def _get_nbrs_rs(self, nn_dist, eps=1e-5):
-        pps = int((len(slices) - 1) / 3) + 1  # polygons per sector, incl. center polygon
-        p = slices[0].p
-        total_num = p * (pps - 1) + 1
-        nn_sector = np.zeros(shape=(pps, p + 1), dtype=np.int32)
-        col = 1
-        for row, polygon in enumerate(slices):
-            if polygon.sector == 0:  # find nn only for polygons of the first 1/p-slice
-                nn_sector[row, 0] = row + 1
-                for pgon in slices:
-                    dist = weierstrass_distance(pgon.centerW(), polygon.centerW())
-                    if polygon.centerP != pgon.centerP and np.round(dist, 9) <= np.round(nn_dist, 9): # TODO: use digits
-                        nn_sector[row, col] = pgon.idx
-                        col += 1
-                col = 1
-
-        ones = np.ones_like(nn_sector)
-        neighbors = np.zeros(shape=(total_num, p + 1), dtype=np.int32)
-        neighbors[:pps, :p + 1] = nn_sector
-        nn_of_first = [2]
-        for n in range(1, p):
-            mat = nn_sector + n * (pps - 1) * ones
-            nn_of_first.append(nn_of_first[-1] + (pps - 1))
-            for ind, row in enumerate(mat[1:, :]):
-                row[1] = 1 if ind == 0 else row[1]
-                row[:] = [elem % total_num + 1 if elem > total_num else elem for elem in row]
-                row[:] = [0 if elem == n * (pps - 1) else elem for elem in row]
-                neighbors[1 + ind + n * (pps - 1), :] = row
-        neighbors[0, 1:] = nn_of_first
-        return neighbors
-
-
-
     # find neighbours by identifying corresponding edges among polygons
     # this is a coordinate-free algorithm, it uses only the graph structure
     # can probably be further improved
@@ -633,35 +551,21 @@ class KernelRotationalCommon(KernelStaticBase):
         return nbrs
 
 
-    def show_nbr_rules(): # TODO
-        return 0
 
+    def get_nbrs_cell(self, index: int, which="default"):
+        raise NotImplemented("[hypertiling] Error: This feature is not implemented!") # TODO: implement me
+    
 
-
-    def get_nbrs(self, which="default", nn_dist=None):
+    def get_nbrs(self, which="default"):
 
         if nn_dist == None:
-            print("[hypertiling] No search radius given; Assuming fundamental edge distance of the tessellation!")
+            print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
             nn_dist = lattice_spacing_weierstrass(self.p, self.q)
 
-        # Brute Force Radius (BFR)
-        if which == "brute-force-radius" or which == "BFR":
-            return self._get_nbrs_bfr(nn_dist)
-
-        # Radius Optimized (RO)
-        elif which == "radius-optimized" or which == "RO":
-            return self._get_nbrs_ro(nn_dist)
-
-        # Radius Slice (RS)
-        elif which == "radius-slice" or which == "RS":
-            return self._get_nbrs_rs(nn_dist)
-
         # Radius Optimized Slice (ROS)
-        elif which == "radius-optimized-slice" or which == "ROS" or which == "default":
+        if which == "radius-optimized-slice" or which == "ROS" or which == "default":
             if self.center == "vertex":
-                print("[hypertiling] Warning: Algorithm \"radius-optimized-slice\" (ROS) is currently not available for vertex-centered tilings!")
-                print("Fallting back to algorithm \"radius-optimized\" (RO)")
-                return self._get_nbrs_ro(nn_dist)
+                raise NotImplementedError("[hypertiling] Warning: Algorithm \"radius-optimized-slice\" (ROS) currently does not support vertex-centered tilings!")
             else:
                 return self._get_nbrs_ros(nn_dist)
 
