@@ -1,32 +1,27 @@
 import numpy as np
-from typing import Callable, Any, List
+from typing import List
 import math
-from hypertiling.check_numba import check_numba
 from hypertiling.distance import weierstrass_distance, lorentzian_distance
 from hypertiling.util import lattice_spacing_weierstrass
 from hypertiling.transformation import p2w
 
 
-
-
 # wrapper to provide a nicer interface
 def find(tiling, radius=None, which="radius-optimized"):
-    if radius == None:
+    if radius is None:
         print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
         radius = lattice_spacing_weierstrass(tiling.p, tiling.q)
 
     if which == "radius-optimized" or which == "RO":
         retval = find_ro(tiling, radius)
-    
+
     elif which == "brute-force-radius" or which == "BFR":
         retval = find_bfr(tiling, radius)
-    
+
     else:
         raise ValueError("[Hypertiling] Error:", which, " is not a valid algorithm!")
 
     return retval
-
-
 
 
 def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
@@ -67,7 +62,6 @@ def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
     return retlist
 
 
-
 def find_ro(tiling, radius, eps=1e-5):
     """
     Get adjacent polygons for the entire tiling through radius search
@@ -91,9 +85,7 @@ def find_ro(tiling, radius, eps=1e-5):
         List[List[int]] containing neighbour indices of every cell.
     """
 
-
-
-    # prepare array containing all center coordinates 
+    # prepare array containing all center coordinates
     # in Weierstrass representation
     ncells = len(tiling)
     v = np.zeros((ncells, 3))
@@ -118,6 +110,3 @@ def find_ro(tiling, radius, eps=1e-5):
         indxs = np.delete(indxs, selff)  # delete self
         retlist.append(list(indxs))
     return retlist
-
-
-
