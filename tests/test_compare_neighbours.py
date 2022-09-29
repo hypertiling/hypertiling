@@ -1,6 +1,6 @@
 import unittest
 from hypertiling import HyperbolicTiling
-from hypertiling.static.neighbours import find
+from hypertiling.neighbors import find
 
 print("Testing different neighbour search algorithms against each other")
 
@@ -17,10 +17,10 @@ class TestCore(unittest.TestCase):
             T = HyperbolicTiling(p, q, nlayer, kernel=kernel, center="cell")
             T.generate()
 
-            nbrs1 = find(T, which="optimized")
-            nbrs2 = find(T, which="optimized_slice")
+            nbrs1 = find(T, which="radius-optimized")
+            nbrs2 = T.get_nbrs_radius_optimized_slice()
 
-            self.assertTrue(nbrs1 == nbrs2)
+            self.assertEqual(nbrs1, nbrs2)
 
         kernel = "SRI"
 
@@ -31,10 +31,10 @@ class TestCore(unittest.TestCase):
             T = HyperbolicTiling(p, q, nlayer, kernel=kernel, center="cell")
             T.generate()
 
-            nbrs1 = find(T, which="optimized")
-            nbrs2 = find(T, which="brute_force")
+            nbrs1 = find(T, which="radius-optimized")
+            nbrs2 = find(T, which="brute-force-radius")
 
-            self.assertTrue(nbrs1 == nbrs2)
+            self.assertEqual(nbrs1, nbrs2)
 
 
 if __name__ == '__main__':

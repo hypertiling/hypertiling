@@ -346,7 +346,7 @@ class KernelRotationalCommon(KernelStaticBase):
     # Radius Optimized Slice (ROS)
     def get_nbrs_radius_optimized_slice(self, radius=None, eps=1e-5):
         """
-        Uses both the benefits of of numpy vectorization (used also in neighbours.find_ro) 
+        Uses both the benefits of of numpy vectorization (used also in neighbours.find_radius_optimized)
         and furthermore applies the radius search only to a p-fold sector of the tiling
 
         currently only working for cell-centered tilings, although there have already been 

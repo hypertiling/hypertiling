@@ -13,10 +13,10 @@ def find(tiling, radius=None, which="radius-optimized"):
         radius = lattice_spacing_weierstrass(tiling.p, tiling.q)
 
     if which == "radius-optimized" or which == "RO":
-        retval = find_ro(tiling, radius)
+        retval = find_radius_optimized(tiling, radius)
 
     elif which == "brute-force-radius" or which == "BFR":
-        retval = find_bfr(tiling, radius)
+        retval = find_brute_force(tiling, radius)
 
     else:
         raise ValueError("[Hypertiling] Error:", which, " is not a valid algorithm!")
@@ -24,7 +24,7 @@ def find(tiling, radius=None, which="radius-optimized"):
     return retval
 
 
-def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
+def find_brute_force(tiling, radius: float, eps=1e-5) -> List[List[int]]:
     """
     Get adjacent polygons for the entire tiling through radius search
     This algorithm works in a brute-force manner, the distances between 
@@ -62,7 +62,7 @@ def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
     return retlist
 
 
-def find_ro(tiling, radius, eps=1e-5):
+def find_radius_optimized(tiling, radius, eps=1e-5):
     """
     Get adjacent polygons for the entire tiling through radius search
     Compared to its brute-force equivalent, this improved implemention
