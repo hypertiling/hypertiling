@@ -6,7 +6,7 @@ from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
 from ..util import fund_radius, lattice_spacing_weierstrass
 from ..geodesics import geodesic_midpoint
-from hypertiling.distance import weierstrass_distance, lorentzian_distance
+from hypertiling.distance import lorentzian_distance
 
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
@@ -136,7 +136,6 @@ class KernelStaticBase(AbstractKernelBase):
 
         Parameters
         ----------
-
         center : str
             decides whether the fundamental cell is construct centered at the origin ("cell", default) 
             or with the origin being one of its vertices ("vertex")
@@ -183,12 +182,14 @@ class KernelRotationalCommon(KernelStaticBase):
         elif self.center == 'vertex':
             self.angular_replicate(copy.deepcopy(self.polygons), self.q)
 
+
     def generate(self):
         """
         do full construction
         """
         self.generate_sector()
         self.replicate()
+
 
     def generate_adj_poly(self, polygon, ind, k):
         """
@@ -197,12 +198,18 @@ class KernelRotationalCommon(KernelStaticBase):
         mfull(self.p, k * self.qhi, ind, polygon.verticesP)
         return polygon
 
-    # tessellates the disk by applying a rotation of 2pi/p to the pizza slice
+
     def angular_replicate(self, polygons, k):
+        """
+        tessellates the disk by applying a rotation of 2pi/p to the pizza slice
+        """
+
+        # central polygon is not assigned to a sector and will hence not be replicated
         if self.center == 'cell':
-            polygons.pop(0)  # first pgon (partially) lies in every sector and thus need not be replicated
+            polygons.pop(0)  
             angle = self.phi
             k = self.p
+        # no central polygon if tiling is centered around a vertex
         elif self.center == 'vertex':
             angle = self.qhi
             k = self.q
@@ -216,15 +223,19 @@ class KernelRotationalCommon(KernelStaticBase):
                 pgon.sector = math.floor(pgon.angle / (360 / k))
                 self.polygons.append(pgon)
 
-        # assign each polygon a unique number
+        # assign a unique number to each polygon 
         for num, poly in enumerate(self.polygons):
             poly.idx = num
 
-    # populate the "edges" list of all polygons in the tiling
-    # untested!!
+
+    # 
     def populate_edge_list(self, digits=12):
-        # note: same neighbour search methods employ the fact that adjacent polygons share an edge
-        # hence these will later be identified via floating point comparison and we need to round
+        """
+        populate the "edges" list of all polygons in the tiling        
+        note: some neighbour methods employ the fact that adjacent polygons share an edge
+        hence these will later be identified via floating point comparison and we need to round
+        """
+
         for poly in self.polygons:
             poly.edges = []
             verts = np.round(poly.verticesP[0:-1], digits)
