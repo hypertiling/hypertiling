@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Callable, Any, List
 import math
+from hypertiling.check_numba import check_numba
 from hypertiling.distance import weierstrass_distance, lorentzian_distance
 from hypertiling.util import lattice_spacing_weierstrass
 from hypertiling.transformation import p2w
@@ -59,7 +60,6 @@ def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
 
     retlist = []  # prepare list
 
-
     for i in range(len(tiling)):
         sublist = []
         for j in range(len(tiling)):
@@ -78,8 +78,8 @@ def find_ro(tiling, radius, eps=1e-5):
     """
     Get adjacent polygons for the entire tiling through radius search
     Compared to its brute-force equivalent, this improved implemention
-    makes sure everything is fully vectorized by numpy, such that we
-    gain a significant speed-up
+    makes sure everything is fully vectorized and complied by numpy, 
+    such that we gain a dramatic speed-up
 
     Time complexity: O(n^2) where n=len(tiling)
 
@@ -99,7 +99,8 @@ def find_ro(tiling, radius, eps=1e-5):
 
 
 
-    # prepare matrix containing all center coordinates
+    # prepare array containing all center coordinates 
+    # in Weierstrass representation
     ncells = len(tiling)
     v = np.zeros((ncells, 3))
     for i in range(ncells):

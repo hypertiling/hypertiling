@@ -234,19 +234,21 @@ class KernelRotationalCommon(KernelStaticBase):
                 poly.edges.append((verts[i], verts[i + 1]))
             poly.edges.append((verts[-1], verts[0]))
 
-    def rotate(self, angle, deg=False):
+
+# ------------- Transformations -------------
+
+
+    def rotate(self, angle: float, deg=False):
         """
-        Rotates the whole tiling around the origin.
+        Rotates the whole tiling about the origin.
         
         Parameters
         ----------
-        
         angle: float
             Angle in radians by which the tiling is rotated.
         
         deg: bool, default: False
             If True, then angle is considered in units of degrees.
-            
         """
 
         if deg:
@@ -261,10 +263,8 @@ class KernelRotationalCommon(KernelStaticBase):
         
         Parameters
         ----------
-        
         z: complex
             The point which will be translated to the origin.
-            
         """
 
         for poly in self.polygons:
@@ -273,9 +273,10 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
+# ------------- Refinements -------------
 
 
-    def refine_lattice(self, iterations):
+    def refine_lattice(self, iterations: int):
         """ 
         Refine a triangular lattice, by subdividing each triangle into four new polygons
         Note that new polygon are not congruent anymore!
@@ -330,18 +331,13 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
+# ------------- Neighbours -------------
 
-
-
-
-
-
-
-    def _get_nbrs_ros(self, nn_dist, eps=1e-5):
+    def _get_nbrs_ros(self, radius, eps=1e-5):
         """
-        combines both the benefits of of numpy vectorization (used in "find_nn_optimized") and 
-        applying the neighbour search only to a p-sector of the tiling (as done in "find_nn_slice")
-        currently this is our fastest algorithm for large tessellations
+        Uses both the benefits of of numpy vectorization (used also in neighbours.find_ro) 
+        and furthermore applies the radius search only to a p-fold sector of the tiling
+
 
         currently only working for cell-centered tilings (to do!)
 
@@ -350,10 +346,10 @@ class KernelRotationalCommon(KernelStaticBase):
 
         tiling : HyperbolicTiling
             the tiling object in which adjacent cell are to be searched for
-        nn_dist : float
+        radius : float
             the expected distance between neighbours
         eps : float
-            increase nn_dist a little in order to make it more stable
+            increase radius a little in order to make it more stable
 
         Returns
         -------
@@ -407,7 +403,7 @@ class KernelRotationalCommon(KernelStaticBase):
             v[i] = poly.centerW()
 
         # the search distance (we are doing a radius search)
-        searchdist = nn_dist + eps
+        searchdist = radius + eps
         searchdist = np.cosh(searchdist)
 
         # prepare list
@@ -418,7 +414,7 @@ class KernelRotationalCommon(KernelStaticBase):
             dists = lorentzian_distance(v, w)
             dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
             indxs = np.where(dists < searchdist)[0]  # radius search
-            selff = np.argwhere(indxs == poly.idx - 1)  # find self
+            selff = np.argwhere(indxs == poly.idx)  # find self
             indxs = np.delete(indxs, selff)  # delete self
             nums = [pgons[ind].idx - 1 for ind in indxs]  # replacing indices by actual polygon number
             nbrlst.append(nums)
@@ -558,16 +554,13 @@ class KernelRotationalCommon(KernelStaticBase):
 
     def get_nbrs(self, which="default"):
 
-        if nn_dist == None:
-            print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
-            nn_dist = lattice_spacing_weierstrass(self.p, self.q)
+        #if radius == None:
+        print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
+        radius = lattice_spacing_weierstrass(self.p, self.q)
 
         # Radius Optimized Slice (ROS)
         if which == "radius-optimized-slice" or which == "ROS" or which == "default":
-            if self.center == "vertex":
-                raise NotImplementedError("[hypertiling] Warning: Algorithm \"radius-optimized-slice\" (ROS) currently does not support vertex-centered tilings!")
-            else:
-                return self._get_nbrs_ros(nn_dist)
+            return self._get_nbrs_ros(radius)
 
         # Edge Map Optimized (EMO)
         elif which == "edge-map-optimized" or which == "EMO":
