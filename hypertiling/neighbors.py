@@ -10,29 +10,23 @@ from hypertiling.transformation import p2w
 
 
 # wrapper to provide a nicer interface
-def find(tiling, radius=None, which="radius-optimized", index_from_zero=True, verbose=False):
+def find(tiling, radius=None, which="radius-optimized"):
     if radius == None:
         print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
         radius = lattice_spacing_weierstrass(tiling.p, tiling.q)
 
     if which == "radius-optimized" or which == "RO":
         retval = find_ro(tiling, radius)
+    
     elif which == "brute-force-radius" or which == "BFR":
         retval = find_bfr(tiling, radius)
-
-
+    
     else:
-        print("[Hypertiling] Error:", which, " is not a valid algorithm!")
+        raise ValueError("[Hypertiling] Error:", which, " is not a valid algorithm!")
 
-    nbrs = []
-    if index_from_zero:
-        for sublist in retval:
-            new_sublist = [x - 1 for x in sublist]
-            nbrs.append(new_sublist)
+    return retval
 
-        return nbrs
-    else:
-        return retval
+
 
 
 def find_bfr(tiling, radius: float, eps=1e-5) -> List[List[int]]:
