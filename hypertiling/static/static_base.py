@@ -332,18 +332,17 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 # ------------- Neighbours -------------
-
-    def _get_nbrs_ros(self, radius, eps=1e-5):
+    # Radius Optimized Slice (ROS)
+    def get_nbrs_radius_optimized_slice(self, radius=None, eps=1e-5):
         """
         Uses both the benefits of of numpy vectorization (used also in neighbours.find_ro) 
         and furthermore applies the radius search only to a p-fold sector of the tiling
 
-        currently only working for cell-centered tilings (to do!)
+        currently only working for cell-centered tilings, although there have already been 
+        attempts in this direction (TODO!)
 
         Attributes
         ----------
-        tiling : HyperbolicTiling
-            the tiling object in which adjacent cell are to be searched for
         radius : float
             the expected distance between neighbours
         eps : float
@@ -352,8 +351,15 @@ class KernelRotationalCommon(KernelStaticBase):
         Returns
         -------
         List of list of integers, where sublists i contains the indices of the neighbour of vertex i in the tiling 
-
         """
+
+        if self.center == "vertex":
+            raise NotImplementedError("[hypertiling] Error: Currently this method does not support vertex-centered tilings!")
+
+
+        if radius == None:
+            print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
+            radius = lattice_spacing_weierstrass(self.p, self.q)
 
 
         totalnum = len(self)  # total number of polygons
@@ -446,12 +452,18 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
+    # Edge Map Optimized (EMO)
+    def get_nbrs_edge_map_optimized(self):
+        """
+        Find neighbours by identifying corresponding edges among polygons
+        This is a coordinate-free algorithm, it uses only the graph structure
+        Can probably be further improved
 
-    # find neighbours by identifying corresponding edges among polygons
-    # this is a coordinate-free algorithm, it uses only the graph structure
-    # can probably be further improved
+        Returns
+        -------
+        List of list of integers, where sublists i contains the indices of the neighbour of vertex i in the tiling 
+        """
 
-    def _get_nbrs_emo(self):
         self.populate_edge_list()
 
         # we create a kind of "dictionary" where keys are the
@@ -505,11 +517,21 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
-    # find neighbours by identifying corresponding edges among polygons
-    # there is an equivalent method available that is much faster: find_nn_edge_map_optimized
-    # use this method only for debugging purposes
-    def _get_nbrs_embf(self):
-        tiling.populate_edge_list()
+    # Edge Map Brute Force (EMBF)
+    def get_nbrs_edge_map_brute_force(self):
+        """
+        Find neighbours by identifying corresponding edges among polygons
+        This is a coordinate-free algorithm, it uses only the graph structure
+    
+        There is an equivalent method available that is much faster: get_nbrs_edge_map
+        Use this method only for debugging purposes
+
+        Returns
+        -------
+        List of list of integers, where sublists i contains the indices of the neighbour of vertex i in the tiling 
+        """
+
+        self.populate_edge_list()
 
         # we create a kind of "dictionary" where keys are the
         # edges and values are the corresponding polygon indices
@@ -539,31 +561,6 @@ class KernelRotationalCommon(KernelStaticBase):
                         nbrs[vals[i] - 1].append(vals[j])
 
         return nbrs
-
-    
-
-    def get_nbrs(self, which="default"):
-
-        #if radius == None:
-        print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
-        radius = lattice_spacing_weierstrass(self.p, self.q)
-
-        # Radius Optimized Slice (ROS)
-        if which == "radius-optimized-slice" or which == "ROS" or which == "default":
-            return self._get_nbrs_ros(radius)
-
-        # Edge Map Optimized (EMO)
-        elif which == "edge-map-optimized" or which == "EMO":
-            return self._get_nbrs_emo()
-
-
-        # Edge Map Brute Force (EMBF)
-        elif which == "edge-map-brute-force" or which == "EMBF":
-            return self._get_nbrs_embf()
-
-
-        else:
-            raise ValueError("[hypertiling] Error: No valid neighbour algorithm specified. Execute \"show_nbr_rules\" for a list of available rules.")
 
 
 
