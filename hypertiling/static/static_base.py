@@ -218,7 +218,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
         # assign each polygon a unique number
         for num, poly in enumerate(self.polygons):
-            poly.idx = num + 1
+            poly.idx = num
 
     # populate the "edges" list of all polygons in the tiling
     # untested!!
@@ -338,12 +338,10 @@ class KernelRotationalCommon(KernelStaticBase):
         Uses both the benefits of of numpy vectorization (used also in neighbours.find_ro) 
         and furthermore applies the radius search only to a p-fold sector of the tiling
 
-
         currently only working for cell-centered tilings (to do!)
 
         Attributes
         ----------
-
         tiling : HyperbolicTiling
             the tiling object in which adjacent cell are to be searched for
         radius : float
@@ -353,8 +351,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
         Returns
         -------
-
-        List of lists, where sublist i contains the indices of the neighbour of vertex i in the tiling 
+        List of list of integers, where sublists i contains the indices of the neighbour of vertex i in the tiling 
 
         """
 
@@ -386,9 +383,6 @@ class KernelRotationalCommon(KernelStaticBase):
                 lsta[lsta < 1] += (totalnum - 1)
                 return sorted(list(lsta))
 
-        # increment indices by one
-        def increment(lst):
-            return list(np.array(lst) + 1)
 
         # slice the first three sectors
         # we are gonna look for neighbours of polygons in the second sector 
@@ -416,7 +410,7 @@ class KernelRotationalCommon(KernelStaticBase):
             indxs = np.where(dists < searchdist)[0]  # radius search
             selff = np.argwhere(indxs == poly.idx)  # find self
             indxs = np.delete(indxs, selff)  # delete self
-            nums = [pgons[ind].idx - 1 for ind in indxs]  # replacing indices by actual polygon number
+            nums = [pgons[ind].idx for ind in indxs]  # replacing indices by actual polygon number
             nbrlst.append(nums)
 
         # prepare full output list
@@ -432,20 +426,20 @@ class KernelRotationalCommon(KernelStaticBase):
             lstzero = []
             for ps in range(0, k):
                 lstzero.append(ps * pps + 1)
-            retlist.append((increment(lstzero)))
+            retlist.append((lstzero))
 
         # first sector
         for lst in nbrlst:
-            retlist.append(increment(shift(lst, -1)))
+            retlist.append(shift(lst, -1))
 
         # second sector
         for lst in nbrlst:
-            retlist.append(increment(lst))
+            retlist.append(lst)
 
         # remaining sectors
         for ps in range(2, k):
             for lst in nbrlst:
-                retlist.append(increment(shift(lst, ps - 1)))
+                retlist.append(shift(lst, ps - 1))
 
         return retlist
 
@@ -546,10 +540,6 @@ class KernelRotationalCommon(KernelStaticBase):
 
         return nbrs
 
-
-
-    def get_nbrs_cell(self, index: int, which="default"):
-        raise NotImplemented("[hypertiling] Error: This feature is not implemented!") # TODO: implement me
     
 
     def get_nbrs(self, which="default"):
