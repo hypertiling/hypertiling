@@ -813,6 +813,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import time
 
     # numba compile stuff
     KernelGenerativeReflection(7, 3, 2)
@@ -820,12 +821,17 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = KernelGenerativeReflection(3, 7, 4)
-    tiling.check_integrity()
+    t1 = time.time()
+    tiling = KernelGenerativeReflection(7, 3, 8)
+    t2 = time.time()
+    print(f"Polygons in total :{len(tiling)}")
+    print(f"Polygons in sector:{len(tiling._sector_polys)}")
+    print(f"Took: {t2 - t1: .4f} s")
+    # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
-        poly_layer = tiling.get_layer(polygon_index)
-        # poly_layer = tiling.get_reflection_level(polygon_index)
+        # poly_layer = tiling.get_layer(polygon_index)
+        poly_layer = tiling.get_reflection_level(polygon_index)
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
