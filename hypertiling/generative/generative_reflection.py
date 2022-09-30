@@ -9,7 +9,7 @@ import hypertiling.distance as distance
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
-n: Number of layers (classical definition)
+n: Number of layers (reflective definition)
 m: Number of polygons
 
 m = m(p, q, n)
@@ -54,8 +54,8 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         # estimate some other technical attributes
         if n > 1:
-            lengths = util.get_reflection_n_estimation(self.geo_atts)
-            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)
+            lengths = util.get_reflection_n_estimation(self.geo_atts)  # n
+            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
         else:
             self._sector_lengths = np.array([1])
 
@@ -70,7 +70,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
 
         # calculate tiling
-        rf = self.generate()
+        rf = self.generate()  # p^2 m + n
 
         # correct properties of the tiling
         self.length = self.geo_atts[0] * (len(rf) - 1) + 1
@@ -81,7 +81,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # calculate additional helper variables
         self._sector_lengths_cumulated = np.empty((self._sector_lengths.shape[0] + 1,), dtype=np.uint32)
         self._sector_lengths_cumulated[0] = 0
-        for i, element in enumerate(self._sector_lengths):
+        for i, element in enumerate(self._sector_lengths):  # n loop execs
             self._sector_lengths_cumulated[i + 1] = element + self._sector_lengths_cumulated[i]
 
         # possible to fill
@@ -290,7 +290,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             dists = distance.lorentzian_distance(weierstrass[
                                                  self._sector_lengths_cumulated[ref_layer - 1]:
                                                  self._sector_lengths_cumulated[
-                                                     ref_layer]], weierstrass[i])
+                                                     ref_layer]], weierstrass[i])  # p^(log_p(m) - 1)
 
             indices = np.argpartition(dists, 2)[:2] if len(dists) > 2 else np.arange(len(dists))
             # necessary to compensate the cumulated uncertainty in the last layer
@@ -326,7 +326,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                                                      self._sector_lengths_cumulated[ref_layer + 1]:
                                                      self._sector_lengths_cumulated[
                                                          ref_layer + 1] + self._sector_lengths[ref_layer + 1]],
-                                                     weierstrass[i])
+                                                     weierstrass[i])  # p^(log_p(m) + 1)
 
                 to_get = self.geo_atts[0] - c
                 indices = np.argpartition(dists, to_get)[:to_get] if len(dists) > to_get else np.arange(len(dists))
@@ -334,7 +334,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
                 c_ = len(allowed)
                 self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
-                    ref_layer + 1]
+                    ref_layer + 1]  # p - 2
                 c += c_
 
             # control boundary child->nephew artifact

@@ -175,11 +175,11 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     edge_array[0] = 1
 
     boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
-    for j, poly in enumerate(sector_polys[:-1]):
+    for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
         if reflection_levels[j] == geo_atts[2]:
             # all reflection layers are constructed
             return reflection_levels[:c]
-        for i, vertex in enumerate(poly[1:]):
+        for i, vertex in enumerate(poly[1:]):  # p loop execs
             """
             Algorithm:
              1. shift vertex into origin
