@@ -1,5 +1,4 @@
 from typing import Tuple, Union
-#from numba import njit
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
@@ -119,6 +118,25 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
 
 
 @check_numba
+def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
+    """
+    Estimates the number of tildes the tiling will have.
+    Time-complexity: O(n)
+    :param geo_atts: Tuple[int, int, int] = (p, q, n), with n = reflective layer
+    :return: np.array[np.uint32] = number of tildes per layer
+    """
+    k = geo_atts[0] - 3 if geo_atts[1] == 3 else geo_atts[0] - 2 if geo_atts[1] == 4 else geo_atts[0] - 1
+
+    lengths = np.empty((geo_atts[2] + 1,), dtype=np.uint32)
+    lengths[0] = 1
+    lengths[1] = geo_atts[0]
+    for n in range(2, geo_atts[2] + 1):
+        lengths[n] = lengths[n - 1] * k
+
+    return lengths
+
+
+@check_numba
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
@@ -158,6 +176,9 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
     boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
     for j, poly in enumerate(sector_polys[:-1]):
+        if reflection_levels[j] == geo_atts[2]:
+            # all reflection layers are constructed
+            return reflection_levels[:c]
         for i, vertex in enumerate(poly[1:]):
             """
             Algorithm:

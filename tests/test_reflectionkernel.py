@@ -16,7 +16,6 @@ COMBIS = [(7, 3, 4),
           (7, 5, 3),
           (3, 8, 3)]
 
-
 # test generate
 MAXLAYERS = 4
 
@@ -32,14 +31,16 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_generate(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel="GR")
             # this is basically the only test we can do and it only will scream when duplicates are found
             with PrintTest() as stream:
                 tiling.check_integrity()
 
     def test_find(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
 
             for index in range(tiling.length - 1):
                 center = tiling[index][0]
@@ -63,7 +64,8 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
 
@@ -104,7 +106,8 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
             tiling.map_neighbors()
             for index in range(tiling.length):
                 neighbors = tiling.get_neighbors(index)
@@ -113,7 +116,8 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_get_neighbors_list(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
             neighbors_list = tiling.get_neighbors_list()  # calls tiling.map_neighbors
             for index in range(tiling.length):
                 neighbors = neighbors_list[index]
@@ -122,7 +126,8 @@ class TestReflectTiling(unittest.TestCase):
 
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
-            tiling = HyperbolicTiling(*combi, kernel="GR")
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
 
             # check for duplicates
             old = tiling._sector_polys[-1, 0]
@@ -143,11 +148,12 @@ class TestReflectTiling(unittest.TestCase):
             if len(messages) == 1:
                 boundary_layer = combi[2]
             else:
-                boundary_layer = int(messages[0].split(" ")[1])
+                boundary_layer = int(messages[0].split(" ")[2])
 
             # only the last q - 3 layers can be incomplete
             # self.assertGreaterEqual(4, 3)
-            self.assertGreaterEqual(boundary_layer, combi[2] - int(np.ceil((combi[1] - 3) / 2)))
+            self.assertGreaterEqual(boundary_layer, combi[2] - int(np.ceil((combi[1] - 3) / 2)),
+                                    msg=f"{combi}: boundary layer bellow expectation")
 
             # obscure layer l and check if layer is considered incomplete
             for l in range(boundary_layer):
@@ -161,7 +167,7 @@ class TestReflectTiling(unittest.TestCase):
                 values = stream.get()
                 messages = values[:-1].split("\n")
                 # check if layer is considered incomplete
-                self.assertEqual(f"Layer {l} is not complete", messages[0])
+                self.assertEqual(f"Layer (traditional) {l} is not complete", messages[0])
 
             # check layer boundary/holes
             indices = np.argwhere(tiling._layers < boundary_layer)[1:]  # eliminate first polygon
