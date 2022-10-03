@@ -90,19 +90,32 @@ class TestReflectTiling(unittest.TestCase):
                         """
                         self.assertNotEqual(index, found)
 
-    """def test_get_neighbors_experimental(self):
+    def test_get_neighbors_radius(self):
         for combi in Progress(COMBIS):
-            tiling = KernelGenerativeReflection(*combi)
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling.map_neighbors()
             for index in range(tiling.length):
-                neighbors = tiling.get_neighbors(index)
-                neighbors2 = tiling.get_neighbors_experimental(index)
+                neighbors = tiling.get_neighbors_mapping(index)
+                neighbors2 = tiling.get_neighbors_radius(index)
                 try:
                     self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
                 except Exception as error:
-                    print(combi, index)
-                    print(np.sort(neighbors2), np.sort(neighbors))
-                    print(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
-                    raise error"""
+                    print(index)
+                    print(combi)
+                    print(neighbors)
+                    print(neighbors2)
+                    raise error
+
+    def test_get_neighbors_experimental(self):
+        for combi in Progress(COMBIS):
+            with PrintTest():
+                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling.map_neighbors()
+            for index in range(tiling.length):
+                neighbors = tiling.get_neighbors_mapping(index)
+                neighbors2 = tiling.get_neighbors_experimental(index)
+                self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
