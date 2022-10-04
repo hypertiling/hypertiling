@@ -9,9 +9,8 @@ import hypertiling.distance as distance
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
-n: Number of layers (classical definition)
+n: Number of layers (reflective definition)
 m: Number of polygons
-rf: Number of reflection layers
 
 m = m(p, q, n)
 """
@@ -28,7 +27,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
     def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
-        Time-complexity: O(p^2 m + n + m / p * rf)
+        Time-complexity: O(p^2 m + n + m / p * n)
         :param p: int = number of vertices per cells
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
@@ -48,38 +47,42 @@ class KernelGenerativeReflection(AbstractKernelBase):
         self.nlayers = n
 
         # technical attributes
-        if n > 1:
-            lengths = util.get_ns(self.geo_atts)  # n
-            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
-            self.length = int(np.sum(lengths))  # n
-        else:
-            self._sector_lengths = np.array([1])
-            self.length = 1
-
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
         self.mangle = mangle / 360 * PI2
 
-        # if center is added it should be p+1
-        self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex128)
+        # estimate some other technical attributes
+        if n > 1:
+            lengths = util.get_reflection_n_estimation(self.geo_atts)  # n
+            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
+        else:
+            self._sector_lengths = np.array([1])
 
+        self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex128)  # + center = p + 1
+        self._edge_array = np.empty(self._sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
         """
         edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
         within a number in the array. Each polygon has its own number where the index is equal in edge_array and 
         the tiling
-        
+
         This is saved for the possibility to expand the grid later (not yet implemented)
         """
-        self._edge_array = np.empty(self._sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
 
+        # calculate tiling
         rf = self.generate()  # p^2 m + n
-        self._reflection_levels = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
-        # m / p * rf + p
-        self._reflection_levels_cumulated = np.empty((self._reflection_levels.shape[0] + 1,), dtype=np.uint32)
-        self._reflection_levels_cumulated[0] = 0
-        for i, element in enumerate(self._reflection_levels):  # rf loop execs
-            self._reflection_levels_cumulated[i + 1] = element + self._reflection_levels_cumulated[i]
+
+        # correct properties of the tiling
+        self.length = self.geo_atts[0] * (len(rf) - 1) + 1
+        self._sector_polys = self._sector_polys[:len(rf)]
+        self._edge_array = self._edge_array[:len(rf)]
+        self._sector_lengths = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
+
+        # calculate additional helper variables
+        self._sector_lengths_cumulated = np.empty((self._sector_lengths.shape[0] + 1,), dtype=np.uint32)
+        self._sector_lengths_cumulated[0] = 0
+        for i, element in enumerate(self._sector_lengths):  # n loop execs
+            self._sector_lengths_cumulated[i + 1] = element + self._sector_lengths_cumulated[i]
 
         # possible to fill
         self._layers = None
@@ -126,6 +129,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
             connection = util.any_close_matrix(self._sector_polys[index1],
                                                self[self._index_from_ref_layer_index(index_wiggled, layer)])
+
         return index_wiggled
 
     def _index_from_ref_layer_index(self, index: int, ref_layer: int) -> int:
@@ -138,11 +142,11 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :param ref_layer: int = index of the reflection layer the polygons are created in
         :return: int = index of the polygon in the tiling
         """
-        if index < self._reflection_levels_cumulated[ref_layer]:
-            index += self._reflection_levels[ref_layer]
+        if index < self._sector_lengths_cumulated[ref_layer]:
+            index += self._sector_lengths[ref_layer]
             index += (self._sector_polys.shape[0] - 1) * (self.geo_atts[0] - 1)
-        elif index >= self._reflection_levels_cumulated[ref_layer + 1]:
-            index -= self._reflection_levels[ref_layer]
+        elif index >= self._sector_lengths_cumulated[ref_layer + 1]:
+            index -= self._sector_lengths[ref_layer]
             index += self._sector_polys.shape[0] - 1
         return index
 
@@ -252,7 +256,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         This function is numerically expensive!
         Calculates the neighbors for each polygon.
-        Time-complexity: O(m[ld(rf + 1) / p + p^(log(m)) + ld(m / p) / p])
+        Time-complexity: O(m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p])
         :param tol: float = tolerance to search neighbors in
         :return: void
         """
@@ -266,27 +270,27 @@ class KernelGenerativeReflection(AbstractKernelBase):
         weierstrass = self._to_weierstrass(self._sector_polys)  # m / p
 
         # boundary
-        boundary_polys_indices = np.empty((2 * (len(self._reflection_levels) - 1), 1), dtype=np.uint32)
-        boundary_polys = np.empty((2 * (len(self._reflection_levels) - 1), 1), dtype=np.complex128)
-        for i in range(1, len(self._reflection_levels)):  # rf loop execs
+        boundary_polys_indices = np.empty((2 * (len(self._sector_lengths) - 1), 1), dtype=np.uint32)
+        boundary_polys = np.empty((2 * (len(self._sector_lengths) - 1), 1), dtype=np.complex128)
+        for i in range(1, len(self._sector_lengths)):
             i1 = 2 * i - 2
             i2 = i1 + 1
             boundary_polys_indices[i1] = self._index_from_ref_layer_index(
-                self._reflection_levels_cumulated[i] - 1, i)
+                self._sector_lengths_cumulated[i] - 1, i)
             boundary_polys[i1, 0] = self[boundary_polys_indices[i1, 0]][0]
             boundary_polys_indices[i2] = self._index_from_ref_layer_index(
-                self._reflection_levels_cumulated[i + 1], i)
+                self._sector_lengths_cumulated[i + 1], i)
             boundary_polys[i2, 0] = self[boundary_polys_indices[i2, 0]][0]
-        boundary_weierstrass = self._to_weierstrass(boundary_polys)  # 2 * rf
-        del boundary_polys  # 2 * log(rf + 1)
+        boundary_weierstrass = self._to_weierstrass(boundary_polys)  # 2 * n
+        del boundary_polys  # 2 * log(n + 1)
 
         for i, poly in enumerate(self._sector_polys[1:], start=1):  # m / p loop execs
             ref_layer = self._get_reflection_level_in_sector(i)  # log(m / p)
 
             # parents
             dists = distance.lorentzian_distance(weierstrass[
-                                                 self._reflection_levels_cumulated[ref_layer - 1]:
-                                                 self._reflection_levels_cumulated[
+                                                 self._sector_lengths_cumulated[ref_layer - 1]:
+                                                 self._sector_lengths_cumulated[
                                                      ref_layer]], weierstrass[i])  # p^(log_p(m) - 1)
 
             indices = np.argpartition(dists, 2)[:2] if len(dists) > 2 else np.arange(len(dists))  # p^(log_p(m) - 1)
@@ -294,7 +298,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             ref_dist = np.min(dists[indices])
             allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
             c = len(allowed)
-            self._neighbors[i, :c] = indices[allowed].flatten() + self._reflection_levels_cumulated[ref_layer - 1]
+            self._neighbors[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
 
             # siblings
             if self.geo_atts[1] == 3:
@@ -304,25 +308,25 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 c += 1
             else:
                 next_ = i + 1
-                if next_ < self._reflection_levels_cumulated[ref_layer + 1] and \
+                if next_ < self._sector_lengths_cumulated[ref_layer + 1] and \
                         util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = next_
                     c += 1
 
                 before = i - 1
-                if before >= self._reflection_levels_cumulated[ref_layer] and \
+                if before >= self._sector_lengths_cumulated[ref_layer] and \
                         util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = before
                     c += 1
 
             # children
-            if len(self._reflection_levels) > ref_layer + 1:
+            if len(self._sector_lengths) > ref_layer + 1:
                 dists = distance.lorentzian_distance(weierstrass[
-                                                     self._reflection_levels_cumulated[ref_layer + 1]:
-                                                     self._reflection_levels_cumulated[
-                                                         ref_layer + 1] + self._reflection_levels[ref_layer + 1]],
+                                                     self._sector_lengths_cumulated[ref_layer + 1]:
+                                                     self._sector_lengths_cumulated[
+                                                         ref_layer + 1] + self._sector_lengths[ref_layer + 1]],
                                                      weierstrass[i])  # p^(log_p(m) + 1)
 
                 to_get = self.geo_atts[0] - c
@@ -331,7 +335,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 # necessary to compensate the cumulated uncertainty in the last layer
                 allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))  # p - 2
                 c_ = len(allowed)
-                self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._reflection_levels_cumulated[
+                self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
                     ref_layer + 1]  # p - 2
                 c += c_
 
@@ -341,9 +345,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
             if rest == 0:
                 continue
 
-            dists = distance.lorentzian_distance(boundary_weierstrass, weierstrass[i])  # 2 * log(rf + 1)
-            indices = np.argsort(dists)  # 2 * log(rf + 1)
-            allowed = np.argwhere(util.is_close(dists[indices], ref_dist))  # 2 * log(rf + 1)
+            dists = distance.lorentzian_distance(boundary_weierstrass, weierstrass[i])  # 2 * log(n + 1)
+            indices = np.argsort(dists)  # 2 * log(n + 1)
+            allowed = np.argwhere(util.is_close(dists[indices], ref_dist))  # 2 * log(n + 1)
             for index in boundary_polys_indices[indices[allowed]].flatten():  # p
                 if index in self._neighbors[i]:
                     continue
@@ -368,14 +372,18 @@ class KernelGenerativeReflection(AbstractKernelBase):
             finally:
                 self._sector_polys[i, 0] = poly_center
 
-        # check if each layer has the correct size
+        # check if each traditional layer has the correct size
         if self._layers is None:
             self.map_layers()
 
-        for i, length in enumerate(self._sector_lengths):
+        layer_lengths = util.get_ns((*self.geo_atts[:2], np.max(self._layers) + 1))
+        layer_lengths = np.ceil(layer_lengths / self.geo_atts[0]).astype(np.uint32)
+        for i, length in enumerate(layer_lengths):
             if np.count_nonzero(self._layers == i) != length:
-                print(f"Layer {i} is not complete")
+                print(f"Layer (traditional) {i} is not complete")
                 break
+
+        # TODO: add control of relfection layer sizes, when formula is available
 
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
@@ -545,12 +553,12 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         Protected(!)
         Returns the reflection level the polygon at index belongs to.
-        Time-complexity: O(log(rf + 1))
+        Time-complexity: O(log(n + 1))
         :param index: int = index of the polygon
         :return: int = reflection level
         """
-        pos = np.searchsorted(self._reflection_levels_cumulated, sector_index)
-        if self._reflection_levels_cumulated[pos] > sector_index:
+        pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)
+        if self._sector_lengths_cumulated[pos] > sector_index:
             return pos - 1
         return pos
 
@@ -572,40 +580,71 @@ class KernelGenerativeReflection(AbstractKernelBase):
         indices = [self.find(e) for e in neighbor_centers]
         return [e for e in indices if not (e is False)]
 
+    def _get_neighbors_radius(self, sector_index: int, tol: float = 1e-5) -> np.array:
+        """
+        Protected(!)
+        Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+        Time-complexity (single polygon): O(m / p + n)
+        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        if sector_index == 0:
+            jump = len(self._sector_polys) - 1
+            return [1 + i * jump for i in range(self.geo_atts[0])]
+
+        dist_ref = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) + tol
+        disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, self._sector_polys[sector_index][0]))
+
+        # sector bulk
+        dists = disk_distance(self._sector_polys[:, 0])
+        neighbors = np.argwhere(np.logical_and(dists <= dist_ref, dists > 0)).flatten().tolist()
+
+        # sector boundary
+        for i in range(1, len(self._sector_lengths)):
+            b_l = self._index_from_ref_layer_index(self._sector_lengths_cumulated[i] - 1, i)
+            if 0 < disk_distance(self[b_l][0]) <= dist_ref:
+                neighbors.append(b_l)
+            b_r = self._index_from_ref_layer_index(self._sector_lengths_cumulated[i + 1], i)
+            if 0 < disk_distance(self[b_r][0]) <= dist_ref:
+                neighbors.append(b_r)
+
+            if len(neighbors) == self.geo_atts[0]:
+                break
+
+        return neighbors
+
     def _get_neighbors_experimental(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
         Has to be in the fundamental sector!
-        Time-complexity: O(?)
+        Time-complexity: O(p^3 + n)
         :param sector_index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
         if sector_index == 0:
-            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])
+            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])  # p
 
         neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
         c = 0
 
         ref_layer = self._get_reflection_level_in_sector(sector_index)
-        pos_in_layer = sector_index - self._reflection_levels_cumulated[ref_layer]
+        pos_in_layer = sector_index - self._sector_lengths_cumulated[ref_layer]
         # relative position in the reflection layer
-        ratio = pos_in_layer / self._reflection_levels[ref_layer]
+        ratio = pos_in_layer / self._sector_lengths[ref_layer]
 
         # 1. parents
-        wiggle_tol = int(self._reflection_levels[ref_layer - 1])
-        wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
         # calculate position of parent through relative position
-        parent_index_candidate = self._reflection_levels_cumulated[ref_layer - 1] + int(
-            ratio * self._reflection_levels[ref_layer - 1])
-        parent_index = self._wiggle_index(sector_index, parent_index_candidate, tol=wiggle_tol)
+        parent_index_candidate = self._sector_lengths_cumulated[ref_layer - 1] + int(
+            ratio * self._sector_lengths[ref_layer - 1])
+        parent_index = self._wiggle_index(sector_index, parent_index_candidate, tol=2)  # tol p^2 = 2 p^2
         neighbors[c] = parent_index
         c += 1
 
         # 2. check if next is parent too
         for shift in [1, -1]:
             parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
-            connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])
+            connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])  # p^2
             if connection.shape[0] == 2:
                 neighbors[c] = parent2_candidate
                 c += 1
@@ -623,20 +662,17 @@ class KernelGenerativeReflection(AbstractKernelBase):
             # if odd, exactly one cousin should be found. It is either the next polygon or the before
             for shift in [1, -1]:
                 cousin_candidate = self._index_from_ref_layer_index(sector_index + shift, ref_layer)
-                connection = util.any_close_matrix(self._sector_polys[sector_index], self[cousin_candidate])
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[cousin_candidate])  # p^2
                 if connection.shape[0] == 2:
                     neighbors[c] = cousin_candidate
                     c += 1
                     break
 
         # 4. children
-        if ref_layer + 1 != len(self._reflection_levels):
-            wiggle_tol = int(self._reflection_levels[ref_layer + 1])
-            wiggle_tol = wiggle_tol if wiggle_tol > 0 else 1
-            child_index_candidate = self._reflection_levels_cumulated[ref_layer + 1] + int(
-                ratio * self._reflection_levels[ref_layer + 1])
-            child_index = self._wiggle_index(sector_index, child_index_candidate,
-                                             tol=wiggle_tol)
+        if ref_layer + 1 != len(self._sector_lengths):
+            child_index_candidate = self._sector_lengths_cumulated[ref_layer + 1] + int(
+                ratio * self._sector_lengths[ref_layer + 1])
+            child_index = self._wiggle_index(sector_index, child_index_candidate, tol=3)  # 3 p^2
 
             # if on boundary no children exist
             if child_index is False:
@@ -652,9 +688,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
             left = self.geo_atts[0] - c
             steps = 2 * left
             step = 0
-            while c < self.geo_atts[0] and step < steps:
+            while c < self.geo_atts[0] and step < steps:  # 2 * (p - 1) loop execs
                 current_index = self._index_from_ref_layer_index(current, ref_layer + 1)
-                connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])  # p^2
                 if connection.shape[0] == 2:
                     neighbors[c] = current_index
                     c += 1
@@ -672,11 +708,11 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         # control boundary child->grand-nephew artifact
         ref_dist = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0])
-        for layer_index in range(2, len(self._reflection_levels_cumulated) - 1):
+        for layer_index in range(2, len(self._sector_lengths_cumulated) - 1):  # n loop execs
             if c == self.geo_atts[0]:
                 break
-            for index_ in [self._reflection_levels_cumulated[layer_index] - 1,
-                           self._reflection_levels_cumulated[layer_index + 1]]:
+            for index_ in [self._sector_lengths_cumulated[layer_index] - 1,
+                           self._sector_lengths_cumulated[layer_index + 1]]:
                 index_b = self._index_from_ref_layer_index(index_, layer_index)
                 dist = util.f_dist_disc(self[index_b][0], self._sector_polys[sector_index, 0])
                 if util.is_close(dist, ref_dist) and index_b not in neighbors:
@@ -695,7 +731,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         if self._neighbors is None:
             print("start mapping neighbors")
-            self.map_neighbors()  # m[ld(rf + 1) / p + p^(log(m)) + ld(m / p) / p]
+            self.map_neighbors()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
         neighbor_indices = self._neighbors[sector_index]
 
         # get value from nice little overflow
@@ -731,7 +767,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
     def get_reflection_level(self, index) -> int:
         """
         Get the neighbors of a polygon at index
-        Time-complexity: O(log(rf + 1))
+        Time-complexity: O(log(n + 1))
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
@@ -741,7 +777,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         index -= 1
         index %= (self._sector_polys.shape[0] - 1)
         index += 1
-        return self._get_reflection_level_in_sector(index)  # log(rf + 1)
+        return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
     def get_neighbors(self, index: int) -> np.array:
         """
@@ -769,6 +805,15 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: np.array = indices of the neighbors
         """
         return self._expand_sector_index_to_tiling(index, self._get_neighbors_mapping)
+
+    def get_neighbors_radius(self, index: int) -> np.array:
+        """
+        Get the neighbors of a polygon at index
+        Time-complexity: O(m / p)
+        :param index: int = index of the polygon
+        :return: np.array = array containing the indices of the neighbors
+        """
+        return self._expand_sector_index_to_tiling(index, self._get_neighbors_radius)
 
     # Generative #######################################################################################################
     # Transformations ##################################################################################################
@@ -808,6 +853,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    import time
 
     # numba compile stuff
     KernelGenerativeReflection(7, 3, 2)
@@ -815,7 +861,14 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
-    tiling = KernelGenerativeReflection(7, 3, 5)
+    t1 = time.time()
+    tiling = KernelGenerativeReflection(3, 7, 12)
+    t2 = time.time()
+
+    print(f"Polygons in total :{len(tiling)}")
+    print(f"Polygons in sector:{len(tiling._sector_polys)}")
+    print(f"Took: {t2 - t1: .4f} s")
+
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
@@ -824,5 +877,5 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(poly_layer))
     plt.show()
