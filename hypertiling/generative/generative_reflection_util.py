@@ -103,7 +103,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
     Time-complexity: O(n)
-    :param geo_atts: Tuple[int, int, int] = (p, q, n)
+    :param geo_atts: Tuple[int, int, int] = (p, q, n), with n = traditional layer
     :return: np.array[np.uint32] = number of tildes per layer
     """
     lengths = np.empty((geo_atts[2],), dtype=np.uint32)
