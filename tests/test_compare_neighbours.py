@@ -20,7 +20,7 @@ class TestCore(unittest.TestCase):
             nbrs1 = find(T, which="radius-optimized")
             nbrs2 = T.get_nbrs_radius_optimized_slice()
 
-            self.assertEqual(nbrs1, nbrs2)
+            self.assertEqual(nbrs1.sort(), nbrs2.sort())
 
         kernel = "SRI"
 
@@ -34,7 +34,7 @@ class TestCore(unittest.TestCase):
             nbrs1 = find(T, which="radius-optimized")
             nbrs2 = find(T, which="brute-force-radius")
 
-            self.assertEqual(nbrs1, nbrs2)
+            self.assertEqual(nbrs1.sort(), nbrs2.sort())
 
 
 if __name__ == '__main__':
