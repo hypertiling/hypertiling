@@ -8,13 +8,3 @@ __credits__ = 'Institute for Theoretical Physics and Astrophysics, University of
 __packages__ = []
 
 
-# for njiting the functions
-import sys
-import io
-
-__std_out = sys.stdout
-sys.stdout = io.StringIO()
-
-tiling = HyperbolicTiling(3, 7, 2, kernel="GR")
-
-sys.stdout = __std_out
