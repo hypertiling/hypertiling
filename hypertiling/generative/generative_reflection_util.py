@@ -2,7 +2,7 @@ from typing import Tuple, Union
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
-from hypertiling.check_numba import check_numba
+from hypertiling.check_numba import check_numba, NumbaChecker
 
 """
 p: Number of edges/vertices of a polygon
@@ -20,7 +20,8 @@ PI2 = 2 * np.pi
 # Variables ============================================================================================================
 # Assistance ===========================================================================================================
 
-@check_numba
+# @check_numba
+@NumbaChecker("boolean(complex128[:], complex128, optional[float])")
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
