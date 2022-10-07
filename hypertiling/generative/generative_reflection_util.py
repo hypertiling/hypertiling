@@ -20,8 +20,8 @@ PI2 = 2 * np.pi
 # Variables ============================================================================================================
 # Assistance ===========================================================================================================
 
-# @check_numba
-@NumbaChecker("boolean(complex128[:], complex128, optional[float])")
+# @NumbaChecker("boolean(complex128[:], complex128, optional[float])")
+@NumbaChecker("boolean(complex128[:], complex128, float64)")
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
@@ -34,8 +34,11 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     return np.any(np.abs(zs - z) <= tol)
 
 
-@check_numba
-def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol: float = 1e-12) -> bool:
+@NumbaChecker(["boolean(complex128, complex128, float64)",
+               "boolean(float64, float64, float64)",
+               "boolean[:](float64[:], float64, float64)",
+               "boolean[:](float64[:], float64, Omitted(1e-12))"])
+def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
     Time-complexity: O(1)
@@ -47,8 +50,9 @@ def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol
     return np.abs(z1 - z2) <= tol
 
 
-@check_numba
-def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
+# "int64[:, :](complex128[:], complex128[:], float64)"
+@NumbaChecker()
+def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
     Time-complexity: O(pq)
@@ -60,7 +64,7 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
 
-@check_numba
+@NumbaChecker("complex128[:](complex128[:])")
 def generate_raw(poly: np.array) -> np.array:
     """
     Generates the neigboring polygons for a single polygon poly
@@ -84,7 +88,7 @@ def generate_raw(poly: np.array) -> np.array:
     return reflection_centers
 
 
-@check_numba
+@NumbaChecker("float64(complex128, complex128)")
 def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
     """
     Calculates the distance between the points z and z_hat.
@@ -99,7 +103,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@check_numba
+@NumbaChecker()
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
@@ -118,7 +122,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@check_numba
+@NumbaChecker()
 def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Estimates the number of tildes the tiling will have.
@@ -137,7 +141,7 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@check_numba
+@NumbaChecker()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
@@ -232,4 +236,20 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c == stop:
                     return reflection_levels
     return reflection_levels
+
+
 # Methods ==============================================================================================================
+
+"""import numba
+
+print("Numba start any_close_matrix")
+p1 = np.array([0. + 0.j, 0.3001407 + 0.01901794j, -0.16654037 + 0.2504205j, -0.13360033 - 0.26943844j])
+p2 = np.array([0.12251896 + 0.2470901j, 0.3001407 + 0.01901794j, 0.23650277 + 0.47696693j, -0.16654037 + 0.2504205j])
+res = any_close_matrix(p1, p2)
+print(numba.typeof(res))
+print(any_close_matrix.signatures)
+
+print("Numba start tuple test")
+res = get_ns((3, 7, 5))
+print(numba.typeof(res))
+print(get_ns.signatures)"""

@@ -865,6 +865,9 @@ if __name__ == "__main__":
     tiling = KernelGenerativeReflection(3, 7, 12)
     t2 = time.time()
 
+    tiling.map_neighbors()
+    tiling.get_neighbors(1)
+    tiling.get_neighbors_experimental(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
