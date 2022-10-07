@@ -103,7 +103,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@NumbaChecker()
+@NumbaChecker("uint32[:](UniTuple(int32, 3))")
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
@@ -122,7 +122,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@NumbaChecker()
+@NumbaChecker("uint32[:](UniTuple(int32, 3))")
 def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Estimates the number of tildes the tiling will have.
@@ -141,6 +141,7 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
+# @NumbaChecker("uint8[:](UniTuple(int32, 3), float64, complex128[:, :], uint32[:], uint32[:], float64, float64)")
 @NumbaChecker()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
@@ -247,9 +248,4 @@ p1 = np.array([0. + 0.j, 0.3001407 + 0.01901794j, -0.16654037 + 0.2504205j, -0.1
 p2 = np.array([0.12251896 + 0.2470901j, 0.3001407 + 0.01901794j, 0.23650277 + 0.47696693j, -0.16654037 + 0.2504205j])
 res = any_close_matrix(p1, p2)
 print(numba.typeof(res))
-print(any_close_matrix.signatures)
-
-print("Numba start tuple test")
-res = get_ns((3, 7, 5))
-print(numba.typeof(res))
-print(get_ns.signatures)"""
+print(any_close_matrix.signatures)"""

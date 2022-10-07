@@ -1,4 +1,3 @@
-from typing import get_type_hints
 import inspect
 import warnings
 
@@ -22,7 +21,8 @@ class NumbaChecker:
             if not (self.signature is None):
                 return njit(self.signature, *self.args, **self.kwargs)(f)
             else:
-                warnings.warn("No signature specified. Use lazy compilation instead!")
+                warnings.warn(
+                    f"{f.__name__} in {inspect.getmodule(f)}:\n\tNo signature specified. Use lazy compilation instead!")
                 return njit(f)
         else:
             return f
