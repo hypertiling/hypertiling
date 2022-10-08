@@ -21,7 +21,7 @@ PI2 = 2 * np.pi
 # Assistance ===========================================================================================================
 
 # @NumbaChecker("boolean(complex128[:], complex128, optional[float])")
-@NumbaChecker("boolean(complex128[:], complex128, float64)")
+@NumbaChecker("boolean(complex128[::1], complex128, float64)")
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
@@ -36,8 +36,8 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
 
 @NumbaChecker(["boolean(complex128, complex128, float64)",
                "boolean(float64, float64, float64)",
-               "boolean[:](float64[:], float64, float64)",
-               "boolean[:](float64[:], float64, Omitted(1e-12))"])
+               "boolean[::1](float64[::1], float64, float64)",
+               "boolean[::1](float64[::1], float64, Omitted(1e-12))"])
 def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
@@ -50,8 +50,8 @@ def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
     return np.abs(z1 - z2) <= tol
 
 
-# "int64[:, :](complex128[:], complex128[:], float64)"
-@NumbaChecker()
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)",
+               "int64[:, :](complex128[::1], complex128[::1], Omitted(1e-12))"])
 def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
@@ -61,10 +61,11 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.arr
     :param tol: float = tolerance of the comparison (absolut)
     :result: np.array = positions where the points match
     """
-    return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
+    res = zs2.reshape(zs2.shape[0], 1)
+    return np.argwhere(np.abs(zs1 - res) <= tol)
 
 
-@NumbaChecker("complex128[:](complex128[:])")
+@NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
     """
     Generates the neigboring polygons for a single polygon poly
@@ -103,7 +104,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@NumbaChecker("uint32[:](UniTuple(int32, 3))")
+@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
@@ -122,7 +123,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@NumbaChecker("uint32[:](UniTuple(int32, 3))")
+@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
 def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Estimates the number of tildes the tiling will have.
@@ -141,7 +142,8 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-# @NumbaChecker("uint8[:](UniTuple(int32, 3), float64, complex128[:, :], uint32[:], uint32[:], float64, float64)")
+# FIXME: uint8 ist ein Problem!!!
+# @NumbaChecker("uint8[::1](UniTuple(int32, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], float64, float64)")
 @NumbaChecker()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
@@ -240,12 +242,3 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
 
 # Methods ==============================================================================================================
-
-"""import numba
-
-print("Numba start any_close_matrix")
-p1 = np.array([0. + 0.j, 0.3001407 + 0.01901794j, -0.16654037 + 0.2504205j, -0.13360033 - 0.26943844j])
-p2 = np.array([0.12251896 + 0.2470901j, 0.3001407 + 0.01901794j, 0.23650277 + 0.47696693j, -0.16654037 + 0.2504205j])
-res = any_close_matrix(p1, p2)
-print(numba.typeof(res))
-print(any_close_matrix.signatures)"""
