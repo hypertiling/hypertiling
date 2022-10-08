@@ -2,7 +2,7 @@ from typing import Tuple, Union
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
-from hypertiling.check_numba import check_numba, NumbaChecker
+from hypertiling.check_numba import NumbaChecker
 
 """
 p: Number of edges/vertices of a polygon

@@ -26,11 +26,3 @@ class NumbaChecker:
                 return njit(f)
         else:
             return f
-
-
-def check_numba(f):
-    if AVAILABLE:
-        warnings.warn("check_numba is outdated and will be removed soon. Use NumbaChecker instead!")
-        return njit(f)
-    else:
-        return f
