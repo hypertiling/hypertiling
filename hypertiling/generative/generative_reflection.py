@@ -855,9 +855,6 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
-    # numba compile stuff
-    KernelGenerativeReflection(7, 3, 2)
-
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)

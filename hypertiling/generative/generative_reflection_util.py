@@ -35,7 +35,9 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
 
 
 @NumbaChecker(["boolean(complex128, complex128, float64)",
+               "boolean(complex128, complex128, Omitted(1e-12))",
                "boolean(float64, float64, float64)",
+               "boolean(float64, float64, Omitted(1e-12))",
                "boolean[::1](float64[::1], float64, float64)",
                "boolean[::1](float64[::1], float64, Omitted(1e-12))"])
 def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
@@ -142,9 +144,9 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-# FIXME: uint8 ist ein Problem!!!
-# @NumbaChecker("uint8[::1](UniTuple(int32, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], float64, float64)")
-@NumbaChecker()
+@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
@@ -239,6 +241,5 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c == stop:
                     return reflection_levels
     return reflection_levels
-
 
 # Methods ==============================================================================================================
