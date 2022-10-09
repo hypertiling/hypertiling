@@ -20,8 +20,9 @@ PI2 = 2 * np.pi
 # Variables ============================================================================================================
 # Assistance ===========================================================================================================
 
-# @NumbaChecker("boolean(complex128[:], complex128, optional[float])")
-@NumbaChecker("boolean(complex128[::1], complex128, float64)")
+
+@NumbaChecker(["boolean(complex128[::1], complex128, float64)",
+               "boolean(complex128[::1], complex128, Omitted(1e-12))"])
 def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
@@ -144,9 +145,10 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
+"""@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
                "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
-               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])"""
+@NumbaChecker()
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """

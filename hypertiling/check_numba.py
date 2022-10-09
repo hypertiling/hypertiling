@@ -22,7 +22,8 @@ class NumbaChecker:
                 return njit(self.signature, *self.args, **self.kwargs)(f)
             else:
                 warnings.warn(
-                    f"{f.__name__} in {inspect.getmodule(f)}:\n\tNo signature specified. Use lazy compilation instead!")
+                    f"{f.__name__} in {inspect.getmodule(f).__file__}:\n" + \
+                    f"\tNo signature specified. Use lazy compilation instead!")
                 return njit(f)
         else:
             return f
