@@ -64,8 +64,11 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.arr
     :param tol: float = tolerance of the comparison (absolut)
     :result: np.array = positions where the points match
     """
-    res = zs2.reshape(zs2.shape[0], 1)
-    return np.argwhere(np.abs(zs1 - res) <= tol)
+    matrix = np.empty((zs1.shape[0], zs2.shape[0]), dtype=zs1.dtype)
+    for i in range(zs1.shape[0]):
+        for j in range(zs2.shape[0]):
+            matrix[j, i] = zs1[i] - zs2[j]
+    return np.argwhere(np.abs(matrix) <= tol)
 
 
 @NumbaChecker("complex128[::1](complex128[::1])")
@@ -145,10 +148,9 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-"""@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
+@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
                "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
-               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])"""
-@NumbaChecker()
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
@@ -243,5 +245,6 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c == stop:
                     return reflection_levels
     return reflection_levels
+
 
 # Methods ==============================================================================================================
