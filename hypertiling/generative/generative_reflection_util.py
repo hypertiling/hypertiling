@@ -52,10 +52,8 @@ def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
     """
     return np.abs(z1 - z2) <= tol
 
-
-@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)",
-               "int64[:, :](complex128[::1], complex128[::1], Omitted(1e-12))"])
-def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.array:
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)"])
+def any_close_matrix(zs1: np.array, zs2: np.array, tol: float) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
     Time-complexity: O(pq)
@@ -78,6 +76,9 @@ def any_close_matrix_fixed_tol(zs1: np.array, zs2: np.array) -> np.array:
     """
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= 1e-12)
 
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1])"])
+def any_close_matrix(zs1: np.array, zs2: np.array) -> np.array:
+    return any_close_matrix(zs1, zs2, 1E-12)
 
 @NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
