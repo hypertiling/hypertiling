@@ -116,7 +116,7 @@ def htdiv(x, dx, y, dy):
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxprod(a, da, b, db):
     '''perform multiplication of complex double double numbers '''
     rea, drea = a.real, da.real
@@ -139,7 +139,7 @@ def htcplxprod(a, da, b, db):
     return complex(r, imacc), complex(dr, dimacc)
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxprodconjb(a, da, b, db):
     '''perform multiplication of complex double double numbers: a * b^* '''
     rea, drea = a.real, da.real
@@ -162,7 +162,7 @@ def htcplxprodconjb(a, da, b, db):
     return complex(r, imacc), complex(dr, dimacc)
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxadd(a, da, b, db):
     '''perform addition of complex double double numbers '''
     rea, drea = a.real, da.real
@@ -175,7 +175,7 @@ def htcplxadd(a, da, b, db):
     return complex(r, i), complex(dr, di)
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxdiff(a, da, b, db):
     '''perform subtraction of complex double double numbers '''
     rea, drea = a.real, da.real
@@ -188,7 +188,7 @@ def htcplxdiff(a, da, b, db):
     return complex(r, i), complex(dr, di)
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxdiv(a, da, b, db):
     '''perform division of complex double double numbers '''
     rea, drea = a.real, da.real
@@ -211,7 +211,7 @@ def htcplxdiv(a, da, b, db):
     return complex(r, i), complex(dr, di)
 
 
-@NumbaChecker()
+@NumbaChecker("float64[:](complex128)")
 def p2w(z):
     '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
@@ -221,7 +221,7 @@ def p2w(z):
     return factor * nparray([(1 + xx + yy), 2 * x, 2 * y])
 
 
-@NumbaChecker()
+@NumbaChecker("complex128(float64[:])")
 def w2p(point):
     '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
@@ -229,7 +229,7 @@ def w2p(point):
     return complex(x * factor, y * factor)
 
 
-@NumbaChecker()
+@NumbaChecker("complex128(complex128, complex128)")
 def mymoeb(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
