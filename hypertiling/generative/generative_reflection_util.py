@@ -64,11 +64,19 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12) -> np.arr
     :param tol: float = tolerance of the comparison (absolut)
     :result: np.array = positions where the points match
     """
-    matrix = np.empty((zs1.shape[0], zs2.shape[0]), dtype=zs1.dtype)
-    for i in range(zs1.shape[0]):
-        for j in range(zs2.shape[0]):
-            matrix[j, i] = zs1[i] - zs2[j]
-    return np.argwhere(np.abs(matrix) <= tol)
+    return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
+
+
+@NumbaChecker("int64[:, :](complex128[::1], complex128[::1])")
+def any_close_matrix_fixed_tol(zs1: np.array, zs2: np.array) -> np.array:
+    """
+    Returns which points of zs1 and zs2 are closer (equal) to tol.
+    Time-complexity: O(pq)
+    :param zs1: np.array[complex] = array with p complex to compare
+    :param zs2: np.array[complex] = array with q complex to compare
+    :result: np.array = positions where the points match
+    """
+    return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= 1e-12)
 
 
 @NumbaChecker("complex128[::1](complex128[::1])")
@@ -225,13 +233,15 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 reflection_levels[c] = reflection_levels[j] + 1  # 1
 
                 # shares edge with former polygon (sibling)
-                connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
+                # connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
+                connection = any_close_matrix_fixed_tol(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 2:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
                     edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
                 # check if poly shares edge with next parent (parents sibling) #filler
-                connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
+                # connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
+                connection = any_close_matrix_fixed_tol(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 3:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
                     edge_array[j + 1] ^= 1 << (connection[0, 0] - 1)
@@ -245,6 +255,5 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c == stop:
                     return reflection_levels
     return reflection_levels
-
 
 # Methods ==============================================================================================================
