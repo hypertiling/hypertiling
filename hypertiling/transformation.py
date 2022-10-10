@@ -4,9 +4,9 @@ from hypertiling.check_numba import NumbaChecker
 
 
 @NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
-               "UniTuple(float64[:], 2)(float64[:], float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
                "UniTuple(float32, 2)(float32, float32)",
-               "UniTuple(float32[:], 2)(float32[:], float32)"])
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
 def kahan(x, y):
     """
     Transform the addition of two floating point numbers:
@@ -30,8 +30,10 @@ def kahan(x, y):
     e = y - (r - x)
     return r, e
 
-
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
 def twosum(x, y):
     '''branch free transformation of addition by Knuth'''
     r = x + y
@@ -39,8 +41,10 @@ def twosum(x, y):
     e = (x - (r - t)) + (y - t)
     return r, e
 
-
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
 def twodiff(x, y):
     '''branch free transformation of subtraction'''
     r = x - y
