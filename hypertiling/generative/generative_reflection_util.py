@@ -54,7 +54,7 @@ def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
 
 
 @NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)"])
-def any_close_matrix(zs1: np.array, zs2: np.array, tol: float) -> np.array:
+def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
     Time-complexity: O(pq)
@@ -65,18 +65,9 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float) -> np.array:
     """
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
-
-@NumbaChecker("int64[:, :](complex128[::1], complex128[::1])")
-def any_close_matrix_fixed_tol(zs1: np.array, zs2: np.array) -> np.array:
-    """
-    Returns which points of zs1 and zs2 are closer (equal) to tol.
-    Time-complexity: O(pq)
-    :param zs1: np.array[complex] = array with p complex to compare
-    :param zs2: np.array[complex] = array with q complex to compare
-    :result: np.array = positions where the points match
-    """
-    return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= 1e-12)
-
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1])"])
+def any_close_matrix(zs1: np.array, zs2: np.array) -> np.array:
+    return any_close_matrix_within_tol(zs1, zs2, 1E-12)
 
 @NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
@@ -233,14 +224,14 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
 
                 # shares edge with former polygon (sibling)
                 # connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
-                connection = any_close_matrix_fixed_tol(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
+                connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 2:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
                     edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
                 # check if poly shares edge with next parent (parents sibling) #filler
                 # connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
-                connection = any_close_matrix_fixed_tol(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
+                connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 3:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
                     edge_array[j + 1] ^= 1 << (connection[0, 0] - 1)
