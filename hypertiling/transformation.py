@@ -256,7 +256,7 @@ def moeb_rotate_trafo(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128)"])
 def mymoebint(z0, z):
     dz0 = complex(0, 0)
     dz = complex(0, 0)
