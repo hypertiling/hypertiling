@@ -237,21 +237,10 @@ def mymoeb(z0, z):
             1 + z * z0.conjugate())  # complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
 
-# maps all points z such that z0 -> 0, respecting the Poincare projection
-@NumbaChecker()
-def moeb_origin_trafo(z0, z):
-    ret, dret = mymoebint(-z0, z)
-    return ret
-
-
-@NumbaChecker()
-def moeb_origin_trafo_inverse(z0, z):
-    ret, dret = mymoebint(z0, z)
-    return ret
 
 
 # rotates z by phi counter-clockwise about the origin
-@NumbaChecker()
+@NumbaChecker("complex128(float64, complex128)")
 def moeb_rotate_trafo(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
@@ -268,8 +257,19 @@ def mymoebint(z0, z):
     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
     return ret, dret
 
+# maps all points z such that z0 -> 0, respecting the Poincare projection
+@NumbaChecker("complex128(complex128, complex128)")
+def moeb_origin_trafo(z0, z):
+    ret, dret = mymoebint(-z0, z)
+    return ret
 
-@NumbaChecker()
+
+@NumbaChecker("complex128(complex128, complex128)")
+def moeb_origin_trafo_inverse(z0, z):
+    ret, dret = mymoebint(z0, z)
+    return ret
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def moeb_origin_trafodd(z0, dz0, z, dz):
     '''Möbius transform to the origin in double double representation'''
     one = complex(1, 0)
@@ -281,7 +281,7 @@ def moeb_origin_trafodd(z0, dz0, z, dz):
     return ret, dret
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, float64)"])
 def moeb_rotate_trafodd(z, dz, phi):
     '''Rotation of a complex number'''
     ep = complex(math.cos(phi), math.sin(phi))
@@ -291,7 +291,7 @@ def moeb_rotate_trafodd(z, dz, phi):
     return ret, dret
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
     '''Inverse Möbius transform to the origin in double double representation'''
     one = complex(1, 0)
