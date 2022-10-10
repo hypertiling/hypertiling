@@ -301,7 +301,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             indices = np.argpartition(dists, 2)[:2] if len(dists) > 2 else np.arange(len(dists))  # p^(log_p(m) - 1)
             # necessary to compensate the cumulated uncertainty in the last layer
             ref_dist = np.min(dists[indices])
-            allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
+            allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))
             c = len(allowed)
             self._neighbors[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
 
@@ -314,14 +314,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
             else:
                 next_ = i + 1
                 if next_ < self._sector_lengths_cumulated[ref_layer + 1] and \
-                        util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = next_
                     c += 1
 
                 before = i - 1
                 if before >= self._sector_lengths_cumulated[ref_layer] and \
-                        util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = before
                     c += 1
@@ -338,7 +338,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 indices = np.argpartition(dists, to_get)[:to_get] if len(dists) > to_get else np.arange(len(dists))
                 # p^(log_p(m) + 1)
                 # necessary to compensate the cumulated uncertainty in the last layer
-                allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))  # p - 2
+                allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))  # p - 2
                 c_ = len(allowed)
                 self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
                     ref_layer + 1]  # p - 2

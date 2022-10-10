@@ -35,13 +35,12 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     return np.any(np.abs(zs - z) <= tol)
 
 
+
+
 @NumbaChecker(["boolean(complex128, complex128, float64)",
-               "boolean(complex128, complex128, Omitted(1e-12))",
                "boolean(float64, float64, float64)",
-               "boolean(float64, float64, Omitted(1e-12))",
-               "boolean[::1](float64[::1], float64, float64)",
-               "boolean[::1](float64[::1], float64, Omitted(1e-12))"])
-def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
+               "boolean[::1](float64[::1], float64, float64)"])
+def is_close_within_tol(z1: complex, z2: complex, tol: float) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
     Time-complexity: O(1)
@@ -52,6 +51,11 @@ def is_close(z1: complex, z2: complex, tol: float = 1e-12) -> bool:
     """
     return np.abs(z1 - z2) <= tol
 
+@NumbaChecker(["boolean(complex128, complex128)",
+               "boolean(float64, float64)",
+               "boolean[::1](float64[::1], float64)"])
+def is_close(z1: complex, z2: complex) -> bool:
+    return is_close_within_tol(z1, z2, 1E-12)
 
 @NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)"])
 def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.array:
