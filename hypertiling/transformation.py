@@ -3,7 +3,10 @@ from numpy import array as nparray
 from hypertiling.check_numba import NumbaChecker
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64)",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32)"])
 def kahan(x, y):
     """
     Transform the addition of two floating point numbers:
