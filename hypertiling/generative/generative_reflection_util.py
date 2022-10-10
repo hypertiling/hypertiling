@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
@@ -21,9 +21,8 @@ PI2 = 2 * np.pi
 # Assistance ===========================================================================================================
 
 
-@NumbaChecker(["boolean(complex128[::1], complex128, float64)",
-               "boolean(complex128[::1], complex128, Omitted(1e-12))"])
-def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
+@NumbaChecker("boolean(complex128[::1], complex128, float64)")
+def any_is_close(zs: np.array, z: np.complex128, tol: float) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
     Time-complexity: O(p)
@@ -33,8 +32,6 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     :result: bool = True if float is in array else False
     """
     return np.any(np.abs(zs - z) <= tol)
-
-
 
 
 @NumbaChecker(["boolean(complex128, complex128, float64)",
@@ -51,11 +48,13 @@ def is_close_within_tol(z1: complex, z2: complex, tol: float) -> bool:
     """
     return np.abs(z1 - z2) <= tol
 
+
 @NumbaChecker(["boolean(complex128, complex128)",
                "boolean(float64, float64)",
                "boolean[::1](float64[::1], float64)"])
 def is_close(z1: complex, z2: complex) -> bool:
     return is_close_within_tol(z1, z2, 1E-12)
+
 
 @NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)"])
 def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.array:
@@ -69,9 +68,11 @@ def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.
     """
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
+
 @NumbaChecker(["int64[:, :](complex128[::1], complex128[::1])"])
 def any_close_matrix(zs1: np.array, zs2: np.array) -> np.array:
     return any_close_matrix_within_tol(zs1, zs2, 1E-12)
+
 
 @NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
