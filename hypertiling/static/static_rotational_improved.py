@@ -18,8 +18,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
     def __init__(self, p, q, n, center, radius=None):
         super(KernelStaticRotationalImproved, self).__init__(p, q, n, center, radius)
-        #self.center = center
-
+        # self.center = center
 
     def generate_sector(self):
         """
@@ -113,8 +112,6 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
 
-
-
     def add_layer(self):
         """ constructs an additional layer for an existing tiling """
 
@@ -125,8 +122,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         if self.center == "vertex":
 
             centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                            math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                        self.fund_poly.verticesP[self.p].real))
+                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
+                                                     self.fund_poly.verticesP[self.p].real))
         else:
             centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
 
