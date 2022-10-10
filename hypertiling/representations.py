@@ -1,11 +1,10 @@
-import math
-from hypertiling.check_numba import check_numba
+import numpy as np
+from hypertiling.check_numba import NumbaChecker
 from numpy import array as nparray
 
 
-
-@check_numba
-def p2w(z):
+@NumbaChecker("float64[::1](complex128)")
+def p2w(z: np.complex128) -> np.array:
     '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
     xx = x * x
@@ -14,16 +13,16 @@ def p2w(z):
     return factor * nparray([(1 + xx + yy), 2 * x, 2 * y])
 
 
-@check_numba
-def w2p(point):
+@NumbaChecker("complex128(float64[:])")
+def w2p(point: np.array) -> np.complex128:
     '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
     factor = 1 / (1 + t)
-    return complex(x * factor, y * factor)
+    return np.complex128(complex(x * factor, y * factor))
 
 
-@check_numba
-def p2w_xyt(z):
+@NumbaChecker("float64[::1](complex128)")
+def p2w_xyt(z: np.complex128) -> np.array:
     '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
     xx = x * x
@@ -32,9 +31,9 @@ def p2w_xyt(z):
     return factor * nparray([2 * x, 2 * y, (1 + xx + yy)])
 
 
-@check_numba
-def w2p_xyt(point):
+@NumbaChecker("complex128(float64[:])")
+def w2p_xyt(point: np.array) -> np.complex128:
     '''Convert Weierstraß to Poincare representation '''
     [x, y, t] = point
     factor = 1 / (1 + t)
-    return complex(x * factor, y * factor)
+    return np.complex128(complex(x * factor, y * factor))

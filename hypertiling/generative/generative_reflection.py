@@ -11,8 +11,13 @@ p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
 n: Number of layers (reflective definition)
 m: Number of polygons
-
 m = m(p, q, n)
+
+LIMITATIONS:
+- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+  layers size in the fundamental sector
+- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
 """
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
@@ -296,7 +301,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             indices = np.argpartition(dists, 2)[:2] if len(dists) > 2 else np.arange(len(dists))  # p^(log_p(m) - 1)
             # necessary to compensate the cumulated uncertainty in the last layer
             ref_dist = np.min(dists[indices])
-            allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))
+            allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))
             c = len(allowed)
             self._neighbors[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
 
@@ -309,14 +314,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
             else:
                 next_ = i + 1
                 if next_ < self._sector_lengths_cumulated[ref_layer + 1] and \
-                        util.is_close(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = next_
                     c += 1
 
                 before = i - 1
                 if before >= self._sector_lengths_cumulated[ref_layer] and \
-                        util.is_close(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
                                       tol=tol):
                     self._neighbors[i, c] = before
                     c += 1
@@ -333,7 +338,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 indices = np.argpartition(dists, to_get)[:to_get] if len(dists) > to_get else np.arange(len(dists))
                 # p^(log_p(m) + 1)
                 # necessary to compensate the cumulated uncertainty in the last layer
-                allowed = np.argwhere(util.is_close(dists[indices], ref_dist, tol=tol))  # p - 2
+                allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))  # p - 2
                 c_ = len(allowed)
                 self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
                     ref_layer + 1]  # p - 2
@@ -855,9 +860,6 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
-    # numba compile stuff
-    KernelGenerativeReflection(7, 3, 2)
-
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
@@ -865,6 +867,9 @@ if __name__ == "__main__":
     tiling = KernelGenerativeReflection(3, 7, 12)
     t2 = time.time()
 
+    tiling.map_neighbors()
+    tiling.get_neighbors(1)
+    tiling.get_neighbors_experimental(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")

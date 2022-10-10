@@ -1,8 +1,8 @@
-from typing import Tuple, Union
+from typing import Tuple
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 import hypertiling.transformation as trans
-from hypertiling.check_numba import check_numba
+from hypertiling.check_numba import NumbaChecker
 
 """
 p: Number of edges/vertices of a polygon
@@ -20,8 +20,9 @@ PI2 = 2 * np.pi
 # Variables ============================================================================================================
 # Assistance ===========================================================================================================
 
-@check_numba
-def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
+
+@NumbaChecker("boolean(complex128[::1], complex128, float64)")
+def any_is_close(zs: np.array, z: np.complex128, tol: float) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
     Time-complexity: O(p)
@@ -33,8 +34,10 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float = 1e-12) -> bool:
     return np.any(np.abs(zs - z) <= tol)
 
 
-@check_numba
-def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol: float = 1e-12) -> bool:
+@NumbaChecker(["boolean(complex128, complex128, float64)",
+               "boolean(float64, float64, float64)",
+               "boolean[::1](float64[::1], float64, float64)"])
+def is_close_within_tol(z1: complex, z2: complex, tol: float) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
     Time-complexity: O(1)
@@ -46,8 +49,15 @@ def is_close(z1: Union[complex, float, int], z2: Union[complex, float, int], tol
     return np.abs(z1 - z2) <= tol
 
 
-@check_numba
-def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
+@NumbaChecker(["boolean(complex128, complex128)",
+               "boolean(float64, float64)",
+               "boolean[::1](float64[::1], float64)"])
+def is_close(z1: complex, z2: complex) -> bool:
+    return is_close_within_tol(z1, z2, 1E-12)
+
+
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1], float64)"])
+def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
     Time-complexity: O(pq)
@@ -59,7 +69,12 @@ def any_close_matrix(zs1: np.array, zs2: np.array, tol: float = 1e-12):
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
 
-@check_numba
+@NumbaChecker(["int64[:, :](complex128[::1], complex128[::1])"])
+def any_close_matrix(zs1: np.array, zs2: np.array) -> np.array:
+    return any_close_matrix_within_tol(zs1, zs2, 1E-12)
+
+
+@NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
     """
     Generates the neigboring polygons for a single polygon poly
@@ -83,7 +98,7 @@ def generate_raw(poly: np.array) -> np.array:
     return reflection_centers
 
 
-@check_numba
+@NumbaChecker("float64(complex128, complex128)")
 def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
     """
     Calculates the distance between the points z and z_hat.
@@ -98,7 +113,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@check_numba
+@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
 def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
@@ -117,7 +132,7 @@ def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@check_numba
+@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
 def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     """
     Estimates the number of tildes the tiling will have.
@@ -136,7 +151,9 @@ def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
     return lengths
 
 
-@check_numba
+@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
+               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
 def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
@@ -211,12 +228,14 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 reflection_levels[c] = reflection_levels[j] + 1  # 1
 
                 # shares edge with former polygon (sibling)
+                # connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                 connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 2:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
                     edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
                 # check if poly shares edge with next parent (parents sibling) #filler
+                # connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
                 connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
                 if connection.shape[0] == 2 and c > 3:
                     edge_array[c] ^= 1 << (connection[1, 1] - 1)
@@ -231,4 +250,5 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 if c == stop:
                     return reflection_levels
     return reflection_levels
+
 # Methods ==============================================================================================================

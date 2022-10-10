@@ -1,8 +1,8 @@
 import hypertiling.transformation as trans
-from hypertiling.check_numba import check_numba
+from hypertiling.check_numba import NumbaChecker
 
 
-@check_numba
+@NumbaChecker("(int64, complex128, complex128[:])")
 def morigin(p, z0, verticesP):
     """
     Apply Moebius transform to an array of length (p+1) of vertices.
@@ -22,7 +22,7 @@ def morigin(p, z0, verticesP):
         verticesP[i] = z
 
 
-@check_numba
+@NumbaChecker("(int64, complex128, complex128[:])")
 def morigin_inv(p, z0, verticesP):
     """
     Apply inverse Moebius trafo to an array of length (p+1) of vertices.
@@ -42,7 +42,7 @@ def morigin_inv(p, z0, verticesP):
         verticesP[i] = z
 
 
-@check_numba
+@NumbaChecker("(int64, float64, complex128[:])")
 def mrotate(p, phi, verticesP):
     """
     Rotate an array of length (p + 1) of complex vertices.
@@ -62,7 +62,7 @@ def mrotate(p, phi, verticesP):
         verticesP[i] = z
 
 
-@check_numba
+@NumbaChecker("complex128(complex128, float64, complex128)")
 def mfull_point(z0, phi, p):
     """
     Apply all transformations(origin, rotate, inv_origin) to a single vertex.
@@ -82,7 +82,7 @@ def mfull_point(z0, phi, p):
     return trans.moeb_origin_trafo_inverse(z0, z)
 
 
-@check_numba
+@NumbaChecker("(int64, float64, int64, complex128[:])")
 def mfull(p, phi, ind, verticesP):
     """ 
     Apply all transformations(origin, rotate, inv_origin) in dd precision to the vertices of an entire polygon.
