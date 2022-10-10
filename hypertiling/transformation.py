@@ -53,9 +53,13 @@ def twodiff(x, y):
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])"])
 def twoproduct(x, y):
-    '''Product of two numbers: x*y = r + e. See Ogita et al. 2005'''
+    """
+    Product of two numbers: x*y = r + e. See Ogita et al. 2005.
+    Note that the magic numbers in this function restrict its domain to IEEE double precision numbers
+    """
     u = x * 134217729.0  # Split input x
     v = y * 134217729.0  # Split input y
     s = u - (u - x)
@@ -67,7 +71,10 @@ def twoproduct(x, y):
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32, float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
 def htadd(x, dx, y, dy):  # double double add
     '''perform addition of numbers given in double double representation '''
     r, e = twosum(x, y)
@@ -76,7 +83,10 @@ def htadd(x, dx, y, dy):  # double double add
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32, float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
 def htdiff(x, dx, y, dy):
     '''perform subtraction of numbers given in double double representation '''
     r, e = twodiff(x, y)
@@ -85,7 +95,8 @@ def htdiff(x, dx, y, dy):
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
 def htprod(x, dx, y, dy):
     '''perform multplication of numbers given in double double representation '''
     r, e = twoproduct(x, y)
@@ -94,7 +105,8 @@ def htprod(x, dx, y, dy):
     return r, e
 
 
-@NumbaChecker()
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
 def htdiv(x, dx, y, dy):
     '''perform division of numbers given in double double representation '''
     r = x / y
