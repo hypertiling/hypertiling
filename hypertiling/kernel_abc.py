@@ -4,8 +4,6 @@ import numpy as np
 
 class AbstractKernelBase(abc.ABC):
 
-    __slots__ = ["p", "q", "n", "length"]
-
     @abc.abstractmethod
     def __init__(self, p: int, q: int, n: int):
         pass

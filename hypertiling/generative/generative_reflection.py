@@ -29,9 +29,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
     Creates the hyperbolic tiling.
     """
 
-    __slots__ = ["r", "degtol", "mangle", "_sector_lengths", "_sector_polys", "_edge_array",
-                 "_sector_lengths_cumulated", "_layers", "_neighbors"]
-
     def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
@@ -871,8 +868,6 @@ if __name__ == "__main__":
     t1 = time.time()
     tiling = KernelGenerativeReflection(3, 7, 12)
     t2 = time.time()
-    print(tiling.__slots__)
-    print(getsizeof(tiling))
 
     tiling.map_neighbors()
     tiling.get_neighbors(1)
