@@ -382,7 +382,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         if self._layers is None:
             self.map_layers()
 
-        layer_lengths = util.get_ns((self.p, self.q, np.max(self._layers) + 1))
+        layer_lengths = util.get_ns(self.p, self.q, np.max(self._layers) + 1)
         layer_lengths = np.ceil(layer_lengths / self.p).astype(np.uint32)
         for i, length in enumerate(layer_lengths):
             if np.count_nonzero(self._layers == i) != length:
