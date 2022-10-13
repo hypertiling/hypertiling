@@ -1,14 +1,14 @@
 import abc
 import numpy as np
-from typing import Optional
+
 
 class AbstractKernelBase(abc.ABC):
 
+    __slots__ = ["p", "q", "n", "length"]
+
     @abc.abstractmethod
-    def __init__(self, p: int, q: int, n: int, radius: Optional[float] = None):
+    def __init__(self, p: int, q: int, n: int):
         pass
-
-
 
     @abc.abstractmethod
     def get_layer(self, index: int) -> int:

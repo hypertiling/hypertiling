@@ -29,6 +29,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
     Creates the hyperbolic tiling.
     """
 
+    __slots__ = ["r", "degtol", "mangle", "_sector_lengths", "_sector_polys", "_edge_array",
+                 "_sector_lengths_cumulated", "_layers", "_neighbors"]
+
     def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
@@ -45,11 +48,10 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # grid attributes
         if not ((p - 2) * (q - 2) > 4):
             raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-        self.geo_atts = (p, q, n)
 
         self.p = p
         self.q = q
-        self.nlayers = n
+        self.n = n
 
         # technical attributes
         fac = np.pi / (p * q)
@@ -59,13 +61,13 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         # estimate some other technical attributes
         if n > 1:
-            lengths = util.get_reflection_n_estimation(self.geo_atts)  # n
+            lengths = util.get_reflection_n_estimation(p, q, n)  # n
             self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
         else:
             self._sector_lengths = np.array([1])
 
         self._sector_polys = np.empty((np.sum(self._sector_lengths), p + 1), dtype=np.complex128)  # + center = p + 1
-        self._edge_array = np.empty(self._sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.geo_atts[0] - 1))
+        self._edge_array = np.empty(self._sector_polys.shape[0], dtype=np.min_scalar_type(2 ** self.p - 1))
         """
         edge_array is not the most compact representation of the edges. The idea is to store which edges are blocked
         within a number in the array. Each polygon has its own number where the index is equal in edge_array and 
@@ -78,7 +80,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         rf = self.generate()  # p^2 m + n
 
         # correct properties of the tiling
-        self.length = self.geo_atts[0] * (len(rf) - 1) + 1
+        self.length = self.p * (len(rf) - 1) + 1
         self._sector_polys = self._sector_polys[:len(rf)]
         self._edge_array = self._edge_array[:len(rf)]
         self._sector_lengths = np.array([np.count_nonzero(rf == i) for i in range(np.max(rf) + 1)], dtype=np.uint32)
@@ -106,8 +108,8 @@ class KernelGenerativeReflection(AbstractKernelBase):
         for poly in polys:
             yield poly
 
-        dphi = PI2 / self.geo_atts[0]
-        phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
+        dphi = PI2 / self.p
+        phis = np.array([dphi * i for i in range(1, self.p)])
         for i, angle in enumerate(phis):
             for poly in polys:
                 yield poly * np.exp(angle * 1j)
@@ -149,7 +151,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         if index < self._sector_lengths_cumulated[ref_layer]:
             index += self._sector_lengths[ref_layer]
-            index += (self._sector_polys.shape[0] - 1) * (self.geo_atts[0] - 1)
+            index += (self._sector_polys.shape[0] - 1) * (self.p - 1)
         elif index >= self._sector_lengths_cumulated[ref_layer + 1]:
             index -= self._sector_lengths[ref_layer]
             index += self._sector_polys.shape[0] - 1
@@ -209,7 +211,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(p^2 m + n)
         :return: void
         """
-        return util.generate(self.geo_atts, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
+        return util.generate(self.p, self.q, self.n, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.degtol,
                              self.mangle)
 
@@ -225,7 +227,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: void
         """
         self._layers = np.empty(self._sector_polys.shape[0], dtype=np.uint8)
-        self._layers.fill(self.geo_atts[2])  # m / p
+        self._layers.fill(self.n)  # m / p
         self._layers[0] = 0
 
         vertices = {np.round(vertex, 12): [np.uint8(1), 0] for vertex in self._sector_polys[0, 1:]}  # p
@@ -234,10 +236,10 @@ class KernelGenerativeReflection(AbstractKernelBase):
             to_add = []
             for vertex_ in poly[1:]:  # p
                 vertex = np.round(vertex_, 12)
-                vertex__ = np.round(vertex_ * np.exp(- PI2 / self.geo_atts[0] * 1j), 12)
+                vertex__ = np.round(vertex_ * np.exp(- PI2 / self.p * 1j), 12)
                 if vertex in vertices:  # 1
                     vertices[vertex][0] += 1
-                    if vertices[vertex] == self.geo_atts[1]:
+                    if vertices[vertex] == self.q:
                         del vertices[vertex]
 
                     v = vertices[vertex][1] + 1
@@ -245,7 +247,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
                 elif vertex__ in vertices:
                     vertices[vertex__][0] += 1
-                    if vertices[vertex__] == self.geo_atts[1]:
+                    if vertices[vertex__] == self.q:
                         del vertices[vertex__]
 
                     v = vertices[vertex__][1] + 1
@@ -267,9 +269,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
 
         dtype = np.min_scalar_type(self.length)
-        self._neighbors = np.empty((self._sector_polys.shape[0], self.geo_atts[0]), dtype=dtype)
+        self._neighbors = np.empty((self._sector_polys.shape[0], self.p), dtype=dtype)
         self._neighbors.fill(- 1)  # to lazy to figure out what 2 ** dtype - 1 would be  # m / p
-        self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])]  # p
+        self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)]  # p
 
         # fundamental sector
         weierstrass = self._to_weierstrass(self._sector_polys)  # m / p
@@ -306,7 +308,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             self._neighbors[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
 
             # siblings
-            if self.geo_atts[1] == 3:
+            if self.q == 3:
                 self._neighbors[i, c] = self._index_from_ref_layer_index(i + 1, ref_layer)
                 c += 1
                 self._neighbors[i, c] = self._index_from_ref_layer_index(i - 1, ref_layer)
@@ -314,15 +316,17 @@ class KernelGenerativeReflection(AbstractKernelBase):
             else:
                 next_ = i + 1
                 if next_ < self._sector_lengths_cumulated[ref_layer + 1] and \
-                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]), ref_dist,
-                                      tol=tol):
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]),
+                                                 ref_dist,
+                                                 tol=tol):
                     self._neighbors[i, c] = next_
                     c += 1
 
                 before = i - 1
                 if before >= self._sector_lengths_cumulated[ref_layer] and \
-                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[before], weierstrass[i]), ref_dist,
-                                      tol=tol):
+                        util.is_close_within_tol(distance.lorentzian_distance(weierstrass[before], weierstrass[i]),
+                                                 ref_dist,
+                                                 tol=tol):
                     self._neighbors[i, c] = before
                     c += 1
 
@@ -334,7 +338,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                                                          ref_layer + 1] + self._sector_lengths[ref_layer + 1]],
                                                      weierstrass[i])  # p^(log_p(m) + 1)
 
-                to_get = self.geo_atts[0] - c
+                to_get = self.p - c
                 indices = np.argpartition(dists, to_get)[:to_get] if len(dists) > to_get else np.arange(len(dists))
                 # p^(log_p(m) + 1)
                 # necessary to compensate the cumulated uncertainty in the last layer
@@ -346,7 +350,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
             # control boundary child->nephew artifact
             # boundary
-            rest = self.geo_atts[0] - c
+            rest = self.p - c
             if rest == 0:
                 continue
 
@@ -381,8 +385,8 @@ class KernelGenerativeReflection(AbstractKernelBase):
         if self._layers is None:
             self.map_layers()
 
-        layer_lengths = util.get_ns((*self.geo_atts[:2], np.max(self._layers) + 1))
-        layer_lengths = np.ceil(layer_lengths / self.geo_atts[0]).astype(np.uint32)
+        layer_lengths = util.get_ns((self.p, self.q, np.max(self._layers) + 1))
+        layer_lengths = np.ceil(layer_lengths / self.p).astype(np.uint32)
         for i, length in enumerate(layer_lengths):
             if np.count_nonzero(self._layers == i) != length:
                 print(f"Layer (traditional) {i} is not complete")
@@ -393,7 +397,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
             neighbor_counter = len(self.get_neighbors(i))
-            if neighbor_counter == self.geo_atts[0]:
+            if neighbor_counter == self.p:
                 continue
             print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
             return
@@ -415,8 +419,8 @@ class KernelGenerativeReflection(AbstractKernelBase):
         for poly in self._sector_polys:
             yield poly
 
-        dphi = PI2 / self.geo_atts[0]
-        phis = np.array([dphi * i for i in range(1, self.geo_atts[0])])
+        dphi = PI2 / self.p
+        phis = np.array([dphi * i for i in range(1, self.p)])
         for i, angle in enumerate(phis):
             for poly in self._sector_polys[1:]:
                 yield poly * np.exp(angle * 1j)
@@ -435,7 +439,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # remove the first one (the central polygon) from consideration
         index -= 1
 
-        phi = PI2 / self.geo_atts[0] * (index // (self._sector_polys.shape[0] - 1))
+        phi = PI2 / self.p * (index // (self._sector_polys.shape[0] - 1))
         index = index if index < (self._sector_polys.shape[0] - 1) else index % (self._sector_polys.shape[0] - 1)
 
         # +1 to ignore the first one
@@ -467,7 +471,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         neighbors = [[element for element in line if element != max_number] for line in self._neighbors.tolist()]
         # m / p loop execs: p loop execs: O(1)
 
-        for sector_i in range(1, self.geo_atts[0]):  # p loop execs
+        for sector_i in range(1, self.p):  # p loop execs
             part = rotate(part)  # m / p * p = m
             neighbors += [[i if i < self.length else i % self.length + 1 for i in line if i != max_number] for line in
                           part.tolist()]
@@ -595,7 +599,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         if sector_index == 0:
             jump = len(self._sector_polys) - 1
-            return [1 + i * jump for i in range(self.geo_atts[0])]
+            return [1 + i * jump for i in range(self.p)]
 
         dist_ref = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) + tol
         disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, self._sector_polys[sector_index][0]))
@@ -613,7 +617,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             if 0 < disk_distance(self[b_r][0]) <= dist_ref:
                 neighbors.append(b_r)
 
-            if len(neighbors) == self.geo_atts[0]:
+            if len(neighbors) == self.p:
                 break
 
         return neighbors
@@ -628,9 +632,9 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: np.array = array containing the indices of the neighbors
         """
         if sector_index == 0:
-            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.geo_atts[0])])  # p
+            return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)])  # p
 
-        neighbors = np.empty((self.geo_atts[0]), dtype=np.uint32)
+        neighbors = np.empty((self.p), dtype=np.uint32)
         c = 0
 
         ref_layer = self._get_reflection_level_in_sector(sector_index)
@@ -656,13 +660,13 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 break
 
         # 3. siblings / cousins
-        if self.geo_atts[1] == 3:
+        if self.q == 3:
             # siblings
             neighbors[c] = self._index_from_ref_layer_index(sector_index + 1, ref_layer)
             c += 1
             neighbors[c] = self._index_from_ref_layer_index(sector_index - 1, ref_layer)
             c += 1
-        elif self.geo_atts[1] & 1:
+        elif self.q & 1:
             # if number is even, it is not a cousin but a nephew and will be find along with the children
             # if odd, exactly one cousin should be found. It is either the next polygon or the before
             for shift in [1, -1]:
@@ -690,10 +694,10 @@ class KernelGenerativeReflection(AbstractKernelBase):
             current = neighbors[c] + side
             c += 1
 
-            left = self.geo_atts[0] - c
+            left = self.p - c
             steps = 2 * left
             step = 0
-            while c < self.geo_atts[0] and step < steps:  # 2 * (p - 1) loop execs
+            while c < self.p and step < steps:  # 2 * (p - 1) loop execs
                 current_index = self._index_from_ref_layer_index(current, ref_layer + 1)
                 connection = util.any_close_matrix(self._sector_polys[sector_index], self[current_index])  # p^2
                 if connection.shape[0] == 2:
@@ -714,7 +718,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # control boundary child->grand-nephew artifact
         ref_dist = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for layer_index in range(2, len(self._sector_lengths_cumulated) - 1):  # n loop execs
-            if c == self.geo_atts[0]:
+            if c == self.p:
                 break
             for index_ in [self._sector_lengths_cumulated[layer_index] - 1,
                            self._sector_lengths_cumulated[layer_index + 1]]:
@@ -754,12 +758,12 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: int = index of the corresponding polygon
         """
         angle = np.angle(v)
-        factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.geo_atts[0])))
+        factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.p)))
 
         for modify in [0, 1, -1]:
             modi = factor + modify
-            modi = modi if modi >= 0 else modi + self.geo_atts[0]
-            sector_proj = v * np.exp(-(modi * PI2 / self.geo_atts[0]) * 1j) if modi != 0 else v  # p + 1
+            modi = modi if modi >= 0 else modi + self.p
+            sector_proj = v * np.exp(-(modi * PI2 / self.p) * 1j) if modi != 0 else v  # p + 1
             index = self._find(sector_proj)  # m / p
             if index:
                 index = int(index + (self._sector_polys.shape[0] - 1) * modi)
@@ -859,6 +863,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import time
+    from sys import getsizeof
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -866,6 +871,8 @@ if __name__ == "__main__":
     t1 = time.time()
     tiling = KernelGenerativeReflection(3, 7, 12)
     t2 = time.time()
+    print(tiling.__slots__)
+    print(getsizeof(tiling))
 
     tiling.map_neighbors()
     tiling.get_neighbors(1)
