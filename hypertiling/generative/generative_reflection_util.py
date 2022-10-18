@@ -113,53 +113,59 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
-def get_ns(geo_atts: Tuple[int, int, int]) -> np.array:
+@NumbaChecker("uint32[::1](int32, int32, int32)")
+def get_ns(p: int, q: int, n: int) -> np.array:
     """
     Calculates the number of tildes the tiling will have.
     Time-complexity: O(n)
-    :param geo_atts: Tuple[int, int, int] = (p, q, n), with n = traditional layer
+    :param p: int = number of edges
+    :param q: int = number of polys per vertex
+    :param n: int = number of layers (traditional)
     :return: np.array[np.uint32] = number of tildes per layer
     """
-    lengths = np.empty((geo_atts[2],), dtype=np.uint32)
+    lengths = np.empty((n,), dtype=np.uint32)
     lengths[0] = 0
-    lengths[1] = (geo_atts[1] - 2) * geo_atts[0]
-    fac = (geo_atts[1] - 2) * (geo_atts[0] - 2) - 2
-    for i in range(2, geo_atts[2]):
+    lengths[1] = (q - 2) * p
+    fac = (q - 2) * (p - 2) - 2
+    for i in range(2, n):
         lengths[i] = fac * lengths[i - 1] - lengths[i - 2]
 
     lengths[0] = 1
     return lengths
 
 
-@NumbaChecker("uint32[::1](UniTuple(int32, 3))")
-def get_reflection_n_estimation(geo_atts: Tuple[int, int, int]) -> np.array:
+@NumbaChecker("uint32[::1](int32, int32, int32)")
+def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     """
     Estimates the number of tildes the tiling will have.
     Time-complexity: O(n)
-    :param geo_atts: Tuple[int, int, int] = (p, q, n), with n = reflective layer
+    :param p: int = number of edges
+    :param q: int = number of polys per vertex
+    :param n: int = number of layers (reflective)
     :return: np.array[np.uint32] = number of tildes per layer
     """
-    k = geo_atts[0] - 3 if geo_atts[1] == 3 else geo_atts[0] - 2 if geo_atts[1] == 4 else geo_atts[0] - 1
+    k = p - 3 if q == 3 else p - 2 if q == 4 else p - 1
 
-    lengths = np.empty((geo_atts[2] + 1,), dtype=np.uint32)
+    lengths = np.empty((n + 1,), dtype=np.uint32)
     lengths[0] = 1
-    lengths[1] = geo_atts[0]
-    for n in range(2, geo_atts[2] + 1):
+    lengths[1] = p
+    for n in range(2, n + 1):
         lengths[n] = lengths[n - 1] * k
 
     return lengths
 
 
-@NumbaChecker(["uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
-               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
-               "uint8[::1](UniTuple(int64, 3), float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
-def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, sector_lengths: np.array,
+@NumbaChecker(["uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
+               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
+               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
+def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_lengths: np.array,
              edge_array: np.array, degtol: float, mangle: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.
     Time-complexity: O(p^2 m(p, q, n) + n), with m(p, q, n) is the number of polygons
-    :param geo_atts: Tuple[int, int, int] = [p, q, n]
+    :param p: int = number of edges
+    :param q: int = number of polys per vertex
+    :param n: int = number of layers (reflective)
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
@@ -169,8 +175,8 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     :param mangle: float = rotation of the center polygon
     :return: np.array[np.uint8] = stores for every polygon which reflection level it has
     """
-    dphi = PI2 / geo_atts[0]
-    phis = np.array([dphi * i + mangle for i in range(geo_atts[0])])  # p
+    dphi = PI2 / p
+    phis = np.array([dphi * i + mangle for i in range(p)])  # p
 
     # most inner polygon
     sector_polys[0, 0] = 0
@@ -184,16 +190,16 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
     reflection_levels[0] = 0
 
     # prepare edge_array
-    edges = int(2 ** geo_atts[0] - 1)
+    edges = int(2 ** p - 1)
     # eliminate parent edge
-    edges ^= 1 << (geo_atts[0] - 1)
+    edges ^= 1 << (p - 1)
     edge_array.fill(edges)  # m/p
     # for first poly create only one neighbor
     edge_array[0] = 1
 
-    boundary = PI2 / geo_atts[0] + (degtol / 360 * PI2)
+    boundary = PI2 / p + (degtol / 360 * PI2)
     for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
-        if reflection_levels[j] == geo_atts[2]:
+        if reflection_levels[j] == n:
             # all reflection layers are constructed
             return reflection_levels[:c]
         for i, vertex in enumerate(poly[1:]):  # p loop execs
@@ -209,12 +215,12 @@ def generate(geo_atts: Tuple[int, int, int], r: float, sector_polys: np.array, s
                 continue
 
             z = poly.copy()  # p  + 1
-            array_trans.morigin(geo_atts[0], vertex, z)  # p + 1
-            phi = np.angle(z[1:][(i + 1) % geo_atts[0]])  # 1
-            array_trans.mrotate(geo_atts[0], phi, z)  # p + 1
+            array_trans.morigin(p, vertex, z)  # p + 1
+            phi = np.angle(z[1:][(i + 1) % p])  # 1
+            array_trans.mrotate(p, phi, z)  # p + 1
             z = np.conjugate(z)  # p + 1
-            array_trans.mrotate(geo_atts[0], - phi, z)  # p + 1
-            array_trans.morigin(geo_atts[0], - vertex, z)  # p + 1
+            array_trans.mrotate(p, - phi, z)  # p + 1
+            array_trans.morigin(p, - vertex, z)  # p + 1
 
             angle = np.angle(z[0])  # 1
             if angle > boundary:
