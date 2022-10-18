@@ -40,7 +40,7 @@ class KernelStaticBase(AbstractKernelBase):
 
     """
 
-    def __init__(self, p, q, nlayers, center="cell", radius=None):
+    def __init__(self, p, q, nlayers, center="cell", autogenerate=True, radius=None):
         super().__init__(p, q, nlayers)
 
         # main attributes
@@ -49,6 +49,7 @@ class KernelStaticBase(AbstractKernelBase):
         self.nlayers = nlayers  # layers of the tessellation
         self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
         self.radius = radius # a cut-off radius (implement me!)
+        self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
 
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
@@ -170,8 +171,8 @@ class KernelRotationalCommon(KernelStaticBase):
     Commonalities
     """
 
-    def __init__(self, p, q, n, center, radius):
-        super(KernelRotationalCommon, self).__init__(p, q, n, center, radius)
+    def __init__(self, p, q, n, center, autogenerate, radius):
+        super(KernelRotationalCommon, self).__init__(p, q, n, center, autogenerate, radius)
 
     def replicate(self):
         """
