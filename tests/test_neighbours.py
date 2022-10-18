@@ -15,7 +15,7 @@ class TestCore(unittest.TestCase):
                     for cen in ["cell", "vertex"]:
                         print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = ", cen, ", kernel =", k)
                         T = HyperbolicTiling(p, q, nl, kernel=k, center=cen)
-                        T.generate()
+        
                         nbrs = find(T, which=which)
                         for n in nbrs:
                             self.assertFalse(len(n) > p)
@@ -31,7 +31,7 @@ class TestCore(unittest.TestCase):
                     for cen in ["cell", "vertex"]:
                         print("Constructing lattice (p,q,n) = ", p, q, nl, ", center = ", cen, ", kernel =", k)
                         T = HyperbolicTiling(p, q, nl, kernel=k, center=cen)
-                        T.generate()
+        
                         nbrs = find(T, which=which)
                         for n in nbrs:
                             self.assertFalse(len(n) > p)
