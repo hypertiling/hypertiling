@@ -33,7 +33,7 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
 
 
 # convert Hyperbolic Tiling cells into matplotlib PatchCollection
-def poly2patch(tiling, colors=None, lazy=False, cutoff=0.001, **kwargs):
+def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, **kwargs):
     """
     Returns a PatchCollection, containing all polygons that are to be drawn.
 
@@ -93,7 +93,7 @@ def poly2patch(tiling, colors=None, lazy=False, cutoff=0.001, **kwargs):
 # transform all edges in the tiling to either matplotlib Arc or Line2D
 # depending on whether they came out straight or curved
 # the respective type is encoded in the array "types"
-def edges2arc(tiling, **kwargs):
+def convert_edges_to_arcs(tiling, **kwargs):
     edges = []
     types = []
 
@@ -167,7 +167,7 @@ def plot_tiling(tiling, colors, symmetric_colors=False, plot_colorbar=False, laz
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
 
     # convert to matplotlib format
-    pgons = poly2patch(tiling, colors, lazy, cutoff, **kwargs)
+    pgons = convert_polygons_to_patches(tiling, colors, lazy, cutoff, **kwargs)
 
     # draw patches
     ax.add_collection(pgons)
@@ -225,7 +225,7 @@ def plot_geodesic(tiling, color="k", xcrange=(-1, 1), ycrange=(-1, 1), **kwargs)
 
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
 
-    edges, types = edges2arc(tiling, **kwargs)
+    edges, types = convert_edges_to_arcs(tiling, **kwargs)
     for edge in edges:
         ax.add_artist(edge)
         edge.set_color(color)
