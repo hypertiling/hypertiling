@@ -38,8 +38,8 @@ class KernelLegacyDunham(KernelStaticBase):
     however produces a lot of duplicates
     """
 
-    def __init__ (self, p, q, n, center="cell"):
-        super(KernelLegacyDunham, self).__init__(p, q, n, center="cell")
+    def __init__ (self, p, q, n, center="cell", autogenerate=True):
+        super(KernelLegacyDunham, self).__init__(p, q, n, center, autogenerate)
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
@@ -64,8 +64,9 @@ class KernelLegacyDunham(KernelStaticBase):
         # fundamental polygon of the tiling
         self.fund_poly = self.create_fundamental_polygon(center, rotate_by=360/p/2)
 
-
-
+        # construct tiling
+        if self.autogenerate:
+            self.generate()
 
 
         

@@ -15,7 +15,6 @@ class TestCore(unittest.TestCase):
         for p, q, nlayer in lattices:
             print("Constructing", p, q, nlayer, "lattice")
             T = HyperbolicTiling(p, q, nlayer, kernel=kernel, center="cell")
-            T.generate()
 
             nbrs1 = find(T, which="radius-optimized")
             nbrs2 = T.get_nbrs_radius_optimized_slice()
@@ -29,7 +28,6 @@ class TestCore(unittest.TestCase):
         for p, q, nlayer in lattices:
             print("Constructing", p, q, nlayer, "lattice")
             T = HyperbolicTiling(p, q, nlayer, kernel=kernel, center="cell")
-            T.generate()
 
             nbrs1 = find(T, which="radius-optimized")
             nbrs2 = find(T, which="brute-force-radius")
