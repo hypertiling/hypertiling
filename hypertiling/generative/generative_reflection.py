@@ -393,7 +393,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
-            neighbor_counter = len(self.get_neighbors(i))
+            neighbor_counter = len(self.get_nbrs(i))
             if neighbor_counter == self.p:
                 continue
             print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
@@ -568,7 +568,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             return pos - 1
         return pos
 
-    def _get_neighbors(self, sector_index: int) -> np.array:
+    def _get_nbrs(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
@@ -586,7 +586,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         indices = [self.find(e) for e in neighbor_centers]
         return [e for e in indices if not (e is False)]
 
-    def _get_neighbors_radius(self, sector_index: int, tol: float = 1e-5) -> np.array:
+    def _get_nbrs_radius(self, sector_index: int, tol: float = 1e-5) -> np.array:
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
@@ -619,7 +619,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         return neighbors
 
-    def _get_neighbors_experimental(self, sector_index: int) -> np.array:
+    def geometrical(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
@@ -727,7 +727,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         return neighbors[:c]
 
-    def _get_neighbors_mapping(self, sector_index: int) -> np.array:
+    def _get_nbrs_mapping(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
@@ -785,41 +785,41 @@ class KernelGenerativeReflection(AbstractKernelBase):
         index += 1
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
-    def get_neighbors(self, index: int) -> np.array:
+    def get_nbrs(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
         Time-complexity: O(m + p^2)
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self._get_neighbors)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
 
-    def get_neighbors_experimental(self, index: int) -> np.array:
+    def get_nbrs_geometrical(self, index: int) -> np.array:
         """
         Get the neighbors of the polygon at index using an experimental method.
         Time-complexity: O(?)
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self._get_neighbors_experimental)
+        return self._expand_sector_index_to_tiling(index, self.geometrical)
 
-    def get_neighbors_mapping(self, index: int) -> np.array:
+    def get_nbrs_mapping(self, index: int) -> np.array:
         """
         Get neighbor of the polygon at index.
         Time-complexity (single polygon): O(p)
         :param index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self._get_neighbors_mapping)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_mapping)
 
-    def get_neighbors_radius(self, index: int) -> np.array:
+    def get_nbrs_radius(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
         Time-complexity: O(m / p)
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self._get_neighbors_radius)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_radius)
 
     # Generative #######################################################################################################
     # Transformations ##################################################################################################
@@ -870,8 +870,8 @@ if __name__ == "__main__":
     t2 = time.time()
 
     tiling.map_neighbors()
-    tiling.get_neighbors(1)
-    tiling.get_neighbors_experimental(2)
+    tiling.get_nbrs(1)
+    tiling.get_nbrs_geometrical(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")

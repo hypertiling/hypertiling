@@ -23,7 +23,7 @@ MAXLAYERS = 4
 RATIOOFDUPLICATES = 0.1
 RATIOOFHOLES = 0.1
 
-# test find/get_neighbors
+# test find/get_nbrs
 SHIFTTOL = 1e-5
 
 
@@ -67,7 +67,7 @@ class TestReflectTiling(unittest.TestCase):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
             for index in range(tiling.length):
-                neighbors = tiling.get_neighbors(index)
+                neighbors = tiling.get_nbrs(index)
 
                 for j in range(tiling.length):
                     if j == index:
@@ -96,8 +96,8 @@ class TestReflectTiling(unittest.TestCase):
                 tiling = HyperbolicTiling(*combi, kernel="GR")
                 tiling.map_neighbors()
             for index in range(tiling.length):
-                neighbors = tiling.get_neighbors_mapping(index)
-                neighbors2 = tiling.get_neighbors_radius(index)
+                neighbors = tiling.get_nbrs_mapping(index)
+                neighbors2 = tiling.get_nbrs_radius(index)
                 try:
                     self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
                 except Exception as error:
@@ -113,8 +113,8 @@ class TestReflectTiling(unittest.TestCase):
                 tiling = HyperbolicTiling(*combi, kernel="GR")
                 tiling.map_neighbors()
             for index in range(tiling.length):
-                neighbors = tiling.get_neighbors_mapping(index)
-                neighbors2 = tiling.get_neighbors_experimental(index)
+                neighbors = tiling.get_nbrs_mapping(index)
+                neighbors2 = tiling.get_nbrs_geometrical(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
     def test_get_neighbors_mapping(self):
@@ -123,8 +123,8 @@ class TestReflectTiling(unittest.TestCase):
                 tiling = HyperbolicTiling(*combi, kernel="GR")
             tiling.map_neighbors()
             for index in range(tiling.length):
-                neighbors = tiling.get_neighbors(index)
-                neighbors2 = tiling.get_neighbors_mapping(index)
+                neighbors = tiling.get_nbrs(index)
+                neighbors2 = tiling.get_nbrs_mapping(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
     def test_get_neighbors_list(self):
@@ -134,7 +134,7 @@ class TestReflectTiling(unittest.TestCase):
             neighbors_list = tiling.get_neighbors_list()  # calls tiling.map_neighbors
             for index in range(tiling.length):
                 neighbors = neighbors_list[index]
-                neighbors2 = tiling.get_neighbors_mapping(index)
+                neighbors2 = tiling.get_nbrs_mapping(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 
     def test_check_integrity(self):
