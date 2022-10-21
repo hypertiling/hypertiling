@@ -866,7 +866,7 @@ if __name__ == "__main__":
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(3, 7, 12)
+    tiling = KernelGenerativeReflection(7, 3, 5)
     t2 = time.time()
 
     tiling.map_nbrs()
@@ -884,5 +884,5 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     color=colors[poly_layer % len(colors)])
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(poly_layer))
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(poly_layer))
     plt.show()
