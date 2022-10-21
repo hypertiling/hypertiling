@@ -256,7 +256,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             for vertex in to_add:  # p loop execs
                 vertices[vertex] = [np.uint8(1), self._layers[i]]
 
-    def map_neighbors(self, tol: float = 1e-5):
+    def map_nbrs(self, tol: float = 1e-5):
         """
         This function is numerically expensive!
         Calculates the neighbors for each polygon.
@@ -450,7 +450,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
     # Basics ###########################################################################################################
     # API ##############################################################################################################
 
-    def get_neighbors_list(self, tol: float = 1e-5) -> List[List[int]]:
+    def get_nbrs_list(self, tol: float = 1e-5) -> List[List[int]]:
         """
         Create and return list of all neighbors
         Time-complexity: O(mp)
@@ -458,7 +458,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: List[List[int]] = list of all neighbors for all polygons
         """
         if self._neighbors is None:
-            self.map_neighbors(tol=tol)
+            self.map_nbrs(tol=tol)
 
         part = np.copy(self._neighbors[1:]).astype(np.uint32)  # m / p * p = m
         max_number = np.iinfo(self._neighbors.dtype).max  # m / p
@@ -737,7 +737,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         if self._neighbors is None:
             print("start mapping neighbors")
-            self.map_neighbors()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
+            self.map_nbrs()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
         neighbor_indices = self._neighbors[sector_index]
 
         # get value from nice little overflow
@@ -869,7 +869,7 @@ if __name__ == "__main__":
     tiling = KernelGenerativeReflection(3, 7, 12)
     t2 = time.time()
 
-    tiling.map_neighbors()
+    tiling.map_nbrs()
     tiling.get_nbrs(1)
     tiling.get_nbrs_geometrical(2)
     print(f"Polygons in total :{len(tiling)}")

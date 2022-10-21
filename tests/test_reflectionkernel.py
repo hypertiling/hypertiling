@@ -94,7 +94,7 @@ class TestReflectTiling(unittest.TestCase):
         for combi in Progress(COMBIS):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
-                tiling.map_neighbors()
+                tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_mapping(index)
                 neighbors2 = tiling.get_nbrs_radius(index)
@@ -111,7 +111,7 @@ class TestReflectTiling(unittest.TestCase):
         for combi in Progress(COMBIS):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
-                tiling.map_neighbors()
+                tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_mapping(index)
                 neighbors2 = tiling.get_nbrs_geometrical(index)
@@ -121,7 +121,7 @@ class TestReflectTiling(unittest.TestCase):
         for combi in Progress(COMBIS):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
-            tiling.map_neighbors()
+            tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs(index)
                 neighbors2 = tiling.get_nbrs_mapping(index)
@@ -131,7 +131,7 @@ class TestReflectTiling(unittest.TestCase):
         for combi in Progress(COMBIS):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
-            neighbors_list = tiling.get_neighbors_list()  # calls tiling.map_neighbors
+            neighbors_list = tiling.get_nbrs_list()  # calls tiling.map_nbrs
             for index in range(tiling.length):
                 neighbors = neighbors_list[index]
                 neighbors2 = tiling.get_nbrs_mapping(index)
