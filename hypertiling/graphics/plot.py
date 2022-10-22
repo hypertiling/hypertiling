@@ -4,45 +4,45 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection, PolyCollection
-from .geodesics import geodesic_arc
+from ..geodesics import geodesic_arc
 
 
 # taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
 # plots even very large samples of polygons in less than a second
-def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", dpi=1200, refs=0):
+def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", dpi=1200):
     x, y = [], []
-    for pgon in tiling.polygons:
-        v = pgon.verticesP[0:-1]
+    for i, pgon in enumerate(tiling):
+        v = tiling.get_vertices(i)
         v = np.append(v, v[0])  # appending first vertex to close the circle to overcome missing edges in plot
         x.extend(v.real)
         x.append(None)  # this is some kind of trick that makes it that fast
         y.extend(v.imag)
         y.append(None)
-        plt.text(pgon.centerP().real-0.015, pgon.centerP().imag-0.015, pgon.number, fontsize=fs) if show_label else None
+        w = tiling.get_center(i)
+        plt.text(w.real-0.015, w.imag-0.015, i, fontsize=fs) if show_label else None
     plt.xlim([-1, 1])
     plt.ylim([-1, 1])
     plt.axis('equal')
     plt.axis('off')
     plt.fill(x, y, facecolor='None', edgecolor=c, linewidth=.1)
     label = f"{{{tiling.p},{tiling.q}}}-{tiling.nlayers} tessellation," \
-            f" {len(tiling.polygons)} polygons, {refs} refinement"
-    label += "s" if refs != 1 else ""  # grammar
+            f" {len(tiling)} polygons"
     plt.title(label)
-    plt.savefig(path, dpi=1200) if save_img else None  # max dpi ca. 4000
+    plt.savefig(path, dpi=dpi) if save_img else None  # max dpi ca. 4000
     plt.show()
 
 
 
-# convert list of HyperPolygon objects to matplotlib PatchCollection
-def poly2patch(polygons, colors=None, lazy=False, cutoff=0.001, **kwargs):
+# convert Hyperbolic Tiling cells into matplotlib PatchCollection
+def poly2patch(tiling, colors=None, lazy=False, cutoff=0.001, **kwargs):
     """
     Returns a PatchCollection, containing all polygons that are to be drawn.
 
     Parameters
     ----------
 
-    polygons: list
-        A list of hyperpolygon classes which are to be added to the PatchCollection. Usually, coming from HyperTiling.polygons.
+    tiling: HyperbolicTiling
+        A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
 
     colors: array-like
         Used for colormapping the PatchCollection. Must have same length as polygons.
@@ -70,9 +70,10 @@ def poly2patch(polygons, colors=None, lazy=False, cutoff=0.001, **kwargs):
     accepted_polys = []
         
     # loop over polygons
-    for idx, poly in enumerate(polygons):
+    for idx in range(len(tiling)):
         # extract vertex coordinates
-        u = poly.verticesP[0:-1]
+        u = tiling.get_vertices(idx)
+        # lazy plotting
         if lazy and np.any(abs(np.diff(u)) < cutoff):
             continue
         # transform to matplotlib Polygon format
@@ -93,15 +94,16 @@ def poly2patch(polygons, colors=None, lazy=False, cutoff=0.001, **kwargs):
 # transform all edges in the tiling to either matplotlib Arc or Line2D
 # depending on whether they came out straight or curved
 # the respective type is encoded in the array "types"
-def edges2matplotlib(T, **kwargs):
+def edges2matplotlib(tiling, **kwargs):
     
     edges = []
     types = []
 
-    for poly in T: # loop over polygons
-        for i in range(T.p): # loop over vertices
-            z1 = poly.verticesP[i] # extract edges
-            z2 = poly.verticesP[(i+1)%T.p]
+    for j, poly in enumerate(tiling): # loop over polygons
+        for i in range(tiling.p): # loop over vertices
+            z = tiling.get_vertices(j)
+            z1 = z[i] # extract edges
+            z2 = z[(i+1)%tiling.p]
             edge = geodesic_arc(z1,z2,**kwargs) # compute arc
             edges.append(edge)
 
@@ -122,7 +124,7 @@ def edges2matplotlib(T, **kwargs):
 
 
 # simple plot function for hyperbolic tiling with colors
-def plot_tiling(polygons, colors, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
+def plot_tiling(tiling, colors, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1,1), ycrange=(-1,1), **kwargs):   
     fig, ax = plt.subplots(figsize=(10,7), dpi=120)
     """
     Plots a hyperbolic tiling.
@@ -130,8 +132,8 @@ def plot_tiling(polygons, colors, symmetric_colors=False, plot_colorbar=False, l
     Parameters
     ----------
 
-    polygons: list
-        A list of hyperpolygon classes which are to be added to the PatchCollection. Usually, coming from HyperTiling.polygons.
+    tiling: HyperbolicTiling
+        A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
 
     colors: array-like
         Used for colormapping the PatchCollection. Must have same length as polygons.
@@ -169,7 +171,7 @@ def plot_tiling(polygons, colors, symmetric_colors=False, plot_colorbar=False, l
     """
 
     # convert to matplotlib format
-    pgons = poly2patch(polygons, colors, lazy, cutoff, **kwargs)
+    pgons = poly2patch(tiling, colors, lazy, cutoff, **kwargs)
 
     # draw patches
     ax.add_collection(pgons)

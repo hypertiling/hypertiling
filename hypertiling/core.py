@@ -1,13 +1,17 @@
 # relative imports
-from .kernelflo import KernelFlo
-from .kernelmanu import KernelManu
-from .kerneldunham import KernelDunham
+from .static.static_rotational_improved import KernelStaticRotationalImproved
+from .static.static_rotational import KernelStaticRotational
+from .static.legacy_dunham import KernelLegacyDunham
+from .generative.generative_reflection import KernelGenerativeReflection
 
-
+KERNELS = {"SR": KernelStaticRotational,
+           "SRI": KernelStaticRotationalImproved,
+           "DUN": KernelLegacyDunham,
+           "GR": KernelGenerativeReflection}
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="flo"):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 
@@ -25,22 +29,40 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="flo"):
         selects the construction algorithm
     """
 
-    if (p-2)*(q-2) <= 4:
-        raise AttributeError("[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+    if (p - 2) * (q - 2) <= 4:
+        raise AttributeError(
+            "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
 
-    if p>20 or q>20 and n>5:
+    if p > 20 or q > 20 and n > 5:
         print("[hypertiling] Warning: The lattice might become very large with your parameter choice!")
 
 
-    kernels = { "manu":   KernelManu, # to-do: we need better names for the kernels ;)
-                "flo":    KernelFlo, 
-                "dunham": KernelDunham}
+    if "radius" in kwargs and kwargs["radius"] is not None:
+        print("you have defined a cut-off radius ... make sure you set n large enough ...")
 
-    if kernel not in kernels:
-       raise KeyError("[hypertiling] Error: No valid kernel specified")
-    if kernel == "dunham":
-        print("Caution: This kernel is slow and error-prone. Use at own risk!")
+
+
+
+    if kernel == "GR":
+        print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
+        return KERNELS[kernel](p, q, n, **kwargs)
+
+    elif kernel == "SR" or kernel == "SRI":
+        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        return KERNELS[kernel](p, q, n, center, **kwargs)
+
+    elif kernel == "DUN":
+        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
         if center == "vertex":
-            print("KernelDunham doesn't support vertex-centered tilings yet. A cell-centered tiling will be generated instead...")
-        # raise NotImplementedError("[hypertiling] Error: Dunham kernel is currently broken (fixme!)")
-    return kernels[kernel](p, q, n, center)
+            print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
+        return KERNELS[kernel](p, q, n, center, **kwargs)     
+
+    #elif ... (further kernels)
+    
+    else:
+        raise KeyError("[hypertiling] Error: No valid kernel specified")
+
+    
+    
+

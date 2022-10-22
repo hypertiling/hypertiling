@@ -3,19 +3,21 @@ import math
 import copy
 
 # relative imports
-from .kernelbase import KernelCommon
-from .hyperpolygon import HyperPolygon, mfull_point
-from .transformation import p2w, moeb_rotate_trafo
-from .distance import disk_distance
+from .static_base import KernelRotationalCommon
+from .hyperpolygon import HyperPolygon
+from ..transformation import p2w, moeb_rotate_trafo
+from ..arraytransformation import mfull_point
+from ..distance import disk_distance
+from .static_base import MANGLE
 
-class KernelManu(KernelCommon):
+class KernelStaticRotational(KernelRotationalCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
-    def __init__ (self, p, q, n, center):
-        super(KernelManu, self).__init__(p, q, n, center)
+    def __init__ (self, p, q, n, center, radius=None):
+        super(KernelStaticRotational, self).__init__(p, q, n, center, radius)
+        #self.center = center # automatically assigned from super class?
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
-
 
     def generate_sector(self):
         """
@@ -29,6 +31,7 @@ class KernelManu(KernelCommon):
         self.polygons = []
 
         # add fundamental polygon to list
+        self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
         # angle width of the fundamental sector
@@ -49,13 +52,10 @@ class KernelManu(KernelCommon):
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
-
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
-
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
-
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         # compute center and angle
@@ -66,7 +66,7 @@ class KernelManu(KernelCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if self.mangle-1e-14 <= cangle < sect_angle_deg+self.degtol+self.mangle:
+                        if MANGLE-1e-14 <= cangle < sect_angle_deg+self.degtol+MANGLE:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             center = np.round(center, self.dgts)
@@ -83,16 +83,16 @@ class KernelManu(KernelCommon):
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.find_angle()
                                 adj_pgon.layer = l+1
+
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if self.mangle-1e-14 <= cangle <= self.degtol+self.mangle:
+                                if MANGLE-1e-14 <= cangle <= self.degtol+MANGLE:
                                     centerset_extra.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
-
 
             if self.numerically_unstable_upper(l, startpgon, endpgon):
                 print("Numerical accuracy exhausted;")
@@ -104,16 +104,15 @@ class KernelManu(KernelCommon):
                 print("No more layers will be constructed; automatic shutdown")
                 break
 
-
         # free mem of centerset
         del centerset
 
         # filter out rotational duplicates
         deletelist = []
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg-self.degtol+self.mangle:
+            if pgon.angle > sect_angle_deg-self.degtol+MANGLE:
 
-                center = moeb_rotate_trafo(pgon.centerP(), -sect_angle)
+                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
 
                 center = np.round(center, self.dgts) # better use simple distance?
 
@@ -123,6 +122,51 @@ class KernelManu(KernelCommon):
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
+    def add_layer(self):
+        """ constructs an additional layer for an existing tiling """
+
+        newpolygons = []
+
+        centerset = set()
+        for pgon in tiling:
+            center = np.round(pgon.centerP(), tiling.dgts)
+            centerset.add(center)
+
+        for pgon in tiling:
+            # iterate over every vertex of pgon
+            for vert_ind in range(tiling.p):
+                # iterate over all polygons touching this very vertex
+                for rot_ind in range(tiling.q):
+                    # compute center and angle
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * tiling.qhi, pgon.centerP())
+
+                    cangle = math.degrees(math.atan2(center.imag, center.real))
+                    cangle += 360 if cangle < 0 else 0
+
+                    # cut away cells outside the fundamental sector
+                    # allow some tolerance at the upper boundary
+                    # try adding to centerlist; it is a set() and takes care of duplicates
+                    lenA = len(centerset)
+                    center = np.round(center, tiling.dgts)  # CAUTION
+                    centerset.add(center)
+                    lenB = len(centerset)
+
+                    # this tells us whether an element has actually been added
+                    if lenB > lenA:
+                        # create copy
+                        polycopy = copy.deepcopy(pgon)
+
+                        # generate adjacent polygon
+                        adj_pgon = tiling.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon.find_angle()
+
+                        # add corresponding poly to large list
+                        newpolygons.append(adj_pgon)
+
+        tiling.polygons += newpolygons
+
+
+        
 
     def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
         """

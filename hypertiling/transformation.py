@@ -1,7 +1,13 @@
 import math
 from numpy import array as nparray
+from hypertiling.check_numba import NumbaChecker
 
-def ddkahan(x, y):
+
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
+def kahan(x, y):
     """
     Transform the addition of two floating point numbers:
 
@@ -24,104 +30,140 @@ def ddkahan(x, y):
     e = y - (r - x)
     return r, e
 
-def ddtwosum(x, y):
-   '''branch free transformation of addition by Knuth'''
-   r = x + y
-   t = r - x
-   e = (x - (r - t)) + (y - t)
-   return r, e
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
+def twosum(x, y):
+    '''branch free transformation of addition by Knuth'''
+    r = x + y
+    t = r - x
+    e = (x - (r - t)) + (y - t)
+    return r, e
 
-def ddtwodiff(x, y):
-   '''branch free transformation of subtraction'''
-   r = x - y
-   t = r - x
-   e = (x - (r - t)) - (y + t)
-   return r, e
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:])"])
+def twodiff(x, y):
+    '''branch free transformation of subtraction'''
+    r = x - y
+    t = r - x
+    e = (x - (r - t)) - (y + t)
+    return r, e
 
-def ddtwoproduct(x, y):
-   '''Product of two numbers: x*y = r + e. See Ogita et al. 2005'''
-   u = x*134217729.0 # Split input x
-   v = y*134217729.0 # Split input y
-   s = u - (u - x)
-   t = v - (v - y)
-   f = x - s
-   g = y - t
-   r = x*y
-   e = ((s*t - r) + s*g + f*t) + f*g
-   return r, e
 
-def ddadd(x, dx, y, dy): # double double add
-   '''perform addition of numbers given in double double representation '''
-   r, e = twosum(x, y)
-   e += dx + dy
-   r, e = kahan(r, e)
-   return r, e
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:])"])
+def twoproduct(x, y):
+    """
+    Product of two numbers: x*y = r + e. See Ogita et al. 2005.
+    Note that the magic numbers in this function restrict its domain to IEEE double precision numbers
+    """
+    u = x * 134217729.0  # Split input x
+    v = y * 134217729.0  # Split input y
+    s = u - (u - x)
+    t = v - (v - y)
+    f = x - s
+    g = y - t
+    r = x * y
+    e = ((s * t - r) + s * g + f * t) + f * g
+    return r, e
 
-def dddiff(x, dx, y, dy):
-   '''perform subtraction of numbers given in double double representation '''
-   r, e = twodiff(x, y)
-   e += dx - dy
-   r, e = kahan(r, e)
-   return r, e
 
-def ddprod(x, dx, y, dy):
-   '''perform multplication of numbers given in double double representation '''
-   r, e = twoproduct(x, y)
-   e += x * dy + y*dx
-   r, e = kahan(r, e)
-   return r, e
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32, float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
+def htadd(x, dx, y, dy):  # double double add
+    '''perform addition of numbers given in double double representation '''
+    r, e = twosum(x, y)
+    e += dx + dy
+    r, e = kahan(r, e)
+    return r, e
 
-def dddiv(x, dx, y, dy):
-   '''perform division of numbers given in double double representation '''
-   r = x/y
-   s, f = twoproduct(r, y)
-   e = (x - s - f + dx - r*dy)/y # Taylor expansion
-   r, e = kahan(r, e)
-   return r, e
 
-def ddcplxprod(a, da, b, db):
-   '''perform multiplication of complex double double numbers '''
-   rea, drea = a.real, da.real
-   ima, dima = a.imag, da.imag
-   reb, dreb = b.real, db.real
-   imb, dimb = b.imag, db.imag
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])",
+               "UniTuple(float32, 2)(float32, float32, float32, float32)",
+               "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
+def htdiff(x, dx, y, dy):
+    '''perform subtraction of numbers given in double double representation '''
+    r, e = twodiff(x, y)
+    e += dx - dy
+    r, e = kahan(r, e)
+    return r, e
 
-   #   We employ the Gauss/Karatsuba trick
-   #   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
-   r, dr = htprod(rea, drea, reb, dreb) # ar*br
-   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-   fac1, dfac1 = htadd(rea, drea, ima, dima)
-   fac2, dfac2 = htadd(reb, dreb, imb, dimb)
-   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-   imacc, dimacc = htdiff(imacc, dimacc, i, di)
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
+def htprod(x, dx, y, dy):
+    '''perform multplication of numbers given in double double representation '''
+    r, e = twoproduct(x, y)
+    e += x * dy + y * dx
+    r, e = kahan(r, e)
+    return r, e
 
-   r, dr = htdiff(r, dr, i, di)
-   return complex(r, imacc), complex(dr, dimacc)
 
-def ddcplxprodconjb(a, da, b, db):
-   '''perform multiplication of complex double double numbers: a * b^* '''
-   rea, drea = a.real, da.real
-   ima, dima = a.imag, da.imag
-   reb, dreb = b.real, db.real
-   imb, dimb = b.imag, db.imag
+@NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
+               "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
+def htdiv(x, dx, y, dy):
+    '''perform division of numbers given in double double representation '''
+    r = x / y
+    s, f = twoproduct(r, y)
+    e = (x - s - f + dx - r * dy) / y  # Taylor expansion
+    r, e = kahan(r, e)
+    return r, e
 
-   #   We employ the Gauss/Karatsuba trick
-   #   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
-   r, dr = htprod(rea, drea, reb, dreb) # ar*br
-   i, di = htprod(ima, dima, imb, dimb) # ai*bi
 
-   fac1, dfac1 = htadd(rea, drea, ima, dima)
-   fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
-   imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
-   imacc, dimacc = htdiff(imacc, dimacc, r, dr)
-   imacc, dimacc = htadd(imacc, dimacc, i, di)
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def htcplxprod(a, da, b, db):
+    '''perform multiplication of complex double double numbers '''
+    rea, drea = a.real, da.real
+    ima, dima = a.imag, da.imag
+    reb, dreb = b.real, db.real
+    imb, dimb = b.imag, db.imag
 
-   r, dr = htadd(r, dr, i, di)
-   return complex(r, imacc), complex(dr, dimacc)
+    #   We employ the Gauss/Karatsuba trick
+    #   (ar + I * ai)*(br + I*bi) = ar*br - ai*bi + I*[ (ar + ai)*(br + bi) - ar*br - ai*bi ]
+    r, dr = htprod(rea, drea, reb, dreb)  # ar*br
+    i, di = htprod(ima, dima, imb, dimb)  # ai*bi
 
-def ddcplxadd(a, da, b, db):
+    fac1, dfac1 = htadd(rea, drea, ima, dima)
+    fac2, dfac2 = htadd(reb, dreb, imb, dimb)
+    imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+    imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+    imacc, dimacc = htdiff(imacc, dimacc, i, di)
+
+    r, dr = htdiff(r, dr, i, di)
+    return complex(r, imacc), complex(dr, dimacc)
+
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def htcplxprodconjb(a, da, b, db):
+    '''perform multiplication of complex double double numbers: a * b^* '''
+    rea, drea = a.real, da.real
+    ima, dima = a.imag, da.imag
+    reb, dreb = b.real, db.real
+    imb, dimb = b.imag, db.imag
+
+    #   We employ the Gauss/Karatsuba trick
+    #   (ar + I * ai)*(br - I*bi) = ar*br + ai*bi + I*[ (ar + ai)*(br - bi) - ar*br + ai*bi ]
+    r, dr = htprod(rea, drea, reb, dreb)  # ar*br
+    i, di = htprod(ima, dima, imb, dimb)  # ai*bi
+
+    fac1, dfac1 = htadd(rea, drea, ima, dima)
+    fac2, dfac2 = htdiff(reb, dreb, imb, dimb)
+    imacc, dimacc = htprod(fac1, dfac1, fac2, dfac2)
+    imacc, dimacc = htdiff(imacc, dimacc, r, dr)
+    imacc, dimacc = htadd(imacc, dimacc, i, di)
+
+    r, dr = htadd(r, dr, i, di)
+    return complex(r, imacc), complex(dr, dimacc)
+
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def htcplxadd(a, da, b, db):
     '''perform addition of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -132,7 +174,9 @@ def ddcplxadd(a, da, b, db):
     i, di = htadd(ima, dima, imb, dimb)
     return complex(r, i), complex(dr, di)
 
-def ddcplxdiff(a, da, b, db):
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def htcplxdiff(a, da, b, db):
     '''perform subtraction of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
@@ -143,160 +187,133 @@ def ddcplxdiff(a, da, b, db):
     i, di = htdiff(ima, dima, imb, dimb)
     return complex(r, i), complex(dr, di)
 
-def ddcplxdiv(a, da, b, db):
-   '''perform division of complex double double numbers '''
-   rea, drea = a.real, da.real
-   ima, dima = a.imag, da.imag
-   reb, dreb = b.real, db.real
-   imb, dimb = b.imag, db.imag
-#    We make the denominator real.
-#    Hence we calculate the denominator and the nominator separately
-#    first the denominator: br^2 + bi^2
-   denom, ddenom = htprod(reb, dreb, reb, dreb)
-   t1, dt1 = htprod(imb, dimb, imb, dimb)
-   denom, ddenom = htadd(denom, ddenom , t1, dt1)
 
-#    Now on to the numerator
-   nom, dnom = htcplxprodconjb(a, da, b, db)
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def htcplxdiv(a, da, b, db):
+    '''perform division of complex double double numbers '''
+    rea, drea = a.real, da.real
+    ima, dima = a.imag, da.imag
+    reb, dreb = b.real, db.real
+    imb, dimb = b.imag, db.imag
+    #    We make the denominator real.
+    #    Hence we calculate the denominator and the nominator separately
+    #    first the denominator: br^2 + bi^2
+    denom, ddenom = htprod(reb, dreb, reb, dreb)
+    t1, dt1 = htprod(imb, dimb, imb, dimb)
+    denom, ddenom = htadd(denom, ddenom, t1, dt1)
 
-   r, dr = htdiv(nom.real, dnom.real, denom, ddenom) 
-   i, di = htdiv(nom.imag, dnom.imag, denom, ddenom)
+    #    Now on to the numerator
+    nom, dnom = htcplxprodconjb(a, da, b, db)
 
-   return complex(r, i), complex(dr, di)
+    r, dr = htdiv(nom.real, dnom.real, denom, ddenom)
+    i, di = htdiv(nom.imag, dnom.imag, denom, ddenom)
 
-def p2w_py(z):
+    return complex(r, i), complex(dr, di)
+
+
+@NumbaChecker("float64[:](complex128)")
+def p2w(z):
     '''Convert Poincare to Weierstraß representation '''
     x, y = z.real, z.imag
-    xx = x*x
-    yy = y*y
-    factor = 1 / (1-xx-yy)
-    return factor*nparray([(1+xx+yy), 2*x, 2*y])
+    xx = x * x
+    yy = y * y
+    factor = 1 / (1 - xx - yy)
+    return factor * nparray([(1 + xx + yy), 2 * x, 2 * y])
 
-def w2p_py(point):
+
+@NumbaChecker("complex128(float64[:])")
+def w2p(point):
     '''Convert Weierstraß to Poincare representation '''
     [t, x, y] = point
-    factor = 1 / (1+t)
-    return complex(x*factor, y*factor)
+    factor = 1 / (1 + t)
+    return complex(x * factor, y * factor)
 
-def mymoeb_py(z0, z):
+
+@NumbaChecker("complex128(complex128, complex128)")
+def mymoeb(z0, z):
     rez, imz = z.real, z.imag
     rez0, imz0 = z0.real, z0.imag
-    return (z+z0) / (1+z*z0.conjugate())#complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
+    return (z + z0) / (
+            1 + z * z0.conjugate())  # complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
 
-# maps all points z such that z0 -> 0, respecting the Poincare projection
 
-def moeb_origin_trafo_py(z0, z):
-    ret, dret = mymoebint(-z0, z)
-    return ret
 
-def moeb_origin_trafo_inverse_py(z0, z):
-    ret, dret = mymoebint(z0, z)
-    return ret
 
- # rotates z by phi counter-clockwise about the origin
-def moeb_rotate_trafo_py(z, phi): 
+# rotates z by phi counter-clockwise about the origin
+@NumbaChecker("complex128(float64, complex128)")
+def moeb_rotate_trafo(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
-def mymoebddint_py(z0, z):
-    dz0 = complex(0,0)
-    dz = complex(0,0)
-    one = complex(1,0)
-    done = complex(0,0)
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128)"])
+def mymoebint(z0, z):
+    dz0 = complex(0, 0)
+    dz = complex(0, 0)
+    one = complex(1, 0)
+    done = complex(0, 0)
     nom, dnom = htcplxadd(z, dz, z0, dz0)
     denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
     denom, ddenom = htcplxadd(one, done, denom, ddenom)
     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
     return ret, dret
 
-def moeb_origin_trafodd_py(z0, dz0, z, dz):
-   '''Möbius transform to the origin in double double representation'''
-   one = complex(1,0)
-   done = complex(0,0)
-   nom, dnom = htcplxdiff(z, dz, z0, dz0)
-   denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-   denom, ddenom = htcplxdiff(one, done, denom, ddenom)
-   ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-   return ret, dret
+# maps all points z such that z0 -> 0, respecting the Poincare projection
+@NumbaChecker("complex128(complex128, complex128)")
+def moeb_origin_trafo(z0, z):
+    ret, dret = mymoebint(-z0, z)
+    return ret
 
-def moeb_rotate_trafodd_py(z, dz, phi):
-   '''Rotation of a complex number'''
-   ep = complex(math.cos(phi), math.sin(phi))
-   ep = ep/abs(ep) # We calculated sin and cos separately. We can't be sure that |ep| == 1
-   dep = complex(0,0)
-   ret, dret = htcplxprod(z, dz, ep, dep)
-   return ret, dret
 
-def moeb_origin_trafo_inversedd_py(z0, dz0, z, dz):
-   '''Inverse Möbius transform to the origin in double double representation'''
-   one = complex(1,0)
-   done = complex(0,0)
-   nom, dnom = htcplxadd(z, dz, z0, dz0)
-   denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
-   denom, ddenom = htcplxadd(one, done, denom, ddenom)
-   ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
-   return ret, dret
+@NumbaChecker("complex128(complex128, complex128)")
+def moeb_origin_trafo_inverse(z0, z):
+    ret, dret = mymoebint(z0, z)
+    return ret
 
-# If numba is present we use the numba compiled functions, else the plain ones.
-try:
-    import numba
-    p2w = numba.njit(p2w_py)
-    w2p = numba.njit(w2p_py)
-    moeb_origin_trafo = numba.njit(moeb_origin_trafo_py)
-    moeb_origin_trafo_inverse = numba.njit(moeb_origin_trafo_inverse_py)
-    moeb_rotate_trafo = numba.njit(moeb_rotate_trafo_py)
-    mymoebint = numba.njit(mymoebddint_py)
-    mymoeb = numba.njit(mymoeb_py)
-    moeb_origin_trafodd = numba.njit(moeb_origin_trafodd_py)
-    moeb_rotate_trafodd = numba.njit(moeb_rotate_trafodd_py)
-    moeb_origin_trafo_inversedd = numba.njit(moeb_origin_trafo_inversedd_py)
-    htcplxadd = numba.njit(ddcplxadd)
-    htcplxdiv = numba.njit(ddcplxdiv)
-    htcplxdiff = numba.njit(ddcplxdiff)
-    htcplxprodconjb = numba.njit(ddcplxprodconjb)
-    htcplxprod = numba.njit(ddcplxprod)
-    htdiv = numba.njit(dddiv)
-    htadd = numba.njit(ddadd)
-    htprod = numba.njit(ddprod)
-    htdiff = numba.njit(dddiff)
-    twoproduct = numba.njit(ddtwoproduct)
-    twosum = numba.njit(ddtwosum)
-    twodiff = numba.njit(ddtwodiff)
-    kahan = numba.njit(ddkahan)
-except ImportError:
-    p2w = p2w_py
-    w2p = w2p_py
-    mymoeb = mymoeb_py
-    moeb_origin_trafo = moeb_origin_trafo_py
-    moeb_origin_trafo_inverse = moeb_origin_trafo_inverse_py
-    moeb_rotate_trafo = moeb_rotate_trafo_py
-    mymoebint = mymoebddint_py
-    moeb_origin_trafodd = moeb_origin_trafodd_py
-    moeb_rotate_trafodd = moeb_rotate_trafodd_py
-    moeb_origin_trafo_inversedd = moeb_origin_trafo_inversedd_py
-    htcplxadd = ddcplxadd
-    htcplxdiv = ddcplxdiv
-    htcplxdiff = ddcplxdiff
-    htcplxprodconjb = ddcplxprodconjb
-    htcplxprod = ddcplxprod
-    htdiv = dddiv
-    htadd = ddadd
-    htprod = ddprod
-    htdiff = dddiff
-    twoproduct = ddtwoproduct
-    twosum = ddtwosum
-    twodiff = ddtwodiff
-    kahan = ddkahan
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def moeb_origin_trafodd(z0, dz0, z, dz):
+    '''Möbius transform to the origin in double double representation'''
+    one = complex(1, 0)
+    done = complex(0, 0)
+    nom, dnom = htcplxdiff(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxdiff(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
+
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, float64)"])
+def moeb_rotate_trafodd(z, dz, phi):
+    '''Rotation of a complex number'''
+    ep = complex(math.cos(phi), math.sin(phi))
+    ep = ep / abs(ep)  # We calculated sin and cos separately. We can't be sure that |ep| == 1
+    dep = complex(0, 0)
+    ret, dret = htcplxprod(z, dz, ep, dep)
+    return ret, dret
+
+
+@NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
+def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
+    '''Inverse Möbius transform to the origin in double double representation'''
+    one = complex(1, 0)
+    done = complex(0, 0)
+    nom, dnom = htcplxadd(z, dz, z0, dz0)
+    denom, ddenom = htcplxprodconjb(z, dz, z0, dz0)
+    denom, ddenom = htcplxadd(one, done, denom, ddenom)
+    ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
+    return ret, dret
+
 
 def moeb_translate_trafo(z, s):
-    num = z-s
-    denom = 1-z*s
-    return num/denom
+    num = z - s
+    denom = 1 - z * s
+    return num / denom
+
 
 # reverses the previous three transformations at once
-def moeb_inverse_trafo(z, z0, phi, s):  
+
+def moeb_inverse_trafo(z, z0, phi, s):
     exp = complex(math.cos(phi), math.sin(phi))
     z0c = z0.conjugate()
-    num = s+z+exp*z0*(1+s*z)
-    denom = exp*(1+s*z)+z0c*(s+z)
-    return num/denom
-
+    num = s + z + exp * z0 * (1 + s * z)
+    denom = exp * (1 + s * z) + z0c * (s + z)
+    return num / denom
