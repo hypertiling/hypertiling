@@ -25,9 +25,8 @@ import numpy as np
 
 """
 
-
-class hyperanimator_live:
-
+class animate_live:
+    
     def __init__(self, state, fig, pgons, step, stepargs={}, animargs={}):
         self.initstate = state
         self.stepargs = stepargs
@@ -67,10 +66,9 @@ class hyperanimator_live:
         additional kwargs to be passed to the FuncAnimator
 
 """
-
-
-class hyperanimator_list:
-
+    
+class animate_list:
+    
     def __init__(self, data, fig, pgons, animargs={}):
         if "frames" in animargs:
             if animargs["frames"] > len(data):

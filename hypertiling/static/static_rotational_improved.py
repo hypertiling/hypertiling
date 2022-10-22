@@ -16,9 +16,12 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
     High precision kernel written by F. Goth
     """
 
-    def __init__(self, p, q, n, center, radius=None):
-        super(KernelStaticRotationalImproved, self).__init__(p, q, n, center, radius)
-        # self.center = center
+    def __init__(self, p, q, n, center, autogenerate=True, radius=None):
+        super(KernelStaticRotationalImproved, self).__init__(p, q, n, center, autogenerate, radius)
+        
+        # construct tiling
+        if self.autogenerate:
+            self.generate()
 
     def generate_sector(self):
         """

@@ -12,96 +12,96 @@ class TestCore(unittest.TestCase):
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 3, 8
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 4, 5
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 4, 6
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 4, 7
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 4, 8
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 5, 5
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
             p, q = 5, 6
             for n in range(l):
                 print("Constructing lattice (p,q,n) = ", p, q, n)
                 T = HyperbolicTiling(p, q, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(p, q, n), len(T))
 
                 print("Constructing lattice (p,q,n) = ", q, p, n)
                 T = HyperbolicTiling(q, p, n, kernel=k)
-                T.generate()
+
                 self.assertEqual(n_cell_centered(q, p, n), len(T))
 
 
