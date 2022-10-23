@@ -3,6 +3,7 @@ import os
 import numpy as np
 from .geodesics import geodesic_arc
 import matplotlib.lines as mlines
+from matplotlib import cm
 
 
 def to_px(z, factor=100, offset=1): 
@@ -29,7 +30,7 @@ def to_px(z, factor=100, offset=1):
 
 
 
-def write_svg(fname, tiling, edgecolor="black", facecolor="transparent", lw=.5,  link=''):
+def write_svg(fname, tiling, edgecolor="black", facecolor="transparent", lw=.5,  link='', cmap=None):
     """
         Saves a plot of the geodesic edges as a .svg-file.
 
@@ -67,12 +68,28 @@ def write_svg(fname, tiling, edgecolor="black", facecolor="transparent", lw=.5, 
         svg.write(pattern + "\r\n")
         if facecolor == 'transparent':
             facecolor = ''
+            fill_individual = False
+    if hasattr(facecolor, "__len__") and len(facecolor) == len(tiling):
+        fill_individual = True
+        if not cmap:
+            cmap = cm.get_cmap("RdYlGn")
+        else:
+            cmap = cm.get_cmap(f"{cmap}")
+        colors = array_to_rgb(norm_0_1(facecolor), cmap)
+    else:
+        print("facecolor must be either an SVG fill command or an array like of size len(tiling) "
+              "containing ints or floats")
+        return
 
-    
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, tiling.p)] + [0]
-    for pgon in tiling.polygons:
-        start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolor}' "
+    for idx, pgon in enumerate(tiling.polygons):
+        if fill_individual:
+            start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; " \
+                    f"fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
+            print(start)
+        else:
+            start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolor}' "
         svg.write(start + "\r")
         z0 = pgon.verticesP[0]
         x0, y0 = to_px(z0)
@@ -111,7 +128,51 @@ def write_svg(fname, tiling, edgecolor="black", facecolor="transparent", lw=.5, 
     print("Image saved as '" + fname + "'!")
 
 
+def norm_0_1(x, cmin=None, cmax=None):
+    """
+        Normalize an array like x linearly between 0 and 1
 
+        Arguments:
+        __________
+        x : 1d array like
+            contains data to be normalized between 0 and 1
+        cmin : float, default = None
+            the value that is mapped to 0
+            if None, the minimal value of x is taken
+        cmax : float, default = None
+            the value that is mapped to 1
+            if None, the maximal value of x is taken
+
+    """
+    if not cmin:
+        cmin = min(x)
+    else:
+        cmin = cmin
+    if not cmax:
+        cmax = max(x)
+    else:
+        cmax = cmax
+    x = np.array(x)
+    return (x - cmin) / (cmax - cmin)
+
+
+def array_to_rgb(x, cmap):
+    """
+        Takes an array like in the range of [0,1] and return a 2d array containing the rgb values in the range [0, 255]
+        in respect to cmap
+
+        Arguments:
+        __________
+        x : 1d array like
+            contains data in the range [0,1] to be mapped to rgb values
+        cmap :  matplotlib.colors.LinearSegmentedColormap
+            the colormap that is used to calculate the rgb values
+
+    """
+    rgb = np.zeros((len(x), 3))
+    for idx, val in enumerate(x):
+        rgb[idx] = cmap(val)[:3]
+    return (rgb * 255).astype(int)
 
 
 def write_csv(fname, nbrs):
