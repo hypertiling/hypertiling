@@ -138,8 +138,6 @@ class HyperanimatorPath:
     def __init__(self, data, fig, ax, tiling, path, path_frames=32, data_frames=None, kwargs={}, animargs={}):
         self.tiling = tiling
         self.ax = ax
-        self.lazy = lazy
-        self.cutoff = cutoff
 
         ### Check whether path has entries of type int or complex/2d float
         ### If int: entries correspond to polygon IDs
@@ -172,8 +170,7 @@ class HyperanimatorPath:
         self.ax.clear()
         self.tiling.translate(self.s_coords[i])
         self.s_coords = mymoeb(-self.s_coords[i], self.s_coords)
-        pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], lazy=self.lazy, cutoff=self.cutoff,
-                                            **self.kwargs)
+        pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], **self.kwargs)
         self.ax.add_collection(pgons)
 
         self.ax.set_xlim(-1, 1)
