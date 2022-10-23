@@ -280,7 +280,7 @@ class KernelRotationalCommon(KernelStaticBase):
         """
 
         for poly in self.polygons:
-            morigin(self.p, -z, poly.verticesP)
+            morigin(self.p, z, poly.verticesP)
 
 
 

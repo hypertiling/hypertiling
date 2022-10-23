@@ -1,7 +1,11 @@
 from matplotlib import animation
-from hypertiling.plot import poly2patch
-from hypertiling.transformation import mymoeb, moeb_rotate_trafo
+from hypertiling.graphics.plot import convert_polygons_to_patches
+from hypertiling.transformation import mymoeb
 import numpy as np
+
+
+def moeb_rotate_trafo(phi, z):
+    return z * (np.cos(phi) + 1j * np.sin(phi))
 
 """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
@@ -25,8 +29,9 @@ import numpy as np
 
 """
 
+
 class animate_live:
-    
+
     def __init__(self, state, fig, pgons, step, stepargs={}, animargs={}):
         self.initstate = state
         self.stepargs = stepargs
@@ -66,9 +71,10 @@ class animate_live:
         additional kwargs to be passed to the FuncAnimator
 
 """
-    
+
+
 class animate_list:
-    
+
     def __init__(self, data, fig, pgons, animargs={}):
         if "frames" in animargs:
             if animargs["frames"] > len(data):
@@ -93,15 +99,47 @@ class animate_list:
         self.anim.save(path, writer)
 
 
-""""
-    doc to follow
 """
+    Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
+
+    use this if you have a pre-computed array of polygon states and want to animate a moving tiling
+    
+    Arguments
+    ---------
+    data : 2d array-like
+        list of polygon states to be traversed through during the animation
+    fig : matplotlib.Figure
+        the figure to be animated
+    ax : matplotlib.axes
+        the axes in which the animation is shown
+    tiling : hypertiling.HyperbolicTiling
+        the tiling to be animated
+    path : 1d or 2d array-like
+        points in the Poincare disk which will be moved to the center throughout the animation.
+        if path is 1d and the elements are integers, the points are expected to be polygon id's.
+        if path is 1d and the elements are complex, the points are expected to be coordinates on the Poincare disk
+        if path is 2d and the elements are floats, the points are expected to be coordinates in the poincare disk,
+        where the 1st dimension hold the real part and the 2nd the complex
+    path_frames : int, default: 32
+        how many frames it takes to go from one point to the next in path
+    data_frames : int, default: None
+        how many frames it takes to go from one state to the next in data 
+        if no value is given, data_frames takes the same value as path_frames
+    kwargs : dict, optional
+        additional matplotlib.Patch kwargs
+    animargs : dict, optional
+        additional kwargs to be passed to the FuncAnimator
+
+"""
+
 
 class HyperanimatorPath:
 
     def __init__(self, data, fig, ax, tiling, path, path_frames=32, data_frames=None, kwargs={}, animargs={}):
         self.tiling = tiling
         self.ax = ax
+        self.lazy = lazy
+        self.cutoff = cutoff
 
         ### Check whether path has entries of type int or complex/2d float
         ### If int: entries correspond to polygon IDs
@@ -121,7 +159,8 @@ class HyperanimatorPath:
         self.path_frames = path_frames
         if not data_frames:
             self.data_frames = self.path_frames
-        self.data_frames = data_frames
+        else:
+            self.data_frames = data_frames
         self.s_coords = self._stretch_coords_geodesic(self.coords, self.path_frames)
         self.s_data = self._stretch_data(data, self.data_frames)
         self.frames = np.min([len(self.s_coords), len(self.s_data)])
@@ -133,7 +172,8 @@ class HyperanimatorPath:
         self.ax.clear()
         self.tiling.translate(self.s_coords[i])
         self.s_coords = mymoeb(-self.s_coords[i], self.s_coords)
-        pgons = poly2patch(self.tiling, self.s_data[i], **self.kwargs)
+        pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], lazy=self.lazy, cutoff=self.cutoff,
+                                            **self.kwargs)
         self.ax.add_collection(pgons)
 
         self.ax.set_xlim(-1, 1)
@@ -144,43 +184,55 @@ class HyperanimatorPath:
         return self.ax
 
     def _poly_id_to_coords(self, path):
+        # Takes list of polygon id's and returns list containing the respective coordinates
         coords = np.zeros(len(path), dtype=np.complex128)
         for i in range(len(path)):
-            coords[i] = self.tiling[path[i]].verticesP[-1]
+            coords[i] = self.tiling.get_center(path[i])
         return coords
 
     def _stretch_pair_geodesic(self, pair, factor):
-        # first, translate first entry to the origin
+        # Takes a list containing two coordinates and divides the path between them into "factor" geodesic parts
+
+        # t = translated
+        # r = rotated
+        # g = geodesic
+
+        # Translate first entry to the origin
         t_pair = mymoeb(-pair[0], pair)
 
-        # then, rotate second entry on to the real axis
+        # Rotate second entry on to the real axis
         angle = np.angle(t_pair[1])
-        r_t_pair = moeb_rotate_trafo(t_pair, -angle)
+        r_t_pair = moeb_rotate_trafo(-angle, t_pair)
 
-        # we go to geodesic length to calculate equal path slices of length diff
+        # Go to geodesic length to calculate equal path slices of length diff
         g_r_t_stretched = np.zeros(factor, dtype=np.complex128)
         diff = np.arctanh(r_t_pair[1]) / factor
 
-        # diff gets added 'factor'-times to the first entry
+        # Diff gets added 'factor'-times to the first entry
         for i in range(1, factor):
             g_r_t_stretched[i] = g_r_t_stretched[i - 1] + diff
 
-        # go back to poincare
+        # Go back to poincare
         r_t_stretched = np.tanh(g_r_t_stretched)
-        # rotate back
-        t_stretched = moeb_rotate_trafo(r_t_stretched, angle)
-        # lastly, translate everything back
+        # Rotate back
+        t_stretched = moeb_rotate_trafo(angle, r_t_stretched)
+        # Translate everything back
         stretched = mymoeb(pair[0], t_stretched)
 
         return stretched
 
     def _stretch_coords_geodesic(self, coords, factor):
+        # Takes list of all coordinates to be visited and stretches it "factor" times
+
         stretched_path = []
 
+        # Replicate the first position
         for i in range((factor + 1) // 2):
             stretched_path.append(coords[0])
+        # Stretch the in between positions
         for i in range(coords[:-1].size):
             stretched_path.extend(self._stretch_pair_geodesic(coords[i:i + 2], factor))
+        # Replicate the last position
         for i in range((factor + 1) // 2):
             stretched_path.append(coords[-1])
 
