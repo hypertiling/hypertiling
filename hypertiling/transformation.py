@@ -224,8 +224,8 @@ def htcplxdiv(a, da, b, db):
 
 
 @NumbaChecker("complex128(float64, complex128)")
-'''Rotates z by phi counter-clockwise about the origin.'''
 def moeb_rotate_trafo(phi, z):
+    '''Rotates z by phi counter-clockwise about the origin.'''
     return z * complex(math.cos(phi), math.sin(phi))
 
 
