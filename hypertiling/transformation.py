@@ -75,8 +75,21 @@ def twoproduct(x, y):
                "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])",
                "UniTuple(float32, 2)(float32, float32, float32, float32)",
                "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
-def htadd(x, dx, y, dy):  # double double add
-    '''perform addition of numbers given in double double representation '''
+def htadd(x, dx, y, dy):
+    """
+    Perform addition of numbers (x,dx) and (y,dy) given in double double representation.
+    
+    Parameters:
+        x  (float): a floating point number.
+        dx (float): overflow of x
+        y  (float): a floating point number.
+        dy (float): overflow of y
+
+    
+    Returns:
+        r (float): x + y + (dx + dy)
+        e (float): the overflow
+    """
     r, e = twosum(x, y)
     e += dx + dy
     r, e = kahan(r, e)
@@ -247,6 +260,7 @@ def moeb_rotate_trafo(phi, z):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128)"])
 def mymoebint(z0, z):
+    '''Internal function for performing a full Möbius transform in double-double representation.'''
     dz0 = complex(0, 0)
     dz = complex(0, 0)
     one = complex(1, 0)
@@ -257,9 +271,19 @@ def mymoebint(z0, z):
     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
     return ret, dret
 
-# maps all points z such that z0 -> 0, respecting the Poincare projection
 @NumbaChecker("complex128(complex128, complex128)")
 def moeb_origin_trafo(z0, z):
+    """
+    Maps all points z such that z0 -> 0, respecting the Poincare projection: (z - z0)/(1 - z0 * z)
+    
+    Parameters:
+        z0 (complex): the origin that we map back to.
+        z (complex): the point that we will tr
+
+    
+    Returns:
+        ret (complex): z Möbius transformed around z0: (z - z0)/(1 - z0 * z)
+    """
     ret, dret = mymoebint(-z0, z)
     return ret
 
