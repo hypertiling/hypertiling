@@ -242,16 +242,6 @@ def w2p(point):
     return complex(x * factor, y * factor)
 
 
-@NumbaChecker("complex128(complex128, complex128)")
-def mymoeb(z0, z):
-    rez, imz = z.real, z.imag
-    rez0, imz0 = z0.real, z0.imag
-    return (z + z0) / (
-            1 + z * z0.conjugate())  # complex(math.fsum([1, rez*rez0, imz*imz0]), imz*rez0-imz0*rez)# (1+z*np.conjugate(z0))
-
-
-
-
 # rotates z by phi counter-clockwise about the origin
 @NumbaChecker("complex128(float64, complex128)")
 def moeb_rotate_trafo(phi, z):
