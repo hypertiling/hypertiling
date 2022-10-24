@@ -866,7 +866,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(m / p)
         :return: void
         """
-        self.transform(lambda x: transform.moeb_rotate_trafo(1, -angle, x))
+        self.transform(lambda x: transform.moeb_rotate_trafo(-angle, x))
 
     def translate(self, z: np.complex128):
         """
