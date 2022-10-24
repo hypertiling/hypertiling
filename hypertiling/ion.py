@@ -87,16 +87,15 @@ def write_svg(fname, tiling, edgecolor="black", facecolor="transparent", lw=.5, 
         if fill_individual:
             start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; " \
                     f"fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
-            print(start)
         else:
             start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolor}' "
         svg.write(start + "\r")
-        z0 = pgon.verticesP[0]
+        z0 = np.conj(pgon.verticesP[0])
         x0, y0 = to_px(z0)
         path = f"       d = 'M {x0} {y0} "
         for v1, v2 in enumerate(vs):
-            z1 = pgon.verticesP[v1]
-            z2 = pgon.verticesP[v2]
+            z1 = np.conj(pgon.verticesP[v1])
+            z2 = np.conj(pgon.verticesP[v2])
             orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
