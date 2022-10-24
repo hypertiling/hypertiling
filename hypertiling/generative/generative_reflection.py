@@ -3,7 +3,8 @@ import numpy as np
 import hypertiling.generative.generative_reflection_util as util
 from hypertiling.generative.generative_reflection_util import PI2
 from hypertiling.kernel_abc import AbstractKernelBase
-import hypertiling.arraytransformation as trans
+import hypertiling.transformation as transform
+import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 
 """
@@ -57,7 +58,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
-        if n > 1:
+        if n != 0:
             lengths = util.get_reflection_n_estimation(p, q, n)  # n
             self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
         else:
@@ -109,7 +110,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
         phis = np.array([dphi * i for i in range(1, self.p)])
         for i, angle in enumerate(phis):
             for poly in polys:
-                yield poly * np.exp(angle * 1j)
+                if self._sector_polys[0, 0] == 0:
+                    yield poly * np.exp(angle * 1j)
+                else:
+                    poly_c = np.copy(poly)
+                    arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
+                    poly_c *= np.exp(angle * 1j)
+                    arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+                    yield poly_c
 
     def _wiggle_index(self, index1: int, index2: int, tol: int = 1) -> int:
         """
@@ -420,7 +428,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
         phis = np.array([dphi * i for i in range(1, self.p)])
         for i, angle in enumerate(phis):
             for poly in self._sector_polys[1:]:
-                yield poly * np.exp(angle * 1j)
+                if self._sector_polys[0, 0] == 0:
+                    yield poly * np.exp(angle * 1j)
+                else:
+                    poly_c = np.copy(poly)
+                    arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
+                    poly_c *= np.exp(angle * 1j)
+                    arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+                    yield poly_c
 
     def __getitem__(self, index: int) -> np.array:
         """
@@ -445,7 +460,16 @@ class KernelGenerativeReflection(AbstractKernelBase):
         if phi == 0:
             return poly
 
-        return poly * np.exp(phi * 1j)
+        if self._sector_polys[0, 0] == 0:
+            return poly * np.exp(phi * 1j)
+
+        else:
+            poly_c = np.copy(poly)
+            arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
+            poly_c *= np.exp(phi * 1j)
+            arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+            return poly_c
+
 
     # Basics ###########################################################################################################
     # API ##############################################################################################################
@@ -833,7 +857,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         """
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
-        function(self._sector_polys)
+        self._sector_polys = function(self._sector_polys)
 
     def rotate(self, angle: float):
         """
@@ -842,7 +866,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(m / p)
         :return: void
         """
-        self.transform(lambda x: trans.mrotate(x.shape[0], -angle, x))
+        self.transform(lambda x: transform.moeb_rotate_trafo(1, -angle, x))
 
     def translate(self, z: np.complex128):
         """
@@ -851,7 +875,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(m / p)
         :return: void
         """
-        self.transform(lambda x: trans.morigin(x.shape[0], z, x))
+        self.transform(lambda x: transform.moeb_origin_trafo(z, x))
 
     # Transformations ##################################################################################################
 
@@ -860,13 +884,12 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     import time
-    from sys import getsizeof
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(7, 3, 5)
+    tiling = KernelGenerativeReflection(7, 3, 3)
     t2 = time.time()
 
     tiling.map_nbrs()
@@ -878,11 +901,19 @@ if __name__ == "__main__":
 
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    prob = [2 / (i + 1) for i in range(9)]
+
+    tiling.translate(tiling[1][0])
+
     for polygon_index, pgon in enumerate(tiling):
+        print(polygon_index)
+        # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
         poly_layer = tiling.get_reflection_level(polygon_index)
+        facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
-                                    color=colors[poly_layer % len(colors)])
+                                    facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(poly_layer))
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+
     plt.show()
