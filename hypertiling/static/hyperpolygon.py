@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from hypertiling.transformation import p2w
+from hypertiling.representations import p2w
 from hypertiling.arraytransformation import mfull, mrotate, morigin
 
 

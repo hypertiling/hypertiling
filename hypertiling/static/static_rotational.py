@@ -5,7 +5,7 @@ import copy
 # relative imports
 from .static_base import KernelRotationalCommon
 from .hyperpolygon import HyperPolygon
-from ..transformation import p2w, moeb_rotate_trafo
+from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull_point
 from ..distance import disk_distance
 from .static_base import MANGLE

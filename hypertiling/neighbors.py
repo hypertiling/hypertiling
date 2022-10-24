@@ -3,7 +3,7 @@ from typing import List
 import math
 from hypertiling.distance import weierstrass_distance, lorentzian_distance
 from hypertiling.util import lattice_spacing_weierstrass
-from hypertiling.transformation import p2w
+from hypertiling.representations import p2w
 
 
 # wrapper to provide a nicer interface

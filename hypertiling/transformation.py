@@ -1,5 +1,4 @@
 import math
-from numpy import array as nparray
 from hypertiling.check_numba import NumbaChecker
 
 
@@ -222,16 +221,6 @@ def htcplxdiv(a, da, b, db):
     i, di = htdiv(nom.imag, dnom.imag, denom, ddenom)
 
     return complex(r, i), complex(dr, di)
-
-
-@NumbaChecker("float64[:](complex128)")
-def p2w(z):
-    '''Convert Poincare to Weierstraß representation '''
-    x, y = z.real, z.imag
-    xx = x * x
-    yy = y * y
-    factor = 1 / (1 - xx - yy)
-    return factor * nparray([(1 + xx + yy), 2 * x, 2 * y])
 
 
 @NumbaChecker("complex128(float64[:])")
