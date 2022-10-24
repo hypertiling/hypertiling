@@ -100,7 +100,7 @@ def htadd(x, dx, y, dy):
                "UniTuple(float32, 2)(float32, float32, float32, float32)",
                "UniTuple(float32[:], 2)(float32[:], float32[:], float32[:], float32[:])"])
 def htdiff(x, dx, y, dy):
-    '''perform subtraction of numbers given in double double representation '''
+    '''Perform subtraction of numbers given in double double representation '''
     r, e = twodiff(x, y)
     e += dx - dy
     r, e = kahan(r, e)
@@ -110,7 +110,7 @@ def htdiff(x, dx, y, dy):
 @NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
                "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
 def htprod(x, dx, y, dy):
-    '''perform multplication of numbers given in double double representation '''
+    '''Perform multplication of numbers given in double double representation '''
     r, e = twoproduct(x, y)
     e += x * dy + y * dx
     r, e = kahan(r, e)
@@ -120,7 +120,7 @@ def htprod(x, dx, y, dy):
 @NumbaChecker(["UniTuple(float64, 2)(float64, float64, float64, float64)",
                "UniTuple(float64[:], 2)(float64[:], float64[:], float64[:], float64[:])"])
 def htdiv(x, dx, y, dy):
-    '''perform division of numbers given in double double representation '''
+    '''Perform division of numbers given in double double representation '''
     r = x / y
     s, f = twoproduct(r, y)
     e = (x - s - f + dx - r * dy) / y  # Taylor expansion
@@ -130,7 +130,7 @@ def htdiv(x, dx, y, dy):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxprod(a, da, b, db):
-    '''perform multiplication of complex double double numbers '''
+    '''Perform multiplication of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
@@ -153,7 +153,7 @@ def htcplxprod(a, da, b, db):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxprodconjb(a, da, b, db):
-    '''perform multiplication of complex double double numbers: a * b^* '''
+    '''Perform multiplication of complex double double numbers: a * b^* '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
@@ -176,7 +176,7 @@ def htcplxprodconjb(a, da, b, db):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxadd(a, da, b, db):
-    '''perform addition of complex double double numbers '''
+    '''Perform addition of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
@@ -189,7 +189,7 @@ def htcplxadd(a, da, b, db):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxdiff(a, da, b, db):
-    '''perform subtraction of complex double double numbers '''
+    '''Perform subtraction of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
@@ -202,7 +202,7 @@ def htcplxdiff(a, da, b, db):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxdiv(a, da, b, db):
-    '''perform division of complex double double numbers '''
+    '''Perform division of complex double double numbers '''
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
@@ -223,8 +223,8 @@ def htcplxdiv(a, da, b, db):
     return complex(r, i), complex(dr, di)
 
 
-# rotates z by phi counter-clockwise about the origin
 @NumbaChecker("complex128(float64, complex128)")
+'''Rotates z by phi counter-clockwise about the origin.'''
 def moeb_rotate_trafo(phi, z):
     return z * complex(math.cos(phi), math.sin(phi))
 
