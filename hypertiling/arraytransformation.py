@@ -22,26 +22,6 @@ def morigin(p, z0, verticesP):
         verticesP[i] = z
 
 
-@NumbaChecker("(int64, complex128, complex128[:])")
-def morigin_inv(p, z0, verticesP):
-    """
-    Apply inverse Moebius trafo to an array of length (p+1) of vertices.
-    
-    Arguments:
-    -----------
-    p : int
-        Number of outer vertices.
-    z0 : complex128
-        Vertex that we transform around.
-    verticesP : complex[]
-        Array of vertices + the center that make up the polygon.
-    """
-
-    for i in range(p + 1):
-        z = trans.moeb_origin_trafo_inverse(z0, verticesP[i])
-        verticesP[i] = z
-
-
 @NumbaChecker("(int64, float64, complex128[:])")
 def mrotate(p, phi, verticesP):
     """
@@ -79,7 +59,7 @@ def mfull_point(z0, phi, p):
 
     z = trans.moeb_origin_trafo(z0, p)
     z = trans.moeb_rotate_trafo(-phi, z)
-    return trans.moeb_origin_trafo_inverse(z0, z)
+    return trans.moeb_origin_trafo(-z0, z)
 
 
 @NumbaChecker("(int64, float64, int64, complex128[:])")

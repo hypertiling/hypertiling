@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
-from .transformation import moeb_origin_trafo, moeb_origin_trafo_inverse
+from .transformation import moeb_origin_trafo
 from .distance import disk_distance
 
 
@@ -69,7 +69,7 @@ def geodesic_midpoint(z1, z2):
     d = disk_distance(0, z2n)  # distance betwen 0 and z2new
     r = np.tanh(d/4)  # compute corresponding Cartesian radius
     zm = r*np.exp(1j*np.angle(z2n))  # add angle
-    zm = moeb_origin_trafo_inverse(z1, zm)  # and transform back
+    zm = moeb_origin_trafo(-z1, zm)  # and transform back
     return zm
 
 

@@ -288,11 +288,6 @@ def moeb_origin_trafo(z0, z):
     return ret
 
 
-@NumbaChecker("complex128(complex128, complex128)")
-def moeb_origin_trafo_inverse(z0, z):
-    ret, dret = mymoebint(z0, z)
-    return ret
-
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def moeb_origin_trafodd(z0, dz0, z, dz):
     '''Möbius transform to the origin in double double representation'''
