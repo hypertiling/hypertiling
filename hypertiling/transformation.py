@@ -223,14 +223,6 @@ def htcplxdiv(a, da, b, db):
     return complex(r, i), complex(dr, di)
 
 
-@NumbaChecker("complex128(float64[:])")
-def w2p(point):
-    '''Convert Weierstraß to Poincare representation '''
-    [t, x, y] = point
-    factor = 1 / (1 + t)
-    return complex(x * factor, y * factor)
-
-
 # rotates z by phi counter-clockwise about the origin
 @NumbaChecker("complex128(float64, complex128)")
 def moeb_rotate_trafo(phi, z):
