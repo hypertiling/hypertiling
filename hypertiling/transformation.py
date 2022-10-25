@@ -301,19 +301,3 @@ def moeb_origin_trafo_inversedd(z0, dz0, z, dz):
     denom, ddenom = htcplxadd(one, done, denom, ddenom)
     ret, dret = htcplxdiv(nom, dnom, denom, ddenom)
     return ret, dret
-
-
-def moeb_translate_trafo(z, s):
-    num = z - s
-    denom = 1 - z * s
-    return num / denom
-
-
-# reverses the previous three transformations at once
-
-def moeb_inverse_trafo(z, z0, phi, s):
-    exp = complex(math.cos(phi), math.sin(phi))
-    z0c = z0.conjugate()
-    num = s + z + exp * z0 * (1 + s * z)
-    denom = exp * (1 + s * z) + z0c * (s + z)
-    return num / denom
