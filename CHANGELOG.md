@@ -1,5 +1,6 @@
 ## v1.1.1
-Date: 2022-10-04
+Date: 2022-10-25
+
 
 **Release Notes**
 
@@ -13,8 +14,7 @@ Date: 2022-10-04
 
 
 ## v1.1
-Date: 2022-10-25
-
+Date: 2022-10-04
 
 **Release Notes**
 - We are proud to present the **Generative Reflection (GR) kernel**. Owing to a novell, sophisticated tiling construction algorithm and its intrinsic generative nature, where only one symmetry sector of the tiling is held stored, the GR kernel is extremely fast and at the same time significantly less memory consuming compared to our existing kernels.
