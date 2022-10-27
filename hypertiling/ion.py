@@ -130,40 +130,27 @@ def write_svg(fname, tiling, edgecolor="black", facecolor="white", lw=.5,  link=
 
 
 
+class svgString():
+    def __init__(self):
+        header = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
+               f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
+        self.string = header
+    def write(self, string):
+        self.string += string
+    def newline(self):
+        self.string += "\n"
+    def tabstop(self):
+        self.string += "\t"
+    def print(self):
+        return self.string
+
 
 from IPython.display import SVG as draw
 
 def draw_svg(tiling, facecolors, individual_colors=True, link='', cmap=None):
-    fname = "/home/schrauth/tiling.svg"
 
-    # preparations
-    os.remove(fname) if os.path.exists(fname) else None
-    head = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
-           f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
-    svg = open(fname, 'w')
-    svg.write(head)
     digits = 5
-
-    # if background image is provided
-    # if link != '':  
-    #     pattern = f"<defs>\r <pattern id='img1' width='5' height='5'>\r" \
-    #               f"  <image href='{link}' " \
-    #               "x='0' y='0' width='45' height='45'/>\r </pattern>\r</defs>"
-    #     svg.write(pattern + "\r\n")
-    #     if facecolor == 'transparent':
-    #         facecolor = ''
-    #         fill_individual = False
-    # if hasattr(facecolor, "__len__") and len(facecolor) == len(tiling):
-    #     fill_individual = True
-    #     if not cmap:
-    #         cmap = cm.get_cmap("RdYlGn")
-    #     else:
-    #         cmap = cm.get_cmap(f"{cmap}")
-    #     colors = array_to_rgb(norm_0_1(facecolor), cmap)
-    # else:
-    #     print("facecolor must be either an SVG fill command or an array like of size len(tiling) "
-    #           "containing ints or floats")
-    #     return
+    svg = svgString()
 
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, tiling.p)] + [0]
@@ -218,9 +205,7 @@ def draw_svg(tiling, facecolors, individual_colors=True, link='', cmap=None):
         svg.write(path + "\r\n")
     svg.write(group_close)
     svg.write("\r</svg>")
-    svg.close()
-    svgstring = open(fname).read()
-    return draw(svgstring)
+    return draw(svg.print())
 
 
 
