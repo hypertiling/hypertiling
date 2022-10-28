@@ -94,18 +94,18 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
     svg.write(group_open)
 
     # loop through tiling
-    for idx, pgon in enumerate(tiling.polygons):
+    for idx, pgon in enumerate(tiling):
         if individual_colors:
             start = f"\t<path   style='fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
         else:
             start = f"\t<path  "
         svg.write(start + "\r")
-        z0 = np.conj(pgon.verticesP[0])
+        z0 = np.conj(tiling.get_vertices(idx)[0])
         x0, y0 = to_px(z0)
         path = f"       d = 'M {np.round(x0,digits)} {np.round(y0,digits)} "
         for v1, v2 in enumerate(vs):
-            z1 = np.conj(pgon.verticesP[v1])
-            z2 = np.conj(pgon.verticesP[v2])
+            z1 = np.conj(tiling.get_vertices(idx)[v1])
+            z2 = np.conj(tiling.get_vertices(idx)[v2])
             orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
