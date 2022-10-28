@@ -4,6 +4,7 @@ import numpy as np
 from .geodesics import geodesic_arc
 import matplotlib.lines as mlines
 from matplotlib import cm
+from IPython.display import SVG, display
 
 
 def to_px(z, factor=100, offset=1, digits=6): 
@@ -30,7 +31,31 @@ def to_px(z, factor=100, offset=1, digits=6):
 
 
 
-def write_svg(fname, tiling, edgecolor="black", facecolor="white", lw=.5,  link='', cmap=None):
+
+
+# helper class, makes working with strings more convenient
+class svgString():
+    def __init__(self):
+        header = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
+               f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
+        self.string = header
+
+    def write(self, string):
+        self.string += string
+
+    def newline(self):
+        self.string += "\n"
+
+    def tabstop(self):
+        self.string += "\t"
+
+    def print(self):
+        return self.string
+
+
+
+
+def make_svg(tiling, facecolors, edgecolor="black", lw=0.3, individual_colors=True, link='', cmap="RdYlGn", digits=5):
     """
         Saves a plot of the geodesic edges as a .svg-file.
 
@@ -49,121 +74,23 @@ def write_svg(fname, tiling, edgecolor="black", facecolor="white", lw=.5,  link=
         link : string
             A hyperlink referencing an image to fill each polygon with.
 
-
-        TODO: This is slow and the svg turns out to be huge, needs improvement
     """
 
-    # preparations
-    os.remove(fname) if os.path.exists(fname) else None
-    head = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
-           f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
-    svg = open(fname, 'w')
-    svg.write(head)
-
-    # if background image is provided
-    if link != '':  
-        pattern = f"<defs>\r <pattern id='img1' width='5' height='5'>\r" \
-                  f"  <image href='{link}' " \
-                  "x='0' y='0' width='45' height='45'/>\r </pattern>\r</defs>"
-        svg.write(pattern + "\r\n")
-        if facecolor == 'transparent':
-            facecolor = ''
-            fill_individual = False
-    if hasattr(facecolor, "__len__") and len(facecolor) == len(tiling):
-        fill_individual = True
-        if not cmap:
-            cmap = cm.get_cmap("RdYlGn")
-        else:
-            cmap = cm.get_cmap(f"{cmap}")
-        colors = array_to_rgb(norm_0_1(facecolor), cmap)
-    else:
-        print("facecolor must be either an SVG fill command or an array like of size len(tiling) "
-              "containing ints or floats")
-        return
-
-    pi2 = 2 * np.pi
-    vs = [_ for _ in range(1, tiling.p)] + [0]
-
-    for idx, pgon in enumerate(tiling.polygons):
-        # if fill_individual:
-        #     start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; " \
-        #             f"fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
-        # else:
-        #     start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolor}' "
-        start = f"   <path style='stroke:{edgecolor}; stroke-width:{lw}px; fill:none' "
-        svg.write(start + "\r")
-        z0 = np.conj(pgon.verticesP[0])
-        x0, y0 = to_px(z0)
-        path = f"       d = 'M {x0} {y0} "
-        for v1, v2 in enumerate(vs):
-            z1 = np.conj(pgon.verticesP[v1])
-            z2 = np.conj(pgon.verticesP[v2])
-            orientation = False
-            a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
-            a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
-
-            # if second point is left of first point: swap values
-            if a2 < a1:  
-                orientation = np.invert(orientation)
-            # for edges that intersect the x-axis: swap values
-            if np.imag(z1) * np.imag(z2) < 0 < np.real(z1):  
-                orientation = np.invert(orientation)
-
-            # calculate svg data
-            arc = geodesic_arc(z1, z2)
-            if type(arc) == mlines.Line2D:  # if r -> \infty
-                r = 1e9  # some large number
-            else:
-                r = arc.get_width() / 2  # = height
-
-            q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
-            x1, y1 = to_px(z1)
-            x2, y2 = to_px(z2)
-            r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            path += f" A {r_px} {r_px} 0 0 {int(orientation)} {x2} {y2} "
-        path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
-        svg.write(path + "\r\n")
-
-    svg.write("\r</svg>")
-    svg.close()
-    print("Image saved as '" + fname + "'!")
-
-
-
-class svgString():
-    def __init__(self):
-        header = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
-               f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
-        self.string = header
-    def write(self, string):
-        self.string += string
-    def newline(self):
-        self.string += "\n"
-    def tabstop(self):
-        self.string += "\t"
-    def print(self):
-        return self.string
-
-
-from IPython.display import SVG as draw
-
-def draw_svg(tiling, facecolors, individual_colors=True, link='', cmap=None):
-
-    digits = 5
     svg = svgString()
 
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, tiling.p)] + [0]
     
-    colors = array_to_rgb(norm_0_1(facecolors), cm.get_cmap("RdYlGn"))
+    ccmap = cm.get_cmap(f"{cmap}")
+    colors = array_to_rgb(norm_0_1(facecolors), ccmap)
 
     group_open  = f"<g>"
     group_close = f"</g>"
 
     if individual_colors:
-        group_open = f"<g style='stroke:white; stroke-width:0.2px'>\r"
+        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px'>\r"
     else:
-        group_open = f"<g style='stroke:black; stroke-width:0.2px; fill:none'>\r"
+        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:none'>\r"
     
     svg.write(group_open)
     for idx, pgon in enumerate(tiling.polygons):
@@ -205,12 +132,19 @@ def draw_svg(tiling, facecolors, individual_colors=True, link='', cmap=None):
         svg.write(path + "\r\n")
     svg.write(group_close)
     svg.write("\r</svg>")
-    return draw(svg.print())
+
+    return svg.print()
 
 
+def draw_svg(content: str):
+    display(SVG(content))
 
 
-
+def write_svg(fname: str, content: svgString):
+    os.remove(fname) if os.path.exists(fname) else None
+    svgfile = open(fname, 'w')
+    svgfile.write(content)
+    svgfile.close()
 
 
 
