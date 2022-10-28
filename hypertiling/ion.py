@@ -7,7 +7,7 @@ from matplotlib import cm
 from IPython.display import SVG, display
 
 
-def to_px(z, factor=100, offset=1, digits=6): 
+def to_px(z, factor=100, offset=1): 
     """
     Transforms complex number to px coordinates
 
@@ -25,7 +25,7 @@ def to_px(z, factor=100, offset=1, digits=6):
     x *= factor
     y = np.imag(z) + offset
     y *= factor
-    return np.round(x,6), np.round(y,6)
+    return x, y
 
 
 class svgString():
@@ -54,7 +54,7 @@ class svgString():
 
 
 
-def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5):
+def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5, link=""):
     """
     Creates an scalable vector graphic (SVG) plot of the tiling
 
@@ -74,14 +74,12 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         number of digits SVG coordinates are rounded to
     """
 
+    # preparations
     svg = svgString()
-
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, tiling.p)] + [0]
-    
-    group_open  = f"<g>"
-    group_close = f"</g>"
 
+    # one color vs. colormap
     individual_colors = True
     if isinstance(facecolors, str):
         individual_colors = False
@@ -89,13 +87,14 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         ccmap = cm.get_cmap(f"{cmap}")
         colors = array_to_rgb(norm_0_1(facecolors), ccmap)
 
-
+    # attribute group
     if individual_colors:
         group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px'>\r"
     else:
         group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolors}'>\r"
-    
     svg.write(group_open)
+
+    # loop through tiling
     for idx, pgon in enumerate(tiling.polygons):
         if individual_colors:
             start = f"\t<path   style='fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
@@ -103,8 +102,8 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
             start = f"\t<path  "
         svg.write(start + "\r")
         z0 = np.conj(pgon.verticesP[0])
-        x0, y0 = to_px(z0, digits=digits)
-        path = f"       d = 'M {x0} {y0} "
+        x0, y0 = to_px(z0)
+        path = f"       d = 'M {np.round(x0,digits)} {np.round(y0,digits)} "
         for v1, v2 in enumerate(vs):
             z1 = np.conj(pgon.verticesP[v1])
             z2 = np.conj(pgon.verticesP[v2])
@@ -133,9 +132,8 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
             path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {x2} {y2} "
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
-    svg.write(group_close)
+    svg.write("</g>")
     svg.write("\r</svg>")
-
     return svg.print()
 
 
