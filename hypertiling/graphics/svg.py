@@ -53,7 +53,7 @@ class svgString():
 
 
 
-def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5, link=""):
+def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5, unitcircle=False, link=""):
     """
     Creates an scalable vector graphic (SVG) plot of the tiling
 
@@ -71,6 +71,8 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         matplotlib colormap key string
     digits : int
         number of digits SVG coordinates are rounded to
+    unitcircle: bool
+        whether or not the unit circle is added to the plot
     """
 
     # preparations
@@ -131,6 +133,8 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
             path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {x2} {y2} "
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
+    if unitcircle:
+        svg.write('<circle cx="100" cy="100" r="99.9999" fill="none" />')
     svg.write("</g>")
     svg.write("\r</svg>")
     return svg.print()
