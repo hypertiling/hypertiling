@@ -9,17 +9,16 @@ from IPython.display import SVG, display
 
 def to_px(z, factor=100, offset=1, digits=6): 
     """
-        Transforms complex number to px coordinates
+    Transforms complex number to px coordinates
 
-        Arguments:
-        ----------
-        z : np.complex
-            coordinate in the complex plane
-        factor : int
-            some large scaling factor to conform to px scale
-        offset : int
-           offset plot region
-        
+    Arguments:
+    ----------
+    z : np.complex
+        coordinate in the complex plane
+    factor : int
+        some large scaling factor to conform to px scale
+    offset : int
+        offset plot region
         
     """
     x = np.real(z) + offset
@@ -29,12 +28,12 @@ def to_px(z, factor=100, offset=1, digits=6):
     return np.round(x,6), np.round(y,6)
 
 
-
-
-
-
-# helper class, makes working with strings more convenient
 class svgString():
+    """
+    Helper class, makes working with strings more convenient
+    
+    """
+
     def __init__(self):
         header = f"<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' " \
                f"width='500px' height='500px' viewBox='0 0 200 200'>" + "\r\n"
@@ -55,25 +54,24 @@ class svgString():
 
 
 
-def make_svg(tiling, facecolors, edgecolor="black", lw=0.3, individual_colors=True, link='', cmap="RdYlGn", digits=5):
+def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5):
     """
-        Saves a plot of the geodesic edges as a .svg-file.
+    Creates an scalable vector graphic (SVG) plot of the tiling
 
-        Arguments:
-        -----------
-        fname : string
-            Output file name including directory
-        tiling : HyperbolicTiling object
-            An object containing the tiling.
-        edgecolor : string
-            The color of each geodesic.
-        facecolor : string
-            The background color of each polygon
-        lw : float
-            The line width of each geodesic.
-        link : string
-            A hyperlink referencing an image to fill each polygon with.
-
+    Arguments:
+    -----------
+    tiling : HyperbolicTiling object
+        An object containing the tiling.
+    facecolor : str or array-like of length len(tiling)
+        The background color of each polygon as a sequence of numbers
+    edgecolor : string
+        The color the polygon edges
+    lw : float
+        The linewidth the polygon edges
+    cmap : str
+        matplotlib colormap key string
+    digits : int
+        number of digits SVG coordinates are rounded to
     """
 
     svg = svgString()
@@ -81,16 +79,21 @@ def make_svg(tiling, facecolors, edgecolor="black", lw=0.3, individual_colors=Tr
     pi2 = 2 * np.pi
     vs = [_ for _ in range(1, tiling.p)] + [0]
     
-    ccmap = cm.get_cmap(f"{cmap}")
-    colors = array_to_rgb(norm_0_1(facecolors), ccmap)
-
     group_open  = f"<g>"
     group_close = f"</g>"
+
+    individual_colors = True
+    if isinstance(facecolors, str):
+        individual_colors = False
+    else:
+        ccmap = cm.get_cmap(f"{cmap}")
+        colors = array_to_rgb(norm_0_1(facecolors), ccmap)
+
 
     if individual_colors:
         group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px'>\r"
     else:
-        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:none'>\r"
+        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolors}'>\r"
     
     svg.write(group_open)
     for idx, pgon in enumerate(tiling.polygons):
@@ -137,10 +140,16 @@ def make_svg(tiling, facecolors, edgecolor="black", lw=0.3, individual_colors=Tr
 
 
 def draw_svg(content: str):
+    """
+    Use IPython display API for displaying SVG
+    """
     display(SVG(content))
 
 
 def write_svg(fname: str, content: svgString):
+    """
+    Write svgString to file
+    """
     os.remove(fname) if os.path.exists(fname) else None
     svgfile = open(fname, 'w')
     svgfile.write(content)
@@ -150,18 +159,18 @@ def write_svg(fname: str, content: svgString):
 
 def norm_0_1(x, cmin=None, cmax=None):
     """
-        Normalize an array like x linearly between 0 and 1
+    Normalize an array like x linearly between 0 and 1
 
-        Arguments:
-        __________
-        x : 1d array like
-            contains data to be normalized between 0 and 1
-        cmin : float, default = None
-            the value that is mapped to 0
-            if None, the minimal value of x is taken
-        cmax : float, default = None
-            the value that is mapped to 1
-            if None, the maximal value of x is taken
+    Arguments:
+    __________
+    x : 1d array like
+        contains data to be normalized between 0 and 1
+    cmin : float, default = None
+        the value that is mapped to 0
+        if None, the minimal value of x is taken
+    cmax : float, default = None
+        the value that is mapped to 1
+        if None, the maximal value of x is taken
 
     """
     if not cmin:
@@ -178,15 +187,15 @@ def norm_0_1(x, cmin=None, cmax=None):
 
 def array_to_rgb(x, cmap):
     """
-        Takes an array like in the range of [0,1] and return a 2d array containing the rgb values in the range [0, 255]
-        in respect to cmap
+    Takes an array like in the range of [0,1] and return a 2d array containing the rgb values in the range [0, 255]
+    in respect to cmap
 
-        Arguments:
-        __________
-        x : 1d array like
-            contains data in the range [0,1] to be mapped to rgb values
-        cmap :  matplotlib.colors.LinearSegmentedColormap
-            the colormap that is used to calculate the rgb values
+    Arguments:
+    __________
+    x : 1d array like
+        contains data in the range [0,1] to be mapped to rgb values
+    cmap :  matplotlib.colors.LinearSegmentedColormap
+        the colormap that is used to calculate the rgb values
 
     """
     rgb = np.zeros((len(x), 3))
@@ -197,13 +206,13 @@ def array_to_rgb(x, cmap):
 
 def write_csv(fname, nbrs):
     """
-        Saves the neighbour list into a CSV table file
+    Saves the neighbour list into a CSV table file
 
-        Arguments:
-        -----------
-        fname : str
-            Output file name including directory
-        nbrs : List[List[int]]:
+    Arguments:
+    -----------
+    fname : str
+        Output file name including directory
+    nbrs : List[List[int]]:
             Neighbors list
     """
     with open(fname, "w", newline="") as f:
