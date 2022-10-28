@@ -160,7 +160,7 @@ class HyperanimatorPath:
         else:
             self.data_frames = data_frames
         self.s_coords = self._stretch_coords_geodesic(self.coords, self.path_frames)
-        self.s_data = self._stretch_data(data, self.data_frames)
+        self.s_data = self._stretch_data(data, self.data_frames, len(self.s_coords))
         self.frames = np.min([len(self.s_coords), len(self.s_data)])
 
         self.anim = animation.FuncAnimation(fig, self._update, frames=self.frames, **animargs)
@@ -235,8 +235,12 @@ class HyperanimatorPath:
 
         return np.array(stretched_path)
 
-    def _stretch_data(self, data, data_frames):
-        return np.repeat(data, (data_frames + 1), axis=0).reshape(len(data) * (data_frames + 1), len(data[0]))
+    def _stretch_data(self, data, data_frames, len_coords):
+        try:
+            len(data[0])
+            return np.repeat(data, (data_frames + 1), axis=0)
+        except:
+            return np.tile(data, len_coords).reshape(len_coords, len(data))
 
     def save(self, path, fps=5, codec=None):
         writer = animation.FFMpegWriter(fps, codec)
