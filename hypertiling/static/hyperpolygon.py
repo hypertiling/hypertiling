@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from hypertiling.transformation import p2w
+from hypertiling.representations import p2w
 from hypertiling.arraytransformation import mfull, mrotate, morigin
 
 
@@ -111,9 +111,6 @@ class HyperPolygon:
         for i in range(self.p + 1):
             z = moeb_translate_trafo(self.verticesP[i], s)
             self.verticesP[i] = z
-
-    def moeb_inverse(self, z0):
-        morigin_inv(self.p, z0, self.verticesP)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
