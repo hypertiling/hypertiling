@@ -11,7 +11,7 @@ KERNELS = {"SR": KernelStaticRotational,
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", **kwargs):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", verbose=False, **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 
@@ -44,15 +44,18 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", **kwargs):
 
 
     if kernel == "GR":
-        print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
+        if verbose:
+            print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, **kwargs)
 
     elif kernel == "SR" or kernel == "SRI":
-        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        if verbose:
+            print("[hypertiling] Third parameter is interpreted as number of layers. Compare documentation.")
         return KERNELS[kernel](p, q, n, center, **kwargs)
 
     elif kernel == "DUN":
-        print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
+        if verbose:
+            print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
         print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
         if center == "vertex":
             print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
