@@ -95,6 +95,13 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolors}'>\r"
     svg.write(group_open)
 
+    if link != '':  
+        pattern = f"<defs>\r <pattern id='img1' width='5' height='5'>\r" \
+                  f"  <image href='{link}' x='0' y='0' width='45' height='45'/>\r </pattern>\r</defs>"
+        svg.write(pattern + "\r\n")
+        facecolors = 'transparent'
+
+
     # loop through tiling
     for idx, pgon in enumerate(tiling):
         if individual_colors:
@@ -130,7 +137,7 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
             x1, y1 = to_px(z1)
             x2, y2 = to_px(z2)
             r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {x2} {y2} "
+            path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {np.round(x2,digits)} {np.round(y2,digits)} "
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
     if unitcircle:
