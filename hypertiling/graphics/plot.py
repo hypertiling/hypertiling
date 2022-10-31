@@ -9,7 +9,8 @@ from ..geodesics import geodesic_arc
 
 # taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
 # plots even very large samples of polygons in less than a second
-def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", dpi=1200):
+def quick_plot(tiling, edgecolor='k', show_title=False, lw=0.3, save_img=False, path="", dpi=150):
+    fig, ax = plt.subplots(figsize=(8,7), dpi=dpi)
     x, y = [], []
     for i, pgon in enumerate(tiling):
         v = tiling.get_vertices(i)
@@ -19,15 +20,15 @@ def quick_plot(tiling, c='b', show_label=False, fs=5, save_img=False, path="", d
         y.extend(v.imag)
         y.append(None)
         w = tiling.get_center(i)
-        plt.text(w.real - 0.015, w.imag - 0.015, i, fontsize=fs) if show_label else None
     plt.xlim([-1, 1])
     plt.ylim([-1, 1])
     plt.axis('equal')
     plt.axis('off')
-    plt.fill(x, y, facecolor='None', edgecolor=c, linewidth=.1)
-    label = f"{{{tiling.p},{tiling.q}}}-{tiling.nlayers} tessellation," \
+    plt.fill(x, y, facecolor='None', edgecolor=edgecolor, linewidth=lw)
+    if show_title:
+        label = f"{{{tiling.p},{tiling.q}}}-{tiling.nlayers} tessellation," \
             f" {len(tiling)} polygons"
-    plt.title(label)
+        plt.title(label)
     plt.savefig(path, dpi=dpi) if save_img else None  # max dpi ca. 4000
     plt.show()
 

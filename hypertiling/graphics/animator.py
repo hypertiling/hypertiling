@@ -1,6 +1,6 @@
 from matplotlib import animation
 from hypertiling.graphics.plot import convert_polygons_to_patches
-from hypertiling.transformation import mymoeb
+from hypertiling.transformation import mymoebint
 import numpy as np
 
 
@@ -35,9 +35,9 @@ class animate_live:
     def __init__(self, state, fig, pgons, step, stepargs={}, animargs={}):
         self.initstate = state
         self.stepargs = stepargs
-        self.anim = animation.FuncAnimation(fig, self._update, init_func=self._init, **animargs)
-        self.nextstate = step
         self.pgons = pgons
+        self.nextstate = step
+        self.anim = animation.FuncAnimation(fig, self._update, init_func=self._init, **animargs)
 
     def _init(self):
         self.state = self.initstate
@@ -169,7 +169,7 @@ class HyperanimatorPath:
     def _update(self, i):
         self.ax.clear()
         self.tiling.translate(self.s_coords[i])
-        self.s_coords = mymoeb(-self.s_coords[i], self.s_coords)
+        self.s_coords = mymoebint(-self.s_coords[i], self.s_coords)
         pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], **self.kwargs)
         self.ax.add_collection(pgons)
 
@@ -195,7 +195,7 @@ class HyperanimatorPath:
         # g = geodesic
 
         # Translate first entry to the origin
-        t_pair = mymoeb(-pair[0], pair)
+        t_pair = mymoebint(-pair[0], pair)
 
         # Rotate second entry on to the real axis
         angle = np.angle(t_pair[1])
