@@ -1,6 +1,17 @@
+## v1.1.2
+Date: 2022-11-02
+
+**Release Notes**
+
+- improved SVG drawing capabilites (now more flexible, robust and compatible with GR kernel; introduce SVG string class)
+- debug and clean up Jupyter demo notebooks
+- path animations are now available (in a testing state)
+- hypertiling now has a CHANGELOG file
+- several bugfixes
+
+
 ## v1.1.1
 Date: 2022-10-25
-
 
 **Release Notes**
 
