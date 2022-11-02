@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '1.1.0'
+version = '1.1.2'
 
 try:
     with open('README.md', 'r') as f:
@@ -14,14 +14,14 @@ except:
 setup(
     name=package_name,
     version=version,
-    description='A Python 3 library for fast generation of regular hyperbolic tilings',
+    description='A high-performance Python 3 library for the generation and visualization of hyperbolic tilings',
     long_description=long_desc,
     long_description_content_type='text/markdown',
     author='Manuel Schrauth, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela, Yanick Thurn',
     author_email='manuel.schrauth@uni-wuerzburg.de',
     url='https://gitpages.physik.uni-wuerzburg.de/hypertiling/hyperweb',
     license='MIT',
-    keywords='hyperbolic tessellation tiling curvature poincare',
+    keywords='hyperbolic tessellation tiling curvature poincare geometry',
     packages=[package_name,
               f"{package_name}.generative",
               f"{package_name}.static",
@@ -30,7 +30,7 @@ setup(
     classifiers=[
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Visualization',
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
     ],
