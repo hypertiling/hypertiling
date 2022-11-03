@@ -1,7 +1,7 @@
 
 import numpy as np
 import math
-from .distance import weierstrass_distance
+from .distance import weierstrass_distance, disk_distance
 
 
 
@@ -28,6 +28,34 @@ def euclidean_center(vertices):
     vx = np.real(vertices)
     vy = np.imag(vertices)
     return complex(np.mean(vx), np.mean(vy))
+
+
+# use the hyperbolic law of cosines to compute the interiour vertex angles in a triangle
+# given by three points za, zb, zc
+def compute_tri_angles(za, zb, zc):
+
+    # compute edge lengths
+    a = disk_distance(zb,zc)
+    b = disk_distance(za,zc)    
+    c = disk_distance(za,zb)
+
+    # pre-compute cosh/sinh
+    cosha = np.cosh(a)
+    coshb = np.cosh(b)
+    coshc = np.cosh(c)
+    sinha = np.sinh(a)
+    sinhb = np.sinh(b)
+    sinhc = np.sinh(c)
+
+    # apply law of cosines
+    cosgamma = (coshc - cosha*coshb) / (sinha*sinhb)
+    cosalpha = (cosha - coshc*coshb) / (sinhc*sinhb)
+    cosbeta  = (coshb - cosha*coshc) / (sinha*sinhc)
+
+    # alpha is the angle opposite of edge "a", etc.
+    return np.arccos(cosalpha), np.arccos(cosbeta), np.arccos(cosgamma)
+
+
 
 
 
