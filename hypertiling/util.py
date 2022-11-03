@@ -23,6 +23,12 @@ def cell_radius_weierstrass(p,q):
     return lattice_spacing_weierstrass(q,p)
 
 
+# compute Euclidean center of a polygon (center of mass)
+def euclidean_center(vertices):
+    vx = np.real(vertices)
+    vy = np.imag(vertices)
+    return complex(np.mean(vx), np.mean(vy))
+
 
 
 # computes the variance of the centers of the polygons in the outmost layer
