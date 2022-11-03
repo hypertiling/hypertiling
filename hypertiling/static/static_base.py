@@ -293,7 +293,7 @@ class KernelRotationalCommon(KernelStaticBase):
         Refine a regular lattice, by subdividing each triangle into four new polygons
         If the tiling is not triangular, in the first step, all cells will be subdivided
         into p triangular cells
-        Note that new cell are not isometric anymore!
+        Note that new cells are not isometric anymore!
         
         Parameters
         ----------
@@ -311,7 +311,7 @@ class KernelRotationalCommon(KernelStaticBase):
         # into p triangles
         if self.p > 3:
             newpolygons = []
-            for num, pgon in enumerate(self.polygons):
+            for pgon in self.polygons:
                 for vrtx in range(self.p):
                     child = HyperPolygon(3) 
                     child.verticesP[0] = pgon.verticesP[vrtx]
