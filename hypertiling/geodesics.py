@@ -75,8 +75,15 @@ def geodesic_midpoint(z1, z2):
 
 # helper function for "geodesic_arc"
 def geodesic_angles(z1, z2):
-    z3 = unit_circle_inversion(z1)
-    zc, radius = circle_through_three_points(z1, z2, z3)
+    
+    # the origin needs some extra care
+    # since it is mapped to infinity
+    if np.abs(z1) > 1e-15:
+        z3 = unit_circle_inversion(z1)
+        zc, radius = circle_through_three_points(z1, z2, z3)
+    else:
+        zc = np.inf
+        radius = -1
     
     # in case points are collinear, return a radius of -1
     if radius == -1:
