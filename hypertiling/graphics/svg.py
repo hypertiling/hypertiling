@@ -129,17 +129,18 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
                 orientation = np.invert(orientation)
 
             # calculate svg data
-            arc = geodesic_arc(z1, z2)
-            if type(arc) == mlines.Line2D:  # if r -> \infty
-                r = 1e9  # some large number
-            else:
-                r = arc.get_width() / 2  # = height
-
-            q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
             x1, y1 = to_px(z1)
             x2, y2 = to_px(z2)
-            r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {np.round(x2,digits)} {np.round(y2,digits)} "
+            arc = geodesic_arc(z1, z2)
+            # for technical reasons we need to distinguish between straight geodesic ..
+            if type(arc) == mlines.Line2D:
+                path += f"M {np.round(x1,digits)},{np.round(y1,digits)} {np.round(x2,digits)},{np.round(y2,digits)}"
+            # ... and those which are circle arcs
+            else:
+                r = arc.get_width() / 2  # = height
+                q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
+                r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+                path += f" A {np.round(r_px,digits)} {np.round(r_px,digits)} 0 0 {int(orientation)} {np.round(x2,digits)} {np.round(y2,digits)} "
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
     if unitcircle:
