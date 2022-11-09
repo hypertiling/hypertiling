@@ -7,9 +7,31 @@ from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
 
 
-# taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
+# taken from 
 # plots even very large samples of polygons in less than a second
 def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
+    """
+    Fast plot function
+    inspired by http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
+
+    Parameters
+    ----------
+
+    tiling: HyperbolicTiling
+        A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
+
+    unitcircle: boolean
+        Determines whether the unit circle is plotted or not
+
+    **kwargs
+        Further properties (such as linewidth, alpha, facecolor, edgecolor, ...)
+
+    Returns
+    -------
+
+    pgonpatches: PatchCollection
+        Contains all the polygon patches.
+    """
 
     # default kwargs
     if "fc" not in kwargs and "facecolor" not in kwargs:
@@ -62,20 +84,16 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     cutoff: float, default: None
         Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
 
+    **kwargs
+        Further properties (such as linewidth, alpha, facecolor, edgecolor, ...)
 
     Returns
     -------
 
     pgonpatches: PatchCollection
         Contains all the polygon patches.
-
-    Other Parameters:
-    -----------------
-
-    **kwargs
-        Patch properties.
-
     """
+
     patches = []
     accepted_polys = []
 
@@ -132,21 +150,35 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     else:
         raise ValueError("[hypertiling] Error: Argument 'colors' has no valid format. Must be matplotlib color type or array-like!")
 
-
     return pgonpatches
 
 
-
-
-# transform all edges in the tiling to either matplotlib Arc or Line2D
-# depending on whether they came out straight or curved
-# the respective type is encoded in the array "types"
 def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
+    """
+    Transform all edges of a tiling to either matplotlib Arc or Line2D object
+    depending on whether they are straight lines or horocycles
+
+    Parameters
+    ----------
+
+    tiling: HyperbolicTiling
+        A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
+
+    cutoff: float, default: None
+        Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
+
+    **kwargs
+        Further properties (such as linewidth, alpha, edgecolor, ...)
+
+    Returns
+    -------
+
+    edges: list of Arc and Line2D objects
+        contains all edges in the lattice in a matplotlib-friendly format
+    """
+
     edges = []
     types = []
-
-    if "fc" in kwargs or "facecolor" in kwargs:
-        print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
 
     lazy = False
     if cutoff is not None:
@@ -202,6 +234,9 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
         Other valid options are matplotlib color strings (e.g. "k", "white" or RGBA (0,0,1,1))
         or an array with the same length as the tiling, containing floats
 
+    unitcircle: Bool, default: False
+        If True, the unit circle (boundary of the Poincare disk) is added to the plot
+
     symmetric_colors: Bool, default: False
         If True, sets the colormap so that the center of the colormap corresponds to the center of colors.
 
@@ -217,6 +252,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     ycrange: (2,) array-like, default: (-1,1)
         Sets the y limits of the plot.
 
+
     Returns
     -------
 
@@ -227,7 +263,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     -----------------
 
     **kwargs
-        Patch properties.
+        Further properties (such as linewidth, alpha, facecolor, edgecolor, ...)
 
     """
 
@@ -263,7 +299,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
 
 
-def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
+def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
     """
     Plots a hyperbolic tiling with geodesic edges
     Cells can not be filled!
@@ -276,6 +312,9 @@ def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1,
 
     color: color
         Sets the color of edges. This internally sets "fc" in kwargs.
+
+    unitcircle: Bool, default: False
+        If True, the unit circle (boundary of the Poincare disk) is added to the plot
 
     cutoff: float, default: None
         Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
@@ -296,12 +335,13 @@ def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1,
     -----------------
 
     **kwargs
-        Patch properties.
+        Further properties (such as linewidth, alpha, facecolor, edgecolor, ...)
 
     """
     
     # create figure
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+
 
     # default values
     if color is not None:
@@ -310,6 +350,18 @@ def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1,
     else:
         if "ec" not in kwargs and "edgecolor" not in kwargs:
             kwargs["ec"] = "k"
+    
+    if "fc" in kwargs:
+        del kwargs["fc"]
+        print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
+    if "facecolor" in kwargs:
+        del kwargs["fc"]
+        print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
+
+    # draw unit circle
+    if unitcircle:
+        circle = plt.Circle((0, 0), 1, fc=(1,1,1,0), **kwargs)
+        ax.add_patch(circle)
 
     # transform
     edges, types = convert_edges_to_arcs(tiling, cutoff, **kwargs)
