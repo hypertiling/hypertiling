@@ -5,7 +5,7 @@ import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
-
+from matplotlib.colors import is_color_like
 
 # taken from 
 # plots even very large samples of polygons in less than a second
@@ -137,13 +137,13 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         pgonpatches.set_array(np.array(colors)[accepted_polys])
 
     # identical colors
-    elif len(colors) == 1:
-        if "cmap" in kwargs:
-            print("[hypertiling] Warning: Colormap argument (cmap) is being ignored, since only one static color is given.")
-        if "fc" not in kwargs and "facecolor" not in kwargs:
-            kwargs["fc"] = colors
+    elif is_color_like(colors):
+        kwargs["fc"] = colors
         if "ec" not in kwargs and "edgecolor" not in kwargs:
             kwargs["ec"] = "k"
+        if "cmap" in kwargs:
+            print("[hypertiling] Warning: Colormap argument (cmap) is being ignored, since only one static color is given.")
+        
         # the polygon list has now become a PatchCollection
         pgonpatches = PatchCollection(patches, **kwargs)     
 
