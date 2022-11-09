@@ -43,7 +43,7 @@ def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
 
 
 # convert Hyperbolic Tiling cells into matplotlib PatchCollection
-def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, **kwargs):
+def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     """
     Returns a PatchCollection, containing all polygons that are to be drawn.
 
@@ -58,11 +58,9 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
         Other valid options are matplotlib color strings (e.g. "k", "white" or RGBA (0,0,1,1))
         or an array with the same length as the tiling, containing floats
 
-    lazy: Bool, default: False
-        If True, only polygons whose edges are all longer than the parameter cutoff will be added to the PatchCollection.
+    cutoff: float, default: None
+        Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
 
-    cutoff: float, default: 0.001
-        Only active, if lazy is True. Sets the minimal edge length for lazy plotting.
 
     Returns
     -------
@@ -80,13 +78,21 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
     patches = []
     accepted_polys = []
 
+    lazy = False
+    if cutoff is not None:
+        lazy = True
+        cutoff = 1-cutoff
+
     # loop over polygons
     for idx in range(len(tiling)):
         # extract vertex coordinates
         u = tiling.get_vertices(idx)
+
         # lazy plotting
-        if lazy and np.any(np.abs(np.diff(u)) < cutoff):
-            continue
+        if lazy:
+            if np.all(np.abs(u) > cutoff):
+                continue
+
         # transform to matplotlib Polygon format
         stack = np.column_stack((u.real, u.imag))
         polygon = Polygon(stack, True)
@@ -129,21 +135,26 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
     return pgonpatches
 
 
+
+
 # transform all edges in the tiling to either matplotlib Arc or Line2D
 # depending on whether they came out straight or curved
 # the respective type is encoded in the array "types"
-def convert_edges_to_arcs(tiling, lazy=False, lazycutoff=0, **kwargs):
+def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
     edges = []
     types = []
 
     if "fc" in kwargs or "facecolor" in kwargs:
         print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
 
-    cutoff = 1-lazycutoff
+    lazy = False
+    if cutoff is not None:
+        lazy = True
+        cutoff = 1-cutoff
 
     # loop over cells
     for j, poly in enumerate(tiling):
-        
+
         # extract vertices
         u = tiling.get_vertices(j)
 
@@ -173,7 +184,7 @@ def convert_edges_to_arcs(tiling, lazy=False, lazycutoff=0, **kwargs):
 
 
 # simple plot function for hyperbolic tiling with colors
-def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1, 1),
+def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
                 ycrange=(-1, 1), **kwargs):
     """
     Plots a hyperbolic tiling.
@@ -195,11 +206,8 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     plot_colorbar: Bool, default: False
         If True, plots a colorbar.
 
-    lazy: Bool, default: False
-        If True, only polygons whose edges are all longer than the parameter cutoff will be added to the PatchCollection.
-
-    cutoff: float, default: 0.001
-        Only active, if lazy is True. Sets the minimal edge length for lazy plotting.
+    cutoff: float, default: None
+        Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
 
     xcrange: (2,) array-like, default: (-1,1)
         Sets the x limits of the plot.
@@ -229,7 +237,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
 
     # convert to matplotlib format
-    pgons = convert_polygons_to_patches(tiling, colors, lazy, cutoff, **kwargs)
+    pgons = convert_polygons_to_patches(tiling, colors, cutoff, **kwargs)
 
     # draw patches
     ax.add_collection(pgons)
@@ -251,10 +259,10 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     return ax
 
 
-# simple plot function for hyperbolic tiling with geodesic edges
-def plot_geodesic(tiling, color=None, lazy=False, lazycutoff=0, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
+def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
     """
-    Plots a hyperbolic tiling.
+    Plots a hyperbolic tiling with geodesic edges
+    Cells can not be filled!
 
     Parameters
     ----------
@@ -264,6 +272,9 @@ def plot_geodesic(tiling, color=None, lazy=False, lazycutoff=0, xcrange=(-1, 1),
 
     color: color
         Sets the color of edges. This internally sets "fc" in kwargs.
+
+    cutoff: float, default: None
+        Actives lazy plotting; If set, only polygons which are located entirely inside the cutoff radius are being drawn
 
     xcrange: (2,) array-like, default: (-1,1)
         Sets the x limits of the plot.
@@ -291,7 +302,7 @@ def plot_geodesic(tiling, color=None, lazy=False, lazycutoff=0, xcrange=(-1, 1),
         kwargs["ec"] = color
         kwargs["edgecolor"] = None
 
-    edges, types = convert_edges_to_arcs(tiling, lazy, lazycutoff, **kwargs)
+    edges, types = convert_edges_to_arcs(tiling, cutoff, **kwargs)
     for edge in edges:
         ax.add_artist(edge)
 
