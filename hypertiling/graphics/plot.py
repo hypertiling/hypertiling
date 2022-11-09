@@ -136,6 +136,10 @@ def convert_edges_to_arcs(tiling, **kwargs):
     edges = []
     types = []
 
+    if "fc" in kwargs or "facecolor" in kwargs:
+        print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
+
+
     for j, poly in enumerate(tiling):  # loop over polygons
         for i in range(tiling.p):  # loop over vertices
             z = tiling.get_vertices(j)
@@ -168,8 +172,10 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     tiling: HyperbolicTiling
         A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
 
-    colors: array-like
-        Used for colormapping the PatchCollection. Must have same length as polygons.
+    colors: None or colorvalue or array-like
+        Used for colormapping the PatchCollection. If None, all polygons are mapped with transparent faces;
+        Other valid options are matplotlib color strings (e.g. "k", "white" or RGBA (0,0,1,1))
+        or an array with the same length as the tiling, containing floats
 
     symmetric_colors: Bool, default: False
         If True, sets the colormap so that the center of the colormap corresponds to the center of colors.
@@ -234,7 +240,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
 
 # simple plot function for hyperbolic tiling with geodesic edges
-def plot_geodesic(tiling, color="k", xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
+def plot_geodesic(tiling, color=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
     """
     Plots a hyperbolic tiling.
 
@@ -245,7 +251,7 @@ def plot_geodesic(tiling, color="k", xcrange=(-1, 1), ycrange=(-1, 1), **kwargs)
         A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
 
     color: color
-        Sets the color of edges.
+        Sets the color of edges. This internally sets "fc" in kwargs.
 
     xcrange: (2,) array-like, default: (-1,1)
         Sets the x limits of the plot.
@@ -269,10 +275,13 @@ def plot_geodesic(tiling, color="k", xcrange=(-1, 1), ycrange=(-1, 1), **kwargs)
 
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
 
+    if color is not None:
+        kwargs["ec"] = color
+        kwargs["edgecolor"] = None
+
     edges, types = convert_edges_to_arcs(tiling, **kwargs)
     for edge in edges:
         ax.add_artist(edge)
-        edge.set_color(color)
 
     plt.xlim(xcrange)
     plt.ylim(ycrange)
