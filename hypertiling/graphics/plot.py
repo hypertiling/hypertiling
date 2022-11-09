@@ -42,9 +42,10 @@ def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
     plt.show()
 
 
-# convert Hyperbolic Tiling cells into matplotlib PatchCollection
+
 def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     """
+    Convert Hyperbolic Tiling cells into matplotlib PatchCollection
     Returns a PatchCollection, containing all polygons that are to be drawn.
 
     Parameters
@@ -183,7 +184,8 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
     return edges, types
 
 
-# simple plot function for hyperbolic tiling with colors
+
+
 def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
                 ycrange=(-1, 1), **kwargs):
     """
@@ -229,12 +231,13 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
     """
 
+    # create figure
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
 
+    # draw unit circle
     if unitcircle:
         circle = plt.Circle((0, 0), 1, **kwargs)
         ax.add_patch(circle)
-
 
     # convert to matplotlib format
     pgons = convert_polygons_to_patches(tiling, colors, cutoff, **kwargs)
@@ -257,6 +260,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     plt.axis("off")
 
     return ax
+
 
 
 def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
@@ -295,14 +299,22 @@ def plot_geodesic(tiling, color=None, cutoff=None, xcrange=(-1, 1), ycrange=(-1,
         Patch properties.
 
     """
-
+    
+    # create figure
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
 
+    # default values
     if color is not None:
         kwargs["ec"] = color
-        kwargs["edgecolor"] = None
+        kwargs.pop("edgecolor", None)
+    else:
+        if "ec" not in kwargs and "edgecolor" not in kwargs:
+            kwargs["ec"] = "k"
 
+    # transform
     edges, types = convert_edges_to_arcs(tiling, cutoff, **kwargs)
+    
+    # draw
     for edge in edges:
         ax.add_artist(edge)
 
