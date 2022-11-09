@@ -3,33 +3,42 @@ import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection, PolyCollection
+from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
 
 
 # taken from http://exnumerus.blogspot.com/2011/02/how-to-quickly-plot-polygons-in.html
 # plots even very large samples of polygons in less than a second
-def quick_plot(tiling, edgecolor='k', show_title=False, lw=0.3, save_img=False, path="", dpi=150):
+def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
+
+    # default kwargs
+    if "fc" not in kwargs and "facecolor" not in kwargs:
+        kwargs["fc"] = (1,1,1,1)
+    if "ec" not in kwargs and "edgecolor" not in kwargs:
+        kwargs["ec"] = "k"
+
+    # actual plot
     fig, ax = plt.subplots(figsize=(8,7), dpi=dpi)
+
+    # add bounding circle
+    if unitcircle:
+        circle = plt.Circle((0, 0), 1, **kwargs)
+        ax.add_patch(circle)
+
+    # draw polygons
     x, y = [], []
-    for i, pgon in enumerate(tiling):
+    for i in range(len(tiling)):
         v = tiling.get_vertices(i)
-        v = np.append(v, v[0])  # appending first vertex to close the circle to overcome missing edges in plot
+        v = np.append(v, v[0])  # appending first vertex to close the path
         x.extend(v.real)
         x.append(None)  # this is some kind of trick that makes it that fast
         y.extend(v.imag)
         y.append(None)
-        w = tiling.get_center(i)
     plt.xlim([-1, 1])
     plt.ylim([-1, 1])
     plt.axis('equal')
     plt.axis('off')
-    plt.fill(x, y, facecolor='None', edgecolor=edgecolor, linewidth=lw)
-    if show_title:
-        label = f"{{{tiling.p},{tiling.q}}}-{tiling.nlayers} tessellation," \
-            f" {len(tiling)} polygons"
-        plt.title(label)
-    plt.savefig(path, dpi=dpi) if save_img else None  # max dpi ca. 4000
+    plt.fill(x, y, **kwargs)
     plt.show()
 
 
@@ -44,8 +53,10 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
     tiling: HyperbolicTiling
         A hyperbolic tiling object, requires proper "get"-interfaces and iterator functionality
 
-    colors: array-like
-        Used for colormapping the PatchCollection. Must have same length as polygons.
+    colors: None or colorvalue or array-like
+        Used for colormapping the PatchCollection. If None, all polygons are mapped with transparent faces;
+        Other valid options are matplotlib color strings (e.g. "k", "white" or RGBA (0,0,1,1))
+        or an array with the same length as the tiling, containing floats
 
     lazy: Bool, default: False
         If True, only polygons whose edges are all longer than the parameter cutoff will be added to the PatchCollection.
@@ -82,11 +93,38 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
         patches.append(polygon)
         accepted_polys.append(idx)
 
-    # the polygon list has now become a PatchCollection
-    pgonpatches = PatchCollection(patches, **kwargs)
-    # add colors
-    if colors is not None:
+    # default values
+    if colors is None:
+        if "fc" not in kwargs and "facecolor" not in kwargs:
+            kwargs["fc"] = (1,1,1,1)
+        if "ec" not in kwargs and "edgecolor" not in kwargs:
+            kwargs["ec"] = "k"
+        pgonpatches = PatchCollection(patches, **kwargs)
+
+    # individual colors
+    elif len(colors) == len(tiling):
+        if "fc" in kwargs or "facecolor" in kwargs:
+            print("[hypertiling] Warning: Since an array of colors is provided, the facecolor argument (fc) is ignored.")
+
+        # the polygon list has now become a PatchCollection
+        pgonpatches = PatchCollection(patches, **kwargs)
+        # add colors
         pgonpatches.set_array(np.array(colors)[accepted_polys])
+
+    # identical colors
+    elif len(colors) == 1:
+        if "cmap" in kwargs:
+            print("[hypertiling] Warning: Colormap argument (cmap) is being ignored, since only one static color is given.")
+        if "fc" not in kwargs and "facecolor" not in kwargs:
+            kwargs["fc"] = colors
+        if "ec" not in kwargs and "edgecolor" not in kwargs:
+            kwargs["ec"] = "k"
+        # the polygon list has now become a PatchCollection
+        pgonpatches = PatchCollection(patches, **kwargs)     
+
+    else:
+        raise ValueError("[hypertiling] Error: Argument 'colors' has no valid format. Must be matplotlib color type or array-like!")
+
 
     return pgonpatches
 
@@ -119,7 +157,7 @@ def convert_edges_to_arcs(tiling, **kwargs):
 
 
 # simple plot function for hyperbolic tiling with colors
-def plot_tiling(tiling, colors, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1, 1),
+def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, lazy=False, cutoff=0.001, xcrange=(-1, 1),
                 ycrange=(-1, 1), **kwargs):
     """
     Plots a hyperbolic tiling.
@@ -166,6 +204,11 @@ def plot_tiling(tiling, colors, symmetric_colors=False, plot_colorbar=False, laz
     """
 
     fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+
+    if unitcircle:
+        circle = plt.Circle((0, 0), 1, **kwargs)
+        ax.add_patch(circle)
+
 
     # convert to matplotlib format
     pgons = convert_polygons_to_patches(tiling, colors, lazy, cutoff, **kwargs)
