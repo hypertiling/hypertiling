@@ -85,7 +85,7 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
         # extract vertex coordinates
         u = tiling.get_vertices(idx)
         # lazy plotting
-        if lazy and np.any(abs(np.diff(u)) < cutoff):
+        if lazy and np.any(np.abs(np.diff(u)) < cutoff):
             continue
         # transform to matplotlib Polygon format
         stack = np.column_stack((u.real, u.imag))
@@ -132,19 +132,31 @@ def convert_polygons_to_patches(tiling, colors=None, lazy=False, cutoff=0.001, *
 # transform all edges in the tiling to either matplotlib Arc or Line2D
 # depending on whether they came out straight or curved
 # the respective type is encoded in the array "types"
-def convert_edges_to_arcs(tiling, **kwargs):
+def convert_edges_to_arcs(tiling, lazy=False, lazycutoff=0, **kwargs):
     edges = []
     types = []
 
     if "fc" in kwargs or "facecolor" in kwargs:
         print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
 
+    cutoff = 1-lazycutoff
 
-    for j, poly in enumerate(tiling):  # loop over polygons
-        for i in range(tiling.p):  # loop over vertices
-            z = tiling.get_vertices(j)
-            z1 = z[i]  # extract edges
-            z2 = z[(i + 1) % tiling.p]
+    # loop over cells
+    for j, poly in enumerate(tiling):
+        
+        # extract vertices
+        u = tiling.get_vertices(j)
+
+        # lazy plotting
+        if lazy:
+            if np.all(np.abs(u) > cutoff):
+                continue
+
+        # loop over vertices/edges
+        for i in range(tiling.p):   
+            # extract edges
+            z1 = u[i]  
+            z2 = u[(i + 1) % tiling.p]
             edge = geodesic_arc(z1, z2, **kwargs)  # compute arc
             edges.append(edge)
 
@@ -240,7 +252,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
 
 # simple plot function for hyperbolic tiling with geodesic edges
-def plot_geodesic(tiling, color=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
+def plot_geodesic(tiling, color=None, lazy=False, lazycutoff=0, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
     """
     Plots a hyperbolic tiling.
 
@@ -279,7 +291,7 @@ def plot_geodesic(tiling, color=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs
         kwargs["ec"] = color
         kwargs["edgecolor"] = None
 
-    edges, types = convert_edges_to_arcs(tiling, **kwargs)
+    edges, types = convert_edges_to_arcs(tiling, lazy, lazycutoff, **kwargs)
     for edge in edges:
         ax.add_artist(edge)
 
