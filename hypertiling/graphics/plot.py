@@ -272,7 +272,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
 
     # draw unit circle
     if unitcircle:
-        circle = plt.Circle((0, 0), 1, **kwargs)
+        circle = plt.Circle((0, 0), 1, lw=0.7, fc=(0,0,0,0), ec="k")
         ax.add_patch(circle)
 
     # convert to matplotlib format
