@@ -18,5 +18,4 @@ Set parameters, initialize and generate the tiling
    nlayers = 5
 
    T = HyperbolicTiling(p,q,nlayers) 
-   T.generate()
 
