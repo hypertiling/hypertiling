@@ -4,7 +4,7 @@ import copy
 from ..kernel_abc import AbstractKernelBase
 from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
-from ..util import fund_radius, lattice_spacing_weierstrass
+from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
 from hypertiling.distance import lorentzian_distance
 
@@ -93,7 +93,7 @@ class KernelStaticBase(AbstractKernelBase):
         :param index: int = index of the polygon
         :return: np.array[np.complex128][p] = vertices of the polygon
         """
-        return self.polygons[index].verticesP[:self.p]
+        return self.polygons[index].verticesP[:-1]
 
     def get_center(self, index: int) -> np.complex128:
         """
@@ -288,10 +288,12 @@ class KernelRotationalCommon(KernelStaticBase):
 # ------------- Refinements -------------
 
 
-    def refine_lattice(self, iterations: int):
+    def refine_lattice(self, iterations=1):
         """ 
-        Refine a triangular lattice, by subdividing each triangle into four new polygons
-        Note that new polygon are not congruent anymore!
+        Refine a regular lattice, by subdividing each triangle into four new polygons
+        If the tiling is not triangular, in the first step, all cells will be subdivided
+        into p triangular cells
+        Note that new cells are not isometric anymore!
         
         Parameters
         ----------
@@ -302,11 +304,27 @@ class KernelRotationalCommon(KernelStaticBase):
             
         """
 
+        if iterations == 0:
+            return
+
+        # if tiling is not triangular, the first refinement steps subdivided all cells
+        # into p triangles
         if self.p > 3:
-            raise ValueError("[hypertiling] Error: Refinements only work for triangular tilings!")
+            newpolygons = []
+            for pgon in self.polygons:
+                for vrtx in range(self.p):
+                    child = HyperPolygon(3) 
+                    child.verticesP[0] = pgon.verticesP[vrtx]
+                    child.verticesP[1] = pgon.verticesP[(vrtx+1)%self.p]
+                    child.verticesP[2] = pgon.verticesP[-1]
+                    child.verticesP[3] = euclidean_center(child.verticesP[:-1])
+                    newpolygons.append(child)
+            self.polygons = newpolygons
+            iterations -= 1 # we have already done one iteration
+
         
         for _ in range(iterations):
-            p = self.p # we use this quite frequently, hence the short form
+            p = 3 # we use this quite frequently, hence the short form
             newpolygons = []  # stores the new polygons
             for num, pgon in enumerate(self.polygons):  # find the new vertices of each polygon
                 ref_vertices = []  # stores newly found vertices through refinement
@@ -332,9 +350,7 @@ class KernelRotationalCommon(KernelStaticBase):
                     vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
                     for i in range(p):
                         child.verticesP[i] = vP[i]
-                    center_x = np.sum(np.real(child.verticesP[:p]))/p  # trick: average over the xs and ys of the vertices to get
-                    center_y = np.sum(np.imag(child.verticesP[:p]))/p  # ... an approximate value for centerP
-                    child.verticesP[-1] = complex(center_x, center_y)
+                    child.verticesP[-1] = euclidean_center(child.verticesP[:-1])
                     child.idx = (4*num+1)+1+vrtx  # assign a unique number
                     newpolygons.append(child)
 

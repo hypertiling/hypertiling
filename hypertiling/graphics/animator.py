@@ -6,6 +6,8 @@ import numpy as np
 
 def moeb_rotate_trafo(phi, z):
     return z * (np.cos(phi) + 1j * np.sin(phi))
+    
+mymoebint = np.vectorize(mymoebint)
 
 """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
@@ -169,7 +171,7 @@ class HyperanimatorPath:
     def _update(self, i):
         self.ax.clear()
         self.tiling.translate(self.s_coords[i])
-        self.s_coords = mymoebint(-self.s_coords[i], self.s_coords)
+        self.s_coords = mymoebint(-self.s_coords[i], self.s_coords)[0]
         pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], **self.kwargs)
         self.ax.add_collection(pgons)
 
@@ -195,7 +197,7 @@ class HyperanimatorPath:
         # g = geodesic
 
         # Translate first entry to the origin
-        t_pair = mymoebint(-pair[0], pair)
+        t_pair = mymoebint(-pair[0], pair)[0]
 
         # Rotate second entry on to the real axis
         angle = np.angle(t_pair[1])
@@ -214,7 +216,7 @@ class HyperanimatorPath:
         # Rotate back
         t_stretched = moeb_rotate_trafo(angle, r_t_stretched)
         # Translate everything back
-        stretched = mymoeb(pair[0], t_stretched)
+        stretched = mymoebint(pair[0], t_stretched)[0]
 
         return stretched
 

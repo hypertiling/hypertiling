@@ -32,10 +32,12 @@ Welcome to the official documentation of the hypertiling package! This page is u
    :maxdepth: 2
    :caption: Examples
 
-   nbcopies/examples.ipynb
+   nbcopies/quickstart.ipynb
+   nbcopies/refinements.ipynb
+   nbcopies/animations.ipynb
    nbcopies/geodesics.ipynb
    nbcopies/logo.ipynb
-   nbcopies/refinements.ipynb
+
 
 .. toctree::
    :maxdepth: 2
