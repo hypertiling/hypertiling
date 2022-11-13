@@ -116,7 +116,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                     poly_c = np.copy(poly)
                     arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
                     poly_c *= np.exp(angle * 1j)
-                    arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+                    arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
                     yield poly_c
 
     def _wiggle_index(self, index1: int, index2: int, tol: int = 1) -> int:
@@ -434,7 +434,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                     poly_c = np.copy(poly)
                     arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
                     poly_c *= np.exp(angle * 1j)
-                    arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+                    arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
                     yield poly_c
 
     def __getitem__(self, index: int) -> np.array:
@@ -467,7 +467,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             poly_c = np.copy(poly)
             arraytransform.morigin(self.p, self._sector_polys[0, 0], poly_c)
             poly_c *= np.exp(phi * 1j)
-            arraytransform.morigin_inv(self.p, self._sector_polys[0, 0], poly_c)
+            arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
             return poly_c
 
 
@@ -914,6 +914,6 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
 
     plt.show()
