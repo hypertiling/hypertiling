@@ -106,7 +106,14 @@ def geodesic_arc(z1, z2, **kwargs):
 
     # in case the points are collinear, we use matplotlib.patch.Arrow to draw a straight line
     if r == -1:
-        return mlines.Line2D(np.array([z1.real, z2.real]), np.array([z1.imag, z2.imag]), **kwargs)
+        # line elements do not know "edgecolor", hence we rename it to "color"
+        linekwargs = kwargs
+        if "ec" in linekwargs:
+            kwargs["color"] = kwargs.pop("ec")
+        if "edgecolor" in linekwargs:
+            kwargs["color"] = kwargs.pop("edgecolor")
+
+        return mlines.Line2D(np.array([z1.real, z2.real]), np.array([z1.imag, z2.imag]), **linekwargs)
     
     # avoid negative angles
     if t1 < 0:
