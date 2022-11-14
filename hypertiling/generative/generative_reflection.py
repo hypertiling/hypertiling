@@ -888,8 +888,9 @@ if __name__ == "__main__":
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
+    fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(7, 3, 3)
+    tiling = KernelGenerativeReflection(7, 3, 6)
     t2 = time.time()
 
     tiling.map_nbrs()
@@ -901,12 +902,12 @@ if __name__ == "__main__":
 
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    prob = [2 / (i + 1) for i in range(9)]
+    # prob = [2 / (i + 1) for i in range(9)]
 
-    tiling.translate(tiling[1][0])
+    # tiling.translate(tiling[1][0])
 
     for polygon_index, pgon in enumerate(tiling):
-        print(polygon_index)
+        # print(polygon_index)
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
         poly_layer = tiling.get_reflection_level(polygon_index)
