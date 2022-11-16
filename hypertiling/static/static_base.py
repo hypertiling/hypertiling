@@ -538,7 +538,7 @@ class KernelRotationalCommon(KernelStaticBase):
             # these indices are neighbours of each other
             for x in w[0]:
                 if vals[i] is not vals[x]:
-                    nbrs[vals[i] - 1].append(vals[x])
+                    nbrs[vals[i]].append(vals[x])
 
         return nbrs
 
@@ -582,11 +582,11 @@ class KernelRotationalCommon(KernelStaticBase):
                 if k1[0] == k2[0] and k1[1] == k2[1]:
                     # check edge
                     if vals[i] is not vals[j]:
-                        nbrs[vals[i] - 1].append(vals[j])
+                        nbrs[vals[i]].append(vals[j])
                 # check also reverse orientation    
                 elif k1[1] == k2[0] and k1[0] == k2[1]:
                     if vals[i] is not vals[j]:
-                        nbrs[vals[i] - 1].append(vals[j])
+                        nbrs[vals[i]].append(vals[j])
 
         return nbrs
 
