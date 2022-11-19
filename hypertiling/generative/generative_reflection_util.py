@@ -202,6 +202,14 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
         if reflection_levels[j] == n:
             # all reflection layers are constructed
             return reflection_levels[:c]
+
+        if j > 1:
+            # check if parent poly shares edge with last created child -> filler of 1st order
+            connection = any_close_matrix(sector_polys[c - 1], sector_polys[j])  # (p+1)^2
+            if connection.shape[0] == 2 and c > 3:
+                edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
+                edge_array[j] ^= 1 << (connection[0, 0] - 1)
+
         for i, vertex in enumerate(poly[1:]):  # p loop execs
             """
             Algorithm:
@@ -233,19 +241,12 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                 # save level of polygons
                 reflection_levels[c] = reflection_levels[j] + 1  # 1
 
-                # shares edge with former polygon (sibling)
-                # connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
-                connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
-                if connection.shape[0] == 2 and c > 2:
-                    edge_array[c] ^= 1 << (connection[1, 1] - 1)
-                    edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
-
-                # check if poly shares edge with next parent (parents sibling) #filler
-                # connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
-                connection = any_close_matrix(sector_polys[c], sector_polys[j + 1])  # (p+1)^2
-                if connection.shape[0] == 2 and c > 3:
-                    edge_array[c] ^= 1 << (connection[1, 1] - 1)
-                    edge_array[j + 1] ^= 1 << (connection[0, 0] - 1)
+                if i == 0 or q == 3:
+                    # shares edge with former polygon -> filler of 2nd Order
+                    connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
+                    if connection.shape[0] == 2 and c > 2:
+                        edge_array[c] ^= 1 << (connection[1, 1] - 1)
+                        edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
                 """
                 Theoretically possible to shift before neighbor comparison.
