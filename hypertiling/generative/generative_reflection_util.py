@@ -207,6 +207,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
             # check if parent poly shares edge with last created child -> filler of 1st order
             connection = any_close_matrix(sector_polys[c - 1], sector_polys[j])  # (p+1)^2
             if connection.shape[0] == 2 and c > 3:
+                # block edges in number-bit-array (see. GRK __init__ for explanation)
                 edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
                 edge_array[j] ^= 1 << (connection[0, 0] - 1)
 
@@ -245,6 +246,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                     # shares edge with former polygon -> filler of 2nd Order
                     connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                     if connection.shape[0] == 2 and c > 2:
+                        # block edges in number-bit-array (see. GRK __init__ for explanation)
                         edge_array[c] ^= 1 << (connection[1, 1] - 1)
                         edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
