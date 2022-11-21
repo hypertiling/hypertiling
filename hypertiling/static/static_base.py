@@ -369,6 +369,7 @@ class KernelRotationalCommon(KernelStaticBase):
         Calls the Radius Optimized Slice (ROS) method without specification of a radius,
         hence, the standard p,q lattice spacing will be used
         """
+        htprint("Status", "This is the default neighbour method of the SR/SRI kernel. It is equivalent to calling 'get_nbrs_radius_optimized_slice' without default arguments.")
         return self.get_nbrs_radius_optimized_slice(radius=None)
 
 
