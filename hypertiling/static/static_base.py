@@ -6,6 +6,7 @@ from .hyperpolygon import HyperPolygon
 from ..arraytransformation import mfull, mrotate, morigin
 from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
+from ..ion import htprint
 from hypertiling.distance import lorentzian_distance
 
 
@@ -360,6 +361,17 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 # ------------- Neighbours -------------
+
+    # Default
+    def get_nbrs(self):
+        """
+        Default neighbour method for the Static Rotational Kernels
+        Calls the Radius Optimized Slice (ROS) method without specification of a radius,
+        hence, the standard p,q lattice spacing will be used
+        """
+        return self.get_nbrs_radius_optimized_slice(radius=None)
+
+
     # Radius Optimized Slice (ROS)
     def get_nbrs_radius_optimized_slice(self, radius=None, eps=1e-5):
         """
@@ -386,9 +398,9 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
         if radius == None:
-            print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
+            htprint("Status", "No search radius provided; Assuming lattice spacing of the (p,q) tessellation!")
             radius = lattice_spacing_weierstrass(self.p, self.q)
-
+            htprint("Status", "Found (p,q) = (%i,%i) and auto-calculated a neighbour distance of %5.4f. Can be changed using the 'radius' argument." % (self.p, self.q, radius))
 
         totalnum = len(self)  # total number of polygons
         p = self.p  # number of edges of each polygon
