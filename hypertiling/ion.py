@@ -10,7 +10,12 @@ VERBOSITY_LEVELS = {"Warning": 1,
 
 
 def show_verbosity_level():
-    print("[hypertiling] The verbosity level is set to '"+GLOBAL_VERBOSITY+"'")
+    print("[hypertiling] The verbosity level is set to:")
+    for key,item in VERBOSITY_LEVELS.items():
+        arrow = "     "
+        if key==GLOBAL_VERBOSITY:
+            arrow = " >>> "
+        print(arrow+str(item),key)    
 
 
 def set_verbosity_level(verbosity_depth="Warning"):
@@ -19,6 +24,7 @@ def set_verbosity_level(verbosity_depth="Warning"):
     else:
         global GLOBAL_VERBOSITY
         GLOBAL_VERBOSITY = verbosity_depth
+    show_verbosity_level()
 
 def htprint(verbosity_depth, message):
     if VERBOSITY_LEVELS[verbosity_depth] <= VERBOSITY_LEVELS[GLOBAL_VERBOSITY]:
