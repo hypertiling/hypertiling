@@ -147,8 +147,6 @@ class KernelStaticRotational(KernelRotationalCommon):
                     cangle = math.degrees(math.atan2(center.imag, center.real))
                     cangle += 360 if cangle < 0 else 0
 
-                    # cut away cells outside the fundamental sector
-                    # allow some tolerance at the upper boundary
                     # try adding to centerlist; it is a set() and takes care of duplicates
                     lenA = len(centerset)
                     center = np.round(center, tiling.dgts)  # CAUTION
