@@ -5,6 +5,11 @@ from .distance import weierstrass_distance, disk_distance
 
 
 
+
+
+
+
+
 # return the hyperbolic/geodesic lattice spacing, i.e. the edge length of any cell
 def lattice_spacing_weierstrass(p, q):
     num = math.cos(math.pi/q)
