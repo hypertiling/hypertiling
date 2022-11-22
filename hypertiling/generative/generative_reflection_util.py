@@ -144,7 +144,10 @@ def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     :param n: int = number of layers (reflective)
     :return: np.array[np.uint32] = number of tildes per layer
     """
-    k = p - 3 if q == 3 else p - 2 if q == 4 else p - 1
+    if q == 3:
+        # reflection and traditional layers match
+        return get_ns(p, q, n + 1)
+    k = p - 2 if q == 4 else p - 1
 
     lengths = np.empty((n + 1,), dtype=np.uint32)
     lengths[0] = 1
