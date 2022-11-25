@@ -104,23 +104,21 @@ class KernelStaticRotational(KernelRotationalCommon):
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-            #if self.numerically_unstable_upper(l, startpgon, endpgon):
-            #    print("Numerical accuracy exhausted;")
-            #    print("No more layers will be constructed; automatic shutdown")
-            #    break
+            if self.numerically_unstable_upper(l, startpgon, endpgon):
+                print("Numerical accuracy exhausted;")
+                print("No more layers will be constructed; automatic shutdown")
+                break
 
-            #if self.numerically_unstable_lower(l, startpgon, endpgon):
-            #    print("Accumulated numerical errors have become too large;")
-            #    print("No more layers will be constructed; automatic shutdown")
-            #    break
+            if self.numerically_unstable_lower(l, startpgon, endpgon):
+                print("Accumulated numerical errors have become too large;")
+                print("No more layers will be constructed; automatic shutdown")
+                break
 
         # free mem of centerset
         del centerset
 
         # --- filter out rotational duplicates
         deletelist = []
-
-        print("         ", len(self.polygons))
 
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
@@ -142,11 +140,9 @@ class KernelStaticRotational(KernelRotationalCommon):
 
 
     def is_duplicate(self, center, centerset):
-
         # since set is a hashed type, we need to round
         center = np.round(center, self.dgts)
         return (center in centerset)
-
 
 
     def add_layer(self):

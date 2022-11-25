@@ -115,9 +115,6 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
         # --- filter out rotational duplicates
         deletelist = []
-
-        print("         ", len(self.polygons))
-
         
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
@@ -138,13 +135,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
-
-
     def is_duplicate(self, center, centerarray):
         return centerarray.fp_has(center)
-
-
-
 
 
     def add_layer(self):
