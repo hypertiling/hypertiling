@@ -17,7 +17,7 @@ class KernelStaticRotational(KernelRotationalCommon):
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        self.dgts = 12
+        self.dgts = 10
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
         # construct tiling
