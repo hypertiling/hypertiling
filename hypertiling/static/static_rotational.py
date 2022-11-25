@@ -15,7 +15,6 @@ class KernelStaticRotational(KernelRotationalCommon):
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        #self.center = center # automatically assigned from super class?
         self.dgts = 8
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
@@ -132,24 +131,24 @@ class KernelStaticRotational(KernelRotationalCommon):
         newpolygons = []
 
         centerset = set()
-        for pgon in tiling:
-            center = np.round(pgon.centerP(), tiling.dgts)
+        for pgon in self.polygons:
+            center = np.round(pgon.centerP(), self.dgts)
             centerset.add(center)
 
-        for pgon in tiling:
+        for pgon in self.polygons:
             # iterate over every vertex of pgon
-            for vert_ind in range(tiling.p):
+            for vert_ind in range(self.p):
                 # iterate over all polygons touching this very vertex
-                for rot_ind in range(tiling.q):
+                for rot_ind in range(self.q):
                     # compute center and angle
-                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * tiling.qhi, pgon.centerP())
+                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.centerP())
 
                     cangle = math.degrees(math.atan2(center.imag, center.real))
                     cangle += 360 if cangle < 0 else 0
 
                     # try adding to centerlist; it is a set() and takes care of duplicates
                     lenA = len(centerset)
-                    center = np.round(center, tiling.dgts)  # CAUTION
+                    center = np.round(center, self.dgts)  # CAUTION
                     centerset.add(center)
                     lenB = len(centerset)
 
@@ -159,13 +158,13 @@ class KernelStaticRotational(KernelRotationalCommon):
                         polycopy = copy.deepcopy(pgon)
 
                         # generate adjacent polygon
-                        adj_pgon = tiling.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                         adj_pgon.find_angle()
 
                         # add corresponding poly to large list
                         newpolygons.append(adj_pgon)
 
-        tiling.polygons += newpolygons
+        self.polygons += newpolygons
 
 
         
