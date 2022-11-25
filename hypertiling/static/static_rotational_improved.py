@@ -154,15 +154,15 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
 
         # fill the centerarray with already existing centers
-        for pgon in tiling:
-            center = np.round(pgon.centerP(), tiling.dgts)
+        for pgon in self.polygons:
+            center = np.round(pgon.centerP(), self.dgts)
             centerarray.add(center)
 
-        for pgon in tiling:
+        for pgon in self.polygons:
             # iterate over every vertex of pgon
-            for vert_ind in range(tiling.p):
+            for vert_ind in range(self.p):
                 # iterate over all polygons touching this very vertex
-                for rot_ind in range(tiling.q):
+                for rot_ind in range(self.q):
                     # compute center and angle
                     center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                     cangle = math.degrees(math.atan2(center.imag, center.real))
