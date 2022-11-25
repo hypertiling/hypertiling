@@ -99,7 +99,7 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 # if angle is in slice, add to centerset_extra
                                 if MANGLE <= cangle <= self.degtol + MANGLE:
                                     if not self.is_duplicate(center, centerset_extra):
-                                        centerset_extra.add(center)
+                                        centerset_extra.add(np.round(center, self.dgts))
 
             startpgon = endpgon
             endpgon = len(self.polygons)
@@ -119,6 +119,8 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # --- filter out rotational duplicates
         deletelist = []
+
+        print(len(self.polygons))
 
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
@@ -142,18 +144,13 @@ class KernelStaticRotational(KernelRotationalCommon):
 
     def is_duplicate(self, center, centerset):
 
-        # try adding "center" to centerset
-        # it is a set (hence a hashed type) and takes care of duplicates automatically
         center = np.round(center, self.dgts)
-        lenA = len(centerset)
-        centerset.add(center)
-        lenB = len(centerset)
 
-        # this tells us whether an element has actually been added
-        if lenB>lenA:
-            return False
-        else:
+        if center in centerset:
             return True
+        else:
+            return False
+
 
 
 
