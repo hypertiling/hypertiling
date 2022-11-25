@@ -116,7 +116,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         # --- filter out rotational duplicates
         deletelist = []
 
-        print(len(self.polygons))
+        print("         ", len(self.polygons))
 
         
         # go through every polygon
