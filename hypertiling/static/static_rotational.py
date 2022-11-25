@@ -81,11 +81,12 @@ class KernelStaticRotational(KernelRotationalCommon):
                         sector_ubound = sect_angle_deg + self.degtol + MANGLE
 
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
-
+                            
+                            # check whether this polygon already exists
                             if not self.is_duplicate(center, centerset):
 
-                                center = np.round(center, self.dgts)
-                                centerset.add(center)
+                                # add to center container
+                                centerset.add(np.round(center, self.dgts))
 
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)

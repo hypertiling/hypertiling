@@ -90,6 +90,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                             
                             # check whether this polygon already exists
                             if not self.is_duplicate(center, centerarray):
+                                                                
+                                # add to center container
                                 centerarray.add(center)
 
                                 # create copy
