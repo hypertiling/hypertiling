@@ -190,7 +190,7 @@ class KernelRotationalCommon(KernelStaticBase):
         do full construction
         """
         self.generate_sector()
-        #self.replicate()
+        self.replicate()
 
 
     def generate_adj_poly(self, polygon, ind, k):
