@@ -141,10 +141,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
 
     def is_duplicate(self, center, centerarray):
-        if centerarray.fp_has(center):
-            return True
-        else:
-            return False
+        return centerarray.fp_has(center)
 
 
 

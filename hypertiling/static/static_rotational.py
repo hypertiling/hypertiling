@@ -17,7 +17,7 @@ class KernelStaticRotational(KernelRotationalCommon):
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        self.dgts = 10
+        self.dgts = 12
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
         # construct tiling
@@ -132,7 +132,6 @@ class KernelStaticRotational(KernelRotationalCommon):
             if angle > MANGLE + sect_angle_deg - self.degtol :
                 # rotate center of poly back by sector angle
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
-                center = np.round(center, self.dgts) # better use simple distance?
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
                 if self.is_duplicate(center, centerset_extra):
@@ -144,13 +143,9 @@ class KernelStaticRotational(KernelRotationalCommon):
 
     def is_duplicate(self, center, centerset):
 
+        # since set is a hashed type, we need to round
         center = np.round(center, self.dgts)
-
-        if center in centerset:
-            return True
-        else:
-            return False
-
+        return (center in centerset)
 
 
 
