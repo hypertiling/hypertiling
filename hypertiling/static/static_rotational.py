@@ -72,9 +72,9 @@ class KernelStaticRotational(KernelRotationalCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        sector_lbound = MANGLE-1e-14
+                        sector_lbound = MANGLE
                         sector_ubound = sect_angle_deg + self.degtol + MANGLE
-                        
+
                         if  sector_lbound <= cangle < sector_ubound:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
@@ -97,7 +97,7 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if MANGLE-1e-14 <= cangle <= self.degtol + MANGLE:
+                                if MANGLE <= cangle <= self.degtol + MANGLE:
                                     centerset_extra.add(center)
 
             startpgon = endpgon
