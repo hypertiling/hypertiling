@@ -117,17 +117,26 @@ class KernelStaticRotational(KernelRotationalCommon):
         # free mem of centerset
         del centerset
 
-        # filter out rotational duplicates
+        # --- filter out rotational duplicates
         deletelist = []
 
+        # go through every polygon
         for kk, pgon in enumerate(self.polygons):
+            # compute angle
             angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
             angle += 360 if angle < 0 else 0
-            if angle > sect_angle_deg - self.degtol + MANGLE:
+            # if poly is inside soft boundary 
+            # it has to be considered for rotational duplicate check
+            if angle > MANGLE + sect_angle_deg - self.degtol :
+                # rotate center of poly back by sector angle
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 center = np.round(center, self.dgts) # better use simple distance?
+                # check whether we already have this rotated center
+                # if so: rotational duplicate
                 if self.is_duplicate(center, centerset_extra):
+                    # delete
                     deletelist.append(kk)
+        # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
@@ -145,6 +154,7 @@ class KernelStaticRotational(KernelRotationalCommon):
             return False
         else:
             return True
+
 
 
     def add_layer(self):
