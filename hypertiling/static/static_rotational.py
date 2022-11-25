@@ -71,7 +71,7 @@ class KernelStaticRotational(KernelRotationalCommon):
                     for rot_ind in range(self.q):
                         
                         # compute center and angle
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
+                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
@@ -91,12 +91,10 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
 
-                                # generate adjacent polygon
+                                # generate adjacent polygon and add to large list
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.find_angle()
                                 adj_pgon.layer = l + 1
-
-                                # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
