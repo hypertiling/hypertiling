@@ -57,10 +57,13 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         # prepare sets which will contain the center coordinates
         # this is used for uniqueness checks later
 
+
+        # half fundamental radius
+        fr = fund_radius(self.p, self.q) / 2
+
         startpgon = 0
         endpgon = 1
 
-        fr = fund_radius(self.p, self.q) / 2
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -72,6 +75,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
+                        
                         # compute center and angle
                         center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                         cangle = math.degrees(math.atan2(center.imag, center.real))
@@ -79,7 +83,12 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if (MANGLE <= cangle < sect_angle_deg + self.degtol + MANGLE) and (abs(center) > fr):
+                        sector_lbound = MANGLE
+                        sector_ubound = sect_angle_deg + self.degtol + MANGLE
+                        
+                        if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
+                            
+                            # check whether this polygon already exists
                             if not centerarray.fp_has(center):
                                 centerarray.add(center)
 
@@ -89,6 +98,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                                 # generate adjacent polygon
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.layer = l + 1
+                                
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 

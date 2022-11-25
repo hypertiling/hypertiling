@@ -55,21 +55,27 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
+            
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
+                
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
+                    
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
+                        
                         # compute center and angle
                         center = mfull_point(pgon.verticesP[vert_ind], rot_ind*self.qhi, pgon.centerP())
-                        
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
                         # cut away cells outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        if MANGLE-1e-14 <= cangle < sect_angle_deg+self.degtol+MANGLE:
+                        sector_lbound = MANGLE-1e-14
+                        sector_ubound = sect_angle_deg + self.degtol + MANGLE
+                        
+                        if  sector_lbound <= cangle < sector_ubound:
 
                             # try adding to centerlist; it is a set() and takes care of duplicates
                             center = np.round(center, self.dgts)
@@ -85,13 +91,13 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 # generate adjacent polygon
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.find_angle()
-                                adj_pgon.layer = l+1
+                                adj_pgon.layer = l + 1
 
                                 # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
-                                if MANGLE-1e-14 <= cangle <= self.degtol+MANGLE:
+                                if MANGLE-1e-14 <= cangle <= self.degtol + MANGLE:
                                     centerset_extra.add(center)
 
             startpgon = endpgon
