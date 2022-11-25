@@ -121,7 +121,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             angle += 360 if angle < 0 else 0
             if angle > sect_angle_deg - self.degtol + MANGLE:
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
-                if centerarray_extra.fp_has(center):
+                if self.is_duplicate(center, centerarray_extra):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
 
@@ -180,4 +180,4 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                         # add corresponding poly to large list
                         newpolygons.append(adj_pgon)
 
-        tiling.polygons += newpolygons
+        self.polygons += newpolygons

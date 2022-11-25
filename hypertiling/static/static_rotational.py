@@ -93,7 +93,6 @@ class KernelStaticRotational(KernelRotationalCommon):
 
                                 # generate adjacent polygon and add to large list
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                                adj_pgon.find_angle()
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
@@ -120,16 +119,15 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # filter out rotational duplicates
         deletelist = []
+
         for kk, pgon in enumerate(self.polygons):
-            if pgon.angle > sect_angle_deg-self.degtol+MANGLE:
-
-                center = moeb_rotate_trafo(-sect_angle, pgon.centerP())
-
+            angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
+            angle += 360 if angle < 0 else 0
+            if angle > sect_angle_deg - self.degtol + MANGLE:
+                center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 center = np.round(center, self.dgts) # better use simple distance?
-
-                if center in centerset_extra:
+                if self.is_duplicate(center, centerset_extra):
                     deletelist.append(kk)
-
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
