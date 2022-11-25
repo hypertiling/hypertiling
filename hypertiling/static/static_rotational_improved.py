@@ -44,18 +44,18 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         if self.center == "vertex":
             sect_angle = self.qhi
             sect_angle_deg = self.degqhi
-            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+            # prepare containers which will be used for uniqueness checks later
+
+            centerarray_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
                                               math.atan2(self.fund_poly.verticesP[self.p].imag,
                                                          self.fund_poly.verticesP[self.p].real))
             centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
                                           math.atan2(self.fund_poly.verticesP[self.p].imag,
                                                      self.fund_poly.verticesP[self.p].real))
         else:
-            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+            centerarray_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
                                               self.phi / 2)  # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
             centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
-        # prepare sets which will contain the center coordinates
-        # this is used for uniqueness checks later
 
 
         # half fundamental radius
@@ -89,7 +89,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
                             
                             # check whether this polygon already exists
-                            if not centerarray.fp_has(center):
+                            if not self.is_duplicate(center, centerarray):
                                 centerarray.add(center)
 
                                 # create copy
@@ -104,8 +104,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
                                 # if angle is in slice, add to centerset_extra
                                 if MANGLE <= cangle <= self.degtol + MANGLE:
-                                    if not centerset_extra.fp_has(center):
-                                        centerset_extra.add(center)
+                                    if not self.is_duplicate(center, centerarray_extra):
+                                        centerarray_extra.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
@@ -121,9 +121,22 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             angle += 360 if angle < 0 else 0
             if angle > sect_angle_deg - self.degtol + MANGLE:
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
-                if centerset_extra.fp_has(center):
+                if centerarray_extra.fp_has(center):
                     deletelist.append(kk)
         self.polygons = list(np.delete(self.polygons, deletelist))
+
+
+
+
+    def is_duplicate(self, center, centerarray):
+        if centerarray.fp_has(center):
+            return True
+        else:
+            return False
+
+
+
+
 
     def add_layer(self):
         """ constructs an additional layer for an existing tiling """

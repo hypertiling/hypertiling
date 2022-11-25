@@ -9,13 +9,15 @@ from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull_point
 from ..distance import disk_distance
 from .static_base import MANGLE
+from ..util import fund_radius
+
 
 class KernelStaticRotational(KernelRotationalCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        self.dgts = 8
+        self.dgts = 12
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
         # construct tiling
@@ -50,6 +52,9 @@ class KernelStaticRotational(KernelRotationalCommon):
         centerset_extra = set()
         centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
 
+        # half fundamental radius
+        fr = fund_radius(self.p, self.q) / 2
+
         startpgon = 0
         endpgon = 1
 
@@ -75,16 +80,13 @@ class KernelStaticRotational(KernelRotationalCommon):
                         sector_lbound = MANGLE
                         sector_ubound = sect_angle_deg + self.degtol + MANGLE
 
-                        if  sector_lbound <= cangle < sector_ubound:
+                        if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
 
-                            # try adding to centerlist; it is a set() and takes care of duplicates
-                            center = np.round(center, self.dgts)
-                            lenA = len(centerset)
-                            centerset.add(center)
-                            lenB = len(centerset)
+                            if not self.is_duplicate(center, centerset):
 
-                            # this tells us whether an element has actually been added
-                            if lenB>lenA:
+                                center = np.round(center, self.dgts)
+                                centerset.add(center)
+
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
 
@@ -98,20 +100,21 @@ class KernelStaticRotational(KernelRotationalCommon):
 
                                 # if angle is in slice, add to centerset_extra
                                 if MANGLE <= cangle <= self.degtol + MANGLE:
-                                    centerset_extra.add(center)
+                                    if not self.is_duplicate(center, centerset_extra):
+                                        centerset_extra.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
 
-            if self.numerically_unstable_upper(l, startpgon, endpgon):
-                print("Numerical accuracy exhausted;")
-                print("No more layers will be constructed; automatic shutdown")
-                break
+            #if self.numerically_unstable_upper(l, startpgon, endpgon):
+            #    print("Numerical accuracy exhausted;")
+            #    print("No more layers will be constructed; automatic shutdown")
+            #    break
 
-            if self.numerically_unstable_lower(l, startpgon, endpgon):
-                print("Accumulated numerical errors have become too large;")
-                print("No more layers will be constructed; automatic shutdown")
-                break
+            #if self.numerically_unstable_lower(l, startpgon, endpgon):
+            #    print("Accumulated numerical errors have become too large;")
+            #    print("No more layers will be constructed; automatic shutdown")
+            #    break
 
         # free mem of centerset
         del centerset
@@ -129,6 +132,22 @@ class KernelStaticRotational(KernelRotationalCommon):
                     deletelist.append(kk)
 
         self.polygons = list(np.delete(self.polygons, deletelist))
+
+
+    def is_duplicate(self, center, centerset):
+
+        # try adding "center" to centerset
+        # it is a set (hence a hashed type) and takes care of duplicates automatically
+        center = np.round(center, self.dgts)
+        lenA = len(centerset)
+        centerset.add(center)
+        lenB = len(centerset)
+
+        # this tells us whether an element has actually been added
+        if lenB>lenA:
+            return False
+        else:
+            return True
 
 
     def add_layer(self):
