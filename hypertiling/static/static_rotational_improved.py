@@ -76,19 +76,19 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                     # iterate over all polygons touching this very vertex
                     for rot_ind in range(self.q):
                         
-                        # compute center and angle
+                        # compute center and angle of the candidate
                         center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
-                        # cut away cells outside the fundamental sector
+                        # cut away candidates outside the fundamental sector
                         # allow some tolerance at the upper boundary
                         sector_lbound = MANGLE
                         sector_ubound = sect_angle_deg + self.degtol + MANGLE
                         
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
                             
-                            # check whether this polygon already exists
+                            # check whether candidate polygon already exists
                             if not self.is_duplicate(center, centerarray):
                                                                 
                                 # add to center container
@@ -97,11 +97,9 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
 
-                                # generate adjacent polygon
+                                # generate adjacent polygon and add to large list
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.layer = l + 1
-                                
-                                # add corresponding poly to large list
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in slice, add to centerset_extra
