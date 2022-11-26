@@ -12,6 +12,22 @@ from .static_base import MANGLE
 from ..util import fund_radius
 
 
+class DuplicateContainer:
+    # since set is a hashed type, we need to round
+
+    def __init__(self, digits):
+        self.digits = digits
+        self.elements = set()
+
+    def add(self, element):
+        self.elements.add(np.round(element, self.digits))
+
+    def is_duplicate(self, element):
+        element = np.round(element, self.digits)
+        return (element in self.elements)
+
+
+
 class KernelStaticRotational(KernelRotationalCommon):
     """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
 
@@ -48,9 +64,9 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
-        centerset = set()
-        centerset_extra = set()
-        centerset.add(np.round(self.fund_poly.centerP(), self.dgts))
+        dupl_large = DuplicateContainer(self.dgts)
+        dupl_small = DuplicateContainer(self.dgts)
+        dupl_large.add(self.fund_poly.centerP())
 
         # half fundamental radius
         fr = fund_radius(self.p, self.q) / 2
@@ -83,10 +99,10 @@ class KernelStaticRotational(KernelRotationalCommon):
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
                             
                             # check whether candidate polygon already exists
-                            if not self.is_duplicate(center, centerset):
+                            if not dupl_large.is_duplicate(center):
 
-                                # add to center container
-                                centerset.add(np.round(center, self.dgts))
+                                # add to duplicate container
+                                dupl_large.add(center)
 
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
@@ -96,10 +112,10 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
-                                # if angle is in slice, add to centerset_extra
+                                # if angle is in slice, add to second duplicate container
                                 if MANGLE <= cangle <= self.degtol + MANGLE:
-                                    if not self.is_duplicate(center, centerset_extra):
-                                        centerset_extra.add(np.round(center, self.dgts))
+                                    if not dupl_small.is_duplicate(center):
+                                        dupl_small.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
@@ -114,8 +130,8 @@ class KernelStaticRotational(KernelRotationalCommon):
                 print("No more layers will be constructed; automatic shutdown")
                 break
 
-        # free mem of centerset
-        del centerset
+        # free mem of duplicate container
+        del dupl_large
 
         # --- filter out rotational duplicates
         deletelist = []
@@ -132,17 +148,12 @@ class KernelStaticRotational(KernelRotationalCommon):
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
-                if self.is_duplicate(center, centerset_extra):
+                if dupl_small.is_duplicate(center):
                     # delete
                     deletelist.append(kk)
         # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
-
-    def is_duplicate(self, center, centerset):
-        # since set is a hashed type, we need to round
-        center = np.round(center, self.dgts)
-        return (center in centerset)
 
 
     def add_layer(self):
@@ -150,10 +161,10 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         newpolygons = []
 
-        centerset = set()
+        dupl_large = set()
         for pgon in self.polygons:
             center = np.round(pgon.centerP(), self.dgts)
-            centerset.add(center)
+            dupl_large.add(center)
 
         for pgon in self.polygons:
             # iterate over every vertex of pgon
@@ -167,10 +178,10 @@ class KernelStaticRotational(KernelRotationalCommon):
                     cangle += 360 if cangle < 0 else 0
 
                     # try adding to centerlist; it is a set() and takes care of duplicates
-                    lenA = len(centerset)
+                    lenA = len(dupl_large)
                     center = np.round(center, self.dgts)  # CAUTION
-                    centerset.add(center)
-                    lenB = len(centerset)
+                    dupl_large.add(center)
+                    lenB = len(dupl_large)
 
                     # this tells us whether an element has actually been added
                     if lenB > lenA:
