@@ -136,9 +136,6 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
-    def is_duplicate(self, center, dupl_large):
-        return dupl_large.fp_has(center)
-
 
     def add_layer(self):
         """ constructs an additional layer for an existing tiling """
