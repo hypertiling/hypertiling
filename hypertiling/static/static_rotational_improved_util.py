@@ -96,6 +96,10 @@ try:
             if iterlen > self.maxlinlength:
                 self.dangle /= 2.0
             return incontainer
+
+        def is_duplicate(self, z):
+            return self.fp_has(z)
+
 except ImportError:
     import bisect
 

@@ -44,18 +44,19 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         if self.center == "vertex":
             sect_angle = self.qhi
             sect_angle_deg = self.degqhi
-            # prepare containers which will be used for uniqueness checks later
 
-            centerarray_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                              math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                         self.fund_poly.verticesP[self.p].real))
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                     self.fund_poly.verticesP[self.p].real))
+            # prepare containers which will be used for uniqueness checks
+            rrad = abs(self.fund_poly.verticesP[self.p])
+            pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
+
+            dupl_small = CenterContainer(self.p * self.q, rrad, pphi)                
+            dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
         else:
-            centerarray_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                              self.phi / 2)  # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
+            rrad = abs(self.fund_poly.verticesP[self.p])
+            pphi = self.phi / 2
+            # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
+            dupl_small = CenterContainer(self.p * self.q, rrad, pphi)
+            dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
 
 
         # half fundamental radius
@@ -89,10 +90,10 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
                             
                             # check whether candidate polygon already exists
-                            if not self.is_duplicate(center, centerarray):
+                            if not dupl_large.is_duplicate(center):
                                                                 
                                 # add to center container
-                                centerarray.add(center)
+                                dupl_large.add(center)
 
                                 # create copy
                                 polycopy = copy.deepcopy(pgon)
@@ -104,14 +105,14 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
 
                                 # if angle is in slice, add to centerset_extra
                                 if MANGLE <= cangle <= self.degtol + MANGLE:
-                                    if not self.is_duplicate(center, centerarray_extra):
-                                        centerarray_extra.add(center)
+                                    if not dupl_small.is_duplicate(center):
+                                        dupl_small.add(center)
 
             startpgon = endpgon
             endpgon = len(self.polygons)
 
         # free mem of centerset
-        del centerarray
+        del dupl_large
 
         # --- filter out rotational duplicates
         deletelist = []
@@ -128,15 +129,15 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                 center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
-                if self.is_duplicate(center, centerarray_extra):
+                if dupl_small.is_duplicate(center):
                     # delete
                     deletelist.append(kk)
         # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
-    def is_duplicate(self, center, centerarray):
-        return centerarray.fp_has(center)
+    def is_duplicate(self, center, dupl_large):
+        return dupl_large.fp_has(center)
 
 
     def add_layer(self):
@@ -148,16 +149,16 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         # this is used for uniqueness checks later
         if self.center == "vertex":
 
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
+            dupl_large = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
                                           math.atan2(self.fund_poly.verticesP[self.p].imag,
                                                      self.fund_poly.verticesP[self.p].real))
         else:
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
+            dupl_large = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
 
-        # fill the centerarray with already existing centers
+        # fill the dupl_large with already existing centers
         for pgon in self.polygons:
             center = np.round(pgon.centerP(), self.dgts)
-            centerarray.add(center)
+            dupl_large.add(center)
 
         for pgon in self.polygons:
             # iterate over every vertex of pgon
@@ -168,8 +169,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                     center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
                     cangle = math.degrees(math.atan2(center.imag, center.real))
                     cangle += 360 if cangle < 0 else 0
-                    if not centerarray.fp_has(center):  # if it's a new polygon
-                        centerarray.add(center)
+                    if not dupl_large.fp_has(center):  # if it's a new polygon
+                        dupl_large.add(center)
 
                         # create copy
                         polycopy = copy.deepcopy(pgon)
