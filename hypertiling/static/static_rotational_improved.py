@@ -32,7 +32,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         out rotational duplicates after all layers have been constructed
         """
 
-        # clear list
+        # clear tiling
         self.polygons = []
 
         # add fundamental polygon to list
@@ -54,78 +54,9 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             dupl_small = CenterContainer(self.p * self.q, rrad, pphi)
             dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
 
-
-        startpgon = 0
-        endpgon = 1
-
-        # loop over layers to be constructed
-        for l in range(1, self.nlayers):
-
-            # computes all neighbor polygons of layer l
-            for pgon in self.polygons[startpgon:endpgon]:
-
-                # center of current polygon
-                pgon_center = pgon.verticesP[self.p]
-                
-                # iterate over every vertex of pgon
-                for vert_ind in range(self.p):
-
-                    # rotate polygon around current vertex
-                    # compute center coordinates of all polygons which share this vertex...
-                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
-                    
-                    # ... and iterate over them
-                    for rot_ind in range(self.q):
-
-                        center = adj_centers[rot_ind]
-
-                        # check whether candidate polygon is in fundemantal sector
-                        if self.in_sector(center):   
-
-                            # check whether candidate polygon already exists
-                            if not dupl_large.is_duplicate(center):
-
-                                # add to duplicate container
-                                dupl_large.add(center)
-
-                                # create copy
-                                polycopy = copy.deepcopy(pgon)
-
-                                # generate adjacent polygon and add to large list
-                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                                adj_pgon.layer = l + 1
-                                self.polygons.append(adj_pgon)
-
-                                # if angle is in lower soft sector boundary, add to second duplicate container
-                                if self.in_slice_lower(center): 
-                                    if not dupl_small.is_duplicate(center):
-                                        dupl_small.add(center)
-
-            startpgon = endpgon
-            endpgon = len(self.polygons)
-
-        # free mem of centerset
-        del dupl_large
-
-        # --- filter out rotational duplicates
-        deletelist = []
-        
-        # go through every polygon
-        for kk, pgon in enumerate(self.polygons):
-            center = pgon.verticesP[self.p]
-            # if poly is inside soft boundary 
-            # it has to be considered for rotational duplicate check
-            if self.in_slice_upper(center): 
-                # rotate center of poly back by sector angle
-                center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
-                # check whether we already have this rotated center
-                # if so: rotational duplicate
-                if dupl_small.is_duplicate(center):
-                    # delete
-                    deletelist.append(kk)
-
-        # delete all rotational duplicates
-        self.polygons = list(np.delete(self.polygons, deletelist))
+        # the actual construction
+        self.populate_sector(dupl_large, dupl_small)
+       
 
 
 
