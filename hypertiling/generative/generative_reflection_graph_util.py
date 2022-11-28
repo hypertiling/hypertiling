@@ -88,17 +88,17 @@ def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector
     while current_level < n:
         # check for filler polys of 1st order
         if current_counter != 0 and current_level != 0:
-            connection = any_close_matrix(next_coords[next_level_counter], current_coords[current_counter])  # (p+1)^2
+            connection = any_close_matrix(next_coords[next_level_counter - 1], current_coords[current_counter])  # (p+1)^2
             if connection.shape[0] == 2 and child_absolut > 3:
                 # block edges in number-bit-array (see. GRK __init__ for explanation)
                 next_edges[next_level_counter] ^= 1 << (connection[1, 1] - 1)
                 current_edges[current_counter] ^= 1 << (connection[0, 0] - 1)
 
                 # add connection to neighbors
-                #neighbors[child_absolut, neighbors[child_absolut, 0]] = parent_absolut
-                #neighbors[child_absolut, 0] += 1
-                #neighbors[parent_absolut, neighbors[parent_absolut, 0]] = child_absolut
-                #neighbors[parent_absolut, 0] += 1
+                neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = parent_absolut
+                neighbors[child_absolut - 1, 0] += 1
+                neighbors[parent_absolut, neighbors[parent_absolut, 0]] = child_absolut - 1
+                neighbors[parent_absolut, 0] += 1
 
         # select polygon
         poly = current_coords[current_counter]
@@ -140,8 +140,6 @@ def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector
                 neighbors[child_absolut, 0] += 1
 
                 # save center coords
-                print(f"{parent_absolut} creates {child_absolut}", end="")
-                print(neighbors[parent_absolut])
                 center_coords[child_absolut] = z[0]
 
                 # check for filler of 2nd order and q == 3
@@ -172,9 +170,6 @@ def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector
 
                 next_level_counter += 1
                 child_absolut += 1
-                if child_absolut == number_of_polys:
-                    # if the number is guessed correctly this will be used instead of the while termination
-                    return neighbors[:child_absolut, 1:], center_coords[:child_absolut]
 
         current_counter += 1
         parent_absolut += 1
