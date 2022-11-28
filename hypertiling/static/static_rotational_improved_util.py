@@ -44,7 +44,7 @@ try:
     from sortedcontainers import SortedList
 
 
-    class CenterContainer:
+    class DuplicateContainerAdv:
         """
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.
@@ -104,7 +104,7 @@ except ImportError:
     import bisect
 
 
-    class CenterContainer:
+    class DuplicateContainerAdv:
         '''
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.

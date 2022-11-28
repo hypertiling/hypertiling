@@ -1,35 +1,18 @@
 import numpy as np
-import math
 import copy
 
 # relative imports
 from .static_base import KernelRotationalCommon
-from .hyperpolygon import HyperPolygon
-from ..transformation import moeb_rotate_trafo
-from ..arraytransformation import mfull_point, multi_rotation_around_vertex
+from .static_rotational_util import DuplicateContainerSimple
+from ..arraytransformation import  multi_rotation_around_vertex
 from ..distance import disk_distance
-from .static_base import MANGLE
-from ..util import fund_radius
-
-
-class DuplicateContainer:
-    # since set is a hashed type, we need to round
-
-    def __init__(self, digits):
-        self.digits = digits
-        self.elements = set()
-
-    def add(self, element):
-        self.elements.add(np.round(element, self.digits))
-
-    def is_duplicate(self, element):
-        element = np.round(element, self.digits)
-        return (element in self.elements)
-
 
 
 class KernelStaticRotational(KernelRotationalCommon):
-    """ Tiling construction algorithm written by M. Schrauth and F. Dusel  """
+    """ 
+    A generic tiling construction kernel, generates a hyperbolic lattice 
+    by discrete rotations of existing polygons about their vertices 
+    """
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
@@ -58,8 +41,8 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
-        dupl_large = DuplicateContainer(self.dgts)
-        dupl_small = DuplicateContainer(self.dgts)
+        dupl_large = DuplicateContainerSimple(self.dgts)
+        dupl_small = DuplicateContainerSimple(self.dgts)
         dupl_large.add(self.fund_poly.centerP())
 
         # the actual construction
@@ -149,7 +132,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         newpolygons = []
 
         # new container for duplicate checks
-        dupl_large = DuplicateContainer(self.dgts)
+        dupl_large = DuplicateContainerSimple(self.dgts)
         # fill container
         for pgon in self.polygons:
             dupl_large.add(pgon.centerP())

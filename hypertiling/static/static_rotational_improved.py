@@ -4,16 +4,14 @@ import copy
 
 # relative imports
 from .static_base import KernelRotationalCommon
-from ..transformation import moeb_rotate_trafo
-from ..arraytransformation import mfull_point, multi_rotation_around_vertex
-from ..util import fund_radius
-from .static_rotational_improved_util import CenterContainer
+from ..arraytransformation import multi_rotation_around_vertex
+from .static_rotational_improved_util import DuplicateContainerAdv
 from .static_base import MANGLE
 
 
 class KernelStaticRotationalImproved(KernelRotationalCommon):
     """
-    High precision kernel written by F. Goth
+    High precision variant of the SR kernel, which uses a more sophisticated data container for duplicate checks
     """
 
     def __init__(self, p, q, n, center, autogenerate=True, radius=None):
@@ -45,14 +43,14 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
 
-            dupl_small = CenterContainer(self.p * self.q, rrad, pphi)                
-            dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)                
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
         if self.center == "cell":
             rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = self.phi / 2
             # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            dupl_small = CenterContainer(self.p * self.q, rrad, pphi)
-            dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
 
         # the actual construction
         self.populate_sector(dupl_large, dupl_small)
@@ -71,7 +69,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         center = self.polygons[0].centerP()
         rrad = np.abs(center)
         pphi = math.atan2(center.imag, center.real)
-        dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
+        dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
         # fill container
         for pgon in self.polygons:
             dupl_large.add(pgon.centerP())
