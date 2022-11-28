@@ -9,6 +9,7 @@ from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from hypertiling.distance import lorentzian_distance
 
+PI2 = 2 * np.pi
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 # used as an angular offset, rotates the entire construction by a bit during construction
@@ -52,15 +53,32 @@ class KernelStaticBase(AbstractKernelBase):
         self.radius = radius # a cut-off radius (implement me!)
         self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
 
+        # half fundamental radius
+        self.fr2 = fund_radius(self.p, self.q) / 2
+
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
         self.degphi = 360 / self.p  # self.phi in degrees
         self.degqhi = 360 / self.q  # self.qhi in degrees
 
-        # technical parameters 
+        # sector boundary tolerance / softness
         # do not change, unless you know what you are doing!)
-        self.degtol = 1  # sector boundary tolerance
+        self.degtol = 1  
+
+        # angle width of the fundamental sector
+        if self.center == "cell":
+            self.sect_angle     = self.phi
+            self.sect_angle_deg = self.degphi
+        if self.center == "vertex":
+            self.sect_angle     = self.qhi
+            self.sect_angle_deg = self.degqhi
+
+        self.sect_lbound = MANGLE
+        self.sect_ubound = MANGLE + self.sect_angle_deg + self.degtol
+
+        self.upper_slice = MANGLE + self.sect_angle_deg - self.degtol
+        self.lower_slice = MANGLE + self.degtol
 
         # prepare list to store polygons 
         self.polygons = []

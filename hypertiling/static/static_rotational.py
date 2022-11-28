@@ -8,7 +8,7 @@ from .hyperpolygon import HyperPolygon
 from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull_point, multi_rotation_around_vertex
 from ..distance import disk_distance
-from .static_base import MANGLE, PI2
+from .static_base import MANGLE
 from ..util import fund_radius
 
 
@@ -40,6 +40,38 @@ class KernelStaticRotational(KernelRotationalCommon):
         if self.autogenerate:
             self.generate()
 
+
+
+    def in_sector(self, z0):
+        """
+        Check whether point z0 is located in fundamental sector of the tiling
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        if (self.sect_lbound <= cangle < self.sect_ubound) and (abs(z0) > self.fr2):
+            return True
+        else:
+            return False
+
+    def in_slice_lower(self, z0):
+        """
+        Check whether point z0 is located in lower soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        return cangle < self.lower_slice
+
+    def in_slice_upper(self, z0):
+        """
+        Check whether point z0 is located in upper soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        return cangle > self.upper_slice
+
+
+
+
+
     def generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
@@ -55,24 +87,11 @@ class KernelStaticRotational(KernelRotationalCommon):
         self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
-        # angle width of the fundamental sector
-        sect_angle     = self.phi
-        sect_angle_deg = self.degphi
-        if self.center == "vertex":
-            sect_angle     = self.qhi
-            sect_angle_deg = self.degqhi
-
-        sector_lbound = MANGLE
-        sector_ubound = sect_angle_deg + self.degtol + MANGLE
-
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
         dupl_large = DuplicateContainer(self.dgts)
         dupl_small = DuplicateContainer(self.dgts)
         dupl_large.add(self.fund_poly.centerP())
-
-        # half fundamental radius
-        fr = fund_radius(self.p, self.q) / 2
 
         startpgon = 0
         endpgon = 1
@@ -97,15 +116,10 @@ class KernelStaticRotational(KernelRotationalCommon):
                     for rot_ind in range(self.q):
 
                         center = adj_centers[rot_ind]
-                        
-                        # compute angle
-                        cangle = math.degrees(math.atan2(center.imag, center.real))
-                        cangle += 360 if cangle < 0 else 0
 
-                        # cut away candidates outside the fundamental sector
-                        # allow some tolerance at the upper boundary
-                        if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
-                            
+                        # check whether candidate polygon is in fundemantal sector
+                        if self.in_sector(center):   
+
                             # check whether candidate polygon already exists
                             if not dupl_large.is_duplicate(center):
 
@@ -120,8 +134,8 @@ class KernelStaticRotational(KernelRotationalCommon):
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
-                                # if angle is in slice, add to second duplicate container
-                                if MANGLE <= cangle <= self.degtol + MANGLE:
+                                # if angle is in lower soft sector boundary, add to second duplicate container
+                                if self.in_slice_lower(center): 
                                     if not dupl_small.is_duplicate(center):
                                         dupl_small.add(center)
 
@@ -146,19 +160,18 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
-            # compute angle
-            angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
-            angle += 360 if angle < 0 else 0
+            center = pgon.verticesP[self.p]
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
-            if angle > MANGLE + sect_angle_deg - self.degtol :
+            if self.in_slice_upper(center): 
                 # rotate center of poly back by sector angle
-                center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
+                center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
                 if dupl_small.is_duplicate(center):
                     # delete
                     deletelist.append(kk)
+                    
         # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
