@@ -98,7 +98,7 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
-            
+
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
 
@@ -142,6 +142,7 @@ class KernelStaticRotational(KernelRotationalCommon):
             startpgon = endpgon
             endpgon = len(self.polygons)
 
+            # check numerical stability before moving on to next layer
             if self.numerically_unstable_upper(l, startpgon, endpgon):
                 print("Numerical accuracy exhausted;")
                 print("No more layers will be constructed; automatic shutdown")
@@ -151,6 +152,7 @@ class KernelStaticRotational(KernelRotationalCommon):
                 print("Accumulated numerical errors have become too large;")
                 print("No more layers will be constructed; automatic shutdown")
                 break
+
 
         # free mem of duplicate container
         del dupl_large
@@ -171,19 +173,18 @@ class KernelStaticRotational(KernelRotationalCommon):
                 if dupl_small.is_duplicate(center):
                     # delete
                     deletelist.append(kk)
-                    
+
         # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
 
     def add_layer(self):
-        """ constructs an additional layer for an existing tiling """
-
+        """
+        grow existing tiling outwards by one layer
+        """
+        
         newpolygons = []
-
-        # half fundamental radius
-        fr = fund_radius(self.p, self.q) / 2
 
         # new container for duplicate checks
         dupl_large = DuplicateContainer(self.dgts)
@@ -192,15 +193,22 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # loop over every polygon
         for pgon in self.polygons:
+
+            # center of current polygon
+            pgon_center = pgon.verticesP[self.p]
+
             # iterate over every vertex of pgon
             for vert_ind in range(self.p):
-                # iterate over all polygons touching this very vertex
+
+                # rotate polygon around current vertex
+                # compute center coordinates of all polygons which share this vertex...
+                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
+                
+                # ... and iterate over them
                 for rot_ind in range(self.q):
-                    # compute center and angle
-                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.centerP())
-                    cangle = math.degrees(math.atan2(center.imag, center.real))
-                    cangle += 360 if cangle < 0 else 0
-                    
+
+                    center = adj_centers[rot_ind]
+
                     # check whether candidate polygon already exists
                     if not dupl_large.is_duplicate(center):
 
