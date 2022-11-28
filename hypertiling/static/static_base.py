@@ -77,7 +77,7 @@ class KernelStaticBase(AbstractKernelBase):
             self.sect_angle_deg = self.degqhi
 
         # required for construction algorithm
-        self.sect_lbound = MANGLE
+        self.sect_lbound = MANGLE - 1e-13
         self.sect_ubound = MANGLE + self.sect_angle_deg + self.degtol
 
         self.upper_slice = MANGLE + self.sect_angle_deg - self.degtol
