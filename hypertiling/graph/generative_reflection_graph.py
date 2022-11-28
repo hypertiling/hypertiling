@@ -2,8 +2,7 @@ from typing import Callable, Any, List
 import numpy as np
 import hypertiling.generative.generative_reflection_util as util
 from hypertiling.generative.generative_reflection_util import PI2
-from hypertiling.kernel_abc import AbstractKernelBase
-import hypertiling.generative.generative_reflection_graph_util as graph_util
+import hypertiling.graph.generative_reflection_graph_util as graph_util
 
 """
 p: Number of edges/vertices of a polygon

@@ -87,7 +87,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
             connection = any_close_matrix(next_coords[next_level_counter - 1], current_coords[current_counter])  # (p+1)^2
             if connection.shape[0] == 2 and child_absolut > 3:
                 # block edges in number-bit-array (see. GRK __init__ for explanation)
-                next_edges[next_level_counter] ^= 1 << (connection[1, 1] - 1)
+                next_edges[next_level_counter - 1] ^= 1 << (connection[1, 1] - 1)
                 current_edges[current_counter] ^= 1 << (connection[0, 0] - 1)
 
                 # add connection to neighbors
