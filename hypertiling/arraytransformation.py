@@ -1,3 +1,5 @@
+import numpy as np
+import math
 import hypertiling.transformation as trans
 from hypertiling.check_numba import NumbaChecker
 
@@ -20,6 +22,26 @@ def morigin(p, z0, verticesP):
     for i in range(p + 1):
         z = trans.moeb_origin_trafo(z0, verticesP[i])
         verticesP[i] = z
+
+
+@NumbaChecker("(int64, complex128, complex128[:])")
+def moeb_origin_vector(p, z0, points):
+    """
+    Apply Moebius translation to an array of length p
+    
+    Arguments:
+    -----------
+    p : int
+        Length of point list
+    z0 : complex128
+        Vertex that we transform around.
+    points : complex128[]
+        List of points in the Poincare disk
+    """
+
+    for i in range(p):
+        z = trans.moeb_origin_trafo(z0, points[i])
+        points[i] = z
 
 
 @NumbaChecker("(int64, float64, complex128[:])")
@@ -60,6 +82,30 @@ def mfull_point(z0, phi, p):
     z = trans.moeb_origin_trafo(z0, p)
     z = trans.moeb_rotate_trafo(-phi, z)
     return trans.moeb_origin_trafo(-z0, z)
+
+
+
+@NumbaChecker("complex128[::1](uint16, float64, complex128, complex128)")
+def multi_rotation_around_vertex(qn, dqhi, z0, p):
+    """
+    Perform qn discrete rotations by i*dqhi of p around z0
+    """
+
+    # transform to origin
+    z = trans.moeb_origin_trafo(z0, p)
+
+    # apply successive rotations
+    retvals = np.zeros(qn, dtype=np.complex128)
+
+    for k in range(qn):
+        zn = trans.moeb_rotate_trafo(-(k*dqhi), z)
+        retvals[k] = zn
+    
+    # transform all points back
+    moeb_origin_vector(qn, -z0, retvals)
+
+    return retvals
+
 
 
 @NumbaChecker("(int64, float64, int64, complex128[:])")

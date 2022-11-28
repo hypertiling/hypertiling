@@ -6,9 +6,9 @@ import copy
 from .static_base import KernelRotationalCommon
 from .hyperpolygon import HyperPolygon
 from ..transformation import moeb_rotate_trafo
-from ..arraytransformation import mfull_point
+from ..arraytransformation import mfull_point, multi_rotation_around_vertex
 from ..distance import disk_distance
-from .static_base import MANGLE
+from .static_base import MANGLE, PI2
 from ..util import fund_radius
 
 
@@ -62,6 +62,9 @@ class KernelStaticRotational(KernelRotationalCommon):
             sect_angle     = self.qhi
             sect_angle_deg = self.degqhi
 
+        sector_lbound = MANGLE
+        sector_ubound = sect_angle_deg + self.degtol + MANGLE
+
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
         dupl_large = DuplicateContainer(self.dgts)
@@ -79,23 +82,28 @@ class KernelStaticRotational(KernelRotationalCommon):
             
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
+
+                # center of current polygon
+                pgon_center = pgon.verticesP[self.p]
                 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
+
+                    # rotate polygon around current vertex
+                    # compute center coordinates of all polygons which share this vertex...
+                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
                     
-                    # iterate over all polygons touching this very vertex
+                    # ... and iterate over them
                     for rot_ind in range(self.q):
+
+                        center = adj_centers[rot_ind]
                         
-                        # compute center and angle of the candidate
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
+                        # compute angle
                         cangle = math.degrees(math.atan2(center.imag, center.real))
                         cangle += 360 if cangle < 0 else 0
 
                         # cut away candidates outside the fundamental sector
                         # allow some tolerance at the upper boundary
-                        sector_lbound = MANGLE
-                        sector_ubound = sect_angle_deg + self.degtol + MANGLE
-
                         if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
                             
                             # check whether candidate polygon already exists
