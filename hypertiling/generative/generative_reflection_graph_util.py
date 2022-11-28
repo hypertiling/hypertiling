@@ -149,8 +149,10 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
                         next_edges[next_level_counter - 1] ^= 1 << (connection[0, 0] - 1)
 
                         # add connection to neighbors
-                        # neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
-                        # neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
+                        neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
+                        neighbors[child_absolut, 0] += 1
+                        neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
+                        neighbors[child_absolut - 1, 0] += 1
 
                 elif q == 3:
                     # close first edge because of sibling
@@ -162,7 +164,9 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
                     else:
                         next_edges[next_level_counter - 1] ^= 32
                     neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
+                    neighbors[child_absolut, 0] += 1
                     neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
+                    neighbors[child_absolut - 1, 0] += 1
 
                 next_level_counter += 1
                 child_absolut += 1

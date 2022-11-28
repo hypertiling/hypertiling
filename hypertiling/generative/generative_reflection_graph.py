@@ -61,7 +61,7 @@ class KernelGenerativeReflectionGraph:
         else:
             self._sector_lengths = np.array([1])
 
-        self.graph, self.center_coords = self.generate()
+        self.graph, self.center_coords = self.generate()  # FIXME: hier muss die boundary noch rein
         self.length = (self.graph.shape[0] - 1) * self.p + 1
 
     def generate(self):
@@ -149,12 +149,14 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 3, 7, 3
+    p, q, n = 3, 7, 8
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
+    t1 = time.time()
     tiling = KernelGenerativeReflection(p, q, n)
+    print(f"Took: {time.time() - t1}")
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -164,9 +166,6 @@ if __name__ == "__main__":
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
-        # print(polygon_index)
-        # print(polygon_index, pgon)
-        # poly_layer = tiling.get_layer(polygon_index)
         poly_layer = tiling.get_reflection_level(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
