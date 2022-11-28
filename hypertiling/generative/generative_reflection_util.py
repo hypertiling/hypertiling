@@ -245,13 +245,23 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                 # save level of polygons
                 reflection_levels[c] = reflection_levels[j] + 1  # 1
 
-                if i == 0 or q == 3:
+                if i == 0:
                     # shares edge with former polygon -> filler of 2nd Order
                     connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                     if connection.shape[0] == 2 and c > 2:
                         # block edges in number-bit-array (see. GRK __init__ for explanation)
                         edge_array[c] ^= 1 << (connection[1, 1] - 1)
                         edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
+
+                elif q == 3:
+                    # close first edge because of sibling
+                    edge_array[c] ^= 1
+                    # close last edge because of sibling
+                    if edge_array[c - 1] == 30:
+                        # if filler polygon of first order
+                        edge_array[c - 1] ^= 16
+                    else:
+                        edge_array[c - 1] ^= 32
 
                 """
                 Theoretically possible to shift before neighbor comparison.
