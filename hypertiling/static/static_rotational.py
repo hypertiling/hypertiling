@@ -161,11 +161,15 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         newpolygons = []
 
-        dupl_large = set()
-        for pgon in self.polygons:
-            center = np.round(pgon.centerP(), self.dgts)
-            dupl_large.add(center)
+        # half fundamental radius
+        fr = fund_radius(self.p, self.q) / 2
 
+        # new container for duplicate checks
+        dupl_large = DuplicateContainer(self.dgts)
+        for pgon in self.polygons:
+            dupl_large.add(pgon.centerP())
+
+        # loop over every polygon
         for pgon in self.polygons:
             # iterate over every vertex of pgon
             for vert_ind in range(self.p):
@@ -173,26 +177,20 @@ class KernelStaticRotational(KernelRotationalCommon):
                 for rot_ind in range(self.q):
                     # compute center and angle
                     center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.centerP())
-
                     cangle = math.degrees(math.atan2(center.imag, center.real))
                     cangle += 360 if cangle < 0 else 0
+                    
+                    # check whether candidate polygon already exists
+                    if not dupl_large.is_duplicate(center):
 
-                    # try adding to centerlist; it is a set() and takes care of duplicates
-                    lenA = len(dupl_large)
-                    center = np.round(center, self.dgts)  # CAUTION
-                    dupl_large.add(center)
-                    lenB = len(dupl_large)
+                        # add to duplicate container
+                        dupl_large.add(center)
 
-                    # this tells us whether an element has actually been added
-                    if lenB > lenA:
                         # create copy
                         polycopy = copy.deepcopy(pgon)
 
-                        # generate adjacent polygon
+                        # generate adjacent polygon and add to large list
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                        adj_pgon.find_angle()
-
-                        # add corresponding poly to large list
                         newpolygons.append(adj_pgon)
 
         self.polygons += newpolygons
