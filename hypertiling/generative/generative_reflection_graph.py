@@ -65,8 +65,7 @@ class KernelGenerativeReflectionGraph:
         self.length = (self.graph.shape[0] - 1) * self.p + 1
 
     def generate(self):
-        return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, np.sum(self._sector_lengths),
-                                        self._sector_lengths, self.degtol, self.mangle)
+        return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle)
 
     def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
         """
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 7, 3, 3
+    p, q, n = 3, 7, 3
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")

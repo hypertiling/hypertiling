@@ -13,10 +13,6 @@ n: Number of layers (classical definition)
 m: Number of polygons
 """
 
-"""@NumbaChecker(["uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
-               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
-               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])"""
-
 
 def plot_graph(adjacent_matrix: List[List[int]], center_coords):
     graph = nx.Graph()
@@ -32,7 +28,8 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords):
     # plt.show()
 
 
-def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector_lengths: np.array, degtol: float,
+@NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64)")
+def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, degtol: int,
                   mangle: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.
@@ -41,7 +38,6 @@ def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector
     :param q: int = number of polys per vertex
     :param n: int = number of layers (reflective)
     :param r: float = radius of the fundamental polygon
-    :param number_of_polys: int = number of polys
     :param sector_lengths: np.array[int] = length
     :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
@@ -54,8 +50,8 @@ def generate_nbrs(p: int, q: int, n: int, r: float, number_of_polys: int, sector
     current_coords = np.empty((sector_lengths[-1], p + 1), dtype=np.complex128)
     next_coords = np.empty((sector_lengths[-1], p + 1), dtype=np.complex128)
     # edge arrays
-    current_edges = np.empty(sector_lengths[-1], dtype=np.min_scalar_type(2 ** p - 1))
-    next_edges = np.empty(sector_lengths[-1], dtype=np.min_scalar_type(2 ** p - 1))
+    current_edges = np.empty(sector_lengths[-1], dtype=np.uint16)
+    next_edges = np.empty(sector_lengths[-1], dtype=np.uint16)
     # neighbors array
     neighbors = np.empty((np.sum(sector_lengths), p + 1), dtype=np.uint32)
     neighbors.fill(-1)
