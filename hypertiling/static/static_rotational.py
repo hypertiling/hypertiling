@@ -41,37 +41,6 @@ class KernelStaticRotational(KernelRotationalCommon):
             self.generate()
 
 
-
-    def in_sector(self, z0):
-        """
-        Check whether point z0 is located in fundamental sector of the tiling
-        """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
-        if (self.sect_lbound <= cangle < self.sect_ubound) and (abs(z0) > self.fr2):
-            return True
-        else:
-            return False
-
-    def in_slice_lower(self, z0):
-        """
-        Check whether point z0 is located in lower soft boundary of fundamental sector
-        This is required in order to check for rotational duplicates during the construction
-        """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
-        return cangle < self.lower_slice
-
-    def in_slice_upper(self, z0):
-        """
-        Check whether point z0 is located in upper soft boundary of fundamental sector
-        This is required in order to check for rotational duplicates during the construction
-        """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
-        return cangle > self.upper_slice
-
-
-
-
-
     def generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
@@ -92,6 +61,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         dupl_large = DuplicateContainer(self.dgts)
         dupl_small = DuplicateContainer(self.dgts)
         dupl_large.add(self.fund_poly.centerP())
+
 
         startpgon = 0
         endpgon = 1
@@ -183,7 +153,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         """
         grow existing tiling outwards by one layer
         """
-        
+
         newpolygons = []
 
         # new container for duplicate checks

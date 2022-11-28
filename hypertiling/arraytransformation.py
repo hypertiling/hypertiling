@@ -1,5 +1,4 @@
 import numpy as np
-import math
 import hypertiling.transformation as trans
 from hypertiling.check_numba import NumbaChecker
 

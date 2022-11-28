@@ -74,6 +74,7 @@ class KernelStaticBase(AbstractKernelBase):
             self.sect_angle     = self.qhi
             self.sect_angle_deg = self.degqhi
 
+        # required for construction algorithm
         self.sect_lbound = MANGLE
         self.sect_ubound = MANGLE + self.sect_angle_deg + self.degtol
 
@@ -248,7 +249,35 @@ class KernelRotationalCommon(KernelStaticBase):
             poly.idx = num
 
 
-    # 
+
+
+    def in_sector(self, z0):
+        """
+        Check whether point z0 is located in fundamental sector of the tiling
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        if (self.sect_lbound <= cangle < self.sect_ubound) and (abs(z0) > self.fr2):
+            return True
+        else:
+            return False
+
+    def in_slice_lower(self, z0):
+        """
+        Check whether point z0 is located in lower soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        return cangle < self.lower_slice
+
+    def in_slice_upper(self, z0):
+        """
+        Check whether point z0 is located in upper soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        return cangle > self.upper_slice
+
+
     def populate_edge_list(self, digits=12):
         """
         populate the "edges" list of all polygons in the tiling        

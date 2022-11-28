@@ -5,7 +5,7 @@ import copy
 # relative imports
 from .static_base import KernelRotationalCommon
 from ..transformation import moeb_rotate_trafo
-from ..arraytransformation import mfull_point
+from ..arraytransformation import mfull_point, multi_rotation_around_vertex
 from ..util import fund_radius
 from .static_rotational_improved_util import CenterContainer
 from .static_base import MANGLE
@@ -23,6 +23,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         if self.autogenerate:
             self.generate()
 
+
     def generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
@@ -38,29 +39,21 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
-        # angle width of the fundamental sector
-        sect_angle = self.phi
-        sect_angle_deg = self.degphi
+        # prepare sets which will contain the center coordinates
+        # will be used for uniqueness checks
         if self.center == "vertex":
-            sect_angle = self.qhi
-            sect_angle_deg = self.degqhi
-
-            # prepare containers which will be used for uniqueness checks
-            rrad = abs(self.fund_poly.verticesP[self.p])
+            rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
 
             dupl_small = CenterContainer(self.p * self.q, rrad, pphi)                
             dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
-        else:
-            rrad = abs(self.fund_poly.verticesP[self.p])
+        if self.center == "cell":
+            rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = self.phi / 2
             # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
             dupl_small = CenterContainer(self.p * self.q, rrad, pphi)
             dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
 
-
-        # half fundamental radius
-        fr = fund_radius(self.p, self.q) / 2
 
         startpgon = 0
         endpgon = 1
@@ -71,28 +64,28 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
 
+                # center of current polygon
+                pgon_center = pgon.verticesP[self.p]
+                
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
 
-                    # iterate over all polygons touching this very vertex
+                    # rotate polygon around current vertex
+                    # compute center coordinates of all polygons which share this vertex...
+                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
+                    
+                    # ... and iterate over them
                     for rot_ind in range(self.q):
-                        
-                        # compute center and angle of the candidate
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
-                        cangle = math.degrees(math.atan2(center.imag, center.real))
-                        cangle += 360 if cangle < 0 else 0
 
-                        # cut away candidates outside the fundamental sector
-                        # allow some tolerance at the upper boundary
-                        sector_lbound = MANGLE
-                        sector_ubound = sect_angle_deg + self.degtol + MANGLE
-                        
-                        if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
-                            
+                        center = adj_centers[rot_ind]
+
+                        # check whether candidate polygon is in fundemantal sector
+                        if self.in_sector(center):   
+
                             # check whether candidate polygon already exists
                             if not dupl_large.is_duplicate(center):
-                                                                
-                                # add to center container
+
+                                # add to duplicate container
                                 dupl_large.add(center)
 
                                 # create copy
@@ -103,8 +96,8 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
-                                # if angle is in slice, add to centerset_extra
-                                if MANGLE <= cangle <= self.degtol + MANGLE:
+                                # if angle is in lower soft sector boundary, add to second duplicate container
+                                if self.in_slice_lower(center): 
                                     if not dupl_small.is_duplicate(center):
                                         dupl_small.add(center)
 
@@ -119,64 +112,68 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
-            # compute angle
-            angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
-            angle += 360 if angle < 0 else 0
+            center = pgon.verticesP[self.p]
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
-            if angle > MANGLE + sect_angle_deg - self.degtol :
+            if self.in_slice_upper(center): 
                 # rotate center of poly back by sector angle
-                center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
+                center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
                 if dupl_small.is_duplicate(center):
                     # delete
                     deletelist.append(kk)
+
         # delete all rotational duplicates
         self.polygons = list(np.delete(self.polygons, deletelist))
 
 
 
     def add_layer(self):
-        """ constructs an additional layer for an existing tiling """
+        """
+        grow existing tiling outwards by one layer
+        """
 
         newpolygons = []
 
-        # prepare sets which will contain the center coordinates
-        # this is used for uniqueness checks later
-        if self.center == "vertex":
-
-            dupl_large = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                     self.fund_poly.verticesP[self.p].real))
-        else:
-            dupl_large = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
-
-        # fill the dupl_large with already existing centers
+        # new container for duplicate checks
+        center = self.polygons[0].centerP()
+        rrad = np.abs(center)
+        pphi = math.atan2(center.imag, center.real)
+        dupl_large = CenterContainer(self.p * self.q, rrad, pphi)
+        # fill container
         for pgon in self.polygons:
-            center = np.round(pgon.centerP(), self.dgts)
-            dupl_large.add(center)
+            dupl_large.add(pgon.centerP())
 
+        # loop over every polygon
         for pgon in self.polygons:
+
+            # center of current polygon
+            pgon_center = pgon.verticesP[self.p]
+
             # iterate over every vertex of pgon
             for vert_ind in range(self.p):
-                # iterate over all polygons touching this very vertex
+
+                # rotate polygon around current vertex
+                # compute center coordinates of all polygons which share this vertex...
+                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
+                
+                # ... and iterate over them
                 for rot_ind in range(self.q):
-                    # compute center and angle
-                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
-                    cangle = math.degrees(math.atan2(center.imag, center.real))
-                    cangle += 360 if cangle < 0 else 0
-                    if not dupl_large.fp_has(center):  # if it's a new polygon
+
+                    center = adj_centers[rot_ind]
+
+                    # check whether candidate polygon already exists
+                    if not dupl_large.is_duplicate(center):
+
+                        # add to duplicate container
                         dupl_large.add(center)
 
                         # create copy
                         polycopy = copy.deepcopy(pgon)
 
-                        # generate adjacent polygon
+                        # generate adjacent polygon and add to large list
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                        adj_pgon.find_angle()
-
-                        # add corresponding poly to large list
                         newpolygons.append(adj_pgon)
 
         self.polygons += newpolygons
