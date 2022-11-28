@@ -150,3 +150,6 @@ except ImportError:
             if (upos - lpos) > self.maxlinlength:
                 self.dangle /= 2.0
             return any(abs(c.z - z) < 1E-12 for c in self.centers[lpos:upos])
+
+        def is_duplicate(self, z):
+            return self.fp_has(z)
