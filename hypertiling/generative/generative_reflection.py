@@ -890,7 +890,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(3, 7, 4)
+    tiling = KernelGenerativeReflection(8, 3, 4)
     t2 = time.time()
 
     #tiling.map_nbrs()

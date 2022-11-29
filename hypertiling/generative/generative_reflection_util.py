@@ -257,11 +257,11 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                     # close first edge because of sibling
                     edge_array[c] ^= 1
                     # close last edge because of sibling
-                    if edge_array[c - 1] == 30:
+                    if not (edge_array[c - 1] & 1 << (p - 2)):
                         # if filler polygon of first order
-                        edge_array[c - 1] ^= 16
+                        edge_array[c - 1] ^= 1 << (p - 3)
                     else:
-                        edge_array[c - 1] ^= 32
+                        edge_array[c - 1] ^= 1 << (p - 2)
 
                 """
                 Theoretically possible to shift before neighbor comparison.

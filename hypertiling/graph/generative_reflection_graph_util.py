@@ -180,15 +180,16 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
                         neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
                         neighbors[child_absolut - 1, 0] += 1
 
-                elif q == 3:
+                elif q == 3 and next_level_counter != 0:
                     # close first edge because of sibling
                     next_edges[next_level_counter] ^= 1
                     # close last edge because of sibling
-                    if next_edges[next_level_counter - 1] == 30:
+                    if not (next_edges[next_level_counter - 1] & 1 << (p - 2)):
                         # if filler polygon of first order
-                        next_edges[next_level_counter - 1] ^= 16
+                        next_edges[next_level_counter - 1] ^= 1 << (p - 3)
                     else:
-                        next_edges[next_level_counter - 1] ^= 32
+                        next_edges[next_level_counter - 1] ^= 1 << (p - 2)
+
                     neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
                     neighbors[child_absolut, 0] += 1
                     neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut

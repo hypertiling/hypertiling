@@ -176,14 +176,14 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 5, 4, 3
+    p, q, n = 8, 3, 3
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    """t1 = time.time()
+    t1 = time.time()
     tiling = KernelGenerativeReflection(p, q, n)
-    print(f"Took: {time.time() - t1}")"""
+    print(f"Took: {time.time() - t1}")
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
