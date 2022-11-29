@@ -2,9 +2,8 @@ from typing import List
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 from hypertiling.check_numba import NumbaChecker
-from hypertiling.generative.generative_reflection_util import PI2, any_close_matrix
+from hypertiling.generative.generative_reflection_util import PI2, any_close_matrix, f_dist_disc
 import networkx as nx
-import matplotlib.pyplot as plt
 
 """
 p: Number of edges/vertices of a polygon
@@ -21,11 +20,12 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords):
 
     for y, row in enumerate(adjacent_matrix):
         for index in row:
-            graph.add_edge(y, index)
+            if index < len(adjacent_matrix):
+                graph.add_edge(y, index)
+            else:
+                print(f"{y} -> {index} not shown")
 
     nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'))
-    # plt.axis("off")
-    # plt.show()
 
 
 @NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64)")
@@ -57,6 +57,9 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     neighbors.fill(-1)
     neighbors[:, 0] = 1  # +1 for counter in array (skip itself)
     # boundary stuff
+    boundary_indices = np.empty((n + 1, 2), dtype=np.uint32)
+    boundary_indices[0].fill(0)
+    # for plotting
     center_coords = np.empty((np.sum(sector_lengths),), dtype=np.complex128)
 
     # most inner polygon
@@ -174,6 +177,10 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
         current_counter += 1
         parent_absolut += 1
         if current_counter == current_open:
+            # add last polygon to boundary list
+            boundary_indices[current_level + 1, 0] = child_absolut - next_level_counter
+            boundary_indices[current_level + 1, 1] = child_absolut - 1
+
             # update counters
             current_open = next_level_counter
             current_counter = 0
@@ -186,5 +193,24 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
             next_edges = np.empty_like(next_edges)
             next_edges.fill(edges)
             current_level += 1
+
+    # boundary
+    ndiff = int(round((q - 1) / 2, 0))
+    jump = (p - 1) * (child_absolut - 1)
+    dist_ref = f_dist_disc(center_coords[0], center_coords[1]) + 1e-12
+    for n1 in range(1, boundary_indices.shape[0]):
+        # right
+        index_right = boundary_indices[n1, 0]
+        print(f"{index_right}")
+        for n2 in range(max(0, n1 - ndiff), min(n1 + ndiff, n + 1)):
+            # left side
+            index_left = boundary_indices[n2, 1]
+            print(f"\t {index_left} / {index_left + jump}")
+            dist = f_dist_disc(center_coords[index_left] * np.exp(- 1j * dphi), center_coords[index_right])
+            if dist <= dist_ref:
+                neighbors[index_right, neighbors[index_right, 0]] = index_left + jump
+                neighbors[index_right, 0] += 1
+                neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
+                neighbors[index_left, 0] += 1
 
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]

@@ -56,14 +56,23 @@ class KernelGenerativeReflectionGraph:
         # estimate some other technical attributes
         if n != 0:
             lengths = util.get_reflection_n_estimation(p, q, n)  # n
-            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
+            self._sector_lengths = lengths # np.ceil(lengths / p).astype(np.uint32)  # n
         else:
             self._sector_lengths = np.array([1])
 
-        self.graph, self.center_coords = self.generate()  # FIXME: hier muss die boundary noch rein
+        self.graph, self.center_coords = self._generate()
         self.length = (self.graph.shape[0] - 1) * self.p + 1
 
-    def generate(self):
+    def __getitem__(self, item):
+        """
+        Get neighbor of the polygon at index.
+        Time-complexity (single polygon): O(p)
+        :param item: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        return self._expand_sector_index_to_tiling(item, self._get_nbrs)
+
+    def _generate(self):
         return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle)
 
     def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
@@ -105,14 +114,8 @@ class KernelGenerativeReflectionGraph:
         overflow = np.iinfo(neighbor_indices.dtype).max
         return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
 
-    def get_nbrs(self, index: int) -> np.array:
-        """
-        Get neighbor of the polygon at index.
-        Time-complexity (single polygon): O(p)
-        :param index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
-        """
-        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
+    def check_integrity(self):
+        pass
 
     def get_nbrs_list_sector(self) -> List[List[int]]:
         max_number = np.iinfo(self.graph.dtype).max
@@ -148,7 +151,7 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 3, 7, 8
+    p, q, n = 3, 7, 10
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
@@ -170,6 +173,7 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
     plt.show()
 
 
