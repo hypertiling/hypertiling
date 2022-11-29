@@ -12,20 +12,42 @@ n: Number of layers (classical definition)
 m: Number of polygons
 """
 
+colors = ["#FF000080", "#00FF0080", "#0000FF80"]
 
-def plot_graph(adjacent_matrix: List[List[int]], center_coords):
+
+def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int):
+    """
+    Plot a network of the connections
+    :param adjacent_matrix: List[List[int]] = matrix storing the neighboring relations
+    :param center_coords: np.array[n] = positions of the node coords as complex
+    :param p: int = number of edges of a single polygon in the tiling == rotational symmetry
+    :return: void
+    """
     graph = nx.Graph()
     for y in range(len(adjacent_matrix)):
-        graph.add_node(y, pos=(np.real(center_coords[y]), np.imag(center_coords[y])))
+        if y >= center_coords.shape[0]:
+            sector = (y - 1) // (center_coords.shape[0] - 1)
+            index = (y - 1) % (center_coords.shape[0] - 1)
+            index += 1
+            rot = center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
+            x_ = np.real(rot)
+            y_ = np.imag(rot)
+        else:
+            x_ = np.real(center_coords[y])
+            y_ = np.imag(center_coords[y])
+            sector = 0
+
+        graph.add_node(y, pos=(x_, y_), node_color=colors[sector % len(colors)])
 
     for y, row in enumerate(adjacent_matrix):
         for index in row:
-            if index < len(adjacent_matrix):
-                graph.add_edge(y, index)
-            else:
-                print(f"{y} -> {index} not shown")
+            if index >= len(adjacent_matrix):
+                print(f"Skip: {y} -> {index}")
+                continue
+            graph.add_edge(y, index)
 
-    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'))
+    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),
+                     node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
 
 
 @NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64)")
@@ -87,7 +109,8 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     while current_level < n:
         # check for filler polys of 1st order
         if current_counter != 0 and current_level != 0:
-            connection = any_close_matrix(next_coords[next_level_counter - 1], current_coords[current_counter])  # (p+1)^2
+            connection = any_close_matrix(next_coords[next_level_counter - 1],
+                                          current_coords[current_counter])  # (p+1)^2
             if connection.shape[0] == 2 and child_absolut > 3:
                 # block edges in number-bit-array (see. GRK __init__ for explanation)
                 next_edges[next_level_counter - 1] ^= 1 << (connection[1, 1] - 1)
@@ -201,16 +224,17 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     for n1 in range(1, boundary_indices.shape[0]):
         # right
         index_right = boundary_indices[n1, 0]
-        print(f"{index_right}")
-        for n2 in range(max(0, n1 - ndiff), min(n1 + ndiff, n + 1)):
+        for n2 in range(max(1, n1 - ndiff), min(n1 + ndiff, n + 1)):
             # left side
             index_left = boundary_indices[n2, 1]
-            print(f"\t {index_left} / {index_left + jump}")
             dist = f_dist_disc(center_coords[index_left] * np.exp(- 1j * dphi), center_coords[index_right])
             if dist <= dist_ref:
                 neighbors[index_right, neighbors[index_right, 0]] = index_left + jump
                 neighbors[index_right, 0] += 1
                 neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
                 neighbors[index_left, 0] += 1
+
+    for i in range(p):
+        neighbors[0, 2 + i] = neighbors[0, i + 1] + child_absolut - 1
 
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]
