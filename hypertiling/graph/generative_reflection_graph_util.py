@@ -225,7 +225,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     for n1 in range(1, boundary_indices.shape[0]):
         # right
         index_right = boundary_indices[n1, 0]
-        for n2 in range(max(1, n1 - ndiff), min(n1 + ndiff, n + 1)):
+        for n2 in range(max(1, n1 - ndiff), min(n1 + ndiff + 1, n + 1)):
             # left side
             index_left = boundary_indices[n2, 1]
             dist = f_dist_disc(center_coords[index_left] * np.exp(- 1j * dphi), center_coords[index_right])

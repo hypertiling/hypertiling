@@ -176,7 +176,7 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 8, 3, 3
+    p, q, n = 7, 3, 3
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
@@ -192,14 +192,14 @@ if __name__ == "__main__":
     graph.check_integrity()
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
 
-    """colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_reflection_level(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
     plt.show()
 
 
