@@ -50,9 +50,9 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
                      node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
 
 
-@NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64)")
+@NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64, float64)")
 def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, degtol: int,
-                  mangle: float) -> np.array:
+                  mangle: float, tol: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.
     Time-complexity: O(p^2 m(p, q, n) + n), with m(p, q, n) is the number of polygons
@@ -63,6 +63,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     :param sector_lengths: np.array[int] = length
     :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
+    :param tol: float = tolerance in the neighbor detection for the boundary
     :return: np.array[np.uint8] = stores for every polygon which reflection level it has
     """
     dphi = PI2 / p
@@ -220,7 +221,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     # boundary
     ndiff = int(round((q - 1) / 2, 0))
     jump = (p - 1) * (child_absolut - 1)
-    dist_ref = f_dist_disc(center_coords[0], center_coords[1]) + 1e-12
+    dist_ref = f_dist_disc(center_coords[0], center_coords[1]) + tol
     for n1 in range(1, boundary_indices.shape[0]):
         # right
         index_right = boundary_indices[n1, 0]

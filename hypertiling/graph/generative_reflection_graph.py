@@ -27,7 +27,7 @@ class KernelGenerativeReflectionGraph:
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
+    def __init__(self, p: int, q: int, n: int, degtol: int = 0, tol: float = 1e-8, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         Time-complexity: O(p^2 m + n + m / p * n)
@@ -35,6 +35,7 @@ class KernelGenerativeReflectionGraph:
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
         :param degtol: int = tolerance at boundary in degrees
+        :param tol: int = tolerance at boundary for neighbor matching
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
         """
@@ -51,6 +52,7 @@ class KernelGenerativeReflectionGraph:
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
+        self.tol = tol
         self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
@@ -77,7 +79,8 @@ class KernelGenerativeReflectionGraph:
         Generates the graph structure for the specified tiling.
         :return: np.array[uint32, uint32] = array containing the neighbor relations
         """
-        return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle)
+        return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle,
+                                        self.tol)
 
     def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
         """
