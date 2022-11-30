@@ -133,13 +133,14 @@ class KernelGenerativeReflectionGraph:
         else:
             return self.center_coords[index]
 
-    def check_integrity(self):
+    def check_integrity(self, tol: float = 1e-8):
         """
         Controls the integrity of the tiling. Checks for correct number of neighbors and their distances.
         Time-complexity: O(mp)
+        :param tol: float = tolerance of the neighboring distance (to accept)
         :return: void
         """
-        dist_ref = util.f_dist_disc(self.get_coord(0), self.get_coord(1)) + 1e-12  # 1
+        dist_ref = util.f_dist_disc(self.get_coord(0), self.get_coord(1)) + tol  # 1
         for i in range(self.length):  # exec loop m times
             nbrs = self[i]  # 1
             coord = self.get_coord(i)  # 1
