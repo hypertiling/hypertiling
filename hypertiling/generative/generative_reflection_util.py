@@ -204,7 +204,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
         if reflection_levels[j] == n:
             # all reflection layers are constructed
-            print(f"stop through reflection {c}/{stop}")
+            print(f"Created {c}/{stop}")
             return reflection_levels[:c]
 
         if j > 1:
@@ -239,7 +239,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
             if angle > boundary:
                 break
 
-            if angle >= 0:  # TODO: hier habe ich was geändert
+            if angle >= 0:
                 sector_polys[c, 0] = z[0]
                 sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
@@ -259,9 +259,12 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                     edge_array[c] ^= 1
                     # close last edge because of sibling
                     if not (edge_array[c - 1] & 1 << (p - 2)):
-                        # if filler polygon of first order
+                        # if filler polygon of first order the second to last edge will be closed
+                        # 1 << (p - 2) checks for second to last edge
+                        # in this case, the sibling will be on the third to last edge (1 << (p - 3))
                         edge_array[c - 1] ^= 1 << (p - 3)
                     else:
+                        # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
                         edge_array[c - 1] ^= 1 << (p - 2)
 
                 """
@@ -270,9 +273,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                 graph should be expanded later on.
                 """
                 c += 1
-                if c == stop:
-                    print("stop through cut")
-                    # return reflection_levels
+
     return reflection_levels
 
 # Methods ==============================================================================================================

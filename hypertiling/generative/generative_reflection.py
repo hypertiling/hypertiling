@@ -885,12 +885,6 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
-    for n in range(14, 21):
-        should = np.sum(util.get_ns(7, 3, n + 1))
-        t = KernelGenerativeReflection(7, 3, n)
-        # t.check_integrity()
-        print(n + 1, t.length, should, t.length == should)
-
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)

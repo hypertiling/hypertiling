@@ -99,7 +99,9 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     # for first poly create only one neighbor
     current_edges[0] = 1
 
-    boundary = PI2 / p + (degtol / 360 * PI2) + 3e-7
+    print(f"Layer 0: 1 / 1")
+
+    boundary = PI2 / p + (degtol / 360 * PI2)# + 3e-7
 
     parent_absolut = 0
     child_absolut = 1
@@ -186,9 +188,12 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
                     next_edges[next_level_counter] ^= 1
                     # close last edge because of sibling
                     if not (next_edges[next_level_counter - 1] & 1 << (p - 2)):
-                        # if filler polygon of first order
+                        # if filler polygon of first order the second to last edge will be closed
+                        # 1 << (p - 2) checks for second to last edge
+                        # in this case, the sibling will be on the third to last edge (1 << (p - 3))
                         next_edges[next_level_counter - 1] ^= 1 << (p - 3)
                     else:
+                        # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
                         next_edges[next_level_counter - 1] ^= 1 << (p - 2)
 
                     neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
@@ -202,21 +207,26 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
         current_counter += 1
         parent_absolut += 1
         if current_counter == current_open:
+            # update counter
+            current_level += 1
+
+            print(f"Layer {current_level}: {next_level_counter} / {sector_lengths[current_level]}")
+
             # add last polygon to boundary list
-            boundary_indices[current_level + 1, 0] = child_absolut - next_level_counter
-            boundary_indices[current_level + 1, 1] = child_absolut - 1
+            boundary_indices[current_level, 0] = child_absolut - next_level_counter
+            boundary_indices[current_level, 1] = child_absolut - 1
 
             # update counters
             current_open = next_level_counter
             current_counter = 0
             next_level_counter = 0
-            current_level += 1
 
             # update arrays
-            current_coords = next_coords
-            next_coords = np.empty((sector_lengths[current_level], p + 1), dtype=np.complex128)
-            current_edges = next_edges
-            next_edges = np.full(sector_lengths[current_level], edges, dtype=np.uint16)
+            if current_level != n:
+                current_coords = next_coords
+                next_coords = np.empty((sector_lengths[current_level + 1], p + 1), dtype=np.complex128)
+                current_edges = next_edges
+                next_edges = np.full(sector_lengths[current_level + 1], edges, dtype=np.uint16)
 
     # boundary
     ndiff = int(round((q - 1) / 2, 0))
@@ -235,9 +245,8 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
                 neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
                 neighbors[index_left, 0] += 1
 
-    for i in range(p):
-        neighbors[0, 2 + i] = neighbors[0, i + 1] + child_absolut - 1
-
+    for i in range(1, p):
+        neighbors[0, 1 + i] = neighbors[0, i] + child_absolut - 1
 
     # TODO: im letzten layer müssen nur 2 Coord sets gespeichert werden
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]

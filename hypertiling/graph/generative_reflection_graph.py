@@ -58,7 +58,7 @@ class KernelGenerativeReflectionGraph:
         # estimate some other technical attributes
         if n != 0:
             lengths = util.get_reflection_n_estimation(p, q, n)  # n
-            self._sector_lengths = lengths  # np.ceil(lengths / p).astype(np.uint32)  # n
+            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
         else:
             self._sector_lengths = np.array([1])
 
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     # import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 7, 3, 5
+    p, q, n = 7, 3, 2
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
