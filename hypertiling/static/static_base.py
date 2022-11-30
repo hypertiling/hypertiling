@@ -77,11 +77,11 @@ class KernelStaticBase(AbstractKernelBase):
             self.sect_angle_deg = self.degqhi
 
         # required for construction algorithm
-        self.sect_lbound = MANGLE - 1e-13
-        self.sect_ubound = MANGLE + self.sect_angle_deg + self.degtol
+        self.sect_lbound = 0
+        self.sect_ubound = self.sect_angle_deg + self.degtol
 
-        self.upper_slice = MANGLE + self.sect_angle_deg - self.degtol
-        self.lower_slice = MANGLE + self.degtol
+        self.upper_slice = self.sect_angle_deg - self.degtol
+        self.lower_slice = self.degtol
 
         # prepare list to store polygons 
         self.polygons = []
@@ -211,7 +211,7 @@ class KernelRotationalCommon(KernelStaticBase):
         do full construction
         """
         self.generate_sector()
-        self.replicate()
+        #self.replicate()
 
 
     def generate_adj_poly(self, polygon, ind, k):
