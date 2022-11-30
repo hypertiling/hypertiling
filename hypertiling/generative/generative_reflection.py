@@ -885,12 +885,18 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
+    for n in range(14, 21):
+        should = np.sum(util.get_ns(7, 3, n + 1))
+        t = KernelGenerativeReflection(7, 3, n)
+        # t.check_integrity()
+        print(n + 1, t.length, should, t.length == should)
+
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(8, 3, 4)
+    tiling = KernelGenerativeReflection(7, 3, 6)
     t2 = time.time()
 
     #tiling.map_nbrs()
@@ -900,7 +906,7 @@ if __name__ == "__main__":
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
 
-    # tiling.check_integrity()
+    tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # prob = [2 / (i + 1) for i in range(9)]
 

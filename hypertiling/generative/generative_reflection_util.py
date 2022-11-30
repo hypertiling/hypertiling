@@ -200,10 +200,11 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     # for first poly create only one neighbor
     edge_array[0] = 1
 
-    boundary = PI2 / p + (degtol / 360 * PI2)
+    boundary = PI2 / p + (degtol / 360 * PI2) + 3e-7
     for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
         if reflection_levels[j] == n:
             # all reflection layers are constructed
+            print(f"stop through reflection {c}/{stop}")
             return reflection_levels[:c]
 
         if j > 1:
@@ -238,7 +239,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
             if angle > boundary:
                 break
 
-            if angle >= 0:
+            if angle >= 0:  # TODO: hier habe ich was geändert
                 sector_polys[c, 0] = z[0]
                 sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
@@ -270,7 +271,8 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                 """
                 c += 1
                 if c == stop:
-                    return reflection_levels
+                    print("stop through cut")
+                    # return reflection_levels
     return reflection_levels
 
 # Methods ==============================================================================================================

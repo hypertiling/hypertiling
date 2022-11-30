@@ -99,7 +99,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     # for first poly create only one neighbor
     current_edges[0] = 1
 
-    boundary = PI2 / p + (degtol / 360 * PI2)
+    boundary = PI2 / p + (degtol / 360 * PI2) + 3e-7
 
     parent_absolut = 0
     child_absolut = 1
@@ -238,4 +238,6 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     for i in range(p):
         neighbors[0, 2 + i] = neighbors[0, i + 1] + child_absolut - 1
 
+
+    # TODO: im letzten layer müssen nur 2 Coord sets gespeichert werden
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]
