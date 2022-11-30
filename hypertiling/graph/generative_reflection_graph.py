@@ -13,7 +13,7 @@ m = m(p, q, n)
 
 LIMITATIONS:
 - A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+- The whole tiling can hold at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
   layers size in the fundamental sector
 - The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
 """
@@ -56,7 +56,7 @@ class KernelGenerativeReflectionGraph:
         # estimate some other technical attributes
         if n != 0:
             lengths = util.get_reflection_n_estimation(p, q, n)  # n
-            self._sector_lengths = lengths # np.ceil(lengths / p).astype(np.uint32)  # n
+            self._sector_lengths = lengths  # np.ceil(lengths / p).astype(np.uint32)  # n
         else:
             self._sector_lengths = np.array([1])
 
@@ -73,27 +73,11 @@ class KernelGenerativeReflectionGraph:
         return self._expand_sector_index_to_tiling(item, self._get_nbrs)
 
     def _generate(self):
+        """
+        Generates the graph structure for the specified tiling.
+        :return: np.array[uint32, uint32] = array containing the neighbor relations
+        """
         return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle)
-
-    @staticmethod
-    def _to_weierstrass(polygons: np.array) -> np.array:
-        """
-        Protected(!)
-        Calculates the weierstrass coordinates for an array of polygons in poincare disks.
-        Time-complexity: O(m / p)
-        :param polygons: np.array[n, p + 1] = polygons to calculate weierstrass coordinates for
-        :return: np.array[p + 1, 3] = polygons in weierstrass coordinates
-        """
-        weierstrass = np.empty((len(polygons), 3), dtype=np.float64)
-        weierstrass[:, 0] = 1
-        weierstrass[:, 1] = np.real(polygons[:, 0])
-        weierstrass[:, 2] = np.imag(polygons[:, 0])
-        xx, yy = weierstrass[:, 1] * weierstrass[:, 1], weierstrass[:, 2] * weierstrass[:, 2]
-        weierstrass[:, 0] += xx + yy
-        weierstrass /= (1 - (xx + yy))[:, None]
-        weierstrass[:, 1] *= 2
-        weierstrass[:, 2] *= 2
-        return weierstrass
 
     def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
         """
@@ -124,7 +108,7 @@ class KernelGenerativeReflectionGraph:
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
-        Time-complexity (without map.): O(p)
+        Time-complexity: O(p)
         :param sector_index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
@@ -134,15 +118,45 @@ class KernelGenerativeReflectionGraph:
         overflow = np.iinfo(neighbor_indices.dtype).max
         return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
 
+    def get_coord(self, index: int) -> np.complex128:
+        """
+        Get the coordinates for the center of the node at index
+        Time-complexity: O(1)
+        :param index: int = index of the node of consideration
+        :return: np.complex128 = center of the node in complex coordinates
+        """
+        if index >= self.center_coords.shape[0]:
+            sector = (index - 1) // (self.center_coords.shape[0] - 1)
+            index = (index - 1) % (self.center_coords.shape[0] - 1)
+            index += 1
+            return self.center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
+        else:
+            return self.center_coords[index]
+
     def check_integrity(self):
-        print("TODO: abstände zwischen den Nachbarn kontrollieren!")  # TODO
-        neighbors = self.get_nbrs_list()
-        for i, nbrs in enumerate(neighbors):
+        """
+        Controls the integrity of the tiling. Checks for correct number of neighbors and their distances.
+        Time-complexity: O(mp)
+        :return: void
+        """
+        dist_ref = util.f_dist_disc(self.get_coord(0), self.get_coord(1)) + 1e-12  # 1
+        for i in range(self.length):  # exec loop m times
+            nbrs = self[i]  # 1
+            coord = self.get_coord(i)  # 1
             if len(nbrs) != self.p:
                 print(f"Integrity ensured till index {i}. {i} has only {len(nbrs)} neighbors")
                 break
+            for nbr in nbrs:  # exec loop p times
+                if dist_ref < util.f_dist_disc(coord, self.get_coord(nbr)):  # 1
+                    print(f"Neighbor {nbr} of polygon {i} out of reach!")
+                    break
 
     def get_nbrs_list_sector(self) -> List[List[int]]:
+        """
+        Returns a list of lists of the neighbors for the graph.
+        Time-complexity: O(m)
+        :return: List[List[int]] = List for each polygons neighbors
+        """
         max_number = np.iinfo(self.graph.dtype).max
         return [[index for index in row if index != max_number] for row in self.graph.tolist()]
 
@@ -150,7 +164,6 @@ class KernelGenerativeReflectionGraph:
         """
         Create and return list of all neighbors
         Time-complexity: O(mp)
-        :param tol: float = tolerance to search neighbors in
         :return: List[List[int]] = list of all neighbors for all polygons
         """
         part = np.copy(self.graph[1:]).astype(np.uint32)  # m / p * p = m
@@ -172,34 +185,38 @@ class KernelGenerativeReflectionGraph:
 
 if __name__ == "__main__":
     import time
-    from hypertiling.generative.generative_reflection import KernelGenerativeReflection
-    import matplotlib as mpl
+    # from hypertiling.generative.generative_reflection import KernelGenerativeReflection
+    # import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 7, 3, 3
+    p, q, n = 7, 3, 5
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    t1 = time.time()
+    """t1 = time.time()
     tiling = KernelGenerativeReflection(p, q, n)
-    print(f"Took: {time.time() - t1}")
+    print(f"Took: {time.time() - t1}")"""
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     graph.check_integrity()
+    for i, nbrs in enumerate(graph.get_nbrs_list()):
+        if not np.array_equal(nbrs, graph[i]):
+            print(nbrs)
+            print(graph[i])
+            print("\n")
+
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
 
-    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    """colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_reflection_level(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
     plt.show()
-
-

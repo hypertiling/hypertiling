@@ -69,11 +69,11 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
     phis = np.array([dphi * i + mangle for i in range(p)])  # p
 
     # coord arrays
-    current_coords = np.empty((sector_lengths[-1], p + 1), dtype=np.complex128)
-    next_coords = np.empty((sector_lengths[-1], p + 1), dtype=np.complex128)
+    current_coords = np.empty((sector_lengths[0], p + 1), dtype=np.complex128)
+    next_coords = np.empty((sector_lengths[1], p + 1), dtype=np.complex128)
     # edge arrays
-    current_edges = np.empty(sector_lengths[-1], dtype=np.uint16)
-    next_edges = np.empty(sector_lengths[-1], dtype=np.uint16)
+    current_edges = np.empty(sector_lengths[0], dtype=np.uint16)
+    next_edges = np.empty(sector_lengths[1], dtype=np.uint16)
     # neighbors array
     neighbors = np.empty((np.sum(sector_lengths), p + 1), dtype=np.uint32)
     neighbors.fill(-1)
@@ -209,14 +209,13 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
             current_open = next_level_counter
             current_counter = 0
             next_level_counter = 0
+            current_level += 1
 
             # update arrays
             current_coords = next_coords
-            next_coords = np.empty_like(next_coords)
+            next_coords = np.empty((sector_lengths[current_level], p + 1), dtype=np.complex128)
             current_edges = next_edges
-            next_edges = np.empty_like(next_edges)
-            next_edges.fill(edges)
-            current_level += 1
+            next_edges = np.full(sector_lengths[current_level], edges, dtype=np.uint16)
 
     # boundary
     ndiff = int(round((q - 1) / 2, 0))
