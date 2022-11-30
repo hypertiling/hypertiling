@@ -129,7 +129,7 @@ class KernelGenerativeReflectionGraph:
             sector = (index - 1) // (self.center_coords.shape[0] - 1)
             index = (index - 1) % (self.center_coords.shape[0] - 1)
             index += 1
-            return self.center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
+            return self.center_coords[index] * np.exp(1j * sector * np.pi * 2 / self.p)
         else:
             return self.center_coords[index]
 
