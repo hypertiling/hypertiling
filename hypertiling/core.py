@@ -1,17 +1,17 @@
 # relative imports
-from .static.static_rotational_improved import KernelStaticRotationalImproved
 from .static.static_rotational import KernelStaticRotational
+from .static.static_rotational_legacy import KernelStaticRotationalLegacy
 from .static.legacy_dunham import KernelLegacyDunham
 from .generative.generative_reflection import KernelGenerativeReflection
 
 KERNELS = {"SR": KernelStaticRotational,
-           "SRI": KernelStaticRotationalImproved,
+            "SRL":KernelStaticRotationalLegacy,
            "DUN": KernelLegacyDunham,
            "GR": KernelGenerativeReflection}
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", verbose=False, **kwargs):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 
@@ -48,7 +48,7 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", verbose=False, **kwar
             print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, **kwargs)
 
-    elif kernel == "SR" or kernel == "SRI":
+    elif kernel == "SR" or kernel == "SRL":
         if verbose:
             print("[hypertiling] Third parameter is interpreted as number of layers. Compare documentation.")
         return KERNELS[kernel](p, q, n, center, **kwargs)
