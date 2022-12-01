@@ -3,6 +3,7 @@ from .static.static_rotational import KernelStaticRotational
 from .static.static_rotational_legacy import KernelStaticRotationalLegacy
 from .static.legacy_dunham import KernelLegacyDunham
 from .generative.generative_reflection import KernelGenerativeReflection
+from .ion import htprint
 
 KERNELS = {"SR": KernelStaticRotational,
             "SRL":KernelStaticRotationalLegacy,
@@ -42,6 +43,8 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwarg
 
 
 
+    if kernel == "SRL":
+        htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
 
     if kernel == "GR":
         if verbose:
