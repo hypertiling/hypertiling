@@ -4,16 +4,14 @@ import copy
 
 # relative imports
 from .static_base import KernelRotationalCommon
-from ..transformation import moeb_rotate_trafo
-from ..arraytransformation import mfull_point
-from ..util import fund_radius
-from .static_rotational_improved_util import CenterContainer
+from ..arraytransformation import multi_rotation_around_vertex
+from .static_rotational_improved_util import DuplicateContainerAdv
 from .static_base import MANGLE
 
 
 class KernelStaticRotationalImproved(KernelRotationalCommon):
     """
-    High precision kernel written by F. Goth
+    High precision variant of the SR kernel, which uses a more sophisticated data container for duplicate checks
     """
 
     def __init__(self, p, q, n, center, autogenerate=True, radius=None):
@@ -23,6 +21,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         if self.autogenerate:
             self.generate()
 
+
     def generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
@@ -31,140 +30,79 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
         out rotational duplicates after all layers have been constructed
         """
 
-        # clear list
+        # clear tiling
         self.polygons = []
 
         # add fundamental polygon to list
         self.fund_poly = self.create_fundamental_polygon(self.center)
         self.polygons.append(self.fund_poly)
 
-        # angle width of the fundamental sector
-        sect_angle = self.phi
-        sect_angle_deg = self.degphi
-        if self.center == "vertex":
-            sect_angle = self.qhi
-            sect_angle_deg = self.degqhi
-            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                              math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                         self.fund_poly.verticesP[self.p].real))
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                     self.fund_poly.verticesP[self.p].real))
-        else:
-            centerset_extra = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                              self.phi / 2)  # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
         # prepare sets which will contain the center coordinates
-        # this is used for uniqueness checks later
+        # will be used for uniqueness checks
+        if self.center == "vertex":
+            rrad = np.abs(self.fund_poly.verticesP[self.p])
+            pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
+
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)                
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+        if self.center == "cell":
+            rrad = np.abs(self.fund_poly.verticesP[self.p])
+            pphi = self.phi / 2
+            # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+
+        # the actual construction
+        self.populate_sector(dupl_large, dupl_small)
+       
 
 
-        # half fundamental radius
-        fr = fund_radius(self.p, self.q) / 2
-
-        startpgon = 0
-        endpgon = 1
-
-        # loop over layers to be constructed
-        for l in range(1, self.nlayers):
-
-            # computes all neighbor polygons of layer l
-            for pgon in self.polygons[startpgon:endpgon]:
-
-                # iterate over every vertex of pgon
-                for vert_ind in range(self.p):
-
-                    # iterate over all polygons touching this very vertex
-                    for rot_ind in range(self.q):
-                        
-                        # compute center and angle
-                        center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
-                        cangle = math.degrees(math.atan2(center.imag, center.real))
-                        cangle += 360 if cangle < 0 else 0
-
-                        # cut away cells outside the fundamental sector
-                        # allow some tolerance at the upper boundary
-                        sector_lbound = MANGLE
-                        sector_ubound = sect_angle_deg + self.degtol + MANGLE
-                        
-                        if (sector_lbound <= cangle < sector_ubound) and (abs(center) > fr):
-                            
-                            # check whether this polygon already exists
-                            if not centerarray.fp_has(center):
-                                centerarray.add(center)
-
-                                # create copy
-                                polycopy = copy.deepcopy(pgon)
-
-                                # generate adjacent polygon
-                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                                adj_pgon.layer = l + 1
-                                
-                                # add corresponding poly to large list
-                                self.polygons.append(adj_pgon)
-
-                                # if angle is in slice, add to centerset_extra
-                                if MANGLE <= cangle <= self.degtol + MANGLE:
-                                    if not centerset_extra.fp_has(center):
-                                        centerset_extra.add(center)
-
-            startpgon = endpgon
-            endpgon = len(self.polygons)
-
-        # free mem of centerset
-        del centerarray
-
-        # filter out rotational duplicates
-        deletelist = []
-
-        for kk, pgon in enumerate(self.polygons):
-            angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
-            angle += 360 if angle < 0 else 0
-            if angle > sect_angle_deg - self.degtol + MANGLE:
-                center = moeb_rotate_trafo(-sect_angle, pgon.verticesP[self.p])
-                if centerset_extra.fp_has(center):
-                    deletelist.append(kk)
-        self.polygons = list(np.delete(self.polygons, deletelist))
 
     def add_layer(self):
-        """ constructs an additional layer for an existing tiling """
+        """
+        grow existing tiling outwards by one layer
+        """
 
         newpolygons = []
 
-        # prepare sets which will contain the center coordinates
-        # this is used for uniqueness checks later
-        if self.center == "vertex":
+        # new container for duplicate checks
+        center = self.polygons[0].centerP()
+        rrad = np.abs(center)
+        pphi = math.atan2(center.imag, center.real)
+        dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+        # fill container
+        for pgon in self.polygons:
+            dupl_large.add(pgon.centerP())
 
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]),
-                                          math.atan2(self.fund_poly.verticesP[self.p].imag,
-                                                     self.fund_poly.verticesP[self.p].real))
-        else:
-            centerarray = CenterContainer(self.p * self.q, abs(self.fund_poly.verticesP[self.p]), self.phi / 2)
+        # loop over every polygon
+        for pgon in self.polygons:
 
-        # fill the centerarray with already existing centers
-        for pgon in tiling:
-            center = np.round(pgon.centerP(), tiling.dgts)
-            centerarray.add(center)
+            # center of current polygon
+            pgon_center = pgon.verticesP[self.p]
 
-        for pgon in tiling:
             # iterate over every vertex of pgon
-            for vert_ind in range(tiling.p):
-                # iterate over all polygons touching this very vertex
-                for rot_ind in range(tiling.q):
-                    # compute center and angle
-                    center = mfull_point(pgon.verticesP[vert_ind], rot_ind * self.qhi, pgon.verticesP[self.p])
-                    cangle = math.degrees(math.atan2(center.imag, center.real))
-                    cangle += 360 if cangle < 0 else 0
-                    if not centerarray.fp_has(center):  # if it's a new polygon
-                        centerarray.add(center)
+            for vert_ind in range(self.p):
+
+                # rotate polygon around current vertex
+                # compute center coordinates of all polygons which share this vertex...
+                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
+                
+                # ... and iterate over them
+                for rot_ind in range(self.q):
+
+                    center = adj_centers[rot_ind]
+
+                    # check whether candidate polygon already exists
+                    if not dupl_large.is_duplicate(center):
+
+                        # add to duplicate container
+                        dupl_large.add(center)
 
                         # create copy
                         polycopy = copy.deepcopy(pgon)
 
-                        # generate adjacent polygon
+                        # generate adjacent polygon and add to large list
                         adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                        adj_pgon.find_angle()
-
-                        # add corresponding poly to large list
                         newpolygons.append(adj_pgon)
 
-        tiling.polygons += newpolygons
+        self.polygons += newpolygons
