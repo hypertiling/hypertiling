@@ -204,7 +204,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
         if reflection_levels[j] == n:
             # all reflection layers are constructed
-            print(f"Created {c}/{stop}")
+            print("Created {c}/{stop}")
             return reflection_levels[:c]
 
         if j > 1:
