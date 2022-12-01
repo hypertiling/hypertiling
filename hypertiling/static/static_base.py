@@ -282,7 +282,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
                 collect_nbrs = np.array(collect_nbrs)
                 collect_nbrs = collect_nbrs[collect_nbrs != counter]
-                nbrs.append(np.unique(collect_nbrs))
+                nbrs.append(list(np.unique(collect_nbrs)))
                 counter += 1
 
 
