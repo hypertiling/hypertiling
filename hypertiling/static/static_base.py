@@ -210,7 +210,7 @@ class KernelRotationalCommon(KernelStaticBase):
         """
         do full construction
         """
-        self.generate_sector()
+        self.nbrs = self.generate_sector()
         #self.replicate()
 
 
@@ -227,6 +227,8 @@ class KernelRotationalCommon(KernelStaticBase):
         endpgon = 1
         counter = 0
 
+        nbrs = []
+
         # loop over layers to be constructed
         for l in range(1, self.nlayers):
 
@@ -235,6 +237,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
                 # center of current polygon
                 pgon_center = pgon.verticesP[self.p]
+
                 collect_nbrs = []
                 
                 # iterate over every vertex of pgon
@@ -263,10 +266,10 @@ class KernelRotationalCommon(KernelStaticBase):
                                 polycopy = copy.deepcopy(pgon)
 
                                 # generate adjacent polygon and add to large list
+                                collect_nbrs.append(len(self.polygons))
                                 adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
-                                collect_nbrs.append(len(self.polygons))
 
                                 # if angle is in lower soft sector boundary, add to second duplicate container
                                 #if self.in_slice_lower(center): 
@@ -277,7 +280,9 @@ class KernelRotationalCommon(KernelStaticBase):
                         else:
                             collect_nbrs.append(0)
 
-                #print(counter, np.unique(np.array(collect_nbrs)))
+                collect_nbrs = np.array(collect_nbrs)
+                collect_nbrs = collect_nbrs[collect_nbrs != counter]
+                nbrs.append(np.unique(collect_nbrs))
                 counter += 1
 
 
@@ -288,6 +293,8 @@ class KernelRotationalCommon(KernelStaticBase):
 
         # free mem of centerset
         del dupl_large
+
+        return nbrs
 
         # # --- filter out rotational duplicates
         # deletelist = []

@@ -53,7 +53,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)
 
         # the actual construction
-        self.populate_sector(dupl_large, dupl_small)
+        return self.populate_sector(dupl_large, dupl_small)
        
 
 
