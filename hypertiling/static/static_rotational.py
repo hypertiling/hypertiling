@@ -3,7 +3,7 @@ import copy
 
 # relative imports
 from .static_base import KernelRotationalCommon
-from .static_rotational_util import DuplicateContainerSimple
+from .static_rotational_util import DuplicateContainerSlow
 from ..arraytransformation import  multi_rotation_around_vertex
 from ..distance import disk_distance
 
@@ -41,9 +41,9 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
-        dupl_large = DuplicateContainerSimple(self.dgts)
-        dupl_small = DuplicateContainerSimple(self.dgts)
-        dupl_large.add(self.fund_poly.centerP())
+        dupl_large = DuplicateContainerSlow()
+        dupl_small = DuplicateContainerSlow()
+        dupl_large.add(self.fund_poly.centerP(),0)
 
         # the actual construction
         self.populate_sector(dupl_large, dupl_small)
