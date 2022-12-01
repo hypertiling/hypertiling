@@ -277,7 +277,7 @@ class KernelRotationalCommon(KernelStaticBase):
                         else:
                             collect_nbrs.append(0)
 
-                print(counter, np.unique(np.array(collect_nbrs)))
+                #print(counter, np.unique(np.array(collect_nbrs)))
                 counter += 1
 
 

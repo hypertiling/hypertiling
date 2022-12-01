@@ -8,12 +8,14 @@ class HTCenter:
     def __init__(self, *args):
         """The constructor.
 
-            Parameters(Option 1):
+            Parameters (Option 1):
                 z (complex) : a complex
+                idx (integer) : the index of z in the tiling
 
-            Parameters(Option 2):
+            Parameters (Option 2):
                 r (real) : magnitude
                 phi (real) : angle
+                idx (integer) : the index of z in the tiling
         """
         if len(args) == 2:
             self.z = args[0]
@@ -109,6 +111,8 @@ class DuplicateContainerAdv:
             angle_lower_extra = 0
             angle_upper_extra = angle_upper - PI2
 
+
+        # perform actual duplicate check
         centerarray_iterator = self.centers.irange(HTCenter(1, angle_lower, dummy), HTCenter(1, angle_upper, dummy))
         incontainer = False
         iterlen = 0  # since we cannot apply len() on the irange iterator we have to determine the length ourselves
@@ -121,7 +125,8 @@ class DuplicateContainerAdv:
                 break
         if iterlen > self.maxlinlength:
             self.dangle /= 2.0
-
+            
+        # if no extra check is required, return current result
         if not extra_check:
             return incontainer, idx
         else:
