@@ -43,14 +43,14 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
 
-            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)                
-            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)                
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)
         if self.center == "cell":
             rrad = np.abs(self.fund_poly.verticesP[self.p])
             pphi = self.phi / 2
             # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
-            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi)
+            dupl_small = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)
+            dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)
 
         # the actual construction
         self.populate_sector(dupl_large, dupl_small)

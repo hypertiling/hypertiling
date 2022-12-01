@@ -250,7 +250,7 @@ class KernelRotationalCommon(KernelStaticBase):
                         center = adj_centers[rot_ind]
 
                         # check whether candidate polygon is in fundemantal sector
-                        if True:#self.in_sector(center):   
+                        if self.not_origin(center):   
 
                             # check whether candidate polygon already exists
                             duplicate, idx = dupl_large.is_duplicate(center)
@@ -274,6 +274,8 @@ class KernelRotationalCommon(KernelStaticBase):
                                 #        dupl_small.add(center,42)
                             else:
                                 collect_nbrs.append(idx)
+                        else:
+                            collect_nbrs.append(0)
 
                 print(counter, np.unique(np.array(collect_nbrs)))
                 counter += 1
@@ -350,6 +352,14 @@ class KernelRotationalCommon(KernelStaticBase):
             return True
         else:
             return False
+
+
+    def not_origin(self, z0):
+        """
+        Check whether point z0 is located at the origin
+        """
+        return (abs(z0) > self.fr2)
+
 
     def in_slice_lower(self, z0):
         """
