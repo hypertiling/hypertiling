@@ -6,7 +6,7 @@ from .generative.generative_reflection import KernelGenerativeReflection
 from .ion import htprint
 
 KERNELS = {"SR": KernelStaticRotational,
-            "SRL":KernelStaticRotationalLegacy,
+           "SRL":KernelStaticRotationalLegacy,
            "DUN": KernelLegacyDunham,
            "GR": KernelGenerativeReflection}
 
@@ -35,33 +35,29 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwarg
             "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
 
     if p > 20 or q > 20 and n > 5:
-        print("[hypertiling] Warning: The lattice might become very large with your parameter choice!")
+        htprint("Warning", "The lattice might become very large with your parameter choice!")
 
 
     if "radius" in kwargs and kwargs["radius"] is not None:
-        print("you have defined a cut-off radius ... make sure you set n large enough ...")
-
+        htprint("Status", "You have defined a cut-off radius ... make sure you set n large enough ...")
 
 
     if kernel == "SRL":
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
 
     if kernel == "GR":
-        if verbose:
-            print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
+        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, **kwargs)
 
     elif kernel == "SR" or kernel == "SRL":
-        if verbose:
-            print("[hypertiling] Third parameter is interpreted as number of layers. Compare documentation.")
+        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, center, **kwargs)
 
     elif kernel == "DUN":
-        if verbose:
-            print("[hypertiling] Parameter n is interpreted as number of layers. Compare documentation.")
-        print("[hypertiling] Warning: Dunham kernel is only implemented for legacy reasons and largely untested. See documentation!")
+        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
+        htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
         if center == "vertex":
-            print("[hypertiling] Warning: Dunham kernel does not support vertex centered tilings yet!")
+            htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
         return KERNELS[kernel](p, q, n, center, **kwargs)     
 
     #elif ... (further kernels)
