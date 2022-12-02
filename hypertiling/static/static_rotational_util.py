@@ -44,7 +44,7 @@ try:
     from sortedcontainers import SortedList
 
 
-    class CenterContainer:
+    class DuplicateContainer:
         """
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.
@@ -96,11 +96,15 @@ try:
             if iterlen > self.maxlinlength:
                 self.dangle /= 2.0
             return incontainer
+
+        def is_duplicate(self, z):
+            return self.fp_has(z)
+
 except ImportError:
     import bisect
 
 
-    class CenterContainer:
+    class DuplicateContainer:
         '''
             A Container to store complex numbers and to efficiently decide
             whether a floating point representative of a given complex number is already present.
@@ -146,3 +150,6 @@ except ImportError:
             if (upos - lpos) > self.maxlinlength:
                 self.dangle /= 2.0
             return any(abs(c.z - z) < 1E-12 for c in self.centers[lpos:upos])
+
+        def is_duplicate(self, z):
+            return self.fp_has(z)

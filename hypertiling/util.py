@@ -1,13 +1,6 @@
-
 import numpy as np
 import math
 from .distance import weierstrass_distance, disk_distance
-
-
-
-
-
-
 
 
 # return the hyperbolic/geodesic lattice spacing, i.e. the edge length of any cell
@@ -105,74 +98,13 @@ def n_vertex_centered(p,q,l):
   else:
     #retval = ( n_v(p,q,l)+n_v(p,q,l-1) )/(p-2)
     retval = ( n_v_vertex_centered(p,q,l)+n_v_vertex_centered(p,q,l-1) )/(p-2)
-  return retval
+  return int(retval)
 
 # Eq. A1, A2 from Mertens & Moore, PRE 96, 042116 (2017)
 def n_v_vertex_centered(p,q,n):
     retval = 0  # no center vertex without polygons
     for j in range(1,n+1):
         retval = retval + n_cell_centered_recursion(p,q,j)
-    return retval
+    return int(retval)
 
-
-
-# the following functions find the total number of polygons for some {p, q} tessellation of l layers
-# reference: Baek et al., Phys. Rev.E. 79.011124
-def find_num_of_pgons_73(l):
-    sum = 0
-    s = np.sqrt(5)/2
-    for j in range(1, l):
-        sum += (3/2+s)**j-(3/2-s)**j
-    return int(1+7/np.sqrt(5)*sum)
-
-
-def find_num_of_pgons_64(l):
-    sum = 0
-    s = 2*np.sqrt(2)
-    for j in range(1, l):
-        sum += (3+s)**j-(3-s)**j
-    return int(1+s*sum)
-
-
-def find_num_of_pgons_55(l):
-    sum = 0
-    s = 3*np.sqrt(5)/2
-    for j in range(1, l):
-        sum += (7/2+s)**j-(7/2-s)**j
-    return int(1+np.sqrt(5)*sum)
-
-
-def find_num_of_pgons_45(l):
-    sum = 0
-    s = np.sqrt(3)
-    for j in range(1, l):
-        sum += (2+s)**j-(2-s)**j
-    return int(1+5/s*sum)
-
-
-def find_num_of_pgons_37(l):
-    sum = 0
-    s = np.sqrt(5)/2
-    for j in range(1, l):
-        sum += (3/2+s)**j-(3/2-s)**j
-    return int(1+7/np.sqrt(5)*sum)
-
-
-# the centers (stored in cleanlist) are used to distinguish between polygons
-# removing duplicates instantly after their initialization slightly decreases the performance
-def remove_duplicates(duplicates, digits=10):
-    l = len(duplicates)
-    pgonnum = 1
-    polygons = []
-    centerlist = []
-    mid = []
-    for pgon in duplicates:
-        z = np.round(pgon.centerP(), digits)
-        if z not in centerlist:
-            centerlist.append(z)
-            pgon.number = pgonnum
-            pgonnum += 1
-            polygons.append(pgon)
-    print(f"{l - len(centerlist)} duplicate polygons have been removed!")
-    return polygons
 

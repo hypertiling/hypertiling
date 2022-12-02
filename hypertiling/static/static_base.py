@@ -3,17 +3,19 @@ import math
 import copy
 from ..kernel_abc import AbstractKernelBase
 from .hyperpolygon import HyperPolygon
-from ..arraytransformation import mfull, mrotate, morigin
+from ..transformation import moeb_rotate_trafo
+
+from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
 from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from hypertiling.distance import lorentzian_distance
 
+PI2 = 2 * np.pi
 
-# Magic number: real irrational number \Gamma(\frac{1}{4})
+# Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction by a bit during construction
-MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
-
+MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -52,15 +54,32 @@ class KernelStaticBase(AbstractKernelBase):
         self.radius = radius # a cut-off radius (implement me!)
         self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
 
+        # half fundamental radius
+        self.fr2 = fund_radius(self.p, self.q) / 2
+
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
         self.degphi = 360 / self.p  # self.phi in degrees
         self.degqhi = 360 / self.q  # self.qhi in degrees
 
-        # technical parameters 
+        # sector boundary tolerance / softness
         # do not change, unless you know what you are doing!)
-        self.degtol = 1  # sector boundary tolerance
+        self.degtol = 1
+        self.radtol = np.radians(self.degtol)
+
+        # angle width of the fundamental sector
+        if self.center == "cell":
+            self.sect_angle     = self.phi
+        if self.center == "vertex":
+            self.sect_angle     = self.qhi
+
+        # required for construction algorithm
+        self.sect_lbound = 0
+        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
+
+        self.upper_slice = self.sect_angle - self.radtol
+        self.lower_slice = MAGICANGLE + self.radtol
 
         # prepare list to store polygons 
         self.polygons = []
@@ -132,7 +151,7 @@ class KernelStaticBase(AbstractKernelBase):
         """
         return self.polygons[index].layer
 
-    def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
+    def create_fundamental_polygon(self, center='cell', rotate_by=MAGICANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -201,6 +220,82 @@ class KernelRotationalCommon(KernelStaticBase):
         return polygon
 
 
+    def populate_sector(self, dupl_large, dupl_small):
+        startpgon = 0
+        endpgon = 1
+
+        # loop over layers to be constructed
+        for l in range(1, self.nlayers):
+
+            # computes all neighbor polygons of layer l
+            for pgon in self.polygons[startpgon:endpgon]:
+
+                # center of current polygon
+                pgon_center = pgon.verticesP[self.p]
+                
+                # iterate over every vertex of pgon
+                for vert_ind in range(self.p):
+
+                    # rotate polygon around current vertex
+                    # compute center coordinates of all polygons which share this vertex...
+                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
+                    
+                    # ... and iterate over them
+                    for rot_ind in range(self.q):
+
+                        center = adj_centers[rot_ind]
+
+                        # check whether candidate polygon is in fundamental sector
+                        if self.in_sector(center):   
+
+                            # check whether candidate polygon already exists
+                            if not dupl_large.is_duplicate(center):
+
+                                # add to duplicate container
+                                dupl_large.add(center)
+
+                                # create copy
+                                polycopy = copy.deepcopy(pgon)
+
+                                # generate adjacent polygon and add to large list
+                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon.layer = l + 1
+                                self.polygons.append(adj_pgon)
+
+                                # if angle is in lower soft sector boundary, add to second duplicate container
+                                if self.in_slice_lower(center): 
+                                    if not dupl_small.is_duplicate(center):
+                                        dupl_small.add(center)
+
+            startpgon = endpgon
+            endpgon = len(self.polygons)
+
+        # free mem of centerset
+        del dupl_large
+
+        # --- filter out rotational duplicates
+        deletelist = []
+        
+        # go through every polygon
+        for kk, pgon in enumerate(self.polygons):
+            center = pgon.verticesP[self.p]
+            # if poly is inside soft boundary 
+            # it has to be considered for rotational duplicate check
+            if self.in_slice_upper(center): 
+                # rotate center of poly back by sector angle
+                center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
+                # check whether we already have this rotated center
+                # if so: rotational duplicate
+                if dupl_small.is_duplicate(center):
+                    # delete
+                    deletelist.append(kk)
+
+        # delete all rotational duplicates
+        self.polygons = list(np.delete(self.polygons, deletelist))
+
+
+
+
     def angular_replicate(self, polygons, k):
         """
         tessellates the disk by applying a rotation of 2pi/p to the pizza slice
@@ -216,21 +311,48 @@ class KernelRotationalCommon(KernelStaticBase):
             angle = self.qhi
             k = self.q
 
+        # perform angular replication
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 mrotate(self.p, -p * angle, pgon.verticesP)
-                pgon.angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
-                pgon.angle += 360 if pgon.angle < 0 else 0
-                pgon.sector = math.floor(pgon.angle / (360 / k))
                 self.polygons.append(pgon)
 
-        # assign a unique number to each polygon 
+        # assign index and angles 
         for num, poly in enumerate(self.polygons):
             poly.idx = num
+            poly.find_angle()
+            poly.find_sector(k)
 
 
-    # 
+
+    def in_sector(self, z0):
+        """
+        Check whether point z0 is located in fundamental sector of the tiling
+        """
+        cangle = math.atan2(z0.imag, z0.real)
+        if (self.sect_lbound <= cangle < self.sect_ubound) and (abs(z0) > self.fr2):
+            return True
+        else:
+            return False
+
+    def in_slice_lower(self, z0):
+        """
+        Check whether point z0 is located in lower soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.atan2(z0.imag, z0.real)
+        return cangle < self.lower_slice
+
+    def in_slice_upper(self, z0):
+        """
+        Check whether point z0 is located in upper soft boundary of fundamental sector
+        This is required in order to check for rotational duplicates during the construction
+        """
+        cangle = math.atan2(z0.imag, z0.real)
+        return cangle > self.upper_slice
+
+
     def populate_edge_list(self, digits=12):
         """
         populate the "edges" list of all polygons in the tiling        
