@@ -1,3 +1,22 @@
+## v1.1.4
+Date: 2022-12-02
+
+**Release Notes**
+
+This release includes several performance and stability optimizations of the static rotational (SR) kernel, as well as a clearer internal code design regarding the duplicate containers. Most important effects of these changes are:
+
+- the static rotational improved (SRI) kernel is from now on only labelled SR. It remains the default kernel.
+- the former static rotational (SR) kernel is now deprecated and labelled as SRL (legacy). It will be removed in one of the upcoming releases.
+
+**Further changes**
+
+- performance optimizations in the GR kernel
+- get_nbrs method for SR kernel was missing
+- updated demo notebooks
+- several bugfixes
+
+
+
 ## v1.1.2
 Date: 2022-11-02
 
