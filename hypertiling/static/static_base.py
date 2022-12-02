@@ -13,10 +13,9 @@ from hypertiling.distance import lorentzian_distance
 
 PI2 = 2 * np.pi
 
-# Magic number: real irrational number \Gamma(\frac{1}{4})
+# Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction by a bit during construction
-MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
-
+MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -66,22 +65,21 @@ class KernelStaticBase(AbstractKernelBase):
 
         # sector boundary tolerance / softness
         # do not change, unless you know what you are doing!)
-        self.degtol = 1  
+        self.degtol = 1
+        self.radtol = np.radians(self.degtol)
 
         # angle width of the fundamental sector
         if self.center == "cell":
             self.sect_angle     = self.phi
-            self.sect_angle_deg = self.degphi
         if self.center == "vertex":
             self.sect_angle     = self.qhi
-            self.sect_angle_deg = self.degqhi
 
         # required for construction algorithm
         self.sect_lbound = 0
-        self.sect_ubound = self.sect_angle_deg + self.degtol
+        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
 
-        self.upper_slice = self.sect_angle_deg - self.degtol
-        self.lower_slice = self.degtol
+        self.upper_slice = self.sect_angle - self.radtol
+        self.lower_slice = MAGICANGLE + self.radtol
 
         # prepare list to store polygons 
         self.polygons = []
@@ -153,7 +151,7 @@ class KernelStaticBase(AbstractKernelBase):
         """
         return self.polygons[index].layer
 
-    def create_fundamental_polygon(self, center='cell', rotate_by=MANGLE):
+    def create_fundamental_polygon(self, center='cell', rotate_by=MAGICANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -333,7 +331,7 @@ class KernelRotationalCommon(KernelStaticBase):
         """
         Check whether point z0 is located in fundamental sector of the tiling
         """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        cangle = math.atan2(z0.imag, z0.real)
         if (self.sect_lbound <= cangle < self.sect_ubound) and (abs(z0) > self.fr2):
             return True
         else:
@@ -344,7 +342,7 @@ class KernelRotationalCommon(KernelStaticBase):
         Check whether point z0 is located in lower soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
         """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        cangle = math.atan2(z0.imag, z0.real)
         return cangle < self.lower_slice
 
     def in_slice_upper(self, z0):
@@ -352,7 +350,7 @@ class KernelRotationalCommon(KernelStaticBase):
         Check whether point z0 is located in upper soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
         """
-        cangle = math.degrees(math.atan2(z0.imag, z0.real))
+        cangle = math.atan2(z0.imag, z0.real)
         return cangle > self.upper_slice
 
 
