@@ -34,22 +34,25 @@ class KernelStaticRotational(KernelRotationalCommon):
 
         # add fundamental polygon to list
         self.fund_poly = self.create_fundamental_polygon(self.center)
+        self.fund_poly_center = self.fund_poly.verticesP[self.p]
         self.polygons.append(self.fund_poly)
 
-        # prepare sets which will contain the center coordinates
-        # will be used for uniqueness checks
+        # prepare container which will be used for duplicate checks
         if self.center == "vertex":
-            rrad = np.abs(self.fund_poly.verticesP[self.p])
-            pphi = math.atan2(self.fund_poly.verticesP[self.p].imag, self.fund_poly.verticesP[self.p].real)
-
-            dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)                
-            dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
+            rrad = np.abs(self.fund_poly_center)
+            pphi = math.atan2(self.fund_poly_center.imag, self.fund_poly_center.real)
         if self.center == "cell":
-            rrad = np.abs(self.fund_poly.verticesP[self.p])
+            # the initial poly has a center of (0,0) 
+            # therefore we set its angle artificially to phi/2
+            rrad = 0
             pphi = self.phi / 2
-            # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-            dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
-            dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
+            
+        
+        # container used for filtering duplicates in the bulk
+        dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
+
+        # container used for filtering rotational duplicates at the sector boundary
+        dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
 
         # the actual construction
         self.populate_sector(dupl_large, dupl_small)
@@ -69,6 +72,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         rrad = np.abs(center)
         pphi = math.atan2(center.imag, center.real)
         dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
+        
         # fill container
         for pgon in self.polygons:
             dupl_large.add(pgon.centerP())

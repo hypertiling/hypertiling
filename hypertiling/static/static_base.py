@@ -245,7 +245,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
                         center = adj_centers[rot_ind]
 
-                        # check whether candidate polygon is in fundemantal sector
+                        # check whether candidate polygon is in fundamental sector
                         if self.in_sector(center):   
 
                             # check whether candidate polygon already exists
@@ -311,19 +311,18 @@ class KernelRotationalCommon(KernelStaticBase):
             angle = self.qhi
             k = self.q
 
+        # perform angular replication
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
                 mrotate(self.p, -p * angle, pgon.verticesP)
-                pgon.angle = math.degrees(math.atan2(pgon.verticesP[self.p].imag, pgon.verticesP[self.p].real))
-                pgon.angle += 360 if pgon.angle < 0 else 0
-                pgon.sector = math.floor(pgon.angle / (360 / k))
                 self.polygons.append(pgon)
 
-        # assign a unique number to each polygon 
+        # assign index and angles 
         for num, poly in enumerate(self.polygons):
             poly.idx = num
-
+            poly.find_angle()
+            poly.find_sector(k)
 
 
 
