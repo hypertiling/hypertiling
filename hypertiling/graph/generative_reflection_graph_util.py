@@ -50,7 +50,8 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
                      node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
 
 
-@NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64, float64)")
+@NumbaChecker(
+    "Tuple((uint32[:, :], complex128[:]))(int64, int64, int64, float64, uint32[::1], int64, float64, float64)")
 def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, degtol: int,
                   mangle: float, tol: float) -> np.array:
     """
@@ -101,7 +102,7 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
 
     print(f"Layer 0: 1 / 1")
 
-    boundary = PI2 / p + (degtol / 360 * PI2)# + 3e-7
+    boundary = PI2 / p + (degtol / 360 * PI2)  # + 3e-7
 
     parent_absolut = 0
     child_absolut = 1
@@ -210,7 +211,9 @@ def generate_nbrs(p: int, q: int, n: int, r: float, sector_lengths: np.array, de
             # update counter
             current_level += 1
 
-            print(f"Layer {current_level}: {next_level_counter} / {sector_lengths[current_level]}")
+            # print(f"Layer {current_level}: {next_level_counter} / {sector_lengths[current_level]}")
+            print("Layer " + str(current_level) + " : " + str(next_level_counter) + " / " + str(
+                sector_lengths[current_level]))
 
             # add last polygon to boundary list
             boundary_indices[current_level, 0] = child_absolut - next_level_counter
