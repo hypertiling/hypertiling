@@ -12,8 +12,8 @@ m: Number of polygons
 m = m(p, q, n)
 
 LIMITATIONS:
-- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can hold at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+- A reflection layer can hold at max 4.294.967.295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+- The whole tiling can hold at max 34.359.738.353 polys as the size of _sector_polys is determined as sum of uint32 of the 
   layers size in the fundamental sector
 - The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
 """
