@@ -316,7 +316,7 @@ class KernelStaticRotationalGraph:
         elif self.center == "vertex":
             self.generate_first_layer()
             for _ in range(self.nlayers-1):
-                self.add_layer(self.not_origin)
+                self.add_layer(self.filter_always_pass)
 
 
     def generate_adj_poly(self, polygon, ind, k):
@@ -347,39 +347,6 @@ class KernelStaticRotationalGraph:
         """
         return (abs(z0) > self.fr2)
 
-
-    def in_slice_lower(self, z0):
-        """
-        Check whether point z0 is located in lower soft boundary of fundamental sector
-        This is required in order to check for rotational duplicates during the construction
-        """
-        cangle = math.atan2(z0.imag, z0.real)
-        return cangle < self.lower_slice
-
-    def in_slice_upper(self, z0):
-        """
-        Check whether point z0 is located in upper soft boundary of fundamental sector
-        This is required in order to check for rotational duplicates during the construction
-        """
-        cangle = math.atan2(z0.imag, z0.real)
-        return cangle > self.upper_slice
-
-
-    def populate_edge_list(self, digits=12):
-        """
-        populate the "edges" list of all polygons in the tiling        
-        note: some neighbour methods employ the fact that adjacent polygons share an edge
-        hence these will later be identified via floating point comparison and we need to round
-        """
-
-        for poly in self.polygons:
-            poly.edges = []
-            verts = np.round(poly.verticesP[0:-1], digits)
-
-            # append edges as tuples
-            for i, vert in enumerate(verts[:-1]):
-                poly.edges.append((verts[i], verts[i + 1]))
-            poly.edges.append((verts[-1], verts[0]))
 
 
 # ------------- Transformations -------------
@@ -453,6 +420,7 @@ class KernelStaticRotationalGraph:
                     child.verticesP[1] = pgon.verticesP[(vrtx+1)%self.p]
                     child.verticesP[2] = pgon.verticesP[-1]
                     child.verticesP[3] = euclidean_center(child.verticesP[:-1])
+                    child.layer = pgon.layer
                     newpolygons.append(child)
             self.polygons = newpolygons
             iterations -= 1 # we have already done one iteration
@@ -474,6 +442,7 @@ class KernelStaticRotationalGraph:
                 # and three that each share one vertex with their mother
 
                 child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
+                child.layer = pgon.layer
                 for i in range(p):
                     child.verticesP[i] = ref_vertices[i]
                 child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
