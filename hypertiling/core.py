@@ -1,12 +1,10 @@
 # relative imports
-from .static.static_rotational_improved import KernelStaticRotationalImproved
-from .static.static_rotational import KernelStaticRotational
-from .static.legacy_dunham import KernelLegacyDunham
+from .static.static_base import KernelStaticRotationalGraph
+#from .static.static_rotational import KernelStaticRotational
+# .static.legacy_dunham import KernelLegacyDunham
 from .generative.generative_reflection import KernelGenerativeReflection
 
-KERNELS = {"SR": KernelStaticRotational,
-           "SRI": KernelStaticRotationalImproved,
-           "DUN": KernelLegacyDunham,
+KERNELS = {"SRG": KernelStaticRotationalGraph,
            "GR": KernelGenerativeReflection}
 
 
@@ -48,7 +46,7 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", verbose=False, **kwar
             print("[hypertiling] Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, **kwargs)
 
-    elif kernel == "SR" or kernel == "SRI":
+    elif kernel == "SR" or kernel == "SRG":
         if verbose:
             print("[hypertiling] Third parameter is interpreted as number of layers. Compare documentation.")
         return KERNELS[kernel](p, q, n, center, **kwargs)
