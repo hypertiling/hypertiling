@@ -8,7 +8,7 @@ print("Testing different neighbour search algorithms against each other")
 class TestCore(unittest.TestCase):
     def test_comp_nbrs(self):
 
-        kernel = "SRI"
+        kernel = "SR"
 
         lattices = [(3, 7, 7,), (7, 3, 7), (5, 4, 6), (4, 5, 6), (9, 3, 4), (4, 10, 3), (3, 8, 4), (6, 4, 4)]
 
@@ -21,7 +21,7 @@ class TestCore(unittest.TestCase):
 
             self.assertEqual(nbrs1.sort(), nbrs2.sort())
 
-        kernel = "SRI"
+        kernel = "SR"
 
         lattices = [(3, 7, 4), (7, 3, 4), (5, 4, 4), (4, 5, 4), (9, 3, 4), (4, 10, 3), (3, 8, 4), (6, 4, 4)]
 
