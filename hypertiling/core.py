@@ -2,17 +2,20 @@
 from .static.static_rotational_graph import KernelStaticRotationalGraph
 from .static.static_rotational import KernelStaticRotational
 from .static.static_rotational_legacy import KernelStaticRotationalLegacy
-#from .static.legacy_dunham import KernelLegacyDunham
+from .static.legacy_dunham import KernelLegacyDunham
 from .generative.generative_reflection import KernelGenerativeReflection
 from .ion import htprint
+
 
 KERNELS = { "SR":KernelStaticRotational,
             "SRG": KernelStaticRotationalGraph,
             "SRL": KernelStaticRotationalLegacy,
+            "DUN": KernelLegacyDunham,
             "GR": KernelGenerativeReflection}
 
 
-# factory pattern allows to select between kernels
+
+
 def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwargs):
     """
     The base function which invokes a hyperbolic tiling

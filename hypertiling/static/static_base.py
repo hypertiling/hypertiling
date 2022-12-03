@@ -17,8 +17,7 @@ PI2 = 2 * np.pi
 # used as an angular offset, rotates the entire construction by a bit during construction
 MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
-# the main object of this library
-# essentially represents a list of polygons which constitute the hyperbolic lattice
+
 class KernelStaticBase(AbstractKernelBase):
     """
     Base class of the static rotational kernel family

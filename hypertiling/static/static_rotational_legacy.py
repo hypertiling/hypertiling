@@ -11,8 +11,9 @@ from ..distance import disk_distance
 
 class KernelStaticRotationalLegacy(KernelRotationalCommon):
     """ 
-    A generic tiling construction kernel, generates a hyperbolic lattice 
-    by discrete rotations of existing polygons about their vertices 
+    Deprecated (!!)
+    Our first tiling construction kernel, generates a hyperbolic lattice 
+    by discrete rotations of existing polygons about their vertices
     """
 
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):

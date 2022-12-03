@@ -11,7 +11,8 @@ from .static_rotational_util import DuplicateContainer
 
 class KernelStaticRotational(KernelRotationalCommon):
     """
-    High precision variant of the SR kernel, which uses a more sophisticated data container for duplicate checks
+    The default lattice construction kernel; New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
+    Duplicates are eliminated using specialized data containers
     """
 
     def __init__(self, p, q, n, center, autogenerate=True, radius=None):

@@ -17,13 +17,14 @@ PI2 = 2 * np.pi
 MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
 
-# the main object of this library
-# essentially represents a list of polygons which constitute the hyperbolic lattice
 class KernelStaticRotationalGraph(KernelStaticBase):
     def __init__(self, p, q, n, center, autogenerate, radius):
         super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
     """
-    Base class of a hyperbolic tiling object
+    Hyperbolic tiling construction kernel
+    
+    unlike the other static rotational kernels, here the neighbours are computed upon construction of the tiling
+    however, since currently no sector algorithm is used, the construction itself is slower
 
     Attributes
     ----------
