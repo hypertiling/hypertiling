@@ -1,11 +1,9 @@
 import numpy as np
 import math
 import copy
-from .hyperpolygon import HyperPolygon
-from .static_base import KernelStaticBase
+from .static_base import KernelStaticBase, KernelRotationalCommon
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
-from ..util import fund_radius, euclidean_center
-from ..geodesics import geodesic_midpoint
+from ..util import fund_radius
 from ..ion import htprint
 from ..arraytransformation import multi_rotation_around_vertex
 from .static_rotational_graph_util import DuplicateContainerCircular
@@ -17,12 +15,12 @@ PI2 = 2 * np.pi
 MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
 
-class KernelStaticRotationalGraph(KernelStaticBase):
+class KernelStaticRotationalGraph(KernelRotationalCommon):
     def __init__(self, p, q, n, center, autogenerate, radius):
         super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
     """
     Hyperbolic tiling construction kernel
-    
+
     unlike the other static rotational kernels, here the neighbours are computed upon construction of the tiling
     however, since currently no sector algorithm is used, the construction itself is slower
 
@@ -320,82 +318,5 @@ class KernelStaticRotationalGraph(KernelStaticBase):
 
         for poly in self.polygons:
             morigin(self.p, z, poly.verticesP)
-
-
-
-
-# ------------- Refinements -------------
-
-
-    def refine_lattice(self, iterations=1):
-        """ 
-        Refine a regular lattice, by subdividing each triangle into four new polygons
-        If the tiling is not triangular, in the first step, all cells will be subdivided
-        into p triangular cells
-        Note that new cells are not isometric anymore!
-        
-        Parameters
-        ----------
-        
-        iterations: int
-            Determines how many times the lattice will be refined; for each iteration the
-            total number of polygons will be multiplied by a factor of four
-            
-        """
-
-        if iterations == 0:
-            return
-
-        # if tiling is not triangular, the first refinement steps subdivided all cells
-        # into p triangles
-        if self.p > 3:
-            newpolygons = []
-            for pgon in self.polygons:
-                for vrtx in range(self.p):
-                    child = HyperPolygon(3) 
-                    child.verticesP[0] = pgon.verticesP[vrtx]
-                    child.verticesP[1] = pgon.verticesP[(vrtx+1)%self.p]
-                    child.verticesP[2] = pgon.verticesP[-1]
-                    child.verticesP[3] = euclidean_center(child.verticesP[:-1])
-                    child.layer = pgon.layer
-                    newpolygons.append(child)
-            self.polygons = newpolygons
-            iterations -= 1 # we have already done one iteration
-
-        
-        for _ in range(iterations):
-            p = 3 # we use this quite frequently, hence the short form
-            newpolygons = []  # stores the new polygons
-            for num, pgon in enumerate(self.polygons):  # find the new vertices of each polygon
-                ref_vertices = []  # stores newly found vertices through refinement
-                # loop through polygon edges
-                for vrtx in range(p):
-                    # find geodesic midpoint
-                    zm = geodesic_midpoint( pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p] )
-                    ref_vertices.append(zm)
-
-
-                # one "mother" triangle bears 4 "children" triangles, one in its mid
-                # and three that each share one vertex with their mother
-
-                child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
-                child.layer = pgon.layer
-                for i in range(p):
-                    child.verticesP[i] = ref_vertices[i]
-                child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
-                child.idx = 4*num+1  # assigning a unique number
-                newpolygons.append(child)
-
-                for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
-                    child = HyperPolygon(p)  # these are the non-center children
-                    vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
-                    for i in range(p):
-                        child.verticesP[i] = vP[i]
-                    child.verticesP[-1] = euclidean_center(child.verticesP[:-1])
-                    child.idx = (4*num+1)+1+vrtx  # assign a unique number
-                    newpolygons.append(child)
-
-            self.polygons = newpolygons
-        return
 
 

@@ -474,6 +474,7 @@ class KernelRotationalCommon(KernelStaticBase):
                     child.verticesP[1] = pgon.verticesP[(vrtx+1)%self.p]
                     child.verticesP[2] = pgon.verticesP[-1]
                     child.verticesP[3] = euclidean_center(child.verticesP[:-1])
+                    child.layer = pgon.layer
                     newpolygons.append(child)
             self.polygons = newpolygons
             iterations -= 1 # we have already done one iteration
@@ -495,6 +496,7 @@ class KernelRotationalCommon(KernelStaticBase):
                 # and three that each share one vertex with their mother
 
                 child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
+                child.layer = pgon.layer
                 for i in range(p):
                     child.verticesP[i] = ref_vertices[i]
                 child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
@@ -503,6 +505,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
                 for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
                     child = HyperPolygon(p)  # these are the non-center children
+                    child.layer = pgon.layer
                     vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
                     for i in range(p):
                         child.verticesP[i] = vP[i]
