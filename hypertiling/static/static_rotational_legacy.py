@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import math
 
 # relative imports
 from .static_base import KernelRotationalCommon, MAGICANGLE

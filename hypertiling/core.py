@@ -50,7 +50,7 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwarg
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, **kwargs)
 
-    elif kernel == "SR" or kernel == "SRL":
+    elif kernel in ["SR", "SRG", "SRL"]:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return KERNELS[kernel](p, q, n, center, **kwargs)
 

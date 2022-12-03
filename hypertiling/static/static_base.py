@@ -220,41 +220,6 @@ class KernelStaticBase(AbstractKernelBase):
 
 
 
-    # def create_fundamental_polygon(self, center='cell', rotate_by=MAGICANGLE):
-    #     """
-    #     Constructs the vertices of the fundamental hyperbolic {p,q} polygon
-
-    #     Parameters
-    #     ----------
-    #     center : str
-    #         decides whether the fundamental cell is construct centered at the origin ("cell", default) 
-    #         or with the origin being one of its vertices ("vertex")
-    #     rotate_by : float
-    #         angle of rotation of the fundamental polygon, default is the magic angle mangle
-    #     """
-
-    #     r = fund_radius(self.p, self.q)
-    #     polygon = HyperPolygon(self.p)
-
-    #     for i in range(self.p):
-    #         z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
-    #         z = z / abs(z)
-    #         z = r * z
-    #         polygon.verticesP[i] = z
-
-    #     # if centered around a vertex, shift one vertex to origin
-    #     if center == 'vertex':
-    #         morigin(self.p, complex(r, 0), polygon.verticesP)
-    #         vertangle = math.atan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
-    #         mrotate(self.p, vertangle, polygon.verticesP)
-    #         polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
-    #         polygon.angle += 360 if polygon.angle < 0 else 0
-
-    #     mrotate(self.p, -2 * math.pi / 360 * rotate_by, polygon.verticesP)
-
-    #     return polygon
-
-
 class KernelRotationalCommon(KernelStaticBase):
     """
     Commonalities
