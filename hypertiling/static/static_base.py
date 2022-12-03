@@ -18,8 +18,7 @@ PI2 = 2 * np.pi
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction by a bit during construction
 MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
-MAGICANGLE = np.radians(10.1234567891011121314151617181920212223242526272829303132333)
-#
+
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
@@ -58,29 +57,17 @@ class KernelStaticRotationalGraph:
         self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
 
         # half fundamental radius
-        self.fr2 = fund_radius(self.p, self.q)
-
+        self.fr2 = fund_radius(self.p, self.q) / 2
 
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-        self.degphi = 360 / self.p  # self.phi in degrees
-        self.degqhi = 360 / self.q  # self.qhi in degrees
 
-        # sector boundary tolerance / softness
-        # do not change, unless you know what you are doing!)
-        self.degtol = 1
-        self.radtol = np.radians(self.degtol)
-
-        # angle width of the fundamental sector
-        if self.center == "cell":
-            self.sect_angle     = self.phi
-        if self.center == "vertex":
-            self.sect_angle     = self.qhi
 
 
         # prepare list to store polygons 
         self.polygons = []
+        # prepare list to store neighours
         self.nbrs = []
 
         if center not in ['cell', 'vertex']:
@@ -177,6 +164,7 @@ class KernelStaticRotationalGraph:
             z = r * z
             polygon.verticesP[i] = z
 
+        # rotate by angle (to get away from the coordinate axis)
         mrotate(self.p, -rotate_by, polygon.verticesP)
 
         return polygon
@@ -184,63 +172,66 @@ class KernelStaticRotationalGraph:
 
     def generate_first_layer(self):
         """
-        generates one p or q-fold sector of the lattice
-        in order to avoid problems associated to rounding we construct the
-        fundamental sector a little bit wider than 360/p degrees in filter
-        out rotational duplicates after all layers have been constructed
+        generate the first layer
         """
 
-        # clear tiling
-        self.polygons = []
 
-        # add fundamental polygon to list
+        # create fundamental polygon
         self.fund_poly = self.create_fundamental_polygon()
+
+        # prepare polygon counter
         self.counter = 0
 
-
+        # tiling centered around cell
+        # add fundamental cell and set bounds of current layer
         if self.center == "cell":
             self.polygons.append(self.fund_poly)
+            self.outmost_layer_lower = 0
+            self.outmost_layer_upper = 1
 
-            self.outerlayer_lower = 0
-            self.outerlayer_upper = 1
 
-
-        # if centered around a vertex, shift one vertex to origin
+        # tiling centered around vertex
         if self.center == 'vertex':
             print("nbrs still buggy for vertex centered")
-            r = fund_radius(self.p, self.q)
-           
-            morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
-            
 
+            # shift fundamental polygon such that one of its vertices is on the origin
+            vertidx = 0           
+            morigin(self.p, self.fund_poly.verticesP[vertidx], self.fund_poly.verticesP)
+            
+            # generate the q polygons of the first layer
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
-
-                adj_pgon = self.generate_adj_poly(polycopy, 0, rot_ind)
+                adj_pgon = self.generate_adj_poly(polycopy, vertidx, rot_ind)
                 self.polygons.append(adj_pgon)
 
-            self.outerlayer_lower = 0
-            self.outerlayer_upper = self.q
+            self.outmost_layer_lower = 0
+            self.outmost_layer_upper = self.q
+
         
-        # prepare sets which will contain the center coordinates
-        # will be used for uniqueness checks
+        # prepare containers for duplicate checks
+        # init with origin, set angle artificially to phi/2
+        idx = 0
         rrad = 0
         pphi = self.phi / 2
-        # the initial poly has a center of (0,0) therefore we set its angle artificially to phi/2
-        self.dupl_large = DuplicateContainerCircular(self.p * self.q, rrad, pphi, 0)        
+        self.dplcts = DuplicateContainerCircular(self.p * self.q, rrad, pphi, idx)        
 
-
+        # add full first layer for vertex centered tilings
         if self.center == "vertex":
             for i in range(0,self.q):
-                self.dupl_large.add(self.polygons[i].centerP(),i)
+                self.dplcts.add(self.polygons[i].centerP(),i)
 
-        
+        # current layer number
         self.layers = 1
+
+
        
 
 
 
     def add_layer(self, filter=None):
+        """
+        add layer
+        """
 
         self.layers += 1
 
@@ -248,7 +239,7 @@ class KernelStaticRotationalGraph:
             filter = self.not_origin
 
         # computes all neighbor polygons of layer l
-        for pgon in self.polygons[self.outerlayer_lower:self.outerlayer_upper]:
+        for pgon in self.polygons[self.outmost_layer_lower:self.outmost_layer_upper]:
 
             # center of current polygon
             pgon_center = pgon.verticesP[self.p]
@@ -271,11 +262,11 @@ class KernelStaticRotationalGraph:
                     if filter(center):   
 
                         # check whether candidate polygon already exists
-                        duplicate, idx = self.dupl_large.is_duplicate(center)
+                        duplicate, idx = self.dplcts.is_duplicate(center)
                         if not duplicate:
 
                             # add to duplicate container
-                            self.dupl_large.add(center,len(self.polygons))
+                            self.dplcts.add(center,len(self.polygons))
 
                             # create copy
                             polycopy = copy.deepcopy(pgon)
@@ -297,8 +288,8 @@ class KernelStaticRotationalGraph:
             self.counter += 1
 
 
-        self.outerlayer_lower = self.outerlayer_upper
-        self.outerlayer_upper = len(self.polygons)
+        self.outmost_layer_lower = self.outmost_layer_upper
+        self.outmost_layer_upper = len(self.polygons)
 
         #htprint("Status", "Created a new layer with index", self.layers+1, "containing", self.outerlayer_lower-self.outerlayer_upper, "polygons")
 
@@ -308,6 +299,12 @@ class KernelStaticRotationalGraph:
         """
         do full construction
         """
+
+
+        # clear tiling
+        self.polygons = []
+
+        # add layers repeatedly until nlayers is reached
         if self.center == "cell":
             self.generate_first_layer()
             for _ in range(self.nlayers-1):
@@ -317,6 +314,9 @@ class KernelStaticRotationalGraph:
             self.generate_first_layer()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.filter_always_pass)
+
+
+
 
 
     def generate_adj_poly(self, polygon, ind, k):
