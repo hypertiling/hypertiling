@@ -2,7 +2,7 @@ import math
 import numpy as np
 PI2 = 6.2831853071795864769
 
-class HTCenter:
+class HTCenterTuple:
     '''This helper class wraps a complex and enables comparison based on the angle'''
 
     def __init__(self, *args):
@@ -62,7 +62,7 @@ class DuplicateContainerCircular:
         self.maxlinlength = linlength  # the maximum linear length
         self.dangle = 0.1  # controls the width of the angle interval and is adapted by repeated searches
 
-        self.centers = SortedList([HTCenter(r, phi, idx)])
+        self.centers = SortedList([HTCenterTuple(r, phi, idx)])
 
     def add(self, z, idx):
         '''
@@ -71,7 +71,7 @@ class DuplicateContainerCircular:
             Parameters:
                 z (complex): A complex number. should not be 0+0*I...
         '''
-        self.centers.add(HTCenter(z,idx))
+        self.centers.add(HTCenterTuple(z,idx))
 
     def __len__(self):
         '''
@@ -93,7 +93,6 @@ class DuplicateContainerCircular:
         nangle = math.atan2(z.imag, z.real)
         nangle += PI2 if nangle<0 else 0
 
-        dummy = 9
         angle_upper = nangle + self.dangle
         angle_lower = nangle - self.dangle
 
@@ -113,7 +112,7 @@ class DuplicateContainerCircular:
 
 
         # perform actual duplicate check
-        iterator = self.centers.irange(HTCenter(1, angle_lower, dummy), HTCenter(1, angle_upper, dummy))
+        iterator = self.centers.irange(HTCenterTuple(1, angle_lower, -1), HTCenterTuple(1, angle_upper, -1))
         iterlen = 0  # since we cannot apply len() on the irange iterator we have to determine the length ourselves
 
         for c in iterator:
@@ -125,7 +124,7 @@ class DuplicateContainerCircular:
             
 
         if extra_check:
-            iterator = self.centers.irange(HTCenter(1, angle_lower_extra, dummy), HTCenter(1, angle_upper_extra, dummy))
+            iterator = self.centers.irange(HTCenterTuple(1, angle_lower_extra, -1), HTCenterTuple(1, angle_upper_extra, -1))
             for c in iterator:
                 if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
                     return True, c.idx
