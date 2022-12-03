@@ -238,7 +238,7 @@ class KernelStaticRotationalGraph(KernelStaticBase):
 
         # add layers repeatedly until nlayers is reached
         if self.center == "cell":
-            self.generate_first_layer()
+            self.create_first_layer()
             self.prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.not_origin)
@@ -246,7 +246,7 @@ class KernelStaticRotationalGraph(KernelStaticBase):
         elif self.center == "vertex":
             print("nbrs still buggy for vertex centered")
 
-            self.generate_first_layer()
+            self.create_first_layer()
             self.prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.filter_always_pass)

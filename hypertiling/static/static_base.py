@@ -21,7 +21,8 @@ MAGICANGLE = np.radians(0.123456789101112131415161718192021222324252627282930313
 # essentially represents a list of polygons which constitute the hyperbolic lattice
 class KernelStaticBase(AbstractKernelBase):
     """
-    Base class of a hyperbolic tiling object
+    Base class of the static rotational kernel family
+    provides interfaces and fundamental polygon
 
     Attributes
     ----------
@@ -60,26 +61,6 @@ class KernelStaticBase(AbstractKernelBase):
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-        self.degphi = 360 / self.p  # self.phi in degrees
-        self.degqhi = 360 / self.q  # self.qhi in degrees
-
-        # sector boundary tolerance / softness
-        # do not change, unless you know what you are doing!)
-        self.degtol = 1
-        self.radtol = np.radians(self.degtol)
-
-        # angle width of the fundamental sector
-        if self.center == "cell":
-            self.sect_angle     = self.phi
-        if self.center == "vertex":
-            self.sect_angle     = self.qhi
-
-        # required for construction algorithm
-        self.sect_lbound = 0
-        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
-
-        self.upper_slice = self.sect_angle - self.radtol
-        self.lower_slice = MAGICANGLE + self.radtol
 
         # prepare list to store polygons 
         self.polygons = []
@@ -181,7 +162,7 @@ class KernelStaticBase(AbstractKernelBase):
         return polygon
 
 
-    def generate_first_layer(self):
+    def create_first_layer(self):
         """
         generate the first layer
         """
@@ -222,12 +203,31 @@ class KernelStaticBase(AbstractKernelBase):
 
 class KernelRotationalCommon(KernelStaticBase):
     """
-    Commonalities
+    Extend base class of the static rotational kernel family towards sector contruction
     """
 
     def __init__(self, p, q, n, center, autogenerate, radius):
         super(KernelRotationalCommon, self).__init__(p, q, n, center, autogenerate, radius)
 
+        # sector boundary tolerance / softness
+        # do not change, unless you know what you are doing!)
+        self.degtol = 1
+        self.radtol = np.radians(self.degtol)
+
+        # angle width of the fundamental sector
+        if self.center == "cell":
+            self.sect_angle     = self.phi
+        if self.center == "vertex":
+            self.sect_angle     = self.qhi
+
+        # required for construction algorithm
+        self.sect_lbound = 0
+        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
+
+        self.upper_slice = self.sect_angle - self.radtol
+        self.lower_slice = MAGICANGLE + self.radtol
+
+   
     def replicate(self):
         """
         tessellate the entire disk by replicating the fundamental sector
