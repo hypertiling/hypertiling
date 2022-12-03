@@ -1,15 +1,18 @@
 # relative imports
-from .static.static_base import KernelStaticRotationalGraph
-#from .static.static_rotational import KernelStaticRotational
-# .static.legacy_dunham import KernelLegacyDunham
+from .static.static_rotational_graph import KernelStaticRotationalGraph
+from .static.static_rotational import KernelStaticRotational
+from .static.static_rotational_legacy import KernelStaticRotationalLegacy
+#from .static.legacy_dunham import KernelLegacyDunham
 from .generative.generative_reflection import KernelGenerativeReflection
 
-KERNELS = {"SRG": KernelStaticRotationalGraph,
-           "GR": KernelGenerativeReflection}
+KERNELS = { "SR":KernelStaticRotational,
+            "SRG": KernelStaticRotationalGraph,
+            "SRL": KernelStaticRotationalLegacy,
+            "GR": KernelGenerativeReflection}
 
 
 # factory pattern allows to select between kernels
-def HyperbolicTiling(p, q, n, center="cell", kernel="SRI", verbose=False, **kwargs):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 

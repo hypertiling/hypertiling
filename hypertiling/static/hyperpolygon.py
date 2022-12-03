@@ -2,6 +2,7 @@ import math
 import numpy as np
 from hypertiling.representations import p2w
 from hypertiling.arraytransformation import mfull, mrotate, morigin
+PI2 = 2 * np.pi
 
 
 # defines a hyperbolic polygon

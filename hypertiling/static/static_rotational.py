@@ -1,24 +1,22 @@
 import numpy as np
+import math
 import copy
 
 # relative imports
-from .static_base import KernelRotationalCommon
-from .static_rotational_util import DuplicateContainerSlow
-from ..arraytransformation import  multi_rotation_around_vertex
-from ..distance import disk_distance
+from .static_base import KernelRotationalCommon, MAGICANGLE
+from ..arraytransformation import morigin, mrotate
+from .static_rotational_util import DuplicateContainer
+
 
 
 class KernelStaticRotational(KernelRotationalCommon):
-    """ 
-    A generic tiling construction kernel, generates a hyperbolic lattice 
-    by discrete rotations of existing polygons about their vertices 
+    """
+    High precision variant of the SR kernel, which uses a more sophisticated data container for duplicate checks
     """
 
-    def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
+    def __init__(self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        self.dgts = 10
-        self.accuracy = 10**(-self.dgts) # numerical accuracy
-
+        
         # construct tiling
         if self.autogenerate:
             self.generate()
@@ -36,136 +34,40 @@ class KernelStaticRotational(KernelRotationalCommon):
         self.polygons = []
 
         # add fundamental polygon to list
-        self.fund_poly = self.create_fundamental_polygon(self.center)
+        self.fund_poly = self.create_fundamental_polygon()
+                
+        # tiling centered around vertex
+        if self.center == 'vertex':
+
+            # shift fundamental polygon such that one of its vertices is on the origin
+            # if centered around a vertex, shift one vertex to origin
+            morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
+            vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
+            mrotate(self.p, vertangle-MAGICANGLE, self.fund_poly.verticesP)
+
+
+        self.fund_poly_center = self.fund_poly.verticesP[self.p]
         self.polygons.append(self.fund_poly)
 
-        # prepare sets which will contain the center coordinates
-        # will be used for uniqueness checks
-        dupl_large = DuplicateContainerSlow()
-        dupl_small = DuplicateContainerSlow()
-        dupl_large.add(self.fund_poly.centerP(),0)
+        # prepare container which will be used for duplicate checks
+        if self.center == "vertex":
+            rrad = np.abs(self.fund_poly_center)
+            pphi = math.atan2(self.fund_poly_center.imag, self.fund_poly_center.real)
+        if self.center == "cell":
+            # the initial poly has a center of (0,0) 
+            # therefore we set its angle artificially to phi/2
+            rrad = 0
+            pphi = self.phi / 2
+            
+        
+        # container used for filtering duplicates in the bulk
+        dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
+
+        # container used for filtering rotational duplicates at the sector boundary
+        dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
 
         # the actual construction
         self.populate_sector(dupl_large, dupl_small)
+       
 
 
-
-        
-
-    def numerically_unstable_upper(self, l, start, end, tolfactor=10, samplesize=10):
-        """
-        check whether the true "embedding" distance between cells in layer l comes close
-        to the rounding accuracy
-        """
-
-        # innermost layers are always fine, do nothing
-        if l<3:
-            return False
-
-        # randomly pick a number of sites from l-th layer
-        curr_layer = self.polygons[start:end]
-        layersize = end-start
-        true_dists = []
-
-        for i in range(samplesize):
-            rndidx = np.random.randint(layersize)
-
-            # generate an adjacent cell
-            mother = curr_layer[rndidx]
-            child  = self.generate_adj_poly(copy.deepcopy(mother), 0, 1)
-
-            # compute the true (non-geodesic) distance
-            true_dist = np.abs(mother.centerP()-child.centerP())
-            true_dists.append(true_dist)
-
-        # if this distances comes close to the rounding accuracy
-        # two cells can no longer be reliably distinguished
-        if np.min(true_dist) < self.accuracy*tolfactor:
-            return True
-        else:
-            return False
-
-
-    def numerically_unstable_lower(self, l, start, end, tolfactor=10, samplesize=100):
-        """
-        we know which geodesic distance two adjancent cells are supposed to have;
-        here we take a sample of cells from the l-th layer and compute mutual 
-        distances; if one of those is significantly off compared to the expected
-        value we are about to enter a dangerous regime in terms of rounding errors
-        """
-
-        # innermost layers are always fine, do nothing
-        if l<3:
-            return False
-
-        # take a sample of cells and compute their distances
-        samples = self.polygons[start:end][:samplesize]
-        disk_distances = []
-        for j1, pgon1 in enumerate(samples):
-            for j2, pgon2 in enumerate(samples):
-                if j1 != j2:
-                    disk_distances.append(disk_distance(pgon1.centerP(), pgon2.centerP()))
-
-        # we are interested in the minimal distance (can be interpreted as an 
-        # upper bound on the accumulated error)
-        mindist = np.min(np.array(disk_distances))
-
-        # the reference distance
-        refdist = disk_distance(self.fund_poly.centerP(), self.polygons[1].centerP())
-
-        # if out arithmetics worked error-free, mindist = refdist
-        # in practice, it does not, so we compute the difference
-        # if it comes close to the rounding accuracy, adjacency can no longer
-        # by reliably resolved and we are about to enter a possibly unstable regime
-        if np.abs(mindist-refdist) > self.accuracy/tolfactor:
-            return True
-        else:
-            return False
-
-
-
-    def add_layer(self):
-        """
-        grow existing tiling outwards by one layer
-        """
-
-        newpolygons = []
-
-        # new container for duplicate checks
-        dupl_large = DuplicateContainerSimple(self.dgts)
-        # fill container
-        for pgon in self.polygons:
-            dupl_large.add(pgon.centerP())
-
-        # loop over every polygon
-        for pgon in self.polygons:
-
-            # center of current polygon
-            pgon_center = pgon.verticesP[self.p]
-
-            # iterate over every vertex of pgon
-            for vert_ind in range(self.p):
-
-                # rotate polygon around current vertex
-                # compute center coordinates of all polygons which share this vertex...
-                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
-                
-                # ... and iterate over them
-                for rot_ind in range(self.q):
-
-                    center = adj_centers[rot_ind]
-
-                    # check whether candidate polygon already exists
-                    if not dupl_large.is_duplicate(center):
-
-                        # add to duplicate container
-                        dupl_large.add(center)
-
-                        # create copy
-                        polycopy = copy.deepcopy(pgon)
-
-                        # generate adjacent polygon and add to large list
-                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                        newpolygons.append(adj_pgon)
-
-        self.polygons += newpolygons

@@ -2,7 +2,7 @@ import numpy as np
 import math
 import copy
 from .hyperpolygon import HyperPolygon
-
+from .static_base import KernelStaticBase
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
 from ..util import fund_radius, euclidean_center
 from ..geodesics import geodesic_midpoint
@@ -19,7 +19,9 @@ MAGICANGLE = np.radians(0.123456789101112131415161718192021222324252627282930313
 
 # the main object of this library
 # essentially represents a list of polygons which constitute the hyperbolic lattice
-class KernelStaticRotationalGraph:
+class KernelStaticRotationalGraph(KernelStaticBase):
+    def __init__(self, p, q, n, center, autogenerate, radius):
+        super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
     """
     Base class of a hyperbolic tiling object
 
@@ -137,91 +139,6 @@ class KernelStaticRotationalGraph:
         """
         return self.polygons[index].layer
 
-    def create_fundamental_polygon(self, rotate_by=MAGICANGLE):
-        """
-        Constructs the vertices of the fundamental hyperbolic {p,q} polygon
-
-        Parameters
-        ----------
-        center : str
-            decides whether the fundamental cell is construct centered at the origin ("cell", default) 
-            or with the origin being one of its vertices ("vertex")
-        rotate_by : float
-            angle of rotation of the fundamental polygon, default is the magic angle mangle
-        """
-
-        r = fund_radius(self.p, self.q)
-        polygon = HyperPolygon(self.p)
-
-        for i in range(self.p):
-            z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
-            z = z / abs(z)
-            z = r * z
-            polygon.verticesP[i] = z
-
-        # rotate by angle (to get away from the coordinate axis)
-        mrotate(self.p, -rotate_by, polygon.verticesP)
-
-        return polygon
-
-
-    def generate_first_layer(self):
-        """
-        generate the first layer
-        """
-
-
-        # create fundamental polygon
-        self.fund_poly = self.create_fundamental_polygon()
-
-        # prepare polygon counter
-        self.counter = 0
-
-        # tiling centered around cell
-        # add fundamental cell and set bounds of current layer
-        if self.center == "cell":
-            self.polygons.append(self.fund_poly)
-            self.outmost_layer_lower = 0
-            self.outmost_layer_upper = 1
-
-
-        # tiling centered around vertex
-        if self.center == 'vertex':
-            print("nbrs still buggy for vertex centered")
-
-            # shift fundamental polygon such that one of its vertices is on the origin
-            vertidx = 0           
-            morigin(self.p, self.fund_poly.verticesP[vertidx], self.fund_poly.verticesP)
-            
-            # generate the q polygons of the first layer
-            for rot_ind in range(self.q):
-                polycopy = copy.deepcopy(self.fund_poly)
-                adj_pgon = self.generate_adj_poly(polycopy, vertidx, rot_ind)
-                self.polygons.append(adj_pgon)
-
-            self.outmost_layer_lower = 0
-            self.outmost_layer_upper = self.q
-
-        
-        # prepare containers for duplicate checks
-        # init with origin, set angle artificially to phi/2
-        idx = 0
-        rrad = 0
-        pphi = self.phi / 2
-        self.dplcts = DuplicateContainerCircular(self.p * self.q, rrad, pphi, idx)        
-
-        # add full first layer for vertex centered tilings
-        if self.center == "vertex":
-            for i in range(0,self.q):
-                self.dplcts.add(self.polygons[i].centerP(),i)
-
-        # current layer number
-        self.layers = 1
-
-
-       
-
-
 
     def add_layer(self, filter=None):
         """
@@ -290,6 +207,26 @@ class KernelStaticRotationalGraph:
 
 
 
+    def prepare_duplicate_container(self):
+    
+        # prepare containers for duplicate checks
+        # init with origin, set angle artificially to phi/2
+        idx = 0
+        rrad = 0
+        pphi = self.phi / 2
+        self.dplcts = DuplicateContainerCircular(self.p * self.q, rrad, pphi, idx)        
+
+        # add full first layer for vertex centered tilings
+        if self.center == "vertex":
+            for i in range(0,self.q):
+                self.dplcts.add(self.polygons[i].centerP(),i)
+
+        # current layer number
+        self.layers = 1
+
+
+
+
     def generate(self):
         """
         do full construction
@@ -302,11 +239,15 @@ class KernelStaticRotationalGraph:
         # add layers repeatedly until nlayers is reached
         if self.center == "cell":
             self.generate_first_layer()
+            self.prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.not_origin)
 
         elif self.center == "vertex":
+            print("nbrs still buggy for vertex centered")
+
             self.generate_first_layer()
+            self.prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.filter_always_pass)
 
