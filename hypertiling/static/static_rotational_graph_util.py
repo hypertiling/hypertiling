@@ -113,33 +113,24 @@ class DuplicateContainerCircular:
 
 
         # perform actual duplicate check
-        centerarray_iterator = self.centers.irange(HTCenter(1, angle_lower, dummy), HTCenter(1, angle_upper, dummy))
-        incontainer = False
+        iterator = self.centers.irange(HTCenter(1, angle_lower, dummy), HTCenter(1, angle_upper, dummy))
         iterlen = 0  # since we cannot apply len() on the irange iterator we have to determine the length ourselves
-        idx = -1
-        for c in centerarray_iterator:
+
+        for c in iterator:
             iterlen += 1
             if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
-                incontainer = True
-                idx = c.idx
-                break
+                return True, c.idx
         if iterlen > self.maxlinlength:
             self.dangle /= 2.0
             
-        # if no extra check is required, return current result
-        if not extra_check:
-            return incontainer, idx
-        else:
-            if incontainer:
-                return incontainer, idx
-            else:
-                centerarray_iterator = self.centers.irange(HTCenter(1, angle_lower_extra, dummy), HTCenter(1, angle_upper_extra, dummy))
-                for c in centerarray_iterator:
-                    if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
-                        incontainer = True
-                        idx = c.idx
-                        break
-                return incontainer, idx
+
+        if extra_check:
+            iterator = self.centers.irange(HTCenter(1, angle_lower_extra, dummy), HTCenter(1, angle_upper_extra, dummy))
+            for c in iterator:
+                if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
+                    return True, c.idx
+            
+        return False, -1
 
 
 
