@@ -6,7 +6,6 @@ import copy
 from .static_base import KernelRotationalCommon
 from ..arraytransformation import multi_rotation_around_vertex
 from .static_rotational_improved_util import DuplicateContainerAdv
-from .static_base import MANGLE
 
 
 class KernelStaticRotationalImproved(KernelRotationalCommon):
@@ -53,7 +52,7 @@ class KernelStaticRotationalImproved(KernelRotationalCommon):
             dupl_large = DuplicateContainerAdv(self.p * self.q, rrad, pphi, 0)
 
         # the actual construction
-        return self.populate_sector(dupl_large, dupl_small)
+        return self.populate(dupl_large, dupl_small)
        
 
 

@@ -121,8 +121,8 @@ class HyperPolygon:
 
     # compute angle between center and the positive x-axis
     def find_angle(self):
-        self.angle = math.degrees(math.atan2(self.centerP().imag, self.centerP().real))
-        self.angle += 360 if self.angle < 0 else 0
+        self.angle = math.atan2(self.centerP().imag, self.centerP().real)
+        self.angle += PI2 if self.angle < 0 else 0
 
     def find_sector(self, k, offset=0):
         """ 
@@ -136,7 +136,7 @@ class HyperPolygon:
             rotate sectors by an angle
         """
 
-        self.sector = math.floor((self.angle - offset) / (360 / k))
+        self.sector = math.floor((self.angle - offset) / (PI2 / k))
 
     # mirror on the x-axis
     def mirror(self):
