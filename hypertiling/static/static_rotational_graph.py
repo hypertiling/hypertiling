@@ -16,127 +16,35 @@ MAGICANGLE = np.radians(0.123456789101112131415161718192021222324252627282930313
 
 
 class KernelStaticRotationalGraph(KernelRotationalCommon):
-    def __init__(self, p, q, n, center, autogenerate, radius):
-        super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
     """
     Hyperbolic tiling construction kernel
 
     unlike the other static rotational kernels, here the neighbours are computed upon construction of the tiling
     however, since currently no sector algorithm is used, the construction itself is slower
-
-    Attributes
-    ----------
-
-
-    Methods
-    -------
-    __getitem__(idx)
-        returns the idx-th HyperPolygon in the tiling
-
-    __iter__()
-        traverses throught all HyperPolygons in the tiling
-
-    __next__()
-        returns the next HyperPolygon in the tiling
-
-    __len__()
-        returns the size of the tiling, which is the number of cells
-
     """
+    def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
+        super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
 
-    def __init__(self, p, q, nlayers, center="cell", autogenerate=True, radius=None):
 
-        # main attributes
-        self.p = p  # number of edges (and thus number of vertices) per polygon
-        self.q = q  # number of polygons that meet at each vertex
-        self.nlayers = nlayers  # layers of the tessellation
-        self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
-        self.radius = radius # a cut-off radius (implement me!)
-        self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
-
-        # half fundamental radius
-        self.fr2 = fund_radius(self.p, self.q) / 2
-
-        # symmetry angles
-        self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
-        self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-
-        # prepare list to store polygons 
-        self.polygons = []
         # prepare list to store neighours
         self.nbrs = []
 
-        if center not in ['cell', 'vertex']:
-            raise ValueError('[hypertiling] Error: Invalid value for argument "center"!')
+        # some variables
+        self.layers = 1
+        self.outmost_layer_lower = 0
+        self.outmost_layer_upper = 1
 
         # construct tiling
         if self.autogenerate:
             self.generate()
 
 
-    def __getitem__(self, idx):
-        return self.polygons[idx]
 
-    def __iter__(self):
-        self.iterctr = 0
-        self.itervar = self.polygons[self.iterctr]
-        return self
-
-    def __next__(self):
-        if self.iterctr < len(self.polygons):
-            retval = self.polygons[self.iterctr]
-            self.iterctr += 1
-            return retval
-        else:
-            raise StopIteration
-
-    def __len__(self):
-        return len(self.polygons)
-
-    def get_vertices(self, index: int) -> np.array:
+    def get_nbrs(self, i):
         """
-        Returns the p vertices of the polygon at index.
-        Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: np.array[np.complex128][p] = vertices of the polygon
+        return neighbours of cell i as list
         """
-        return self.polygons[index].verticesP[:-1]
-
-    def get_center(self, index: int) -> np.complex128:
-        """
-        Returns the center of the polygon at index.
-        Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: np.complex128 = center of the polygon
-        """
-        return self.polygons[index].verticesP[-1]
-
-    def get_sector(self, index: int) -> int:
-        """
-        Returns the sector, the polygon at index refers to.
-        Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: int = number of the sector
-        """
-        return self.polygons[index].sector
-
-    def get_angle(self, index: int) -> float:
-        """
-        Returns the angle to the center of the polygon at index.
-        Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: float = angle of the polygon
-        """
-        return self.polygons[index].angle
-
-    def get_layer(self, index: int) -> int:
-        """
-        Returns the layer to the center of the polygon at index.
-        Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: int = layer of the polygon
-        """
-        return self.polygons[index].layer
+        return self.nbrs[i]
 
 
     def add_layer(self, filter=None):
