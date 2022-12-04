@@ -15,7 +15,7 @@ PI2 = 2 * np.pi
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
+MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
 
 
 class KernelStaticBase(AbstractKernelBase):

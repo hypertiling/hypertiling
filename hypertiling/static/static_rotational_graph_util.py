@@ -47,49 +47,29 @@ class HTCenterTuple:
         return self.z != other.z
 
 
-#try:
-from sortedcontainers import SortedList
 
-
-class DuplicateContainerCircular:
+class DuplicateContainerCircularCommon:
     """
-        A Container to store complex numbers and to efficiently decide
-        whether a floating point representative of a given complex number is already present.
+    Common methods used in both versions of the circular DuplicateContainer (the default and the fallback version)
     """
-
-    def __init__(self, linlength, r, phi, idx):
-        # Note to self, think of numpy in the alternative implementation
-        self.maxlinlength = linlength  # the maximum linear length
-        self.dangle = 0.1  # controls the width of the angle interval and is adapted by repeated searches
-
-        self.centers = SortedList([HTCenterTuple(r, phi, idx)])
-
-    def add(self, z, idx):
-        '''
-            Add z to the container.
-
-            Parameters:
-                z (complex): A complex number. should not be 0+0*I...
-        '''
-        self.centers.add(HTCenterTuple(z,idx))
+    def __init__(self):
+        pass        
 
     def __len__(self):
         '''
-            Returns the length of the container and should enable use of the len() builtin on this container.
+        Returns the length of the container and should enable use of the len() builtin on this container.
         '''
         return len(self.centers)
 
-    def is_duplicate(self, z):
-        '''
-            Checks whether a representative of z has already been stored.
 
-            Parameter:
-                z (complex): the number to check.
+    def _angle_windows(self, z):
+        """
+        computes the bounds of a region of angles around the angle of the complex number z
+        in case the region crosses 2*pi, it is split into two
+        """
 
-            Returns:
-                true if a number that is as close as 1E-12 to z has already been stored
-                else false. 1E-12 is deemed sufficient since on the hyperbolic lattice the numbers pile up near |z| ~ 1
-        '''
+        windows = []
+
         nangle = math.atan2(z.imag, z.real)
         nangle += PI2 if nangle<0 else 0
 
@@ -97,94 +77,149 @@ class DuplicateContainerCircular:
         angle_lower = nangle - self.dangle
 
         # in case the angle domain crosses 0, we need to split into two checks
-        extra_check = False
+        second_window = False
         if angle_lower < 0:
             angle_lower = 0
-            extra_check = True
+            second_window = True
             angle_lower_extra = angle_lower + PI2
             angle_upper_extra = PI2
 
-        if angle_upper > PI2:
+        elif angle_upper > PI2:
             angle_upper = PI2
-            extra_check = True
+            second_window = True
             angle_lower_extra = 0
             angle_upper_extra = angle_upper - PI2
 
+        windows.append([angle_lower, angle_upper])
 
-        # perform actual duplicate check
-        iterator = self.centers.irange(HTCenterTuple(1, angle_lower, -1), HTCenterTuple(1, angle_upper, -1))
-        iterlen = 0  # since we cannot apply len() on the irange iterator we have to determine the length ourselves
+        if second_window:
+            windows.append([angle_lower_extra,angle_upper_extra])
 
-        for c in iterator:
-            iterlen += 1
-            if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
-                return True, c.idx
-        if iterlen > self.maxlinlength:
-            self.dangle /= 2.0
-            
-
-        if extra_check:
-            iterator = self.centers.irange(HTCenterTuple(1, angle_lower_extra, -1), HTCenterTuple(1, angle_upper_extra, -1))
-            for c in iterator:
-                if np.abs(z - c.z) < 1E-12:  # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
-                    return True, c.idx
-            
-        return False, -1
+        return windows
 
 
+try:
+    from sortedcontainers import SortedList
+
+    # default
+    class DuplicateContainerCircular(DuplicateContainerCircularCommon):
+        """
+        A Container to store complex numbers and to efficiently decide
+        whether a floating point representative of a given complex number is already present.
+        """
+
+        def __init__(self, linlength, r, phi, idx):
+            # the maximum linear length
+            self.maxlinlength = linlength  
+            # controls the width of the angle interval and is adapted by repeated searches
+            self.dangle = 0.1  
+            # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
+            self.eps = 1e-12
+            # array where the actual data is stored
+            self.centers = SortedList([HTCenterTuple(r, phi, idx)])
 
 
+        def add(self, z, idx):
+            '''
+            Add z to the container.
 
-# except ImportError:
-#     import bisect
+            Parameters:
+                z (complex): A complex number. should not be 0+0*I...
+            '''
+            self.centers.add(HTCenterTuple(z,idx))
 
 
-#     class DuplicateContainerAdv:
-#         '''
-#             A Container to store complex numbers and to efficiently decide
-#             whether a floating point representative of a given complex number is already present.
-#         '''
+        def is_duplicate(self, z):
+            '''
+            Checks whether a representative of z has already been stored.
 
-#         def __init__(self, linlength, r, phi):
-#             # Note to self, think of numpy in the alternative implementation
-#             self.maxlinlength = linlength  # the maximum linear length
-#             self.dangle = 0.1  # controls the width of the angle interval and is adapted by repeated searches
-#             self.centers = [HTCenter(r, phi)]
+            Parameter:
+                z (complex): the number to check.
 
-#         def add(self, z):
-#             '''
-#                 Add z to the container
+            Returns:
+                true if a number that is as close as eps to z has already been stored
+                as well as the index of that number
+                else false
+            '''
+                        
+            # compute regions to be checked
+            windows = self._angle_windows(z)
+
+            # loop over regions
+            for w in windows:
+
+                iterator = self.centers.irange(HTCenterTuple(1, w[0], -1), HTCenterTuple(1, w[1], -1))
+                # since we cannot apply len() on the irange iterator we have to determine the length ourselves
+                iterlen = 0  
+                # loop over region
+                for c in iterator:
+                    iterlen += 1
+                    if np.abs(z - c.z) < self.eps:
+                        return True, c.idx
+                if iterlen > self.maxlinlength:
+                    self.dangle /= 2.0
                 
-#                 Parameters:
-#                     z (complex): A complex number. It should not be 0+0*I...
-#             '''
-#             temp = HTCenter(z)
-#             pos = bisect.bisect_left(self.centers, temp)
-#             self.centers.insert(pos, temp)
+            return False, -1
 
-#         def __len__(self):
-#             '''
-#                 Returns the length of the container and should enable use of the len() builtin on this container.
-#             '''
-#             return len(self.centers)
 
-#         def fp_has(self, z):
-#             '''
-#                 Checks whether a representative of z has already been stored
+except ImportError:
+    import bisect
+
+    # fallback
+    class DuplicateContainerCircular(DuplicateContainerCircularCommon):
+        '''
+            A Container to store complex numbers and to efficiently decide
+            whether a floating point representative of a given complex number is already present.
+            Fallback implementation in case SortedListed is not available
+        '''
+
+        def __init__(self, linlength, r, phi, idx):
+            # the maximum linear length
+            self.maxlinlength = linlength  
+            # controls the width of the angle interval and is adapted by repeated searches
+            self.dangle = 0.1  
+            # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
+            self.eps = 1e-12
+            # array where the actual data is stored
+            self.centers = [HTCenterTuple(r, phi, idx)]
+
+
+        def add(self, z, idx):
+            '''
+                Add z to the container
                 
-#                 Parameter:
-#                     z (complex): the number to check.
+                Parameters:
+                    z (complex): A complex number. It should not be 0+0*I...
+            '''
+            temp = HTCenterTuple(z, idx)
+            pos = bisect.bisect_left(self.centers, temp)
+            self.centers.insert(pos, temp)
+
+
+        def is_duplicate(self, z):
+            '''
+                Checks whether a representative of z has already been stored
+                
+                Parameter:
+                    z (complex): the number to check.
                     
-#                 Returns:
-#                     true if a number that is as close as 1E-12 to z has already been stored
-#                     else false.
-#             '''
-#             nangle = math.atan2(z.imag, z.real)
-#             lpos = bisect.bisect_left(self.centers, HTCenter(1, nangle * (1 - self.dangle)))
-#             upos = bisect.bisect_left(self.centers, HTCenter(1, nangle * (1 + self.dangle)))
-#             if (upos - lpos) > self.maxlinlength:
-#                 self.dangle /= 2.0
-#             return any(abs(c.z - z) < 1E-12 for c in self.centers[lpos:upos])
+                Returns:
+                    true if a number that is as close as eps to z has already been stored
+                    as well as the index of that number
+                    else false
+                    
+            '''
+            # compute regions to be checked
+            windows = self._angle_windows(z)
+            
+            # loop over region
+            for w in windows:
+                lpos = bisect.bisect_left(self.centers, HTCenterTuple(1, w[0], -1))
+                upos = bisect.bisect_left(self.centers, HTCenterTuple(1, w[1], -1))
+                if (upos - lpos) > self.maxlinlength:
+                    self.dangle /= 2.0
 
-#         def is_duplicate(self, z):
-#             return self.fp_has(z)
+                for c in self.centers[lpos:upos]:
+                    if np.abs(z - c.z) < self.eps:
+                        return True, c.idx
+            return False, -1
