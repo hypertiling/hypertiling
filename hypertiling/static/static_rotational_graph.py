@@ -206,10 +206,12 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
 
 
 
-    def prepare_duplicate_container(self):
-    
-        # prepare containers for duplicate checks
-        # init with origin, set angle artificially to phi/2
+    def _prepare_duplicate_container(self):
+        """
+        prepare containers for duplicate checks
+        init with origin, set angle artificially to phi/2
+        """
+
         idx = 0
         rrad = 0
         pphi = self.phi / 2
@@ -237,20 +239,17 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
 
         # add layers repeatedly until nlayers is reached
         if self.center == "cell":
-            self.create_first_layer()
-            self.prepare_duplicate_container()
+            self._create_first_layer()
+            self._prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.not_origin)
 
         elif self.center == "vertex":
-            print("nbrs still buggy for vertex centered")
 
-            self.create_first_layer()
-            self.prepare_duplicate_container()
+            self._create_first_layer()
+            self._prepare_duplicate_container()
             for _ in range(self.nlayers-1):
                 self.add_layer(self.filter_always_pass)
-
-
 
 
 

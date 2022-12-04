@@ -23,7 +23,16 @@ class KernelStaticRotational(KernelRotationalCommon):
             self.generate()
 
 
-    def generate_sector(self):
+
+    def generate(self):
+        """
+        do full construction
+        """
+        self._generate_sector()
+        self._replicate()
+
+
+    def _generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
         in order to avoid problems associated to rounding we construct the
@@ -68,7 +77,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
 
         # the actual construction
-        self.populate_sector(dupl_large, dupl_small)
+        self._populate_sector(dupl_large, dupl_small)
        
 
 

@@ -161,11 +161,11 @@ class KernelStaticBase(AbstractKernelBase):
         return polygon
 
 
-    def create_first_layer(self):
+    def _create_first_layer(self):
         """
         generate the first layer
+        this is one polygon for cell-centered and q polygons for vertex-centered
         """
-
 
         # create fundamental polygon
         self.fund_poly = self.create_fundamental_polygon()
@@ -227,25 +227,17 @@ class KernelRotationalCommon(KernelStaticBase):
         self.lower_slice = MAGICANGLE + self.radtol
 
    
-    def replicate(self):
+    def _replicate(self):
         """
         tessellate the entire disk by replicating the fundamental sector
         """
         if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+            self._angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+            self._angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
-    def generate(self):
-        """
-        do full construction
-        """
-        self.generate_sector()
-        self.replicate()
-
-
-    def generate_adj_poly(self, polygon, ind, k):
+    def _generate_adj_poly(self, polygon, ind, k):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
@@ -253,7 +245,11 @@ class KernelRotationalCommon(KernelStaticBase):
         return polygon
 
 
-    def populate_sector(self, dupl_large, dupl_small):
+    def _populate_sector(self, dupl_large, dupl_small):
+        """
+        compute all polygons within one sector of the tiling
+        """
+
         startpgon = 0
         endpgon = 1
 
@@ -279,7 +275,7 @@ class KernelRotationalCommon(KernelStaticBase):
                         center = adj_centers[rot_ind]
 
                         # check whether candidate polygon is in fundamental sector
-                        if self.in_sector(center):   
+                        if self._in_sector(center):   
 
                             # check whether candidate polygon already exists
                             if not dupl_large.is_duplicate(center):
@@ -291,12 +287,12 @@ class KernelRotationalCommon(KernelStaticBase):
                                 polycopy = copy.deepcopy(pgon)
 
                                 # generate adjacent polygon and add to large list
-                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon = self._generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in lower soft sector boundary, add to second duplicate container
-                                if self.in_slice_lower(center): 
+                                if self._in_slice_lower(center): 
                                     if not dupl_small.is_duplicate(center):
                                         dupl_small.add(center)
 
@@ -314,7 +310,7 @@ class KernelRotationalCommon(KernelStaticBase):
             center = pgon.verticesP[self.p]
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
-            if self.in_slice_upper(center): 
+            if self._in_slice_upper(center): 
                 # rotate center of poly back by sector angle
                 center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
@@ -329,7 +325,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
-    def angular_replicate(self, polygons, k):
+    def _angular_replicate(self, polygons, k):
         """
         tessellates the disk by applying a rotation of 2pi/p to the pizza slice
         """
@@ -358,8 +354,9 @@ class KernelRotationalCommon(KernelStaticBase):
             poly.find_sector(k)
 
 
+# ------------- Filters -------------
 
-    def in_sector(self, z0):
+    def _in_sector(self, z0):
         """
         Check whether point z0 is located in fundamental sector of the tiling
         """
@@ -369,7 +366,7 @@ class KernelRotationalCommon(KernelStaticBase):
         else:
             return False
 
-    def in_slice_lower(self, z0):
+    def _in_slice_lower(self, z0):
         """
         Check whether point z0 is located in lower soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
@@ -377,7 +374,7 @@ class KernelRotationalCommon(KernelStaticBase):
         cangle = math.atan2(z0.imag, z0.real)
         return cangle < self.lower_slice
 
-    def in_slice_upper(self, z0):
+    def _in_slice_upper(self, z0):
         """
         Check whether point z0 is located in upper soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
@@ -385,6 +382,8 @@ class KernelRotationalCommon(KernelStaticBase):
         cangle = math.atan2(z0.imag, z0.real)
         return cangle > self.upper_slice
 
+
+# ------------- Other Stuff -------------
 
     def populate_edge_list(self, digits=12):
         """

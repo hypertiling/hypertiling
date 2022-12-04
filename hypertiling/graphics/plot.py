@@ -219,7 +219,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
 
 
 def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
-                ycrange=(-1, 1), **kwargs):
+                ycrange=(-1, 1), dpi=120, **kwargs):
     """
     Plots a hyperbolic tiling.
 
@@ -268,7 +268,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     """
 
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=dpi)
 
     # draw unit circle
     if unitcircle:
