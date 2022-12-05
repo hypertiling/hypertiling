@@ -3,14 +3,16 @@ import math
 import copy
 
 # relative imports
-from .static_base import KernelRotationalCommon
-from ..arraytransformation import multi_rotation_around_vertex
+from .static_base import KernelRotationalCommon, MAGICANGLE
+from ..arraytransformation import morigin, mrotate
 from .static_rotational_util import DuplicateContainer
+
 
 
 class KernelStaticRotational(KernelRotationalCommon):
     """
-    High precision variant of the SR kernel, which uses a more sophisticated data container for duplicate checks
+    The default lattice construction kernel; New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
+    Duplicates are eliminated using specialized data containers
     """
 
     def __init__(self, p, q, n, center, autogenerate=True, radius=None):
@@ -21,7 +23,16 @@ class KernelStaticRotational(KernelRotationalCommon):
             self.generate()
 
 
-    def generate_sector(self):
+
+    def generate(self):
+        """
+        do full construction
+        """
+        self._generate_sector()
+        self._replicate()
+
+
+    def _generate_sector(self):
         """
         generates one p or q-fold sector of the lattice
         in order to avoid problems associated to rounding we construct the
@@ -33,7 +44,18 @@ class KernelStaticRotational(KernelRotationalCommon):
         self.polygons = []
 
         # add fundamental polygon to list
-        self.fund_poly = self.create_fundamental_polygon(self.center)
+        self.fund_poly = self.create_fundamental_polygon()
+                
+        # tiling centered around vertex
+        if self.center == 'vertex':
+
+            # shift fundamental polygon such that one of its vertices is on the origin
+            # if centered around a vertex, shift one vertex to origin
+            morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
+            vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
+            mrotate(self.p, vertangle-MAGICANGLE, self.fund_poly.verticesP)
+
+
         self.fund_poly_center = self.fund_poly.verticesP[self.p]
         self.polygons.append(self.fund_poly)
 
@@ -55,57 +77,7 @@ class KernelStaticRotational(KernelRotationalCommon):
         dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
 
         # the actual construction
-        self.populate_sector(dupl_large, dupl_small)
+        self._populate_sector(dupl_large, dupl_small)
        
 
 
-
-    def add_layer(self):
-        """
-        grow existing tiling outwards by one layer
-        """
-
-        newpolygons = []
-
-        # new container for duplicate checks
-        center = self.polygons[0].centerP()
-        rrad = np.abs(center)
-        pphi = math.atan2(center.imag, center.real)
-        dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
-        
-        # fill container
-        for pgon in self.polygons:
-            dupl_large.add(pgon.centerP())
-
-        # loop over every polygon
-        for pgon in self.polygons:
-
-            # center of current polygon
-            pgon_center = pgon.verticesP[self.p]
-
-            # iterate over every vertex of pgon
-            for vert_ind in range(self.p):
-
-                # rotate polygon around current vertex
-                # compute center coordinates of all polygons which share this vertex...
-                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.verticesP[vert_ind], pgon_center)            
-                
-                # ... and iterate over them
-                for rot_ind in range(self.q):
-
-                    center = adj_centers[rot_ind]
-
-                    # check whether candidate polygon already exists
-                    if not dupl_large.is_duplicate(center):
-
-                        # add to duplicate container
-                        dupl_large.add(center)
-
-                        # create copy
-                        polycopy = copy.deepcopy(pgon)
-
-                        # generate adjacent polygon and add to large list
-                        adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                        newpolygons.append(adj_pgon)
-
-        self.polygons += newpolygons

@@ -72,7 +72,7 @@ try:
             '''
             return len(self.centers)
 
-        def fp_has(self, z):
+        def is_duplicate(self, z):
             '''
                 Checks whether a representative of z has already been stored.
 
@@ -97,8 +97,6 @@ try:
                 self.dangle /= 2.0
             return incontainer
 
-        def is_duplicate(self, z):
-            return self.fp_has(z)
 
 except ImportError:
     import bisect
@@ -133,7 +131,7 @@ except ImportError:
             '''
             return len(self.centers)
 
-        def fp_has(self, z):
+        def is_duplicate(self, z):
             '''
                 Checks whether a representative of z has already been stored
                 
@@ -150,6 +148,3 @@ except ImportError:
             if (upos - lpos) > self.maxlinlength:
                 self.dangle /= 2.0
             return any(abs(c.z - z) < 1E-12 for c in self.centers[lpos:upos])
-
-        def is_duplicate(self, z):
-            return self.fp_has(z)

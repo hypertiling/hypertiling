@@ -21,7 +21,7 @@ class TestCore(unittest.TestCase):
 
             self.assertEqual(nbrs1.sort(), nbrs2.sort())
 
-        kernel = "SR"
+        kernel = "SRL"
 
         lattices = [(3, 7, 4), (7, 3, 4), (5, 4, 4), (4, 5, 4), (9, 3, 4), (4, 10, 3), (3, 8, 4), (6, 4, 4)]
 
