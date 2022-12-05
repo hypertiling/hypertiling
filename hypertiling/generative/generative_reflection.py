@@ -890,7 +890,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(7, 3, 17)
+    tiling = KernelGenerativeReflection(3, 7, 5)
     t2 = time.time()
 
     #tiling.map_nbrs()
@@ -900,7 +900,7 @@ if __name__ == "__main__":
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
 
-    """# tiling.check_integrity()
+    tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # prob = [2 / (i + 1) for i in range(9)]
 
@@ -915,6 +915,6 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
 
-    plt.show()"""
+    plt.show()

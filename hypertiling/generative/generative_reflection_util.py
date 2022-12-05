@@ -200,10 +200,12 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     # for first poly create only one neighbor
     edge_array[0] = 1
 
-    boundary = PI2 / p + (degtol / 360 * PI2)
+    boundary = PI2 / p + (degtol / 360 * PI2) + 3e-7
     for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
         if reflection_levels[j] == n:
             # all reflection layers are constructed
+            # print(f"Created {c} / {stop}")
+            print("Created " + str(c) + " / " + str(stop))
             return reflection_levels[:c]
 
         if j > 1:
@@ -245,7 +247,7 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                 # save level of polygons
                 reflection_levels[c] = reflection_levels[j] + 1  # 1
 
-                if i == 0 or q == 3:
+                if i == 0:
                     # shares edge with former polygon -> filler of 2nd Order
                     connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
                     if connection.shape[0] == 2 and c > 2:
@@ -253,14 +255,26 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
                         edge_array[c] ^= 1 << (connection[1, 1] - 1)
                         edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
+                elif q == 3:
+                    # close first edge because of sibling
+                    edge_array[c] ^= 1
+                    # close last edge because of sibling
+                    if not (edge_array[c - 1] & 1 << (p - 2)):
+                        # if filler polygon of first order the second to last edge will be closed
+                        # 1 << (p - 2) checks for second to last edge
+                        # in this case, the sibling will be on the third to last edge (1 << (p - 3))
+                        edge_array[c - 1] ^= 1 << (p - 3)
+                    else:
+                        # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
+                        edge_array[c - 1] ^= 1 << (p - 2)
+
                 """
                 Theoretically possible to shift before neighbor comparison.
                 However, even if this would avoid some (maybe useless) calculations it can be important if the
                 graph should be expanded later on.
                 """
                 c += 1
-                if c == stop:
-                    return reflection_levels
+
     return reflection_levels
 
 # Methods ==============================================================================================================

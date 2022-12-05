@@ -6,5 +6,6 @@
 /.idea
 *.pyc
 hypertiling/generative/__pycache__
+hypertiling/graph/__pycache__
 venv
 /build
