@@ -15,13 +15,13 @@ PI2 = 2 * np.pi
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
+MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
 
-# the main object of this library
-# essentially represents a list of polygons which constitute the hyperbolic lattice
+
 class KernelStaticBase(AbstractKernelBase):
     """
-    Base class of a hyperbolic tiling object
+    Base class of the static rotational kernel family
+    provides interfaces and fundamental polygon
 
     Attributes
     ----------
@@ -60,26 +60,6 @@ class KernelStaticBase(AbstractKernelBase):
         # symmetry angles
         self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-        self.degphi = 360 / self.p  # self.phi in degrees
-        self.degqhi = 360 / self.q  # self.qhi in degrees
-
-        # sector boundary tolerance / softness
-        # do not change, unless you know what you are doing!)
-        self.degtol = 1
-        self.radtol = np.radians(self.degtol)
-
-        # angle width of the fundamental sector
-        if self.center == "cell":
-            self.sect_angle     = self.phi
-        if self.center == "vertex":
-            self.sect_angle     = self.qhi
-
-        # required for construction algorithm
-        self.sect_lbound = 0
-        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
-
-        self.upper_slice = self.sect_angle - self.radtol
-        self.lower_slice = MAGICANGLE + self.radtol
 
         # prepare list to store polygons 
         self.polygons = []
@@ -151,7 +131,9 @@ class KernelStaticBase(AbstractKernelBase):
         """
         return self.polygons[index].layer
 
-    def create_fundamental_polygon(self, center='cell', rotate_by=MAGICANGLE):
+
+
+    def create_fundamental_polygon(self, rotate_by=MAGICANGLE):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -173,46 +155,89 @@ class KernelStaticBase(AbstractKernelBase):
             z = r * z
             polygon.verticesP[i] = z
 
-        # if centered around a vertex, shift one vertex to origin
-        if center == 'vertex':
-            morigin(self.p, complex(r, 0), polygon.verticesP)
-            vertangle = math.atan2(polygon.verticesP[1].imag, polygon.verticesP[1].real)
-            mrotate(self.p, vertangle, polygon.verticesP)
-            polygon.angle = math.degrees(math.atan2(polygon.verticesP[self.p].imag, polygon.verticesP[self.p].real))
-            polygon.angle += 360 if polygon.angle < 0 else 0
-
-        mrotate(self.p, -2 * math.pi / 360 * rotate_by, polygon.verticesP)
+        # rotate by angle (to get away from the coordinate axis)
+        mrotate(self.p, -rotate_by, polygon.verticesP)
 
         return polygon
 
 
+    def _create_first_layer(self):
+        """
+        generate the first layer
+        this is one polygon for cell-centered and q polygons for vertex-centered
+        """
+
+        # create fundamental polygon
+        self.fund_poly = self.create_fundamental_polygon()
+
+        # prepare polygon counter
+        self.counter = 0
+
+        # tiling centered around cell
+        # add fundamental cell and set bounds of current layer
+        if self.center == "cell":
+            self.polygons.append(self.fund_poly)
+            self.outmost_layer_lower = 0
+            self.outmost_layer_upper = 1
+
+
+        # tiling centered around vertex
+        if self.center == 'vertex':
+
+            # shift fundamental polygon such that one of its vertices is on the origin
+            vertidx = 0           
+            morigin(self.p, self.fund_poly.verticesP[vertidx], self.fund_poly.verticesP)
+            
+            # generate the q polygons of the first layer
+            for rot_ind in range(self.q):
+                polycopy = copy.deepcopy(self.fund_poly)
+                adj_pgon = self.generate_adj_poly(polycopy, vertidx, rot_ind)
+                self.polygons.append(adj_pgon)
+
+            self.outmost_layer_lower = 0
+            self.outmost_layer_upper = self.q
+
+
+
+
 class KernelRotationalCommon(KernelStaticBase):
     """
-    Commonalities
+    Extend base class of the static rotational kernel family towards sector contruction
     """
 
     def __init__(self, p, q, n, center, autogenerate, radius):
         super(KernelRotationalCommon, self).__init__(p, q, n, center, autogenerate, radius)
 
-    def replicate(self):
+        # sector boundary tolerance / softness
+        # do not change, unless you know what you are doing!)
+        self.degtol = 1
+        self.radtol = np.radians(self.degtol)
+
+        # angle width of the fundamental sector
+        if self.center == "cell":
+            self.sect_angle     = self.phi
+        if self.center == "vertex":
+            self.sect_angle     = self.qhi
+
+        # required for construction algorithm
+        self.sect_lbound = 0
+        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
+
+        self.upper_slice = self.sect_angle - self.radtol
+        self.lower_slice = MAGICANGLE + self.radtol
+
+   
+    def _replicate(self):
         """
         tessellate the entire disk by replicating the fundamental sector
         """
         if self.center == 'cell':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.p)
+            self._angular_replicate(copy.deepcopy(self.polygons), self.p)
         elif self.center == 'vertex':
-            self.angular_replicate(copy.deepcopy(self.polygons), self.q)
+            self._angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
-    def generate(self):
-        """
-        do full construction
-        """
-        self.generate_sector()
-        self.replicate()
-
-
-    def generate_adj_poly(self, polygon, ind, k):
+    def _generate_adj_poly(self, polygon, ind, k):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
@@ -220,7 +245,11 @@ class KernelRotationalCommon(KernelStaticBase):
         return polygon
 
 
-    def populate_sector(self, dupl_large, dupl_small):
+    def _populate_sector(self, dupl_large, dupl_small):
+        """
+        compute all polygons within one sector of the tiling
+        """
+
         startpgon = 0
         endpgon = 1
 
@@ -246,7 +275,7 @@ class KernelRotationalCommon(KernelStaticBase):
                         center = adj_centers[rot_ind]
 
                         # check whether candidate polygon is in fundamental sector
-                        if self.in_sector(center):   
+                        if self._in_sector(center):   
 
                             # check whether candidate polygon already exists
                             if not dupl_large.is_duplicate(center):
@@ -258,12 +287,12 @@ class KernelRotationalCommon(KernelStaticBase):
                                 polycopy = copy.deepcopy(pgon)
 
                                 # generate adjacent polygon and add to large list
-                                adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
+                                adj_pgon = self._generate_adj_poly(polycopy, vert_ind, rot_ind)
                                 adj_pgon.layer = l + 1
                                 self.polygons.append(adj_pgon)
 
                                 # if angle is in lower soft sector boundary, add to second duplicate container
-                                if self.in_slice_lower(center): 
+                                if self._in_slice_lower(center): 
                                     if not dupl_small.is_duplicate(center):
                                         dupl_small.add(center)
 
@@ -281,7 +310,7 @@ class KernelRotationalCommon(KernelStaticBase):
             center = pgon.verticesP[self.p]
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
-            if self.in_slice_upper(center): 
+            if self._in_slice_upper(center): 
                 # rotate center of poly back by sector angle
                 center = moeb_rotate_trafo(-self.sect_angle, pgon.verticesP[self.p])
                 # check whether we already have this rotated center
@@ -296,7 +325,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
 
 
-    def angular_replicate(self, polygons, k):
+    def _angular_replicate(self, polygons, k):
         """
         tessellates the disk by applying a rotation of 2pi/p to the pizza slice
         """
@@ -325,8 +354,9 @@ class KernelRotationalCommon(KernelStaticBase):
             poly.find_sector(k)
 
 
+# ------------- Filters -------------
 
-    def in_sector(self, z0):
+    def _in_sector(self, z0):
         """
         Check whether point z0 is located in fundamental sector of the tiling
         """
@@ -336,7 +366,7 @@ class KernelRotationalCommon(KernelStaticBase):
         else:
             return False
 
-    def in_slice_lower(self, z0):
+    def _in_slice_lower(self, z0):
         """
         Check whether point z0 is located in lower soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
@@ -344,7 +374,7 @@ class KernelRotationalCommon(KernelStaticBase):
         cangle = math.atan2(z0.imag, z0.real)
         return cangle < self.lower_slice
 
-    def in_slice_upper(self, z0):
+    def _in_slice_upper(self, z0):
         """
         Check whether point z0 is located in upper soft boundary of fundamental sector
         This is required in order to check for rotational duplicates during the construction
@@ -352,6 +382,8 @@ class KernelRotationalCommon(KernelStaticBase):
         cangle = math.atan2(z0.imag, z0.real)
         return cangle > self.upper_slice
 
+
+# ------------- Other Stuff -------------
 
     def populate_edge_list(self, digits=12):
         """
@@ -441,6 +473,7 @@ class KernelRotationalCommon(KernelStaticBase):
                     child.verticesP[1] = pgon.verticesP[(vrtx+1)%self.p]
                     child.verticesP[2] = pgon.verticesP[-1]
                     child.verticesP[3] = euclidean_center(child.verticesP[:-1])
+                    child.layer = pgon.layer
                     newpolygons.append(child)
             self.polygons = newpolygons
             iterations -= 1 # we have already done one iteration
@@ -462,6 +495,7 @@ class KernelRotationalCommon(KernelStaticBase):
                 # and three that each share one vertex with their mother
 
                 child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
+                child.layer = pgon.layer
                 for i in range(p):
                     child.verticesP[i] = ref_vertices[i]
                 child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
@@ -470,6 +504,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
                 for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
                     child = HyperPolygon(p)  # these are the non-center children
+                    child.layer = pgon.layer
                     vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
                     for i in range(p):
                         child.verticesP[i] = vP[i]
