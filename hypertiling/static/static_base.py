@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import copy
-from ..kernel_abc import AbstractKernelBase
+from ..kernel_abc import Tiling
 from .hyperpolygon import HyperPolygon
 from ..transformation import moeb_rotate_trafo
 
@@ -18,7 +18,7 @@ PI2 = 2 * np.pi
 MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
 
 
-class KernelStaticBase(AbstractKernelBase):
+class KernelStaticBase(Tiling):
     """
     Base class of the static rotational kernel family
     provides interfaces and fundamental polygon

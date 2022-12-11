@@ -3,6 +3,7 @@ import numpy as np
 import hypertiling.generative.generative_reflection_util as util
 from hypertiling.generative.generative_reflection_util import PI2
 import hypertiling.graph.generative_reflection_graph_util as graph_util
+from hypertiling.kernel_abc import Graph
 
 """
 p: Number of edges/vertices of a polygon
@@ -22,7 +23,7 @@ LIMITATIONS:
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
-class KernelGenerativeReflectionGraph:
+class KernelGenerativeReflectionGraph(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -74,6 +75,8 @@ class KernelGenerativeReflectionGraph:
         """
         return self._expand_sector_index_to_tiling(item, self._get_nbrs)
 
+    # Helper ###########################################################################################################
+
     def _generate(self):
         """
         Generates the graph structure for the specified tiling.
@@ -120,6 +123,8 @@ class KernelGenerativeReflectionGraph:
         # get value from nice little overflow
         overflow = np.iinfo(neighbor_indices.dtype).max
         return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
+
+    # Helper ###########################################################################################################
 
     def get_coord(self, index: int) -> np.complex128:
         """
@@ -186,6 +191,9 @@ class KernelGenerativeReflectionGraph:
 
         return neighbors
 
+    def get_nbrs(self, index):
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
+
 
 if __name__ == "__main__":
     import time
@@ -193,6 +201,7 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import hypertiling.core as core
+    from hypertiling.kernel_abc import Tiling
 
     p, q, n = 3, 7, 6
     n2 = 3
@@ -200,11 +209,14 @@ if __name__ == "__main__":
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    """t1 = time.time()
+    t1 = time.time()
     tiling = KernelGenerativeReflection(q, p, n)
-    print(f"Took: {time.time() - t1}")"""
-    tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)
+    print(f"Took: {time.time() - t1}")
+
+    print(graph)
+    print(tiling)
+    #tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
+    #tiling.rotate(60, deg=True)
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -217,7 +229,7 @@ if __name__ == "__main__":
             print(graph[i])
             print("\n")
 
-    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    """colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # tiling.map_layers()
     for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
@@ -225,6 +237,6 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
     plt.show()

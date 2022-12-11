@@ -2,11 +2,42 @@ import abc
 import numpy as np
 
 
-class AbstractKernelBase(abc.ABC):
+class Graph(abc.ABC):
+
+    def __init__(self, p: int, q: int, n: int, mangle: int):
+        self.p = p
+        self.q = q
+        self.n = n
+
+        # symmetry angles
+        self.phi = 2 * np.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
+        self.qhi = 2 * np.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
+
+        fac = np.pi / (p * q)
+        self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
+
+        self.mangle = mangle / 180 * np.pi
+
+    def __repr__(self):
+        return f"Graph {self.p, self.q, self.n}"
 
     @abc.abstractmethod
-    def __init__(self, p: int, q: int, n: int):
+    def get_nbrs(self, i):
         pass
+
+    @abc.abstractmethod
+    def get_nbrs_list(self):
+        pass
+
+    """@abc.abstractmethod
+    def check_integrity(self):
+        pass"""
+
+
+class Tiling(Graph):
+
+    def __repr__(self):
+        return f"Tiling {self.p, self.q, self.n}"
 
     @abc.abstractmethod
     def get_layer(self, index: int) -> int:
@@ -52,3 +83,13 @@ class AbstractKernelBase(abc.ABC):
         :return: float = center of the polygon
         """
         pass
+
+    """@abc.abstractmethod
+    def get_nbrs(self, i):
+        # TODO: implement default function
+        pass"""
+
+    """@abc.abstractmethod
+    def get_nbrs_list(self):
+        # TODO: implement default function
+        pass"""

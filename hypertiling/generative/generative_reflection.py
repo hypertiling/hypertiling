@@ -2,10 +2,11 @@ from typing import Callable, Any, List
 import numpy as np
 import hypertiling.generative.generative_reflection_util as util
 from hypertiling.generative.generative_reflection_util import PI2
-from hypertiling.kernel_abc import AbstractKernelBase
+from hypertiling.kernel_abc import Tiling
 import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
+
 
 """
 p: Number of edges/vertices of a polygon
@@ -25,7 +26,7 @@ LIMITATIONS:
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
-class KernelGenerativeReflection(AbstractKernelBase):
+class KernelGenerativeReflection(Tiling):
     """
     Creates the hyperbolic tiling.
     """
@@ -401,7 +402,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
-            neighbor_counter = len(self.get_nbrs(i))
+            neighbor_counter = len(self.get_nbrs_generative(i))
             if neighbor_counter == self.p:
                 continue
             print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
@@ -469,7 +470,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
             poly_c *= np.exp(phi * 1j)
             arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
             return poly_c
-
 
     # Basics ###########################################################################################################
     # API ##############################################################################################################
@@ -592,7 +592,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
             return pos - 1
         return pos
 
-    def _get_nbrs(self, sector_index: int) -> np.array:
+    def _get_nbrs_generative(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
@@ -643,7 +643,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         return neighbors
 
-    def geometrical(self, sector_index: int) -> np.array:
+    def _get_nbrs_geometrical(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
@@ -809,14 +809,21 @@ class KernelGenerativeReflection(AbstractKernelBase):
         index += 1
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
-    def get_nbrs(self, index: int) -> np.array:
+    def get_nbrs(self, i, method="mapping"):
+        methods = {"mapping": self.get_nbrs_mapping,
+                   "generative": self.get_nbrs_generative,
+                   "radius": self.get_nbrs_radius,
+                   "geometrical": self.get_nbrs_geometrical}
+        return methods[method](i)
+
+    def get_nbrs_generative(self, index: int) -> np.array:
         """
         Get the neighbors of a polygon at index
         Time-complexity: O(m + p^2)
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_generative)
 
     def get_nbrs_geometrical(self, index: int) -> np.array:
         """
@@ -825,7 +832,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self.geometrical)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
         """
@@ -893,9 +900,9 @@ if __name__ == "__main__":
     tiling = KernelGenerativeReflection(3, 7, 5)
     t2 = time.time()
 
-    #tiling.map_nbrs()
-    #tiling.get_nbrs(1)
-    #tiling.get_nbrs_geometrical(2)
+    # tiling.map_nbrs()
+    # tiling.get_nbrs_generative(1)
+    # tiling.get_nbrs_geometrical(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
