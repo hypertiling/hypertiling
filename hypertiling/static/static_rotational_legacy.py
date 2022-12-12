@@ -3,7 +3,7 @@ import copy
 import math
 
 # relative imports
-from .static_base import KernelRotationalCommon, MAGICANGLE
+from .static_base import KernelRotationalCommon
 from .static_rotational_legacy_util import DuplicateContainerSimple
 from ..arraytransformation import  mrotate, morigin
 from ..distance import disk_distance
@@ -55,7 +55,7 @@ class KernelStaticRotationalLegacy(KernelRotationalCommon):
             # if centered around a vertex, shift one vertex to origin
             morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
             vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
-            mrotate(self.p, vertangle-MAGICANGLE, self.fund_poly.verticesP)
+            mrotate(self.p, vertangle-self.mangle, self.fund_poly.verticesP)
 
 
         self.fund_poly_center = self.fund_poly.verticesP[self.p]

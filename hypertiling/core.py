@@ -7,10 +7,10 @@ from .generative.generative_reflection import KernelGenerativeReflection
 from .ion import htprint
 from .graph.generative_reflection_graph import KernelGenerativeReflectionGraph
 
-TILINGS = {  # "SR":KernelStaticRotational,
+TILINGS = {"SR":KernelStaticRotational,
     # "SRG": KernelStaticRotationalGraph,
-    # "SRL": KernelStaticRotationalLegacy,
-    # "DUN": KernelLegacyDunham,
+     "SRL": KernelStaticRotationalLegacy,
+     "DUN": KernelLegacyDunham,
     "GR": KernelGenerativeReflection}
 
 GRAPHS = {
@@ -18,7 +18,7 @@ GRAPHS = {
 }
 
 
-def HyperbolicTiling(p, q, n, center="cell", kernel="SR", verbose=False, **kwargs):
+def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):
     """
     The base function which invokes a hyperbolic tiling
 

@@ -3,7 +3,7 @@ import math
 import copy
 
 # relative imports
-from .static_base import KernelRotationalCommon, MAGICANGLE
+from .static_base import KernelRotationalCommon
 from ..arraytransformation import morigin, mrotate
 from .static_rotational_util import DuplicateContainer
 

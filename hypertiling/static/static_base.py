@@ -10,13 +10,9 @@ from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from hypertiling.distance import lorentzian_distance
+from ..neighbors import find_brute_force, find_radius_optimized
 
 PI2 = 2 * np.pi
-
-# Magic number: transcendental number (Champernowne constant)
-# used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
-
 
 class KernelStaticBase(Tiling):
     """
@@ -133,7 +129,7 @@ class KernelStaticBase(Tiling):
 
 
 
-    def create_fundamental_polygon(self, rotate_by=MAGICANGLE):
+    def create_fundamental_polygon(self, rotate_by=None):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -145,6 +141,8 @@ class KernelStaticBase(Tiling):
         rotate_by : float
             angle of rotation of the fundamental polygon, default is the magic angle mangle
         """
+        if rotate_by is None:
+            rotate_by = self.mangle
 
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
@@ -221,10 +219,10 @@ class KernelRotationalCommon(KernelStaticBase):
 
         # required for construction algorithm
         self.sect_lbound = 0
-        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
+        self.sect_ubound = self.mangle + self.sect_angle + self.radtol
 
         self.upper_slice = self.sect_angle - self.radtol
-        self.lower_slice = MAGICANGLE + self.radtol
+        self.lower_slice = self.mangle + self.radtol
 
    
     def _replicate(self):
@@ -520,14 +518,21 @@ class KernelRotationalCommon(KernelStaticBase):
 # ------------- Neighbours -------------
 
     # Default
-    def get_nbrs(self):
+    def get_nbrs_list(self, method="ROS", **kwargs):
+
+        methods = { "BS": self.get_nbrs_radius_brute_force,
+                    "ROS": self.get_nbrs_radius_optimized_slice}
+
         """
         Default neighbour method for the Static Rotational Kernels
         Calls the Radius Optimized Slice (ROS) method without specification of a radius,
         hence, the standard p,q lattice spacing will be used
         """
-        htprint("Status", "This is the default neighbour method of the SR/SRI kernel. It is equivalent to calling 'get_nbrs_radius_optimized_slice' without default arguments.")
-        return self.get_nbrs_radius_optimized_slice(radius=None)
+        #htprint("Status", "This is the default neighbour method of the SR kernel. It is equivalent to calling 'get_nbrs_radius_optimized_slice' without default arguments.")
+        return methods[method](**kwargs)
+
+    def get_nbrs_radius_brute_force(self, **kwargs):
+        return find_brute_force(self, **kwargs)
 
 
     # Radius Optimized Slice (ROS)
@@ -555,7 +560,7 @@ class KernelRotationalCommon(KernelStaticBase):
             raise NotImplementedError("[hypertiling] Error: Currently this method does not support vertex-centered tilings!")
 
 
-        if radius == None:
+        if radius is None:
             htprint("Status", "No search radius provided; Assuming lattice spacing of the (p,q) tessellation!")
             radius = lattice_spacing_weierstrass(self.p, self.q)
             htprint("Status", "Found (p,q) = (%i,%i) and auto-calculated a neighbour distance of %5.4f. Can be changed using the 'radius' argument." % (self.p, self.q, radius))

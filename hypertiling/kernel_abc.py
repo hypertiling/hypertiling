@@ -1,10 +1,17 @@
 import abc
 import numpy as np
 
+from .neighbors import find_radius_optimized
+from .util import lattice_spacing_weierstrass, fund_radius
+
+# Magic number: transcendental number (Champernowne constant)
+# used as an angular offset, rotates the entire construction by a bit during construction
+MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
+
 
 class Graph(abc.ABC):
 
-    def __init__(self, p: int, q: int, n: int, mangle: int):
+    def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
         self.p = p
         self.q = q
         self.n = n
@@ -13,10 +20,17 @@ class Graph(abc.ABC):
         self.phi = 2 * np.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * np.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
 
-        fac = np.pi / (p * q)
-        self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
+        #fac = np.pi / (p * q)
+        #self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
+
+        self.r = fund_radius(self.p, self.q)
+
+        self.h     = lattice_spacing_weierstrass(self.p, self.q)
+        self.dualh = lattice_spacing_weierstrass(self.q, self.p)
 
         self.mangle = mangle / 180 * np.pi
+
+        self._nbrs = None
 
     def __repr__(self):
         return f"Graph {self.p, self.q, self.n}"
@@ -84,12 +98,12 @@ class Tiling(Graph):
         """
         pass
 
-    """@abc.abstractmethod
     def get_nbrs(self, i):
-        # TODO: implement default function
-        pass"""
+        if self._nbrs is None:
+            print("start mapping neighbors")
+            self._nbrs = find_radius_optimized(self)
+        return self._nbrs[i]
 
-    """@abc.abstractmethod
     def get_nbrs_list(self):
-        # TODO: implement default function
-        pass"""
+        self._nbrs = find_radius_optimized(self)
+        return self._nbrs
