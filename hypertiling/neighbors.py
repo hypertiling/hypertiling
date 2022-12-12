@@ -30,7 +30,7 @@ def find_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """
     if radius is None:
         print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
-        radius = tiling.r
+        radius = tiling.h
 
     retlist = []  # prepare list
 
@@ -43,7 +43,7 @@ def find_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
             if dist < radius + eps:
                 if i is not j:
                     sublist.append(j)
-                    print("ture")
+        print(sublist)
         retlist.append(sublist)
     return retlist
 
@@ -73,7 +73,7 @@ def find_radius_optimized(tiling, radius=None, eps=1e-5):
 
     if radius is None:
         print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
-        radius = tiling.r
+        radius = tiling.h
 
     # prepare array containing all center coordinates
     # in Weierstrass representation
