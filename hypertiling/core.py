@@ -7,15 +7,14 @@ from .generative.generative_reflection import KernelGenerativeReflection
 from .ion import htprint
 from .graph.generative_reflection_graph import KernelGenerativeReflectionGraph
 
-TILINGS = {"SR":KernelStaticRotational,
-    # "SRG": KernelStaticRotationalGraph,
-     "SRL": KernelStaticRotationalLegacy,
-     "DUN": KernelLegacyDunham,
-    "GR": KernelGenerativeReflection}
+TILINGS = { "SR":  KernelStaticRotational,
+            "SRG": KernelStaticRotationalGraph,
+            "SRL": KernelStaticRotationalLegacy,
+            "DUN": KernelLegacyDunham,
+            "GR":  KernelGenerativeReflection}
 
 GRAPHS = {
-    "GRG": KernelGenerativeReflectionGraph
-}
+            "GRG": KernelGenerativeReflectionGraph}
 
 
 def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):

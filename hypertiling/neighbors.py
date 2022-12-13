@@ -6,7 +6,7 @@ from .representations import p2w
 
 
 
-def find_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
+def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """
     Get adjacent polygons for the entire tiling through radius search
     This algorithm works in a brute-force manner, the distances between 

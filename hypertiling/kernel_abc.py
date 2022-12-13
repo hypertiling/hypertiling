@@ -12,6 +12,8 @@ MAGICANGLE = np.radians(5.123456789101112131415161718192021222324252627282930313
 class Graph(abc.ABC):
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
+
+        # fundamental lattice parameters
         self.p = p
         self.q = q
         self.n = n
@@ -20,16 +22,19 @@ class Graph(abc.ABC):
         self.phi = 2 * np.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
         self.qhi = 2 * np.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
 
-        #fac = np.pi / (p * q)
-        #self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
-
+        # radius of the fundamental polygon in the Poincare disk
         self.r = fund_radius(self.p, self.q)
 
-        self.h     = lattice_spacing_weierstrass(self.p, self.q)
-        self.dualh = lattice_spacing_weierstrass(self.q, self.p)
+        # hyperbolic/geodesic lattice spacing, i.e. the edge length of any cell
+        self.h = lattice_spacing_weierstrass(self.p, self.q)
 
+        # geodesic radius (i.e. distance between center and any vertex) of cells in a regular p,q tiling
+        self.hr = lattice_spacing_weierstrass(self.q, self.p)
+
+        # magic angle required for technical reasons
         self.mangle = mangle / 180 * np.pi
 
+        # a place to store adjaceny relations
         self._nbrs = None
 
     def __repr__(self):
@@ -98,11 +103,13 @@ class Tiling(Graph):
         """
         pass
 
+
     def get_nbrs(self, i):
         if self._nbrs is None:
             print("start mapping neighbors")
             self._nbrs = find_radius_optimized(self)
         return self._nbrs[i]
+        
 
     def get_nbrs_list(self):
         self._nbrs = find_radius_optimized(self)

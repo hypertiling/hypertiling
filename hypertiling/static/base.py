@@ -10,7 +10,7 @@ from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from hypertiling.distance import lorentzian_distance
-from ..neighbors import find_brute_force, find_radius_optimized
+from ..neighbors import find_radius_brute_force, find_radius_optimized
 
 PI2 = 2 * np.pi
 
@@ -520,19 +520,20 @@ class KernelRotationalCommon(KernelStaticBase):
     # Default
     def get_nbrs_list(self, method="ROS", **kwargs):
 
-        methods = { "BS": self.get_nbrs_radius_brute_force,
-                    "ROS": self.get_nbrs_radius_optimized_slice}
+        methods = { "RBF":  self.get_nbrs_radius_brute_force,
+                    "RO":   self.get_nbrs_radius_optimized,
+                    "ROS":  self.get_nbrs_radius_optimized_slice,
+                    "EMO":  self.get_nbrs_edge_map_optimized,
+                    "EMBF": self.get_nbrs_edge_map_brute_force}
 
-        """
-        Default neighbour method for the Static Rotational Kernels
-        Calls the Radius Optimized Slice (ROS) method without specification of a radius,
-        hence, the standard p,q lattice spacing will be used
-        """
-        #htprint("Status", "This is the default neighbour method of the SR kernel. It is equivalent to calling 'get_nbrs_radius_optimized_slice' without default arguments.")
         return methods[method](**kwargs)
 
     def get_nbrs_radius_brute_force(self, **kwargs):
-        return find_brute_force(self, **kwargs)
+        return find_radius_brute_force(self, **kwargs)
+
+    def get_nbrs_radius_optimized(self, **kwargs):
+        return find_radius_optimized(self, **kwargs)
+
 
 
     # Radius Optimized Slice (ROS)

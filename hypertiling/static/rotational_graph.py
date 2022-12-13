@@ -1,18 +1,12 @@
 import numpy as np
 import math
 import copy
-from .static_base import KernelStaticBase, KernelRotationalCommon
+from .base import KernelRotationalCommon
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
-from ..util import fund_radius
-from ..ion import htprint
 from ..arraytransformation import multi_rotation_around_vertex
-from .static_rotational_graph_util import DuplicateContainerCircular
+from .rotational_graph_util import DuplicateContainerCircular
 
 PI2 = 2 * np.pi
-
-# Magic number: transcendental number (Champernowne constant)
-# used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(0.1234567891011121314151617181920212223242526272829303132333)
 
 
 class KernelStaticRotationalGraph(KernelRotationalCommon):
@@ -25,9 +19,8 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
     def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
         super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
 
-
-        # prepare list to store neighours
-        self.nbrs = []
+        # define type of neighbour container
+        self._nbrs = []
 
         # some variables
         self.layers = 1
@@ -37,14 +30,6 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
         # construct tiling
         if self.autogenerate:
             self.generate()
-
-
-
-    def get_nbrs(self, i):
-        """
-        return neighbours of cell i as list
-        """
-        return self.nbrs[i]
 
 
     def add_layer(self, filter=None):
@@ -103,7 +88,7 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
 
             collect_nbrs = np.array(collect_nbrs)
             collect_nbrs = collect_nbrs[collect_nbrs != self.counter]
-            self.nbrs.append(list(np.unique(collect_nbrs)))
+            self._nbrs.append(list(np.unique(collect_nbrs)))
             self.counter += 1
 
 
@@ -190,40 +175,18 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
         return (abs(z0) > self.fr2)
 
 
+# ------------- Neighbours -------------
 
-# ------------- Transformations -------------
 
-
-    def rotate(self, angle: float, deg=False):
+    def get_nbrs_list(self):
         """
-        Rotates the whole tiling about the origin.
-        
-        Parameters
-        ----------
-        angle: float
-            Angle in radians by which the tiling is rotated.
-        
-        deg: bool, default: False
-            If True, then angle is considered in units of degrees.
+        return neighbour list of entire lattice
         """
+        return self._nbrs
 
-        if deg:
-            angle = angle * math.pi / 180
 
-        for poly in self.polygons:
-            mrotate(self.p, angle, poly.verticesP)
-
-    def translate(self, z):
-        """ 
-        Translates the whole tiling so that the point z lays in the origin.
-        
-        Parameters
-        ----------
-        z: complex
-            The point which will be translated to the origin.
+    def get_nbrs(self, i):
         """
-
-        for poly in self.polygons:
-            morigin(self.p, z, poly.verticesP)
-
-
+        return neighbours of cell i as list
+        """
+        return self._nbrs[i]
