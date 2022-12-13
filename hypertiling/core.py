@@ -1,11 +1,11 @@
-# relative imports
-from .static.static_rotational_graph import KernelStaticRotationalGraph
-from .static.static_rotational import KernelStaticRotational
-from .static.static_rotational_legacy import KernelStaticRotationalLegacy
-from .static.legacy_dunham import KernelLegacyDunham
-from .generative.generative_reflection import KernelGenerativeReflection
 from .ion import htprint
-from .graph.generative_reflection_graph import KernelGenerativeReflectionGraph
+from .kernels.SRG import KernelStaticRotationalGraph
+from .kernels.SR  import KernelStaticRotational
+from .kernels.SRL import KernelStaticRotationalLegacy
+from .kernels.DUN import KernelLegacyDunham
+from .kernels.GR  import KernelGenerativeReflection
+from .kernels.GRG import KernelGenerativeReflectionGraph
+
 
 TILINGS = { "SR":  KernelStaticRotational,
             "SRG": KernelStaticRotationalGraph,
