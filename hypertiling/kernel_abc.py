@@ -41,20 +41,6 @@ class Graph(abc.ABC):
         return f"Graph {self.p, self.q, self.n}"
 
 
-    def get_nbrs_list(self, **kwargs):
-        if self._nbrs is None:
-            htprint("Status", "Mapping neighbours for entire lattice using 'optimized radius search' algorithm.")
-            self._nbrs = find_radius_optimized(self, **kwargs)
-        return self._nbrs
-
-
-    def get_nbrs(self, i, **kwargs):
-        if self._nbrs is None:
-            htprint("Status", "Performing radius search for one vertex. If neighbours of many points are required, we recommend to use 'get_nbrs_list'.")
-            return find_radius_optimized_single(self, i, **kwargs)
-        else:
-            return self._nbrs[i]
-
 
 
 class Tiling(Graph):
@@ -107,3 +93,17 @@ class Tiling(Graph):
         """
         pass
 
+
+    def get_nbrs_list(self, **kwargs):
+        if self._nbrs is None:
+            htprint("Status", "Mapping neighbours for entire lattice using 'optimized radius search' algorithm.")
+            self._nbrs = find_radius_optimized(self, **kwargs)
+        return self._nbrs
+
+
+    def get_nbrs(self, i, **kwargs):
+        if self._nbrs is None:
+            htprint("Status", "Performing radius search for one vertex. If neighbours of many points are required, we recommend to use 'get_nbrs_list'.")
+            return find_radius_optimized_single(self, i, **kwargs)
+        else:
+            return self._nbrs[i]
