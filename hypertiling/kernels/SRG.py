@@ -16,8 +16,8 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
     unlike the other static rotational kernels, here the neighbours are computed upon construction of the tiling
     however, since currently no sector algorithm is used, the construction itself is slower
     """
-    def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
-        super(KernelStaticRotationalGraph, self).__init__(p, q, n, center, autogenerate, radius)
+    def __init__ (self, p, q, n, **kwargs):
+        super(KernelStaticRotationalGraph, self).__init__(p, q, n, **kwargs)
 
         # define type of neighbour container
         self._nbrs = []
@@ -28,8 +28,7 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
         self.outmost_layer_upper = 1
 
         # construct tiling
-        if self.autogenerate:
-            self.generate()
+        self.generate()
 
 
     def add_layer(self, filter=None):
@@ -134,14 +133,14 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
         if self.center == "cell":
             self._create_first_layer()
             self._prepare_duplicate_container()
-            for _ in range(self.nlayers-1):
+            for _ in range(self.n-1):
                 self.add_layer(self.not_origin)
 
         elif self.center == "vertex":
 
             self._create_first_layer()
             self._prepare_duplicate_container()
-            for _ in range(self.nlayers-1):
+            for _ in range(self.n-1):
                 self.add_layer(self.filter_always_pass)
 
 
