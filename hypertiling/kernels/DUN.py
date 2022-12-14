@@ -1,32 +1,13 @@
 import numpy as np
 import copy
+from ..ion import htprint
+from .SR_base import KernelStaticBase
+from .DUN_util import transformW_poly, transformW_site
 
-# relative imports
-from .SR_base import KernelStaticBase, HyperPolygon
-from ..representations import p2w_xyt, w2p_xyt
 
 # NOTE: This kernel implements the "original" construction algorithm of D. Dunham (1982)
 # The algorithm uses Weierstraß (hyperboloid) coordinates; since those are not natively supported
-# by our HyperPolygon class we need the following two transformation functions:
-
-def transformW_poly(polygon: HyperPolygon, transformation):
-    """
-    Apply Weierstraß transformation matrix to entire HyperPolygon, i.e. vertices and center coordiantes
-    """
-    new_verts = np.zeros_like(polygon.verticesP)
-    for i, pointP in enumerate(polygon.verticesP):
-        new_verts[i] = transformW_site(pointP, transformation)
-    polygon.verticesP = new_verts
-
-
-def transformW_site(pointP: np.complex128, transformation):
-    """
-    Apply Weierstraß transformation to Poincare site
-    1. Transform site from Poincare to Weierstraß
-    2. Apply Weierstraß transformation
-    3. Transform back
-    """
-    return w2p_xyt(transformation @ p2w_xyt(pointP))
+# by our HyperPolygon class we need transformation functions provided in DUN_util.py
 
 
 class KernelLegacyDunham(KernelStaticBase):
@@ -36,8 +17,9 @@ class KernelLegacyDunham(KernelStaticBase):
     however produces a lot of duplicates
     """
 
-    def __init__ (self, p, q, n, center="cell", autogenerate=True):
-        super(KernelLegacyDunham, self).__init__(p, q, n, center, autogenerate)
+    def __init__ (self, p, q, n, **kwargs):
+        super(KernelLegacyDunham, self).__init__(p, q, n, **kwargs)
+
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
@@ -60,38 +42,26 @@ class KernelLegacyDunham(KernelStaticBase):
         self.RotCenterR = np.eye(3)   # R for usage in replicate(...)
 
         # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon(center, rotate_by=360/p/2)
+        self.fund_poly = self.create_fundamental_polygon()
 
         # construct tiling
-        if self.autogenerate:
-            self.generate()
+        self.generate()
 
 
-        
-        
-
-    # def create_fundamental_polygon(self):  # constructs the verticesP of the fundamental hyperbolic {p,q} polygon
-    #     r = fund_radius(self.p, self.q)
-    #     polygon = HyperPolygon(self.p)
-    #     angle = np.pi / self.p
-    #     for i in range(self.p):  # for every corner of the polygon
-    #         z = complex(r * np.cos(angle + 2 * np.pi * i / self.p), r * np.sin(angle + 2 * np.pi * i / self.p))
-    #         polygon.verticesP[i] = z
-    #         polygon.verticesW[:, i] = p2w(z)
-        #return polygon
 
     def generate(self):
-        if self.nlayers == 1:
+        if self.n == 1:
             return
 
         for _ in range(self.p):
             RotVertex = self.RotCenterG @ self.RotQ
-            self.replicate(self.polygons, RotVertex, self.nlayers - 2, "Edge")
+            self.replicate(self.polygons, RotVertex, self.n - 2, "Edge")
             for _ in range(self.q - 3):
                 RotVertex = RotVertex @ self.RotQ
-                self.replicate(self.polygons, RotVertex, self.nlayers - 2, "Vertex")
+                self.replicate(self.polygons, RotVertex, self.n - 2, "Vertex")
 
             self.RotCenterG = self.RotCenterG @ self.RotP
+
 
     def replicate(self, Polygons, InitialTran, LayersToDo, AdjacencyType):
         poly = copy.deepcopy(self.fund_poly)
@@ -124,5 +94,5 @@ class KernelLegacyDunham(KernelStaticBase):
                 self.RotCenterR = self.RotCenterR @ self.RotP
 
     def add_layer(self):
-        print('[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
+        htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
         return

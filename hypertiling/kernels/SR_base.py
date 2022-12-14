@@ -37,29 +37,23 @@ class KernelStaticBase(Tiling):
 
     """
 
-    def __init__(self, p, q, nlayers, center="cell", autogenerate=True, radius=None):
-        super().__init__(p, q, nlayers)
+    def __init__(self, p, q, n, **kwargs):
+        super().__init__(p, q, n)
 
-        # main attributes
-        self.p = p  # number of edges (and thus number of vertices) per polygon
-        self.q = q  # number of polygons that meet at each vertex
-        self.nlayers = nlayers  # layers of the tessellation
-        self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
-        self.radius = radius # a cut-off radius (implement me!)
-        self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
+        if "center" in kwargs:
+            self.center = kwargs["center"]  # tiling can be centered around a "cell" (default) or a "vertex"
+        else:
+            self.center = "cell"
 
         # half fundamental radius
         self.fr2 = fund_radius(self.p, self.q) / 2
 
-        # symmetry angles
-        self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
-        self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-
         # prepare list to store polygons 
         self.polygons = []
 
-        if center not in ['cell', 'vertex']:
+        if self.center not in ['cell', 'vertex']:
             raise ValueError('[hypertiling] Error: Invalid value for argument "center"!')
+
 
     def __getitem__(self, idx):
         return self.polygons[idx]
@@ -141,6 +135,7 @@ class KernelStaticBase(Tiling):
         """
         if rotate_by is None:
             rotate_by = self.mangle
+        print(rotate_by)
 
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
@@ -201,8 +196,8 @@ class KernelRotationalCommon(KernelStaticBase):
     Extend base class of the static rotational kernel family towards sector contruction
     """
 
-    def __init__(self, p, q, n, center, autogenerate, radius):
-        super(KernelRotationalCommon, self).__init__(p, q, n, center, autogenerate, radius)
+    def __init__(self, p, q, n, **kwargs):
+        super(KernelRotationalCommon, self).__init__(p, q, n, **kwargs)
 
         # sector boundary tolerance / softness
         # do not change, unless you know what you are doing!)
@@ -250,7 +245,7 @@ class KernelRotationalCommon(KernelStaticBase):
         endpgon = 1
 
         # loop over layers to be constructed
-        for l in range(1, self.nlayers):
+        for l in range(1, self.n):
 
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:

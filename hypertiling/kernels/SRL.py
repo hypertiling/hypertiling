@@ -16,14 +16,13 @@ class KernelStaticRotationalLegacy(KernelRotationalCommon):
     by discrete rotations of existing polygons about their vertices
     """
 
-    def __init__ (self, p, q, n, center, autogenerate=True, radius=None):
-        super(KernelStaticRotationalLegacy, self).__init__(p, q, n, center, autogenerate, radius)
+    def __init__ (self, p, q, n, **kwargs):
+        super(KernelStaticRotationalLegacy, self).__init__(p, q, n, **kwargs)
         self.dgts = 10
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 
         # construct tiling
-        if self.autogenerate:
-            self.generate()
+        self.generate()
 
 
     def generate(self):

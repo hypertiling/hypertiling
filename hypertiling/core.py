@@ -16,7 +16,7 @@ TILINGS = { "SR":  KernelStaticRotational,
 GRAPHS = {  "GRG": KernelGenerativeReflectionGraph}
 
 
-def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):
+def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     """
     The factory pattern function which invokes a hyperbolic tiling
 
@@ -53,14 +53,14 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):
 
     elif kernel in ["SR", "SRG", "SRL"]:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-        return TILINGS[kernel](p, q, n, center, **kwargs)
+        return TILINGS[kernel](p, q, n, **kwargs)
 
     elif kernel == "DUN":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
-        if center == "vertex":
-            htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
-        return TILINGS[kernel](p, q, n, center, **kwargs)
+        # if center == "vertex":
+        #     htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
+        return TILINGS[kernel](p, q, n, **kwargs)
 
         # elif ... (further kernels)
 

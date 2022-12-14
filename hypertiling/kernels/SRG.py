@@ -190,3 +190,6 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
         return neighbours of cell i as list
         """
         return self._nbrs[i]
+
+
+        

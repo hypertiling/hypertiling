@@ -32,7 +32,7 @@ class Graph(abc.ABC):
         self.hr = lattice_spacing_weierstrass(self.q, self.p)
 
         # magic angle required for technical reasons
-        self.mangle = mangle / 180 * np.pi
+        self.mangle = mangle
 
         # a place to store adjaceny relations
         self._nbrs = None
