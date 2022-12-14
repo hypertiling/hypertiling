@@ -516,7 +516,6 @@ class KernelRotationalCommon(KernelStaticBase):
 
 # ------------- Neighbours -------------
 
-    # Default
     def get_nbrs_list(self, method="ROS", **kwargs):
 
         methods = { "RBF":  self.get_nbrs_radius_brute_force,
@@ -527,12 +526,12 @@ class KernelRotationalCommon(KernelStaticBase):
 
         return methods[method](**kwargs)
 
+
     def get_nbrs_radius_brute_force(self, **kwargs):
         return find_radius_brute_force(self, **kwargs)
 
     def get_nbrs_radius_optimized(self, **kwargs):
         return find_radius_optimized(self, **kwargs)
-
 
 
     # Radius Optimized Slice (ROS)

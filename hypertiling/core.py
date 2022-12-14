@@ -11,15 +11,14 @@ TILINGS = { "SR":  KernelStaticRotational,
             "SRG": KernelStaticRotationalGraph,
             "SRL": KernelStaticRotationalLegacy,
             "DUN": KernelLegacyDunham,
-            "GR":  KernelGenerativeReflection}
+            "GR":  KernelGenerativeReflection  }
 
-GRAPHS = {
-            "GRG": KernelGenerativeReflectionGraph}
+GRAPHS = {  "GRG": KernelGenerativeReflectionGraph}
 
 
 def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):
     """
-    The base function which invokes a hyperbolic tiling
+    The factory pattern function which invokes a hyperbolic tiling
 
     Parameters
     ----------
@@ -69,9 +68,9 @@ def HyperbolicTiling(p, q, n, center="cell", kernel="SR", **kwargs):
         raise KeyError("[hypertiling] Error: No valid kernel specified")
 
 
-def HyperbolicGraph(p, q, n, center="cell", kernel="SR", verbose=False, **kwargs):
+def HyperbolicGraph(p, q, n, center="cell", kernel="SR", **kwargs):
     """
-    The base function which invokes a hyperbolic tiling
+    The factory pattern  function which invokes a hyperbolic graph
 
     Parameters
     ----------

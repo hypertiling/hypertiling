@@ -1,12 +1,12 @@
 import abc
 import numpy as np
-
-from .neighbors import find_radius_optimized
+from .ion import htprint
+from .neighbors import find_radius_optimized, find_radius_optimized_single
 from .util import lattice_spacing_weierstrass, fund_radius
 
 # Magic number: transcendental number (Champernowne constant)
-# used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
+# used as an angular offset, rotates the entire construction slightly during construction
+MAGICANGLE = np.radians(0.12345678910111213141516171819202122232425262728293031)
 
 
 class Graph(abc.ABC):
@@ -40,17 +40,21 @@ class Graph(abc.ABC):
     def __repr__(self):
         return f"Graph {self.p, self.q, self.n}"
 
-    @abc.abstractmethod
-    def get_nbrs(self, i):
-        pass
 
-    @abc.abstractmethod
-    def get_nbrs_list(self):
-        pass
+    def get_nbrs_list(self, **kwargs):
+        if self._nbrs is None:
+            htprint("Status", "Mapping neighbours for entire lattice using 'optimized radius search' algorithm.")
+            self._nbrs = find_radius_optimized(self, **kwargs)
+        return self._nbrs
 
-    """@abc.abstractmethod
-    def check_integrity(self):
-        pass"""
+
+    def get_nbrs(self, i, **kwargs):
+        if self._nbrs is None:
+            htprint("Status", "Performing radius search for one vertex. If neighbours of many points are required, we recommend to use 'get_nbrs_list'.")
+            return find_radius_optimized_single(self, i, **kwargs)
+        else:
+            return self._nbrs[i]
+
 
 
 class Tiling(Graph):
@@ -103,14 +107,3 @@ class Tiling(Graph):
         """
         pass
 
-
-    def get_nbrs(self, i):
-        if self._nbrs is None:
-            print("start mapping neighbors")
-            self._nbrs = find_radius_optimized(self)
-        return self._nbrs[i]
-        
-
-    def get_nbrs_list(self):
-        self._nbrs = find_radius_optimized(self)
-        return self._nbrs
