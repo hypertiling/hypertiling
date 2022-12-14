@@ -135,7 +135,6 @@ class KernelStaticBase(Tiling):
         """
         if rotate_by is None:
             rotate_by = self.mangle
-        print(rotate_by)
 
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
@@ -152,14 +151,14 @@ class KernelStaticBase(Tiling):
         return polygon
 
 
-    def _create_first_layer(self):
+    def _create_first_layer(self, rotate_by=None):
         """
         generate the first layer
         this is one polygon for cell-centered and q polygons for vertex-centered
         """
 
         # create fundamental polygon
-        self.fund_poly = self.create_fundamental_polygon()
+        self.fund_poly = self.create_fundamental_polygon(rotate_by)
 
         # prepare polygon counter
         self.counter = 0
@@ -182,11 +181,20 @@ class KernelStaticBase(Tiling):
             # generate the q polygons of the first layer
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
-                adj_pgon = self.generate_adj_poly(polycopy, vertidx, rot_ind)
+                adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
                 self.polygons.append(adj_pgon)
 
             self.outmost_layer_lower = 0
             self.outmost_layer_upper = self.q
+
+
+    def _generate_adj_poly(self, polygon, ind, k):
+        """
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        """
+        mfull(self.p, k * self.qhi, ind, polygon.verticesP)
+        return polygon
+
 
 
 
@@ -227,13 +235,6 @@ class KernelRotationalCommon(KernelStaticBase):
         elif self.center == 'vertex':
             self._angular_replicate(copy.deepcopy(self.polygons), self.q)
 
-
-    def _generate_adj_poly(self, polygon, ind, k):
-        """
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
-        """
-        mfull(self.p, k * self.qhi, ind, polygon.verticesP)
-        return polygon
 
 
     def _populate_sector(self, dupl_large, dupl_small):

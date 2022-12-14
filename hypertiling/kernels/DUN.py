@@ -42,7 +42,8 @@ class KernelLegacyDunham(KernelStaticBase):
         self.RotCenterR = np.eye(3)   # R for usage in replicate(...)
 
         # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon()
+        #self.fund_poly = self.create_fundamental_polygon(self.phi/2)
+        self._create_first_layer(self.phi/2)
 
         # construct tiling
         self.generate()
