@@ -30,7 +30,7 @@ def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
         List[List[int]] containing neighbour indices of every cell.
     """
     if radius is None:
-        print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
+        htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
         radius = tiling.h
 
     retlist = []  # prepare list
@@ -41,10 +41,9 @@ def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
             c1 = tiling.get_center(i)
             c2 = tiling.get_center(j)
             dist = weierstrass_distance(p2w(c1), p2w(c2))
-            if dist < radius + eps:
-                if i is not j:
-                    sublist.append(j)
-        print(sublist)
+            if tiling.h/2 <dist < radius + eps:
+                sublist.append(j)
+
         retlist.append(sublist)
     return retlist
 

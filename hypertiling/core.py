@@ -33,23 +33,18 @@ def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     """
 
     if (p - 2) * (q - 2) <= 4:
-        raise AttributeError(
-            "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+        raise AttributeError("[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
 
     if p > 20 or q > 20 and n > 5:
         htprint("Warning", "The lattice might become very large with your parameter choice!")
 
     if kernel == "SRL":
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
-
     if kernel == "GR":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-
-    elif kernel in ["SR", "SRG", "SRL"]:
+    if kernel in ["SR", "SRG", "SRL"]:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-        return TILINGS[kernel](p, q, n, **kwargs)
-
-    elif kernel == "DUN":
+    if kernel == "DUN":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
 
@@ -77,15 +72,15 @@ def HyperbolicGraph(p, q, n, kernel="SR", **kwargs):
     """
 
     if (p - 2) * (q - 2) <= 4:
-        raise AttributeError(
-            "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+        raise AttributeError("[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
 
     if p > 20 or q > 20 and n > 5:
         htprint("Warning", "The lattice might become very large with your parameter choice!")
 
     if kernel == "GRG":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-        return GRAPHS[kernel](p, q, n, **kwargs)
-
+        
     if kernel not in GRAPHS:
         raise KeyError("[hypertiling] Error: No valid kernel specified")
+
+    return GRAPHS[kernel](p, q, n, **kwargs)
