@@ -21,6 +21,9 @@ class KernelLegacyDunham(KernelStaticBase):
         super(KernelLegacyDunham, self).__init__(p, q, n, **kwargs)
 
 
+        if self.center == "vertex":
+            htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
+
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
 

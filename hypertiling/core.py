@@ -28,8 +28,6 @@ def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
         number of cells meeting at each vertex
     n : int
         number of layers to be constructed
-    center : str
-        decides whether the tiling is constructed about a "vertex" or "cell" (default)
     kernel : str
         selects the construction algorithm
     """
@@ -41,15 +39,11 @@ def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     if p > 20 or q > 20 and n > 5:
         htprint("Warning", "The lattice might become very large with your parameter choice!")
 
-    if "radius" in kwargs and kwargs["radius"] is not None:
-        htprint("Status", "You have defined a cut-off radius ... make sure you set n large enough ...")
-
     if kernel == "SRL":
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
 
     if kernel == "GR":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-        return TILINGS[kernel](p, q, n, **kwargs)
 
     elif kernel in ["SR", "SRG", "SRL"]:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
@@ -58,17 +52,15 @@ def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     elif kernel == "DUN":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
-        # if center == "vertex":
-        #     htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
-        return TILINGS[kernel](p, q, n, **kwargs)
 
-        # elif ... (further kernels)
-
-    else:
+    if kernel not in TILINGS:
         raise KeyError("[hypertiling] Error: No valid kernel specified")
 
+    return TILINGS[kernel](p, q, n, **kwargs)
 
-def HyperbolicGraph(p, q, n, center="cell", kernel="SR", **kwargs):
+
+
+def HyperbolicGraph(p, q, n, kernel="SR", **kwargs):
     """
     The factory pattern  function which invokes a hyperbolic graph
 
@@ -80,8 +72,6 @@ def HyperbolicGraph(p, q, n, center="cell", kernel="SR", **kwargs):
         number of cells meeting at each vertex
     n : int
         number of layers to be constructed
-    center : str
-        decides whether the tiling is constructed about a "vertex" or "cell" (default)
     kernel : str
         selects the construction algorithm
     """
@@ -97,5 +87,5 @@ def HyperbolicGraph(p, q, n, center="cell", kernel="SR", **kwargs):
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         return GRAPHS[kernel](p, q, n, **kwargs)
 
-    else:
+    if kernel not in GRAPHS:
         raise KeyError("[hypertiling] Error: No valid kernel specified")

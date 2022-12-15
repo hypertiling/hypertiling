@@ -19,7 +19,8 @@ class KernelStaticBase(Tiling):
 
     Attributes
     ----------
-
+    center : str
+        decides whether the tiling is constructed about a "vertex" or "cell" (default)
 
     Methods
     -------
