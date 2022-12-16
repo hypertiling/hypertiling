@@ -13,6 +13,9 @@ class Graph(abc.ABC):
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
 
+        if not ((p - 2) * (q - 2) > 4):
+            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+
         # fundamental lattice parameters
         self.p = p
         self.q = q

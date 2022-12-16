@@ -23,7 +23,7 @@ LIMITATIONS:
 """
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
-MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
+MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
 class KernelGenerativeReflection(Tiling):
@@ -42,21 +42,10 @@ class KernelGenerativeReflection(Tiling):
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
         """
-        super().__init__(p, q, n)
-
-        # grid attributes
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-
-        self.p = p
-        self.q = q
-        self.n = n
+        super().__init__(p, q, n, mangle)
 
         # technical attributes
-        fac = np.pi / (p * q)
-        self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.degtol = degtol
-        self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
         if n != 0:
@@ -92,7 +81,6 @@ class KernelGenerativeReflection(Tiling):
 
         # possible to fill
         self._layers = None
-        self._neighbors = None
 
     # Helper ###########################################################################################################
 
@@ -275,9 +263,9 @@ class KernelGenerativeReflection(Tiling):
         """
 
         dtype = np.min_scalar_type(self.length)
-        self._neighbors = np.empty((self._sector_polys.shape[0], self.p), dtype=dtype)
-        self._neighbors.fill(- 1)  # to lazy to figure out what 2 ** dtype - 1 would be  # m / p
-        self._neighbors[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)]  # p
+        self._nbrs = np.empty((self._sector_polys.shape[0], self.p), dtype=dtype)
+        self._nbrs.fill(- 1)  # to lazy to figure out what 2 ** dtype - 1 would be  # m / p
+        self._nbrs[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)]  # p
 
         # fundamental sector
         weierstrass = self._to_weierstrass(self._sector_polys)  # m / p
@@ -311,13 +299,13 @@ class KernelGenerativeReflection(Tiling):
             ref_dist = np.min(dists[indices])
             allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))
             c = len(allowed)
-            self._neighbors[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
+            self._nbrs[i, :c] = indices[allowed].flatten() + self._sector_lengths_cumulated[ref_layer - 1]
 
             # siblings
             if self.q == 3:
-                self._neighbors[i, c] = self._index_from_ref_layer_index(i + 1, ref_layer)
+                self._nbrs[i, c] = self._index_from_ref_layer_index(i + 1, ref_layer)
                 c += 1
-                self._neighbors[i, c] = self._index_from_ref_layer_index(i - 1, ref_layer)
+                self._nbrs[i, c] = self._index_from_ref_layer_index(i - 1, ref_layer)
                 c += 1
             else:
                 next_ = i + 1
@@ -325,7 +313,7 @@ class KernelGenerativeReflection(Tiling):
                         util.is_close_within_tol(distance.lorentzian_distance(weierstrass[next_], weierstrass[i]),
                                                  ref_dist,
                                                  tol=tol):
-                    self._neighbors[i, c] = next_
+                    self._nbrs[i, c] = next_
                     c += 1
 
                 before = i - 1
@@ -333,7 +321,7 @@ class KernelGenerativeReflection(Tiling):
                         util.is_close_within_tol(distance.lorentzian_distance(weierstrass[before], weierstrass[i]),
                                                  ref_dist,
                                                  tol=tol):
-                    self._neighbors[i, c] = before
+                    self._nbrs[i, c] = before
                     c += 1
 
             # children
@@ -350,7 +338,7 @@ class KernelGenerativeReflection(Tiling):
                 # necessary to compensate the cumulated uncertainty in the last layer
                 allowed = np.argwhere(util.is_close_within_tol(dists[indices], ref_dist, tol=tol))  # p - 2
                 c_ = len(allowed)
-                self._neighbors[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
+                self._nbrs[i, c:c + c_] = indices[allowed].flatten() + self._sector_lengths_cumulated[
                     ref_layer + 1]  # p - 2
                 c += c_
 
@@ -364,9 +352,9 @@ class KernelGenerativeReflection(Tiling):
             indices = np.argsort(dists)  # 2 * log(n + 1)
             allowed = np.argwhere(util.is_close(dists[indices], ref_dist))  # 2 * log(n + 1)
             for index in boundary_polys_indices[indices[allowed]].flatten():  # p
-                if index in self._neighbors[i]:
+                if index in self._nbrs[i]:
                     continue
-                self._neighbors[i, c] = index
+                self._nbrs[i, c] = index
                 c += 1
 
     def check_integrity(self):
@@ -481,15 +469,15 @@ class KernelGenerativeReflection(Tiling):
         :param tol: float = tolerance to search neighbors in
         :return: List[List[int]] = list of all neighbors for all polygons
         """
-        if self._neighbors is None:
+        if self._nbrs is None:
             self.map_nbrs(tol=tol)
 
-        part = np.copy(self._neighbors[1:]).astype(np.uint32)  # m / p * p = m
-        max_number = np.iinfo(self._neighbors.dtype).max  # m / p
+        part = np.copy(self._nbrs[1:]).astype(np.uint32)  # m / p * p = m
+        max_number = np.iinfo(self._nbrs.dtype).max  # m / p
 
         jump = np.uint32(self._sector_polys.shape[0] - 1)
         rotate = np.vectorize(lambda x: x if x == max_number else x if x == 0 else x + jump)
-        neighbors = [[element for element in line if element != max_number] for line in self._neighbors.tolist()]
+        neighbors = [[element for element in line if element != max_number] for line in self._nbrs.tolist()]
         # m / p loop execs: p loop execs: O(1)
 
         for sector_i in range(1, self.p):  # p loop execs
@@ -759,10 +747,10 @@ class KernelGenerativeReflection(Tiling):
         :param sector_index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        if self._neighbors is None:
+        if self._nbrs is None:
             print("start mapping neighbors")
             self.map_nbrs()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
-        neighbor_indices = self._neighbors[sector_index]
+        neighbor_indices = self._nbrs[sector_index]
 
         # get value from nice little overflow
         overflow = np.iinfo(neighbor_indices.dtype).max
@@ -897,7 +885,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(3, 7, 5)
+    tiling = KernelGenerativeReflection(7, 3, 4)
     t2 = time.time()
 
     # tiling.map_nbrs()
