@@ -382,29 +382,16 @@ class KernelGenerativeReflection(AbstractKernelBase):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"Duplicate detected at index {i}")
+                    raise AttributeError(f"Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
-
-        # check if each traditional layer has the correct size
-        if self._layers is None:
-            self.map_layers()
-
-        layer_lengths = util.get_ns(self.p, self.q, np.max(self._layers) + 1)
-        layer_lengths = np.ceil(layer_lengths / self.p).astype(np.uint32)
-        for i, length in enumerate(layer_lengths):
-            if np.count_nonzero(self._layers == i) != length:
-                print(f"Layer (traditional) {i} is not complete")
-                break
-
-        # TODO: add control of relfection layer sizes, when formula is available
 
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
             neighbor_counter = len(self.get_nbrs(i))
             if neighbor_counter == self.p:
                 continue
-            print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
+            print(f"Integrity ensured till index {i} at layer {self.get_reflection_level(i)}")
             return
 
     def __len__(self):
@@ -890,23 +877,17 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(3, 7, 5)
+    tiling = KernelGenerativeReflection(5, 5, 7)
     t2 = time.time()
 
-    #tiling.map_nbrs()
-    #tiling.get_nbrs(1)
-    #tiling.get_nbrs_geometrical(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
 
-    tiling.check_integrity()
+    # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    # prob = [2 / (i + 1) for i in range(9)]
 
-    # tiling.translate(tiling[1][0])
-
-    for polygon_index, pgon in enumerate(tiling):
+    for polygon_index, pgon in enumerate(tiling._sector_polys):
         # print(polygon_index)
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
@@ -915,6 +896,6 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
 
     plt.show()

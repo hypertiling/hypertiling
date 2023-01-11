@@ -113,49 +113,60 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Assistance ===========================================================================================================
 # Methods ==============================================================================================================
 
-@NumbaChecker("uint32[::1](int32, int32, int32)")
-def get_ns(p: int, q: int, n: int) -> np.array:
-    """
-    Calculates the number of tildes the tiling will have.
-    Time-complexity: O(n)
-    :param p: int = number of edges
-    :param q: int = number of polys per vertex
-    :param n: int = number of layers (traditional)
-    :return: np.array[np.uint32] = number of tildes per layer
-    """
+
+@NumbaChecker("uint32[:](int32, int32, int32)")
+def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     lengths = np.empty((n,), dtype=np.uint32)
     lengths[0] = 0
-    lengths[1] = (q - 2) * p
-    fac = (q - 2) * (p - 2) - 2
-    for i in range(2, n):
-        lengths[i] = fac * lengths[i - 1] - lengths[i - 2]
-
-    lengths[0] = 1
-    return lengths
-
-
-@NumbaChecker("uint32[::1](int32, int32, int32)")
-def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
-    """
-    Estimates the number of tildes the tiling will have.
-    Time-complexity: O(n)
-    :param p: int = number of edges
-    :param q: int = number of polys per vertex
-    :param n: int = number of layers (reflective)
-    :return: np.array[np.uint32] = number of tildes per layer
-    """
-    if q == 3:
-        # reflection and traditional layers match
-        return get_ns(p, q, n + 1)
-    k = p - 2 if q == 4 else p - 1
-
-    lengths = np.empty((n + 1,), dtype=np.uint32)
-    lengths[0] = 1
     lengths[1] = p
-    for n in range(2, n + 1):
-        lengths[n] = lengths[n - 1] * k
 
-    return lengths
+    if q == 3:
+        k = p - 2
+        for i in range(2, n):
+            lengths[i] = k * lengths[i - 1] - lengths[i - 2]
+        lengths[0] = 1
+        return lengths
+
+    elif q % 2 == 1:
+        k = p - 1
+        delta = int((q - 1) // 2)
+        # fillers[:, 0] == 1st order; fillers[:, 1] == 2nd order
+        fillers = np.zeros((n, 2), dtype=np.uint32)
+        fillers[delta, 1] = 2 * p
+
+        for i in range(2, n):
+            if i <= delta:
+                lengths[i] = k * lengths[i - 1]
+            else:
+                i_delta = i - delta
+                i_1 = i - 1
+                # update filler of 1st order
+                fillers[i, 0] = int(fillers[i_delta, 1] / 2)
+                # update filler of 2nd order
+                fillers[i, 1] = 2 * ((p - 2) * (lengths[i_delta] - fillers[i_delta, 0] - fillers[i_delta, 1]) + \
+                                     (p - 3) * (fillers[i_delta, 0] + fillers[i_delta, 1]))
+                # update lengths
+                lengths[i] = k * lengths[i_1] - fillers[i_1, 1] - fillers[i, 0] - fillers[i_1, 0]
+
+        lengths[0] = 1
+        return lengths
+
+    else:  # q % 2 == 0
+        k = p - 1
+        delta = int(q // 2)
+        fillers = np.zeros((n,), dtype=np.uint32)
+        fillers[delta] = p
+
+        for i in range(2, n):
+            if i <= delta:
+                lengths[i] = k * lengths[i - 1] - fillers[i]
+            else:
+                i_delta = i - delta
+                i_1 = i - 1
+                fillers[i] = (p - 2) * (lengths[i_delta] - fillers[i_delta]) + (p - 3) * fillers[i_delta]
+                lengths[i] = k * lengths[i_1] - fillers[i] - fillers[i_1]
+        lengths[0] = 1
+        return lengths
 
 
 @NumbaChecker(["uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
@@ -185,9 +196,6 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     sector_polys[0, 0] = 0
     sector_polys[0, 1:] = r * np.exp(1j * phis)  # p
 
-    c = 1
-    stop = np.sum(sector_lengths)  # n
-
     # prepare reflection array
     reflection_levels = np.empty(sector_polys.shape[0], dtype=np.uint8)
     reflection_levels[0] = 0
@@ -200,80 +208,83 @@ def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_le
     # for first poly create only one neighbor
     edge_array[0] = 1
 
-    boundary = PI2 / p + (degtol / 360 * PI2) + 3e-7
-    for j, poly in enumerate(sector_polys[:-1]):  # m/p loop executions
-        if reflection_levels[j] == n:
-            # all reflection layers are constructed
-            # print(f"Created {c} / {stop}")
-            print("Created " + str(c) + " / " + str(stop))
-            return reflection_levels[:c]
+    c = 1
+    counter_shift = 0
+    for layer_index, layer_size in enumerate(sector_lengths[:-1]):
+        next_level_counter = 0
+        for j in range(counter_shift, layer_size + counter_shift):
+            poly = sector_polys[j]
 
-        if j > 1:
-            # check if parent poly shares edge with last created child -> filler of 1st order
-            connection = any_close_matrix(sector_polys[c - 1], sector_polys[j])  # (p+1)^2
-            if connection.shape[0] == 2 and c > 3:
-                # block edges in number-bit-array (see. GRK __init__ for explanation)
-                edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
-                edge_array[j] ^= 1 << (connection[0, 0] - 1)
+            if j > 1:
+                # check if parent poly shares edge with last created child -> filler of 1st order
+                connection = any_close_matrix(sector_polys[c - 1], poly)  # (p+1)^2
+                if connection.shape[0] == 2 and c > 3:
+                    # block edges in number-bit-array (see. GRK.__init__ for explanation)
+                    edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
+                    edge_array[j] ^= 1 << (connection[0, 0] - 1)
 
-        for i, vertex in enumerate(poly[1:]):  # p loop execs
-            """
-            Algorithm:
-             1. shift vertex into origin
-             2. rotate poly such that two vertices are on the x-axis
-             3. reflection on the x-axis (inversion of the imaginary part)
-             4. rotate poly back to original orientation (it is now reflected)
-             5. shift poly back to original position
-            """
-            if not (edge_array[j] & 1 << i):  # not important (time complexity)
-                continue
+            for i, vertex in enumerate(poly[1:]):  # p loop execs
+                """
+                Algorithm:
+                 1. shift vertex into origin
+                 2. rotate poly such that two vertices are on the x-axis
+                 3. reflection on the x-axis (inversion of the imaginary part)
+                 4. rotate poly back to original orientation (it is now reflected)
+                 5. shift poly back to original position
+                """
+                if not (edge_array[j] & 1 << i):  # not important (time complexity)
+                    continue
 
-            z = poly.copy()  # p  + 1
-            array_trans.morigin(p, vertex, z)  # p + 1
-            phi = np.angle(z[1:][(i + 1) % p])  # 1
-            array_trans.mrotate(p, phi, z)  # p + 1
-            z = np.conjugate(z)  # p + 1
-            array_trans.mrotate(p, - phi, z)  # p + 1
-            array_trans.morigin(p, - vertex, z)  # p + 1
+                z = poly.copy()  # p  + 1
+                array_trans.morigin(p, vertex, z)  # p + 1
+                phi = np.angle(z[1:][(i + 1) % p])  # 1
+                array_trans.mrotate(p, phi, z)  # p + 1
+                z = np.conjugate(z)  # p + 1
+                array_trans.mrotate(p, - phi, z)  # p + 1
+                array_trans.morigin(p, - vertex, z)  # p + 1
 
-            angle = np.angle(z[0])  # 1
-            if angle > boundary:
+                if np.angle(z[0]) >= 0:
+                    sector_polys[c, 0] = z[0]
+                    sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
+
+                    # save level of polygons
+                    reflection_levels[c] = reflection_levels[j] + 1  # 1
+
+                    if i == 0:
+                        # shares edge with former polygon -> filler of 2nd Order
+                        connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
+                        if connection.shape[0] == 2 and c > 2:
+                            # block edges in number-bit-array (see. GRK __init__ for explanation)
+                            edge_array[c] ^= 1 << (connection[1, 1] - 1)
+                            edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
+
+                    elif q == 3:
+                        # close first edge because of sibling
+                        edge_array[c] ^= 1
+                        # close last edge because of sibling
+                        if not (edge_array[c - 1] & 1 << (p - 2)):
+                            # if filler polygon of first order the second to last edge will be closed
+                            # 1 << (p - 2) checks for second to last edge
+                            # in this case, the sibling will be on the third to last edge (1 << (p - 3))
+                            edge_array[c - 1] ^= 1 << (p - 3)
+                        else:
+                            # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
+                            edge_array[c - 1] ^= 1 << (p - 2)
+
+                    """
+                    Theoretically possible to shift before neighbor comparison.
+                    However, even if this would avoid some (maybe useless) calculations it can be important if the
+                    graph should be expanded later on.
+                    """
+                    c += 1
+                    next_level_counter += 1
+                    if next_level_counter == sector_lengths[layer_index + 1]:
+                        break
+
+            if next_level_counter == sector_lengths[layer_index + 1]:
                 break
 
-            if angle >= 0:
-                sector_polys[c, 0] = z[0]
-                sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
-
-                # save level of polygons
-                reflection_levels[c] = reflection_levels[j] + 1  # 1
-
-                if i == 0:
-                    # shares edge with former polygon -> filler of 2nd Order
-                    connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
-                    if connection.shape[0] == 2 and c > 2:
-                        # block edges in number-bit-array (see. GRK __init__ for explanation)
-                        edge_array[c] ^= 1 << (connection[1, 1] - 1)
-                        edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
-
-                elif q == 3:
-                    # close first edge because of sibling
-                    edge_array[c] ^= 1
-                    # close last edge because of sibling
-                    if not (edge_array[c - 1] & 1 << (p - 2)):
-                        # if filler polygon of first order the second to last edge will be closed
-                        # 1 << (p - 2) checks for second to last edge
-                        # in this case, the sibling will be on the third to last edge (1 << (p - 3))
-                        edge_array[c - 1] ^= 1 << (p - 3)
-                    else:
-                        # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
-                        edge_array[c - 1] ^= 1 << (p - 2)
-
-                """
-                Theoretically possible to shift before neighbor comparison.
-                However, even if this would avoid some (maybe useless) calculations it can be important if the
-                graph should be expanded later on.
-                """
-                c += 1
+        counter_shift += layer_size
 
     return reflection_levels
 
