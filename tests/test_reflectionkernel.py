@@ -149,7 +149,8 @@ class TestReflectTiling(unittest.TestCase):
                 tiling._sector_polys[-1, 0] = tiling._sector_polys[index, 0]
                 with self.assertRaises(AttributeError, msg=f"Duplicate at index {index} was not detected") as error:
                     tiling.check_integrity()
-                self.assertEqual(f"Duplicate detected at index {index}", str(error.exception))
+                self.assertEqual(f"Duplicate detected at index {index} at layer {tiling.get_reflection_level(index)}",
+                                 str(error.exception))
             tiling._sector_polys[-1, 0] = old
 
         print("Testing for holes is not written yet (updated)")

@@ -121,7 +121,7 @@ def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     lengths[1] = p
 
     if q == 3:
-        k = p - 2
+        k = (p - 2) - 2
         for i in range(2, n):
             lengths[i] = k * lengths[i - 1] - lengths[i - 2]
         lengths[0] = 1
@@ -169,23 +169,21 @@ def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
         return lengths
 
 
-@NumbaChecker(["uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint8[::1], int64, float64)",
-               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint16[::1], int64, float64)",
-               "uint8[::1](int64, int64, int64, float64, complex128[:, ::1], uint32[::1], uint32[::1], int64, float64)"])
-def generate(p: int, q: int, n: int, r: float, sector_polys: np.array, sector_lengths: np.array,
-             edge_array: np.array, degtol: float, mangle: float) -> np.array:
+@NumbaChecker(["uint8[::1](int64, int64, float64, complex128[:, ::1], uint32[::1], uint8[::1], float64)",
+               "uint8[::1](int64, int64, float64, complex128[:, ::1], uint32[::1], uint16[::1], float64)",
+               "uint8[::1](int64, int64, float64, complex128[:, ::1], uint32[::1], uint32[::1], float64)"])
+def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: np.array,
+             edge_array: np.array, mangle: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.
     Time-complexity: O(p^2 m(p, q, n) + n), with m(p, q, n) is the number of polygons
     :param p: int = number of edges
     :param q: int = number of polys per vertex
-    :param n: int = number of layers (reflective)
     :param r: float = radius of the fundamental polygon
     :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
     :param sector_lengths: np.array[int] = length
     :param edge_array: np.array[int] = binary of number represents which edges are free
     (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
-    :param degtol: float = tolerance at the boundary
     :param mangle: float = rotation of the center polygon
     :return: np.array[np.uint8] = stores for every polygon which reflection level it has
     """

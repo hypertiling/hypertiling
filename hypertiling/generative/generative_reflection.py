@@ -30,7 +30,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
+    def __init__(self, p: int, q: int, n: int, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         Time-complexity: O(p^2 m + n + m / p * n)
@@ -54,7 +54,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # technical attributes
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
-        self.degtol = degtol
         self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
@@ -216,8 +215,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(p^2 m + n)
         :return: void
         """
-        return util.generate(self.p, self.q, self.n, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
-                             self.degtol,
+        return util.generate(self.p, self.q, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.mangle)
 
     def add_layer(self):
@@ -457,7 +455,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
             arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
             return poly_c
 
-
     # Basics ###########################################################################################################
     # API ##############################################################################################################
 
@@ -630,7 +627,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         return neighbors
 
-    def geometrical(self, sector_index: int) -> np.array:
+    def _get_nbrs_geometrical(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
@@ -659,13 +656,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
         c += 1
 
         # 2. check if next is parent too
-        for shift in [1, -1]:
-            parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
-            connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])  # p^2
-            if connection.shape[0] == 2:
-                neighbors[c] = parent2_candidate
-                c += 1
-                break
+        if ref_layer != 1:
+            for shift in [1, -1]:
+                parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])  # p^2
+                if connection.shape[0] == 2:
+                    neighbors[c] = parent2_candidate
+                    c += 1
+                    break
 
         # 3. siblings / cousins
         if self.q == 3:
@@ -686,6 +684,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                     break
 
         # 4. children
+        print(neighbors)
         if ref_layer + 1 != len(self._sector_lengths):
             child_index_candidate = self._sector_lengths_cumulated[ref_layer + 1] + int(
                 ratio * self._sector_lengths[ref_layer + 1])
@@ -724,6 +723,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 step += 1
 
         # control boundary child->grand-nephew artifact
+        print(neighbors)
         ref_dist = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for layer_index in range(2, len(self._sector_lengths_cumulated) - 1):  # n loop execs
             if c == self.p:
@@ -766,8 +766,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: int = index of the corresponding polygon
         """
         angle = np.angle(v)
-        factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.p)))
-
+        factor = int(np.floor(angle / (PI2 / self.p)))
         for modify in [0, 1, -1]:
             modi = factor + modify
             modi = modi if modi >= 0 else modi + self.p
@@ -812,7 +811,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self.geometrical)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
         """
@@ -877,8 +876,10 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(5, 5, 7)
+    tiling = KernelGenerativeReflection(5, 4, 3)
     t2 = time.time()
+    print(tiling.length)
+    print(tiling.get_nbrs_geometrical(1))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
@@ -887,7 +888,7 @@ if __name__ == "__main__":
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
 
-    for polygon_index, pgon in enumerate(tiling._sector_polys):
+    for polygon_index, pgon in enumerate(tiling):
         # print(polygon_index)
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
@@ -896,6 +897,6 @@ if __name__ == "__main__":
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
 
     plt.show()
