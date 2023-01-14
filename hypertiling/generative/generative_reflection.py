@@ -876,7 +876,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(5, 4, 3)
+    tiling = KernelGenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
     print(tiling.get_nbrs_geometrical(1))

@@ -50,8 +50,8 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
                      node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
 
 
-# @NumbaChecker(
-#    "Tuple((uint32[:, :], complex128[:]))(int64, int64, float64, uint32[::1], float64, float64)")
+@NumbaChecker(
+    "Tuple((uint32[:, :], complex128[:]))(int64, int64, float64, uint32[::1], float64, float64)")
 def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: float, tol: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.

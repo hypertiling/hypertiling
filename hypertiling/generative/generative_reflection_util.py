@@ -114,7 +114,7 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 # Methods ==============================================================================================================
 
 
-@NumbaChecker("uint32[:](int32, int32, int32)")
+# @NumbaChecker("uint32[:](int32, int32, int32)")
 def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     lengths = np.empty((n,), dtype=np.uint32)
     lengths[0] = 0
@@ -132,7 +132,8 @@ def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
         delta = int((q - 1) // 2)
         # fillers[:, 0] == 1st order; fillers[:, 1] == 2nd order
         fillers = np.zeros((n, 2), dtype=np.uint32)
-        fillers[delta, 1] = 2 * p
+        if delta <= n:
+            fillers[delta, 1] = 2 * p
 
         for i in range(2, n):
             if i <= delta:
@@ -155,7 +156,8 @@ def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
         k = p - 1
         delta = int(q // 2)
         fillers = np.zeros((n,), dtype=np.uint32)
-        fillers[delta] = p
+        if delta <= n:
+            fillers[delta] = p
 
         for i in range(2, n):
             if i <= delta:
