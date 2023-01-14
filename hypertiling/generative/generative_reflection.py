@@ -684,7 +684,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
                     break
 
         # 4. children
-        print(neighbors)
         if ref_layer + 1 != len(self._sector_lengths):
             child_index_candidate = self._sector_lengths_cumulated[ref_layer + 1] + int(
                 ratio * self._sector_lengths[ref_layer + 1])
@@ -723,7 +722,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
                 step += 1
 
         # control boundary child->grand-nephew artifact
-        print(neighbors)
         ref_dist = util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0])
         for layer_index in range(2, len(self._sector_lengths_cumulated) - 1):  # n loop execs
             if c == self.p:
