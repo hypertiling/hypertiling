@@ -27,7 +27,7 @@ class KernelGenerativeReflectionGraph:
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p: int, q: int, n: int, degtol: int = 0, tol: float = 1e-8, mangle: float = MANGLE):
+    def __init__(self, p: int, q: int, n: int, tol: float = 1e-8, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         Time-complexity: O(p^2 m + n + m / p * n)
@@ -51,7 +51,6 @@ class KernelGenerativeReflectionGraph:
         # technical attributes
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
-        self.degtol = degtol
         self.tol = tol
         self.mangle = mangle / 360 * PI2
 
@@ -79,7 +78,7 @@ class KernelGenerativeReflectionGraph:
         Generates the graph structure for the specified tiling.
         :return: np.array[uint32, uint32] = array containing the neighbor relations
         """
-        return graph_util.generate_nbrs(self.p, self.q, self.n, self.r, self._sector_lengths, self.degtol, self.mangle,
+        return graph_util.generate_nbrs(self.p, self.q, self.r, self._sector_lengths, self.mangle,
                                         self.tol)
 
     def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import hypertiling.core as core
 
-    p, q, n = 3, 7, 6
+    p, q, n = 3, 7, 7
     n2 = 3
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
@@ -203,8 +202,8 @@ if __name__ == "__main__":
     """t1 = time.time()
     tiling = KernelGenerativeReflection(q, p, n)
     print(f"Took: {time.time() - t1}")"""
-    tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)
+    """tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
+    tiling.rotate(60, deg=True)"""
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -219,12 +218,12 @@ if __name__ == "__main__":
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # tiling.map_layers()
-    for polygon_index, pgon in enumerate(tiling):
+    """for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
     plt.show()

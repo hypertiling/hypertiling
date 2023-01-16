@@ -30,7 +30,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
     Creates the hyperbolic tiling.
     """
 
-    def __init__(self, p: int, q: int, n: int, degtol: int = 0, mangle: float = MANGLE):
+    def __init__(self, p: int, q: int, n: int, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
         Time-complexity: O(p^2 m + n + m / p * n)
@@ -54,7 +54,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
         # technical attributes
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
-        self.degtol = degtol
         self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
@@ -216,8 +215,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         Time-complexity: O(p^2 m + n)
         :return: void
         """
-        return util.generate(self.p, self.q, self.n, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
-                             self.degtol,
+        return util.generate(self.p, self.q, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.mangle)
 
     def add_layer(self):
@@ -382,29 +380,16 @@ class KernelGenerativeReflection(AbstractKernelBase):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"Duplicate detected at index {i}")
+                    raise AttributeError(f"Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
-
-        # check if each traditional layer has the correct size
-        if self._layers is None:
-            self.map_layers()
-
-        layer_lengths = util.get_ns(self.p, self.q, np.max(self._layers) + 1)
-        layer_lengths = np.ceil(layer_lengths / self.p).astype(np.uint32)
-        for i, length in enumerate(layer_lengths):
-            if np.count_nonzero(self._layers == i) != length:
-                print(f"Layer (traditional) {i} is not complete")
-                break
-
-        # TODO: add control of relfection layer sizes, when formula is available
 
         # check if all edges have a partner
         for i in range(len(self._sector_polys)):
             neighbor_counter = len(self.get_nbrs(i))
             if neighbor_counter == self.p:
                 continue
-            print(f"Integrity ensured till index {i} at layer {self.get_layer(i)}")
+            print(f"Integrity ensured till index {i} at layer {self.get_reflection_level(i)}")
             return
 
     def __len__(self):
@@ -469,7 +454,6 @@ class KernelGenerativeReflection(AbstractKernelBase):
             poly_c *= np.exp(phi * 1j)
             arraytransform.morigin(self.p, - self._sector_polys[0, 0], poly_c)
             return poly_c
-
 
     # Basics ###########################################################################################################
     # API ##############################################################################################################
@@ -643,7 +627,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
 
         return neighbors
 
-    def geometrical(self, sector_index: int) -> np.array:
+    def _get_nbrs_geometrical(self, sector_index: int) -> np.array:
         """
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
@@ -672,13 +656,14 @@ class KernelGenerativeReflection(AbstractKernelBase):
         c += 1
 
         # 2. check if next is parent too
-        for shift in [1, -1]:
-            parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
-            connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])  # p^2
-            if connection.shape[0] == 2:
-                neighbors[c] = parent2_candidate
-                c += 1
-                break
+        if ref_layer != 1:
+            for shift in [1, -1]:
+                parent2_candidate = self._index_from_ref_layer_index(neighbors[c - 1] + shift, ref_layer - 1)
+                connection = util.any_close_matrix(self._sector_polys[sector_index], self[parent2_candidate])  # p^2
+                if connection.shape[0] == 2:
+                    neighbors[c] = parent2_candidate
+                    c += 1
+                    break
 
         # 3. siblings / cousins
         if self.q == 3:
@@ -779,8 +764,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :return: int = index of the corresponding polygon
         """
         angle = np.angle(v)
-        factor = int(np.floor((angle - self.degtol / 360 * PI2) / (PI2 / self.p)))
-
+        factor = int(np.floor(angle / (PI2 / self.p)))
         for modify in [0, 1, -1]:
             modi = factor + modify
             modi = modi if modi >= 0 else modi + self.p
@@ -825,7 +809,7 @@ class KernelGenerativeReflection(AbstractKernelBase):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(index, self.geometrical)
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
         """
@@ -890,21 +874,17 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(3, 7, 5)
+    tiling = KernelGenerativeReflection(7, 3, 4)
     t2 = time.time()
+    print(tiling.length)
+    print(tiling.get_nbrs_geometrical(1))
 
-    #tiling.map_nbrs()
-    #tiling.get_nbrs(1)
-    #tiling.get_nbrs_geometrical(2)
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
     print(f"Took: {t2 - t1: .4f} s")
 
-    tiling.check_integrity()
+    # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    # prob = [2 / (i + 1) for i in range(9)]
-
-    # tiling.translate(tiling[1][0])
 
     for polygon_index, pgon in enumerate(tiling):
         # print(polygon_index)
