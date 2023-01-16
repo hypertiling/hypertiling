@@ -116,6 +116,13 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 
 @NumbaChecker("uint32[:](int32, int32, int32)")
 def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
+    """
+    Estimates the number of tiles the tiling will have.
+    :param p: int = number of edges
+    :param q: int = number of polys per vertex
+    :param n: int = number of layers (reflective)
+    :return: np.array[np.uint32] = number of tildes per layer
+    """
     lengths = np.empty((n,), dtype=np.uint32)
     lengths[0] = 0
     lengths[1] = p
