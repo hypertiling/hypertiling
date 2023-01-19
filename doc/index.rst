@@ -32,11 +32,13 @@ Welcome to the official documentation of the hypertiling package! This page is u
    :maxdepth: 2
    :caption: Examples
 
-   nbcopies/quickstart.ipynb
-   nbcopies/refinements.ipynb
-   nbcopies/animations.ipynb
-   nbcopies/geodesics.ipynb
-   nbcopies/logo.ipynb
+   examples/quickstart.ipynb
+   examples/refinements.ipynb
+   examples/animations.ipynb
+   examples/geodesics.ipynb
+   examples/logo.ipynb
+   examples/srg-kernel.ipynb
+   examples/gr-kernel.ipynb
 
 
 .. toctree::
