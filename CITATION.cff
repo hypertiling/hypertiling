@@ -7,7 +7,10 @@ type: software
 authors:
   - given-names: Manuel
     family-names: Schrauth
-    email: mschrauth@physik.uni-wuerzburg.de
+    email: manuel.schrauth@physik.uni-wuerzburg.de
+    affiliation: University of Würzburg
+    affiliation: Independent Researcher, An der Aurach 12, 96194 Erlau, Germany
+    orcid: 'https://orcid.org/0000-0003-3969-2238'
   - given-names: Felix
     family-names: Dusel
   - given-names: Yanick
