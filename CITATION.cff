@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+title: hypertiling
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Manuel
+    family-names: Schrauth
+    email: mschrauth@physik.uni-wuerzburg.de
+  - given-names: Felix
+    family-names: Dusel
+  - given-names: Yanick
+    family-names: Thurn
+    affiliation: University of Würzburg
+    email: yanick.thurn@physik.uni-wuerzburg.de
+  - given-names: Florian
+    family-names: Goth
+    email: florian.goth@physik.uni-wuerzburg.de
+    affiliation: University of Würzburg
+    orcid: 'https://orcid.org/0000-0003-2707-4790'
+  - given-names: Dietmar
+    family-names: Herdt
+  - given-names: Jefferson
+    family-names: Portela
+    name-particle: S. E.
+repository-code: >-
+  https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
+url: 'http://hypertiling.de'
+abstract: >-
+  hypertiling is a high-performance Python 3 library for the
+  generation of regular hyperbolic tilings embedded in the
+  Poincaré disk model. Using efficient algorithms and the
+  CPU/SIMD optimization provided by numpy, hyperbolic
+  tilings with hundreds of millions of vertices can be
+  created in a matter of minutes on a single computer.
+  Facilities including optimized search algorithms for
+  adjacent vertices and powerful plotting and animation
+  capabilities are provided to support scientific and other
+  advanced uses of the graphs.
+keywords:
+  - hyperbolic space
+  - non-euclidean space
+license: MIT
