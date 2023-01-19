@@ -192,7 +192,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import hypertiling.core as core
     from hypertiling.kernel_abc import Tiling
-
+    """
     p, q, n = 3, 7, 7
     n2 = 3
     t1 = time.time()
@@ -201,9 +201,9 @@ if __name__ == "__main__":
 
     t1 = time.time()
     tiling = KernelGenerativeReflection(q, p, n)
-    print(f"Took: {time.time() - t1}")"""
-    """tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)"""
+    print(f"Took: {time.time() - t1}")
+    tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
+    tiling.rotate(60, deg=True)
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -216,14 +216,16 @@ if __name__ == "__main__":
             print(graph[i])
             print("\n")
 
-    """colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # tiling.map_layers()
-    """for polygon_index, pgon in enumerate(tiling):
+    for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
     plt.show()
+
+    """
