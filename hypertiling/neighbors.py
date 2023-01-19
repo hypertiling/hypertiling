@@ -1,30 +1,13 @@
 import numpy as np
 from typing import List
 import math
-from hypertiling.distance import weierstrass_distance, lorentzian_distance
-from hypertiling.util import lattice_spacing_weierstrass
-from hypertiling.representations import p2w
+from .distance import weierstrass_distance, lorentzian_distance
+from .representations import p2w
+from .ion import htprint
 
 
-# wrapper to provide a nicer interface
-def find(tiling, radius=None, which="radius-optimized"):
-    if radius is None:
-        print("[hypertiling] No search radius given; Assuming lattice spacing of the tessellation!")
-        radius = lattice_spacing_weierstrass(tiling.p, tiling.q)
 
-    if which == "radius-optimized" or which == "RO":
-        retval = find_radius_optimized(tiling, radius)
-
-    elif which == "brute-force-radius" or which == "BFR":
-        retval = find_brute_force(tiling, radius)
-
-    else:
-        raise ValueError("[Hypertiling] Error:", which, " is not a valid algorithm!")
-
-    return retval
-
-
-def find_brute_force(tiling, radius: float, eps=1e-5) -> List[List[int]]:
+def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """
     Get adjacent polygons for the entire tiling through radius search
     This algorithm works in a brute-force manner, the distances between 
@@ -35,7 +18,7 @@ def find_brute_force(tiling, radius: float, eps=1e-5) -> List[List[int]]:
 
     Arguments:
     ----------
-    tiling : sub-class of AbstractKernelBase
+    tiling : sub-class of Tiling
         The hyperbolic tiling object (represented by one of the "kernels")
     radius : float
         The search radius
@@ -46,6 +29,9 @@ def find_brute_force(tiling, radius: float, eps=1e-5) -> List[List[int]]:
     --------
         List[List[int]] containing neighbour indices of every cell.
     """
+    if radius is None:
+        htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
+        radius = tiling.h
 
     retlist = []  # prepare list
 
@@ -55,14 +41,14 @@ def find_brute_force(tiling, radius: float, eps=1e-5) -> List[List[int]]:
             c1 = tiling.get_center(i)
             c2 = tiling.get_center(j)
             dist = weierstrass_distance(p2w(c1), p2w(c2))
-            if dist < radius + eps:
-                if i is not j:
-                    sublist.append(j)
+            if tiling.h/2 <dist < radius + eps:
+                sublist.append(j)
+
         retlist.append(sublist)
     return retlist
 
 
-def find_radius_optimized(tiling, radius, eps=1e-5):
+def find_radius_optimized(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """
     Get adjacent polygons for the entire tiling through radius search
     Compared to its brute-force equivalent, this improved implemention
@@ -73,7 +59,7 @@ def find_radius_optimized(tiling, radius, eps=1e-5):
 
     Arguments:
     ----------
-    tiling : sub-class of AbstractKernelBase
+    tiling : sub-class of Tiling
         The hyperbolic tiling object (represented by one of the "kernels")
     radius : float
         The search radius
@@ -84,6 +70,10 @@ def find_radius_optimized(tiling, radius, eps=1e-5):
     --------
         List[List[int]] containing neighbour indices of every cell.
     """
+
+    if radius is None:
+        htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
+        radius = tiling.h
 
     # prepare array containing all center coordinates
     # in Weierstrass representation
@@ -102,7 +92,7 @@ def find_radius_optimized(tiling, radius, eps=1e-5):
 
     # loop over cells
     for i in range(ncells):
-        w = p2w(tiling.get_center(i))
+        w = p2w(tiling.get_center(i)) # Weierstrass representation
         dists = lorentzian_distance(v, w)
         dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
         indxs = np.where(dists < searchdist)[0]  # radius search
@@ -110,3 +100,54 @@ def find_radius_optimized(tiling, radius, eps=1e-5):
         indxs = np.delete(indxs, selff)  # delete self
         retlist.append(list(indxs))
     return retlist
+
+
+
+def find_radius_optimized_single(tiling, index, radius=None, eps=1e-5) -> List[int]:
+    """
+    Get adjacent polygons for a single polygon through radius search
+    Compared to its brute-force equivalent, this improved implemention
+    makes sure everything is fully vectorized and complied by numpy, 
+    such that we gain a dramatic speed-up
+
+    Time complexity: O(n) where n=len(tiling)
+
+    Arguments:
+    ----------
+    tiling : sub-class of Tiling
+        The hyperbolic tiling object (represented by one of the "kernels")
+    index : int
+        Index of the cell for which the neighbours are to be found
+    radius : float
+        The search radius
+    eps : float
+        Add small value to search radius to avoid rounding issues
+
+    Returns:
+    --------
+        [List[int]] containing neighbour indices of every cell.
+    """
+
+    if radius is None:
+        htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
+        radius = tiling.h
+
+    # prepare array containing all center coordinates
+    # in Weierstrass representation
+    ncells = len(tiling)
+    v = np.zeros((ncells, 3))
+    for i in range(ncells):
+        v[i] = p2w(tiling.get_center(i))
+
+    # add something to "radius" to avoid rounding problems
+    # does not need to be particularly small
+    searchdist = radius + eps
+    searchdist = math.cosh(searchdist)
+
+    w = p2w(tiling.get_center(index)) # Weierstrass representation
+    dists = lorentzian_distance(v, w)
+    dists[(dists < 1)] = 1  # this costs some %, but reduces warnings
+    indxs = np.where(dists < searchdist)[0]  # radius search
+    selff = np.argwhere(indxs == index)  # find self
+    indxs = np.delete(indxs, selff)  # delete self
+    return list(indxs)

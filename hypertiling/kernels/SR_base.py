@@ -1,31 +1,26 @@
 import numpy as np
-import math
-import copy
-from ..kernel_abc import AbstractKernelBase
-from .hyperpolygon import HyperPolygon
+import math, copy
+from ..kernel_abc import Tiling
 from ..transformation import moeb_rotate_trafo
-
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
 from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
 from ..geodesics import geodesic_midpoint
 from ..ion import htprint
-from hypertiling.distance import lorentzian_distance
+from ..distance import lorentzian_distance
+from ..neighbors import find_radius_brute_force, find_radius_optimized
+from .SR_util import HyperPolygon
 
 PI2 = 2 * np.pi
 
-# Magic number: transcendental number (Champernowne constant)
-# used as an angular offset, rotates the entire construction by a bit during construction
-MAGICANGLE = np.radians(5.1234567891011121314151617181920212223242526272829303132333)
-
-
-class KernelStaticBase(AbstractKernelBase):
+class KernelStaticBase(Tiling):
     """
     Base class of the static rotational kernel family
     provides interfaces and fundamental polygon
 
     Attributes
     ----------
-
+    center : str
+        decides whether the tiling is constructed about a "vertex" or "cell" (default)
 
     Methods
     -------
@@ -43,29 +38,23 @@ class KernelStaticBase(AbstractKernelBase):
 
     """
 
-    def __init__(self, p, q, nlayers, center="cell", autogenerate=True, radius=None):
-        super().__init__(p, q, nlayers)
+    def __init__(self, p, q, n, **kwargs):
+        super().__init__(p, q, n)
 
-        # main attributes
-        self.p = p  # number of edges (and thus number of vertices) per polygon
-        self.q = q  # number of polygons that meet at each vertex
-        self.nlayers = nlayers  # layers of the tessellation
-        self.center = center  # tiling can be centered around a "cell" (default) or a "vertex"
-        self.radius = radius # a cut-off radius (implement me!)
-        self.autogenerate = autogenerate # determines whether the lattice is constructed upon class instantiation or only after call to self.generate
+        if "center" in kwargs:
+            self.center = kwargs["center"]  # tiling can be centered around a "cell" (default) or a "vertex"
+        else:
+            self.center = "cell"
 
         # half fundamental radius
         self.fr2 = fund_radius(self.p, self.q) / 2
 
-        # symmetry angles
-        self.phi = 2 * math.pi / self.p  # angle of rotation that leaves the lattice invariant when cell centered
-        self.qhi = 2 * math.pi / self.q  # angle of rotation that leaves the lattice invariant when vertex centered
-
         # prepare list to store polygons 
         self.polygons = []
 
-        if center not in ['cell', 'vertex']:
+        if self.center not in ['cell', 'vertex']:
             raise ValueError('[hypertiling] Error: Invalid value for argument "center"!')
+
 
     def __getitem__(self, idx):
         return self.polygons[idx]
@@ -133,7 +122,7 @@ class KernelStaticBase(AbstractKernelBase):
 
 
 
-    def create_fundamental_polygon(self, rotate_by=MAGICANGLE):
+    def create_fundamental_polygon(self, rotate_by=None):
         """
         Constructs the vertices of the fundamental hyperbolic {p,q} polygon
 
@@ -145,6 +134,8 @@ class KernelStaticBase(AbstractKernelBase):
         rotate_by : float
             angle of rotation of the fundamental polygon, default is the magic angle mangle
         """
+        if rotate_by is None:
+            rotate_by = self.mangle
 
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
@@ -161,14 +152,14 @@ class KernelStaticBase(AbstractKernelBase):
         return polygon
 
 
-    def _create_first_layer(self):
+    def _create_first_layer(self, rotate_by=None):
         """
         generate the first layer
         this is one polygon for cell-centered and q polygons for vertex-centered
         """
 
         # create fundamental polygon
-        self.fund_poly = self.create_fundamental_polygon()
+        self.fund_poly = self.create_fundamental_polygon(rotate_by)
 
         # prepare polygon counter
         self.counter = 0
@@ -191,11 +182,20 @@ class KernelStaticBase(AbstractKernelBase):
             # generate the q polygons of the first layer
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
-                adj_pgon = self.generate_adj_poly(polycopy, vertidx, rot_ind)
+                adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
                 self.polygons.append(adj_pgon)
 
             self.outmost_layer_lower = 0
             self.outmost_layer_upper = self.q
+
+
+    def _generate_adj_poly(self, polygon, ind, k):
+        """
+        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        """
+        mfull(self.p, k * self.qhi, ind, polygon.verticesP)
+        return polygon
+
 
 
 
@@ -205,8 +205,8 @@ class KernelRotationalCommon(KernelStaticBase):
     Extend base class of the static rotational kernel family towards sector contruction
     """
 
-    def __init__(self, p, q, n, center, autogenerate, radius):
-        super(KernelRotationalCommon, self).__init__(p, q, n, center, autogenerate, radius)
+    def __init__(self, p, q, n, **kwargs):
+        super(KernelRotationalCommon, self).__init__(p, q, n, **kwargs)
 
         # sector boundary tolerance / softness
         # do not change, unless you know what you are doing!)
@@ -221,10 +221,10 @@ class KernelRotationalCommon(KernelStaticBase):
 
         # required for construction algorithm
         self.sect_lbound = 0
-        self.sect_ubound = MAGICANGLE + self.sect_angle + self.radtol
+        self.sect_ubound = self.mangle + self.sect_angle + self.radtol
 
         self.upper_slice = self.sect_angle - self.radtol
-        self.lower_slice = MAGICANGLE + self.radtol
+        self.lower_slice = self.mangle + self.radtol
 
    
     def _replicate(self):
@@ -237,13 +237,6 @@ class KernelRotationalCommon(KernelStaticBase):
             self._angular_replicate(copy.deepcopy(self.polygons), self.q)
 
 
-    def _generate_adj_poly(self, polygon, ind, k):
-        """
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
-        """
-        mfull(self.p, k * self.qhi, ind, polygon.verticesP)
-        return polygon
-
 
     def _populate_sector(self, dupl_large, dupl_small):
         """
@@ -254,7 +247,7 @@ class KernelRotationalCommon(KernelStaticBase):
         endpgon = 1
 
         # loop over layers to be constructed
-        for l in range(1, self.nlayers):
+        for l in range(1, self.n):
 
             # computes all neighbor polygons of layer l
             for pgon in self.polygons[startpgon:endpgon]:
@@ -519,15 +512,22 @@ class KernelRotationalCommon(KernelStaticBase):
 
 # ------------- Neighbours -------------
 
-    # Default
-    def get_nbrs(self):
-        """
-        Default neighbour method for the Static Rotational Kernels
-        Calls the Radius Optimized Slice (ROS) method without specification of a radius,
-        hence, the standard p,q lattice spacing will be used
-        """
-        htprint("Status", "This is the default neighbour method of the SR/SRI kernel. It is equivalent to calling 'get_nbrs_radius_optimized_slice' without default arguments.")
-        return self.get_nbrs_radius_optimized_slice(radius=None)
+    def get_nbrs_list(self, method="ROS", **kwargs):
+
+        methods = { "RBF":  self.get_nbrs_radius_brute_force,
+                    "RO":   self.get_nbrs_radius_optimized,
+                    "ROS":  self.get_nbrs_radius_optimized_slice,
+                    "EMO":  self.get_nbrs_edge_map_optimized,
+                    "EMBF": self.get_nbrs_edge_map_brute_force}
+
+        return methods[method](**kwargs)
+
+
+    def get_nbrs_radius_brute_force(self, **kwargs):
+        return find_radius_brute_force(self, **kwargs)
+
+    def get_nbrs_radius_optimized(self, **kwargs):
+        return find_radius_optimized(self, **kwargs)
 
 
     # Radius Optimized Slice (ROS)
@@ -555,7 +555,7 @@ class KernelRotationalCommon(KernelStaticBase):
             raise NotImplementedError("[hypertiling] Error: Currently this method does not support vertex-centered tilings!")
 
 
-        if radius == None:
+        if radius is None:
             htprint("Status", "No search radius provided; Assuming lattice spacing of the (p,q) tessellation!")
             radius = lattice_spacing_weierstrass(self.p, self.q)
             htprint("Status", "Found (p,q) = (%i,%i) and auto-calculated a neighbour distance of %5.4f. Can be changed using the 'radius' argument." % (self.p, self.q, radius))
@@ -759,7 +759,3 @@ class KernelRotationalCommon(KernelStaticBase):
                         nbrs[vals[i]].append(vals[j])
 
         return nbrs
-
-
-
-          

@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 from hypertiling.check_numba import NumbaChecker
-from hypertiling.generative.generative_reflection_util import PI2, any_close_matrix, f_dist_disc
+from hypertiling.kernels.GR_util import PI2, any_close_matrix, f_dist_disc
 import networkx as nx
 
 """

@@ -23,9 +23,7 @@ setup(
     license='MIT',
     keywords='hyperbolic tessellation tiling curvature poincare geometry',
     packages=[package_name,
-              f"{package_name}.generative",
-              f"{package_name}.static",
-              f"{package_name}.graph",
+              f"{package_name}.kernels",
               f"{package_name}.experimental",
               f"{package_name}.graphics"],
     classifiers=[

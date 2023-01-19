@@ -1,11 +1,8 @@
 import numpy as np
 import math
-import copy
-
-# relative imports
-from .static_base import KernelRotationalCommon, MAGICANGLE
 from ..arraytransformation import morigin, mrotate
-from .static_rotational_util import DuplicateContainer
+from .SR_util import DuplicateContainer
+from .SR_base import KernelRotationalCommon
 
 
 
@@ -15,12 +12,10 @@ class KernelStaticRotational(KernelRotationalCommon):
     Duplicates are eliminated using specialized data containers
     """
 
-    def __init__(self, p, q, n, center, autogenerate=True, radius=None):
-        super(KernelStaticRotational, self).__init__(p, q, n, center, autogenerate, radius)
-        
-        # construct tiling
-        if self.autogenerate:
-            self.generate()
+    def __init__(self, p, q, n, **kwargs):
+        super(KernelStaticRotational, self).__init__(p, q, n, **kwargs)   
+
+        self.generate()
 
 
 
@@ -53,7 +48,7 @@ class KernelStaticRotational(KernelRotationalCommon):
             # if centered around a vertex, shift one vertex to origin
             morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
             vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
-            mrotate(self.p, vertangle-MAGICANGLE, self.fund_poly.verticesP)
+            mrotate(self.p, vertangle-self.mangle, self.fund_poly.verticesP)
 
 
         self.fund_poly_center = self.fund_poly.verticesP[self.p]

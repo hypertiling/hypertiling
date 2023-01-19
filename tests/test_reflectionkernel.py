@@ -2,7 +2,7 @@ import unittest
 from tests.test_util import *
 from hypertiling.core import HyperbolicTiling
 import hypertiling.geodesics as geos
-import hypertiling.generative.generative_reflection_util as util
+import hypertiling.kernels.GR_util as util
 import random
 import numpy as np
 
@@ -23,7 +23,7 @@ MAXLAYERS = 4
 RATIOOFDUPLICATES = 0.1
 RATIOOFHOLES = 0.1
 
-# test find/get_nbrs
+# test find/get_nbrs_generative
 SHIFTTOL = 1e-5
 
 
@@ -67,7 +67,7 @@ class TestReflectTiling(unittest.TestCase):
             with PrintTest():
                 tiling = HyperbolicTiling(*combi, kernel="GR")
             for index in range(tiling.length):
-                neighbors = tiling.get_nbrs(index)
+                neighbors = tiling.get_nbrs_generative(index)
 
                 for j in range(tiling.length):
                     if j == index:
@@ -123,7 +123,7 @@ class TestReflectTiling(unittest.TestCase):
                 tiling = HyperbolicTiling(*combi, kernel="GR")
             tiling.map_nbrs()
             for index in range(tiling.length):
-                neighbors = tiling.get_nbrs(index)
+                neighbors = tiling.get_nbrs_generative(index)
                 neighbors2 = tiling.get_nbrs_mapping(index)
                 self.assertTrue(np.array_equal(np.sort(neighbors2), np.sort(neighbors)))
 

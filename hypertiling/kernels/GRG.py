@@ -1,8 +1,8 @@
 from typing import Callable, Any, List
 import numpy as np
-import hypertiling.generative.generative_reflection_util as util
-from hypertiling.generative.generative_reflection_util import PI2
-import hypertiling.graph.generative_reflection_graph_util as graph_util
+import hypertiling.kernels.GR_util as util
+import hypertiling.kernels.GRG_util as graph_util
+from hypertiling.kernel_abc import Graph
 
 """
 p: Number of edges/vertices of a polygon
@@ -19,10 +19,10 @@ LIMITATIONS:
 """
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
-MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
+MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class KernelGenerativeReflectionGraph:
+class KernelGenerativeReflectionGraph(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -39,20 +39,12 @@ class KernelGenerativeReflectionGraph:
         :param mangle: float = rotation of the center polygon in degrees
                                (prevents boundaries from being along symmetry axis)
         """
-
-        # grid attributes
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-
-        self.p = p
-        self.q = q
-        self.n = n
+        super().__init__(p, q, n, mangle)
 
         # technical attributes
         fac = np.pi / (p * q)
         self.r = np.sqrt(np.cos(fac * (p + q)) / np.cos(fac * (p - q)))
         self.tol = tol
-        self.mangle = mangle / 360 * PI2
 
         # estimate some other technical attributes
         if n != 0:
@@ -61,8 +53,8 @@ class KernelGenerativeReflectionGraph:
         else:
             self._sector_lengths = np.array([1])
 
-        self.graph, self.center_coords = self._generate()
-        self.length = (self.graph.shape[0] - 1) * self.p + 1
+        self._nbrs, self.center_coords = self._generate()
+        self.length = (self._nbrs.shape[0] - 1) * self.p + 1
 
     def __getitem__(self, item):
         """
@@ -72,6 +64,8 @@ class KernelGenerativeReflectionGraph:
         :return: np.array = indices of the neighbors
         """
         return self._expand_sector_index_to_tiling(item, self._get_nbrs)
+
+    # Helper ###########################################################################################################
 
     def _generate(self):
         """
@@ -94,10 +88,10 @@ class KernelGenerativeReflectionGraph:
         if index != 0:
             # get equivalent poly in sector
             index -= 1
-            sector_replica = index // (self.graph.shape[0] - 1)
-            index %= (self.graph.shape[0] - 1)
+            sector_replica = index // (self._nbrs.shape[0] - 1)
+            index %= (self._nbrs.shape[0] - 1)
             index += 1
-            jump = self.graph.shape[0] - 1
+            jump = self._nbrs.shape[0] - 1
 
             indices = f(index)
 
@@ -114,11 +108,13 @@ class KernelGenerativeReflectionGraph:
         :param sector_index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        neighbor_indices = self.graph[sector_index]
+        neighbor_indices = self._nbrs[sector_index]
 
         # get value from nice little overflow
         overflow = np.iinfo(neighbor_indices.dtype).max
         return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
+
+    # Helper ###########################################################################################################
 
     def get_coord(self, index: int) -> np.complex128:
         """
@@ -160,8 +156,8 @@ class KernelGenerativeReflectionGraph:
         Time-complexity: O(m)
         :return: List[List[int]] = List for each polygons neighbors
         """
-        max_number = np.iinfo(self.graph.dtype).max
-        return [[index for index in row if index != max_number] for row in self.graph.tolist()]
+        max_number = np.iinfo(self._nbrs.dtype).max
+        return [[index for index in row if index != max_number] for row in self._nbrs.tolist()]
 
     def get_nbrs_list(self) -> List[List[int]]:
         """
@@ -169,12 +165,12 @@ class KernelGenerativeReflectionGraph:
         Time-complexity: O(mp)
         :return: List[List[int]] = list of all neighbors for all polygons
         """
-        part = np.copy(self.graph[1:]).astype(np.uint32)  # m / p * p = m
-        max_number = np.iinfo(self.graph.dtype).max  # m / p
+        part = np.copy(self._nbrs[1:]).astype(np.uint32)  # m / p * p = m
+        max_number = np.iinfo(self._nbrs.dtype).max  # m / p
 
-        jump = np.uint32(self.graph.shape[0] - 1)
+        jump = np.uint32(self._nbrs.shape[0] - 1)
         rotate = np.vectorize(lambda x: x if x == max_number else x if x == 0 else x + jump)
-        neighbors = [[element for element in line if element != max_number] for line in self.graph.tolist()]
+        neighbors = [[element for element in line if element != max_number] for line in self._nbrs.tolist()]
         # m / p loop execs: p loop execs: O(1)
 
         for sector_i in range(1, self.p):  # p loop execs
@@ -185,25 +181,29 @@ class KernelGenerativeReflectionGraph:
 
         return neighbors
 
+    def get_nbrs(self, index):
+        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
+
 
 if __name__ == "__main__":
     import time
-    from hypertiling.generative.generative_reflection import KernelGenerativeReflection
+    from hypertiling.kernels.GR import KernelGenerativeReflection
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import hypertiling.core as core
-
+    from hypertiling.kernel_abc import Tiling
+    """
     p, q, n = 3, 7, 7
     n2 = 3
     t1 = time.time()
     graph = KernelGenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    """t1 = time.time()
+    t1 = time.time()
     tiling = KernelGenerativeReflection(q, p, n)
-    print(f"Took: {time.time() - t1}")"""
-    """tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)"""
+    print(f"Took: {time.time() - t1}")
+    tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
+    tiling.rotate(60, deg=True)
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -218,12 +218,14 @@ if __name__ == "__main__":
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     # tiling.map_layers()
-    """for polygon_index, pgon in enumerate(tiling):
+    for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))"""
+        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
     plt.show()
+
+    """
