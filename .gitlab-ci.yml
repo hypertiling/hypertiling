@@ -108,7 +108,6 @@ sphinx-doc:
     - pip install pypandoc sphinx-mdinclude
     - pip install sphinx --upgrade
     - pip install nbsphinx --upgrade
-    - pip install m2r2
     - cd doc
     - mkdir nbcopies
     - cd nbcopies
