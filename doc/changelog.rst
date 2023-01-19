@@ -5,5 +5,4 @@
 Changelog
 ============
 
-
-
+.. mdinclude:: ../CHANGELOG.md
