@@ -13,44 +13,6 @@ m: Number of polygons
 """
 
 
-def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int, colors=[]):
-    """
-    Plot a network of the connections
-    :param adjacent_matrix: List[List[int]] = matrix storing the neighboring relations
-    :param center_coords: np.array[n] = positions of the node coords as complex
-    :param p: int = number of edges of a single polygon in the tiling == rotational symmetry
-    :return: void
-    """
-    graph = nx.Graph()
-    for y in range(len(adjacent_matrix)):
-        if y >= center_coords.shape[0]:
-            sector = (y - 1) // (center_coords.shape[0] - 1)
-            index = (y - 1) % (center_coords.shape[0] - 1)
-            index += 1
-            rot = center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
-            x_ = np.real(rot)
-            y_ = np.imag(rot)
-        else:
-            x_ = np.real(center_coords[y])
-            y_ = np.imag(center_coords[y])
-            sector = 0
-
-        if colors:
-            graph.add_node(y, pos=(x_, y_), node_color=colors[y])
-        else:
-            graph.add_node(y, pos=(x_, y_))
-
-    for y, row in enumerate(adjacent_matrix):
-        for index in row:
-            if index >= len(adjacent_matrix):
-                print(f"Skip: {y} -> {index}")
-                continue
-            graph.add_edge(y, index)
-
-    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),
-                     node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
-
-
 @NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, float64, uint32[::1], float64, float64)")
 def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: float, tol: float) -> np.array:
     """
@@ -93,8 +55,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
     edges ^= 1 << (p - 1)
     current_edges.fill(edges)  # m/p
     next_edges.fill(edges)  # m/p
-    # for first poly create only one neighbor
-    current_edges[0] = 1
+    current_edges[0] = int(2 ** p - 1)
 
     # for neighboring array
     child_absolut = 1
@@ -124,6 +85,21 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                     neighbors[parent_absolut, neighbors[parent_absolut, 0]] = child_absolut - 1
                     neighbors[parent_absolut, 0] += 1
 
+            # check for first order filler on closing
+            if j == layer_size - 1 and current_level != 0:
+                connection = any_close_matrix(next_coords[0], current_coords[j])  # (p+1)^2
+                if connection.shape[0] == 2 and child_absolut > 3:
+                    # block edges in number-bit-array (see. GRK __init__ for explanation)
+                    next_edges[0] ^= 1
+                    current_edges[j] ^= 1 << (p - 1)
+
+                    # add connection to
+                    first_child = child_absolut - next_level_counter
+                    neighbors[first_child, neighbors[first_child, 0]] = parent_absolut
+                    neighbors[first_child, 0] += 1
+                    neighbors[parent_absolut, neighbors[parent_absolut, 0]] = first_child
+                    neighbors[parent_absolut, 0] += 1
+
             for i, vertex in enumerate(poly[1:]):
                 """
                 Algorithm:
@@ -147,59 +123,71 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
 
-                if np.angle(z[0]) >= 0:
-                    next_coords[next_level_counter, 0] = z[0]
-                    next_coords[next_level_counter, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
+                next_coords[next_level_counter, 0] = z[0]
+                next_coords[next_level_counter, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
-                    # save neighboring relations
-                    neighbors[parent_absolut, neighbors[parent_absolut, 0]] = child_absolut
-                    neighbors[parent_absolut, 0] += 1
-                    neighbors[child_absolut, neighbors[child_absolut, 0]] = parent_absolut
-                    neighbors[child_absolut, 0] += 1
+                # save neighboring relations
+                neighbors[parent_absolut, neighbors[parent_absolut, 0]] = child_absolut
+                neighbors[parent_absolut, 0] += 1
+                neighbors[child_absolut, neighbors[child_absolut, 0]] = parent_absolut
+                neighbors[child_absolut, 0] += 1
 
-                    # save center coords
-                    center_coords[child_absolut] = z[0]
+                # save center coords
+                center_coords[child_absolut] = z[0]
 
+                if i == 0:
                     # check for filler of 2nd order and q == 3
-                    if i == 0:
-                        # shares edge with former polygon -> filler of 2nd Order
-                        connection = any_close_matrix(next_coords[next_level_counter],
-                                                      next_coords[next_level_counter - 1])  # (p+1)^2
-                        if connection.shape[0] == 2 and child_absolut > 2:
-                            # block edges in number-bit-array (see. GRK __init__ for explanation)
-                            next_edges[next_level_counter] ^= 1 << (connection[1, 1] - 1)
-                            next_edges[next_level_counter - 1] ^= 1 << (connection[0, 0] - 1)
+                    # shares edge with former polygon -> filler of 2nd Order
+                    connection = any_close_matrix(next_coords[next_level_counter],
+                                                  next_coords[next_level_counter - 1])  # (p+1)^2
+                    if connection.shape[0] == 2 and child_absolut > 2:
+                        # block edges in number-bit-array (see. GRK __init__ for explanation)
+                        next_edges[next_level_counter] ^= 1 << (connection[1, 1] - 1)
+                        next_edges[next_level_counter - 1] ^= 1 << (connection[0, 0] - 1)
 
-                            # add connection to neighbors
-                            neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
-                            neighbors[child_absolut, 0] += 1
-                            neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
-                            neighbors[child_absolut - 1, 0] += 1
-
-                    elif q == 3 and next_level_counter != 0:
-                        # close first edge because of sibling
-                        next_edges[next_level_counter] ^= 1
-                        # close last edge because of sibling
-                        if not (next_edges[next_level_counter - 1] & 1 << (p - 2)):
-                            # if filler polygon of first order the second to last edge will be closed
-                            # 1 << (p - 2) checks for second to last edge
-                            # in this case, the sibling will be on the third to last edge (1 << (p - 3))
-                            next_edges[next_level_counter - 1] ^= 1 << (p - 3)
-                        else:
-                            # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
-                            next_edges[next_level_counter - 1] ^= 1 << (p - 2)
-
+                        # add connection to neighbors
                         neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
                         neighbors[child_absolut, 0] += 1
                         neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
                         neighbors[child_absolut - 1, 0] += 1
 
-                    # update counter
-                    next_level_counter += 1
-                    child_absolut += 1
+                elif q == 3 and next_level_counter != 0:
+                    # close first edge because of sibling
+                    next_edges[next_level_counter] ^= 1
+                    # close last edge because of sibling
+                    if not (next_edges[next_level_counter - 1] & 1 << (p - 2)):
+                        # if filler polygon of first order the second to last edge will be closed
+                        # 1 << (p - 2) checks for second to last edge
+                        # in this case, the sibling will be on the third to last edge (1 << (p - 3))
+                        next_edges[next_level_counter - 1] ^= 1 << (p - 3)
+                    else:
+                        # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
+                        next_edges[next_level_counter - 1] ^= 1 << (p - 2)
 
-                    if next_level_counter == sector_lengths[current_level + 1]:
-                        break
+                    neighbors[child_absolut, neighbors[child_absolut, 0]] = child_absolut - 1
+                    neighbors[child_absolut, 0] += 1
+                    neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_absolut
+                    neighbors[child_absolut - 1, 0] += 1
+
+                # update counter
+                next_level_counter += 1
+                child_absolut += 1
+
+                if next_level_counter == sector_lengths[current_level + 1]:
+                    # control if filler 2nd order on closing
+                    connection = any_close_matrix(next_coords[next_level_counter - 1], next_coords[0])
+                    if connection.shape[0] == 2 and child_absolut > 2:
+                        # block edges in number-bit-array (see. GRK __init__ for explanation)
+                        next_edges[0] ^= 1
+                        next_edges[next_level_counter - 1] ^= 1 << (p - 1)
+
+                        # add connection to neighbors
+                        child_first = child_absolut - next_level_counter
+                        neighbors[child_absolut - 1, neighbors[child_absolut - 1, 0]] = child_first
+                        neighbors[child_absolut - 1, 0] += 1
+                        neighbors[child_first, neighbors[child_first, 0]] = child_absolut - 1
+                        neighbors[child_first, 0] += 1
+                    break
 
             # update counter
             parent_absolut += 1
@@ -215,7 +203,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
         current_coords = next_coords
         current_edges = next_edges
 
-    # boundary
+    # boundary (closing of circle)
     ndiff = int(round((q - 1) / 2, 0))
     jump = (p - 1) * (child_absolut - 1)
     dist_ref = f_dist_disc(center_coords[0], center_coords[1]) + tol
@@ -231,8 +219,5 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                 neighbors[index_right, 0] += 1
                 neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
                 neighbors[index_left, 0] += 1
-
-    for i in range(1, p):
-        neighbors[0, 1 + i] = neighbors[0, i] + child_absolut - 1
 
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]

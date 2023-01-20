@@ -563,7 +563,7 @@ class KernelGenerativeReflection(Tiling):
         Protected(!)
         Returns the reflection level the polygon at index belongs to.
         Time-complexity: O(log(n + 1))
-        :param index: int = index of the polygon
+        :param sector_index: int = index of the polygon
         :return: int = reflection level
         """
         pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)

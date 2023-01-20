@@ -56,6 +56,11 @@ class KernelGenerativeReflectionGraph(Graph):
         self._nbrs, self.center_coords = self._generate()
         self.length = (self._nbrs.shape[0] - 1) * self.p + 1
 
+        self._sector_lengths_cumulated = np.empty((self._sector_lengths.shape[0] + 1,), dtype=np.uint32)
+        self._sector_lengths_cumulated[0] = 0
+        for i, element in enumerate(self._sector_lengths):  # n loop execs
+            self._sector_lengths_cumulated[i + 1] = element + self._sector_lengths_cumulated[i]
+
     def __getitem__(self, item):
         """
         Get neighbor of the polygon at index.
@@ -66,6 +71,11 @@ class KernelGenerativeReflectionGraph(Graph):
         return self._expand_sector_index_to_tiling(item, self._get_nbrs)
 
     def __len__(self):
+        """
+        Return the number of polygons in the tiling
+        Time-complexity: O(1)
+        :return: int = number of polygons in the tiling
+        """
         return self.length
 
     # Helper ###########################################################################################################
@@ -116,6 +126,20 @@ class KernelGenerativeReflectionGraph(Graph):
         # get value from nice little overflow
         overflow = np.iinfo(neighbor_indices.dtype).max
         return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
+
+    def _get_reflection_level_in_sector(self, sector_index: int) -> int:
+        """
+        Protected(!)
+        Returns the reflection level the polygon at index belongs to.
+        Time-complexity: O(log(n + 1))
+        :param sector_index: int = index of the polygon
+        :return: int = reflection level
+        """
+        print(sector_index)
+        pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)
+        if self._sector_lengths_cumulated[pos] > sector_index:
+            return pos - 1
+        return pos
 
     # Helper ###########################################################################################################
 
@@ -187,6 +211,21 @@ class KernelGenerativeReflectionGraph(Graph):
     def get_nbrs(self, index):
         return self._expand_sector_index_to_tiling(index, self._get_nbrs)
 
+    def get_reflection_level(self, index) -> int:
+        """
+        Get the neighbors of a polygon at index
+        Time-complexity: O(log(n + 1))
+        :param index: int = index of the polygon
+        :return: np.array = array containing the indices of the neighbors
+        """
+        if index == 0:
+            return 0
+
+        index -= 1
+        index %= (self._sector_lengths_cumulated[-1] - 1)
+        index += 1
+        return self._get_reflection_level_in_sector(index)  # log(n + 1)
+
 
 if __name__ == "__main__":
     import time
@@ -195,7 +234,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import hypertiling.core as core
     from hypertiling.kernel_abc import Tiling
-    """
+
     p, q, n = 3, 7, 7
     n2 = 3
     t1 = time.time()
@@ -228,7 +267,7 @@ if __name__ == "__main__":
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
         # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
-    graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
+    graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p,
+                          colors=[colors[graph.get_reflection_level(i) % len(colors)] for i in range(graph.length)])
     plt.show()
 
-    """
