@@ -43,7 +43,9 @@ class Graph(abc.ABC):
     def __repr__(self):
         return f"Graph {self.p, self.q, self.n}"
 
-    # todo: add __len__
+    @abc.abstractmethod
+    def __len__(self):
+        pass
 
 
 class Tiling(Graph):

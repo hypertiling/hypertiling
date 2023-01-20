@@ -65,6 +65,9 @@ class KernelGenerativeReflectionGraph(Graph):
         """
         return self._expand_sector_index_to_tiling(item, self._get_nbrs)
 
+    def __len__(self):
+        return self.length
+
     # Helper ###########################################################################################################
 
     def _generate(self):

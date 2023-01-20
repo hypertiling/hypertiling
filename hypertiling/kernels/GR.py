@@ -7,7 +7,6 @@ import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 
-
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
@@ -450,13 +449,17 @@ class KernelGenerativeReflection(Tiling):
     # Basics ###########################################################################################################
     # API ##############################################################################################################
 
-    def get_nbrs_list(self, tol: float = 1e-5) -> List[List[int]]:
+    def get_nbrs_list(self, tol: float = 1e-5, method="default") -> List[List[int]]:
         """
         Create and return list of all neighbors
         Time-complexity: O(mp)
         :param tol: float = tolerance to search neighbors in
+        :param method: str = method to use for calculating the neighbors. Currently "default" only
         :return: List[List[int]] = list of all neighbors for all polygons
         """
+        if method != "default":
+            raise AttributeError("Only default implemented yet")
+
         if self._nbrs is None:
             self.map_nbrs(tol=tol)
 
