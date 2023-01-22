@@ -1,5 +1,6 @@
 {
-  'upload_type': 'software',
+  "title": "hypertiling",
+  "upload_type": "software",
   "creators": [
     {
       "name": "Schrauth, Manuel"
@@ -31,5 +32,7 @@
   "license": {
     "id": "MIT"
   },
-  "title": "hypertiling"
+    "publication_date": "2022-11-17",
+    "access_right": "open",
+    "version": "1.1.3"
 }
