@@ -20,7 +20,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Get Hypertiling
 
    installation
@@ -42,7 +42,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Modules
 
    hyperpolygon
