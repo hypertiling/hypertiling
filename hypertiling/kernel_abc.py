@@ -98,6 +98,10 @@ class Tiling(Graph):
 
 
     def get_nbrs_list(self, **kwargs):
+        """
+        calculates for each vertex the neighbours a returns a list.
+        :return: List of list with neighbours
+        """
         if self._nbrs is None:
             htprint("Status", "Mapping neighbours for entire lattice using 'optimized radius search' algorithm.")
             self._nbrs = find_radius_optimized(self, **kwargs)
@@ -105,6 +109,11 @@ class Tiling(Graph):
 
 
     def get_nbrs(self, i, **kwargs):
+        """
+        return the indices of the neighbours of vertex i.
+        :param i: int the index you're intereted in.
+        :return: a list of all neighbours
+        """
         if self._nbrs is None:
             htprint("Status", "Performing radius search for one vertex. If neighbours of many points are required, we recommend to use 'get_nbrs_list'.")
             return find_radius_optimized_single(self, i, **kwargs)
