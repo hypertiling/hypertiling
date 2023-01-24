@@ -28,16 +28,11 @@ The package can also be locally installed. First download or clone the package, 
 ```
 $ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
 ```
-Now execute 
+follow by
 ```
 $ pip install .
 ```
-in the package's root directory to install the package in-place.
-
-For developer mode use
-```
-$ pip install -e .
-```
+in the package's root directory.
 
 
 In Python, import tiling object from *hypertiling* library
