@@ -24,15 +24,11 @@ Hypertiling is available in the [PyPI](https://pypi.org/) package index and can 
 ```
 $ pip install hypertiling
 ```
-The package can also be locally installed. First download or clone the package, using
+The package can also be locally installed from our public repository via
 ```
 $ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
-```
-follow by
-```
 $ pip install .
 ```
-in the package's root directory.
 
 
 In Python, import tiling object from *hypertiling* library
