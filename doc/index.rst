@@ -1,4 +1,4 @@
-.. Copyright (c) 2022, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2022-2023, Manuel Schrauth, Florian Goth
 
 .. raw:: html
 
@@ -20,7 +20,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Get Hypertiling
 
    installation
@@ -42,7 +42,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Modules
 
    hyperpolygon
@@ -51,6 +51,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
    transformations
    geodesics
    neighbours
+   misc
 
 
 Indices and tables

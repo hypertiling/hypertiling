@@ -153,7 +153,30 @@ def htcplxprod(a, da, b, db):
 
 @NumbaChecker(["UniTuple(complex128, 2)(complex128, complex128, complex128, complex128)"])
 def htcplxprodconjb(a, da, b, db):
-    '''Perform multiplication of complex double double numbers: a * b^* '''
+    """
+    Perform multiplication of complex double double numbers where b is conjugated.
+
+    .. math::
+
+        (a, da) * (b, db)^* = (r, dr)
+
+    Parameters:
+        a  : float 
+           a floating point number.
+        da : float
+           overflow of a
+        b  : float
+           a floating point number.
+        db : float
+           overflow of b
+
+    Returns:
+        r : float
+
+        dr : float
+           the overflow
+
+    """
     rea, drea = a.real, da.real
     ima, dima = a.imag, da.imag
     reb, dreb = b.real, db.real
