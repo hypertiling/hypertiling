@@ -103,7 +103,7 @@ sphinx-doc:
       - doc/*
   script:
     - apt-get update
-    - apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme pandoc
+    - apt-get install -y python3-numpy python3-colorama python3-h5py doxygen python3-breathe git python3-sphinx-rtd-theme pandoc python3-networkx
     - pip install --upgrade pip
     - pip install pypandoc sphinx-mdinclude
     - pip install sphinx --upgrade
