@@ -13,18 +13,14 @@
 
 **hypertiling** is a high-performance Python 3 library for the generation and visualization of hyperbolic lattices, embedded in the Poincare disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with millions of vertices can be created in a matter of minutes on a single workstation computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.
 
-## Source
-
-The package can be found and downloaded in our public [git repository](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling).
-
 
 ## Installation and Usage
 
-Hypertiling is available in the [PyPI](https://pypi.org/) package index and can be installed using
+hypertiling is available in the [PyPI](https://pypi.org/) package index and can be installed using
 ```
 $ pip install hypertiling
 ```
-The package can also be locally installed from our public repository via
+The package can also be locally installed from our public [git repository](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling) via
 ```
 $ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
 $ pip install .
@@ -46,6 +42,7 @@ nlayers = 5
 T = HyperbolicTiling(p,q,nlayers) 
 ```
 
+Further examples are available in our [documentation](https://gitpages.physik.uni-wuerzburg.de/hypertiling/hyperweb/doc/examples/quickstart.html) and Jupyter demo notebooks.
 
 ## Authors
 * Manuel Schrauth  
