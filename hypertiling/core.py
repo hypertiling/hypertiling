@@ -39,7 +39,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKerne
         selects the construction algorithm
     """
     if not isinstance(kernel, TilingKernels):
-        raise AttributeError("Provided kernel is not a Tiling")
+        raise AttributeError("Provided kernel is not a TilingKernel")
     kernel = kernel.value
 
     if (p - 2) * (q - 2) <= 4:
@@ -59,13 +59,11 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKerne
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
 
-    # if kernel not in TILINGS:
-    #     raise KeyError("[hypertiling] Error: No valid kernel specified")
 
     return kernel(p, q, n, **kwargs)
 
 
-def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.StaticRotationalGraph, **kwargs) -> Graph:
+def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.GenerativeReflectionGraph, **kwargs) -> Graph:
     """
     The factory pattern  function which invokes a hyperbolic graph
 
@@ -82,7 +80,7 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.
     """
 
     if not isinstance(kernel, GraphKernels):
-        raise AttributeError("Provided kernel is not a Graph")
+        raise AttributeError("Provided kernel is not a GraphKernel")
     kernel = kernel.value
 
     if (p - 2) * (q - 2) <= 4:
