@@ -1,3 +1,4 @@
+import kernel_abc as abc
 from .ion import htprint
 from .kernel.SRG import StaticRotationalGraph
 from .kernel.SR import StaticRotational
@@ -22,7 +23,7 @@ class Graphs(Enum):
     StaticReflectionGraph = StaticReflectionGraph
 
 
-def HyperbolicTiling(p, q, n, kernel: Tilings = Tilings.StaticRotational, **kwargs):
+def HyperbolicTiling(p: int, q: int, n: int, kernel: Tilings = Tilings.StaticRotational, **kwargs) -> abc.Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling
 
@@ -64,7 +65,7 @@ def HyperbolicTiling(p, q, n, kernel: Tilings = Tilings.StaticRotational, **kwar
     return kernel(p, q, n, **kwargs)
 
 
-def HyperbolicGraph(p, q, n, kernel: Graphs = Graphs.StaticRotationalGraph, **kwargs):
+def HyperbolicGraph(p: int, q: int, n: int, kernel: Graphs = Graphs.StaticRotationalGraph, **kwargs) -> abc.Graph:
     """
     The factory pattern  function which invokes a hyperbolic graph
 
