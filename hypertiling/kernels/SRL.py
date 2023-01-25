@@ -9,7 +9,7 @@ from ..arraytransformation import  mrotate, morigin
 from ..distance import disk_distance
 
 
-class KernelStaticRotationalLegacy(KernelRotationalCommon):
+class StaticRotationalLegacy(KernelRotationalCommon):
     """ 
     Deprecated (!!)
     Our first tiling construction kernel, generates a hyperbolic lattice 
@@ -17,7 +17,7 @@ class KernelStaticRotationalLegacy(KernelRotationalCommon):
     """
 
     def __init__ (self, p, q, n, **kwargs):
-        super(KernelStaticRotationalLegacy, self).__init__(p, q, n, **kwargs)
+        super(StaticRotationalLegacy, self).__init__(p, q, n, **kwargs)
         self.dgts = 10
         self.accuracy = 10**(-self.dgts) # numerical accuracy
 

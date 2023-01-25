@@ -22,7 +22,7 @@ LIMITATIONS:
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class KernelStaticReflectionGraph(Graph):
+class StaticReflectionGraph(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -155,7 +155,7 @@ class KernelStaticReflectionGraph(Graph):
 
 if __name__ == "__main__":
     import time
-    from hypertiling.kernels.GR import KernelGenerativeReflection
+    from hypertiling.kernels.GR import GenerativeReflection
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import hypertiling.core as core
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     p, q, n = 3, 7, 6
     n2 = 3
     t1 = time.time()
-    graph = KernelStaticReflectionGraph(p, q, n)
+    graph = StaticReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
     """t1 = time.time()

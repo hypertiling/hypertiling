@@ -25,7 +25,7 @@ LIMITATIONS:
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class KernelGenerativeReflection(Tiling):
+class GenerativeReflection(Tiling):
     """
     Creates the hyperbolic tiling.
     """
@@ -876,7 +876,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(7, 3, 4)
+    tiling = GenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
     print(tiling.get_nbrs_geometrical(1))

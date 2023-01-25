@@ -10,7 +10,7 @@ from .DUN_util import transformW_poly, transformW_site
 # by our HyperPolygon class we need transformation functions provided in DUN_util.py
 
 
-class KernelLegacyDunham(KernelStaticBase):
+class LegacyDunham(KernelStaticBase):
     """
     Original construction algorithm by D. Dunham (1982)
     works for every valid combination {p,q}
@@ -18,7 +18,7 @@ class KernelLegacyDunham(KernelStaticBase):
     """
 
     def __init__ (self, p, q, n, **kwargs):
-        super(KernelLegacyDunham, self).__init__(p, q, n, **kwargs)
+        super(LegacyDunham, self).__init__(p, q, n, **kwargs)
 
 
         if self.center == "vertex":

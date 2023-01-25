@@ -1,24 +1,16 @@
 from .ion import htprint
-from .kernels.SRG import KernelStaticRotationalGraph
-from .kernels.SR  import KernelStaticRotational
-from .kernels.SRL import KernelStaticRotationalLegacy
-from .kernels.DUN import KernelLegacyDunham
-from .kernels.GR  import KernelGenerativeReflection
-from .kernels.GRG import KernelGenerativeReflectionGraph
-from .kernels.SGRG import KernelStaticReflectionGraph
+from .kernels.SRG import StaticRotationalGraph
+from .kernels.SR  import StaticRotational
+from .kernels.SRL import StaticRotationalLegacy
+from .kernels.DUN import LegacyDunham
+from .kernels.GR  import GenerativeReflection
+from .kernels.GRG import GenerativeReflectionGraph
+from .kernels.SGRG import StaticReflectionGraph
 
 
-TILINGS = { "SR":  KernelStaticRotational,
-            "SRG": KernelStaticRotationalGraph,
-            "SRL": KernelStaticRotationalLegacy,
-            "DUN": KernelLegacyDunham,
-            "GR":  KernelGenerativeReflection  }
 
-GRAPHS = {  "GRG": KernelGenerativeReflectionGraph,
-            "SGRG": KernelStaticReflectionGraph}
+def HyperbolicTiling(p, q, n, kernel=StaticRotational, **kwargs):
 
-
-def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     """
     The factory pattern function which invokes a hyperbolic tiling
 
@@ -40,24 +32,23 @@ def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
     if p > 20 or q > 20 and n > 5:
         htprint("Warning", "The lattice might become very large with your parameter choice!")
 
-    if kernel == "SRL":
+    if kernel == StaticRotationalLegacy:
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
-    if kernel == "GR":
+    if kernel == GenerativeReflection:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-    if kernel in ["SR", "SRG", "SRL"]:
+    if kernel in [StaticRotational, StaticRotationalGraph, StaticRotationalLegacy]:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-    if kernel == "DUN":
+    if kernel == LegacyDunham:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
 
-    if kernel not in TILINGS:
-        raise KeyError("[hypertiling] Error: No valid kernel specified")
+    # if kernel not in TILINGS:
+    #     raise KeyError("[hypertiling] Error: No valid kernel specified")
 
-    return TILINGS[kernel](p, q, n, **kwargs)
+    return kernel(p, q, n, **kwargs)
 
 
-
-def HyperbolicGraph(p, q, n, kernel="SR", **kwargs):
+def HyperbolicGraph(p, q, n, kernel=StaticRotationalGraph, **kwargs):
     """
     The factory pattern  function which invokes a hyperbolic graph
 
@@ -79,10 +70,10 @@ def HyperbolicGraph(p, q, n, kernel="SR", **kwargs):
     if p > 20 or q > 20 and n > 5:
         htprint("Warning", "The lattice might become very large with your parameter choice!")
 
-    if kernel == "GRG":
+    if kernel == GenerativeReflectionGraph:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         
-    if kernel not in GRAPHS:
-        raise KeyError("[hypertiling] Error: No valid kernel specified")
+    # if kernel not in GRAPHS:
+    #     raise KeyError("[hypertiling] Error: No valid kernel specified")
 
-    return GRAPHS[kernel](p, q, n, **kwargs)
+    return kernel(p, q, n, **kwargs)

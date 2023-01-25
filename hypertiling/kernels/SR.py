@@ -6,14 +6,14 @@ from .SR_base import KernelRotationalCommon
 
 
 
-class KernelStaticRotational(KernelRotationalCommon):
+class StaticRotational(KernelRotationalCommon):
     """
     The default lattice construction kernel; New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
     Duplicates are eliminated using specialized data containers
     """
 
     def __init__(self, p, q, n, **kwargs):
-        super(KernelStaticRotational, self).__init__(p, q, n, **kwargs)   
+        super(StaticRotational, self).__init__(p, q, n, **kwargs)   
 
         self.generate()
 

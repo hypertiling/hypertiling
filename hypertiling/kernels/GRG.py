@@ -22,7 +22,7 @@ LIMITATIONS:
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class KernelGenerativeReflectionGraph(Graph):
+class GenerativeReflectionGraph(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -229,7 +229,7 @@ class KernelGenerativeReflectionGraph(Graph):
 
 if __name__ == "__main__":
     import time
-    from hypertiling.kernels.GR import KernelGenerativeReflection
+    from hypertiling.kernels.GR import GenerativeReflection
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import hypertiling.core as core
@@ -238,11 +238,11 @@ if __name__ == "__main__":
     p, q, n = 3, 7, 7
     n2 = 3
     t1 = time.time()
-    graph = KernelGenerativeReflectionGraph(p, q, n)
+    graph = GenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
     t1 = time.time()
-    tiling = KernelGenerativeReflection(q, p, n)
+    tiling = GenerativeReflection(q, p, n)
     print(f"Took: {time.time() - t1}")
     tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
     tiling.rotate(60, deg=True)
