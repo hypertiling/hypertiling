@@ -12,7 +12,6 @@ from enum import Enum
 
 class TilingKernels(Enum):
     StaticRotational = StaticRotational
-    SR = StaticRotational
     StaticRotationalGraph = StaticRotationalGraph
     StaticRotationalLegacy = StaticRotationalLegacy
     LegacyDunham = LegacyDunham
@@ -36,8 +35,8 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKerne
         number of cells meeting at each vertex
     n : int
         number of layers to be constructed
-    kernel : str
-        selects the construction algorithm
+    kernel : Tiling
+        selects the construction kernel
     """
     if not isinstance(kernel, TilingKernels):
         raise AttributeError("Provided kernel is not a TilingKernel")
@@ -76,8 +75,8 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.
         number of cells meeting at each vertex
     n : int
         number of layers to be constructed
-    kernel : str
-        selects the construction algorithm
+    kernel : Graph
+        selects the construction kernel
     """
 
     if not isinstance(kernel, GraphKernels):
@@ -94,7 +93,5 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.
     if kernel == GenerativeReflectionGraph:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
 
-    # if kernel not in GRAPHS:
-    #     raise KeyError("[hypertiling] Error: No valid kernel specified")
 
     return kernel(p, q, n, **kwargs)
