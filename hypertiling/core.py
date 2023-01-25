@@ -5,6 +5,7 @@ from .kernels.SRL import KernelStaticRotationalLegacy
 from .kernels.DUN import KernelLegacyDunham
 from .kernels.GR  import KernelGenerativeReflection
 from .kernels.GRG import KernelGenerativeReflectionGraph
+from .kernels.SGRG import KernelStaticReflectionGraph
 
 
 TILINGS = { "SR":  KernelStaticRotational,
@@ -13,7 +14,8 @@ TILINGS = { "SR":  KernelStaticRotational,
             "DUN": KernelLegacyDunham,
             "GR":  KernelGenerativeReflection  }
 
-GRAPHS = {  "GRG": KernelGenerativeReflectionGraph}
+GRAPHS = {  "GRG": KernelGenerativeReflectionGraph,
+            "SGRG": KernelStaticReflectionGraph}
 
 
 def HyperbolicTiling(p, q, n, kernel="SR", **kwargs):
