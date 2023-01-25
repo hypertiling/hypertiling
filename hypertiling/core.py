@@ -1,11 +1,11 @@
 from .ion import htprint
-from .kernels.SRG import StaticRotationalGraph
-from .kernels.SR  import StaticRotational
-from .kernels.SRL import StaticRotationalLegacy
-from .kernels.DUN import LegacyDunham
-from .kernels.GR  import GenerativeReflection
-from .kernels.GRG import GenerativeReflectionGraph
-from .kernels.SGRG import StaticReflectionGraph
+from .kernel.SRG import StaticRotationalGraph
+from .kernel.SR  import StaticRotational
+from .kernel.SRL import StaticRotationalLegacy
+from .kernel.DUN import LegacyDunham
+from .kernel.GR  import GenerativeReflection
+from .kernel.GRG import GenerativeReflectionGraph
+from .kernel.SGRG import StaticReflectionGraph
 
 
 
