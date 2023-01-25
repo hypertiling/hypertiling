@@ -10,7 +10,7 @@ from .kernel.SGRG import StaticReflectionGraph
 from enum import Enum
 
 
-class Tilings(Enum):
+class TilingKernels(Enum):
     StaticRotational = StaticRotational
     StaticRotationalGraph = StaticRotationalGraph
     StaticRotationalLegacy = StaticRotationalLegacy
@@ -18,7 +18,7 @@ class Tilings(Enum):
     GenerativeReflection = GenerativeReflection
 
 
-class Graphs(Enum):
+class GraphKernels(Enum):
     GenerativeReflectionGraph = GenerativeReflectionGraph
     StaticReflectionGraph = StaticReflectionGraph
 
@@ -38,7 +38,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Tilings = Tilings.StaticRot
     kernel : str
         selects the construction algorithm
     """
-    if not isinstance(kernel, Tilings):
+    if not isinstance(kernel, TilingKernels):
         raise AttributeError("Provided kernel is not a Tiling")
     kernel = kernel.value
 
@@ -81,7 +81,7 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: Graphs = Graphs.StaticRotati
         selects the construction algorithm
     """
 
-    if not isinstance(kernel, Graphs):
+    if not isinstance(kernel, GraphKernels):
         raise AttributeError("Provided kernel is not a Graph")
     kernel = kernel.value
 
