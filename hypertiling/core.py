@@ -12,6 +12,7 @@ from enum import Enum
 
 class TilingKernels(Enum):
     StaticRotational = StaticRotational
+    SR = StaticRotational
     StaticRotationalGraph = StaticRotationalGraph
     StaticRotationalLegacy = StaticRotationalLegacy
     LegacyDunham = LegacyDunham

@@ -1,6 +1,6 @@
-from .core import HyperbolicTiling, HyperbolicGraph, Tilings, Graphs
+from .core import HyperbolicTiling, HyperbolicGraph, TilingKernels, GraphKernels
 
-__all__ = ['HyperbolicTiling', 'HyperbolicGraph', 'Tilings', 'Graphs']
+__all__ = ['HyperbolicTiling', 'HyperbolicGraph', 'TilingKernels', 'GraphKernels']
 
 __version__ = "1.1.3"
 __author__ = 'Manuel Schrauth, Yanick Thurn, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela'
