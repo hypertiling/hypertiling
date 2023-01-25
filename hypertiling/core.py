@@ -23,7 +23,7 @@ class GraphKernels(Enum):
     StaticReflectionGraph = StaticReflectionGraph
 
 
-def HyperbolicTiling(p: int, q: int, n: int, kernel: Tilings = Tilings.StaticRotational, **kwargs) -> Tiling:
+def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKernels.StaticRotational, **kwargs) -> Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling
 
@@ -65,7 +65,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Tilings = Tilings.StaticRot
     return kernel(p, q, n, **kwargs)
 
 
-def HyperbolicGraph(p: int, q: int, n: int, kernel: Graphs = Graphs.StaticRotationalGraph, **kwargs) -> Graph:
+def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.StaticRotationalGraph, **kwargs) -> Graph:
     """
     The factory pattern  function which invokes a hyperbolic graph
 
