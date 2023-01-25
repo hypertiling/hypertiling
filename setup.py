@@ -17,7 +17,7 @@ setup(
     description='A high-performance Python 3 library for the generation and visualization of hyperbolic tilings',
     long_description=long_desc,
     long_description_content_type='text/markdown',
-    author='Manuel Schrauth, Felix Dusel, Yanick Thurn, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela',
+    author='Manuel Schrauth, Yanick Thurn, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela',
     author_email='manuel.schrauth@uni-wuerzburg.de',
     url='http://www.hypertiling.de/',
     license='MIT',

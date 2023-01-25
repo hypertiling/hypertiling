@@ -1,5 +1,6 @@
 import unittest
 from hypertiling import HyperbolicTiling
+from hypertiling.kernels import StaticRotational, StaticRotationalLegacy
 
 print("Testing different neighbour search algorithms against each other")
 
@@ -7,7 +8,7 @@ print("Testing different neighbour search algorithms against each other")
 class TestCore(unittest.TestCase):
     def test_comp_nbrs(self):
 
-        kernel = "SR"
+        kernel = StaticRotational
 
         lattices = [(3, 7, 6,), (7, 3, 6), (5, 4, 5), (4, 5, 5), (9, 3, 3), (4, 10, 3), (3, 8, 3), (6, 4, 3)]
 
@@ -22,7 +23,7 @@ class TestCore(unittest.TestCase):
             self.assertEqual(nbrs1, nbrs2, nbrs3)
 
 
-        kernel = "SRL"
+        kernel = StaticRotationalLegacy
 
         lattices = [(3, 7, 4), (7, 3, 4), (5, 4, 4), (4, 5, 4), (9, 3, 4), (4, 10, 3), (3, 8, 4), (6, 4, 4)]
 

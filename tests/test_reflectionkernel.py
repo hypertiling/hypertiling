@@ -1,8 +1,9 @@
 import unittest
 from tests.test_util import *
 from hypertiling.core import HyperbolicTiling
+from hypertiling.kernels import GenerativeReflection
 import hypertiling.geodesics as geos
-import hypertiling.kernels.GR_util as util
+import hypertiling.kernel.GR_util as util
 import random
 import numpy as np
 
@@ -32,7 +33,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_generate(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel="GR")
+                tiling = HyperbolicTiling(combi[0], combi[1], n=MAXLAYERS, kernel=GenerativeReflection)
             # this is basically the only test we can do and it only will scream when duplicates are found
             with PrintTest() as stream:
                 tiling.check_integrity()
@@ -40,7 +41,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_find(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
 
             for index in range(tiling.length - 1):
                 center = tiling[index][0]
@@ -65,7 +66,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_generative(index)
 
@@ -93,7 +94,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors_radius(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
                 tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_mapping(index)
@@ -110,7 +111,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors_experimental(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
                 tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_mapping(index)
@@ -120,7 +121,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors_mapping(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
             tiling.map_nbrs()
             for index in range(tiling.length):
                 neighbors = tiling.get_nbrs_generative(index)
@@ -130,7 +131,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_get_neighbors_list(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
             neighbors_list = tiling.get_nbrs_list()  # calls tiling.map_nbrs
             for index in range(tiling.length):
                 neighbors = neighbors_list[index]
@@ -140,7 +141,7 @@ class TestReflectTiling(unittest.TestCase):
     def test_check_integrity(self):
         for combi in Progress(COMBIS):
             with PrintTest():
-                tiling = HyperbolicTiling(*combi, kernel="GR")
+                tiling = HyperbolicTiling(*combi, kernel=GenerativeReflection)
 
             # check for duplicates
             old = tiling._sector_polys[-1, 0]
@@ -170,5 +171,5 @@ class TestReflectTiling(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    tiling = HyperbolicTiling(7, 3, 2, kernel="GR")
+    tiling = HyperbolicTiling(7, 3, 2, kernel=GenerativeReflection)
     unittest.main()
