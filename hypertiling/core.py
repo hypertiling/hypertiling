@@ -6,7 +6,6 @@ from .kernel.DUN import LegacyDunham
 from .kernel.GR import GenerativeReflection
 from .kernel.GRG import GenerativeReflectionGraph
 from .kernel.SGRG import StaticReflectionGraph
-from .kernel_abc import Tiling, Graph
 from enum import Enum
 
 
