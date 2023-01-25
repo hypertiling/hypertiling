@@ -1,12 +1,12 @@
 import unittest
 from hypertiling import HyperbolicTiling
+from hypertiling import TilingKernels
 from hypertiling.util import n_cell_centered, n_vertex_centered
-from hypertiling.kernels import StaticRotational, StaticRotationalGraph
 
 class TestCore(unittest.TestCase):
     def test_num_cells_cell_centered(self):
         l = 5
-        kernels = [StaticRotational, StaticRotationalGraph]
+        kernels = [TilingKernels.StaticRotational, TilingKernels.StaticRotationalGraph]
         for k in kernels:
 
             for p,q in [(7,3), (8,3), (4,5), (4,6), (4,7), (4,8), (5,5), (5,6)]:
