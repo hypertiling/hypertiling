@@ -15,7 +15,7 @@ def maximal_radial_cutoff(T, eps=1e-10):
 
     maxlayer_centers = []
     for poly in T:
-        if poly.layer == T.nlayers:
+        if poly.layer == T.n: # improve me!
             maxlayer_centers.append(radial_distance_polar(poly.centerP()))
 
     cutoff_radius = np.min(maxlayer_centers) - eps
