@@ -6,5 +6,6 @@
 /.idea
 *.pyc
 hypertiling/kernels/__pycache__
+hypertiling/kernel/__pycache__
 venv
 /build

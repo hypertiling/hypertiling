@@ -1,22 +1,28 @@
 import numpy as np
+import copy
 import math
-from ..arraytransformation import morigin, mrotate
-from .SR_util import DuplicateContainer
+
+# relative imports
 from .SR_base import KernelRotationalCommon
+from .SRL_util import DuplicateContainerSimple
+from ..arraytransformation import  mrotate, morigin
+from ..distance import disk_distance
 
 
-
-class KernelStaticRotational(KernelRotationalCommon):
+class StaticRotationalLegacy(KernelRotationalCommon):
+    """ 
+    Deprecated (!!)
+    Our first tiling construction kernel, generates a hyperbolic lattice 
+    by discrete rotations of existing polygons about their vertices
     """
-    The default lattice construction kernel; New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
-    Duplicates are eliminated using specialized data containers
-    """
 
-    def __init__(self, p, q, n, **kwargs):
-        super(KernelStaticRotational, self).__init__(p, q, n, **kwargs)   
+    def __init__ (self, p, q, n, **kwargs):
+        super(StaticRotationalLegacy, self).__init__(p, q, n, **kwargs)
+        self.dgts = 10
+        self.accuracy = 10**(-self.dgts) # numerical accuracy
 
+        # construct tiling
         self.generate()
-
 
 
     def generate(self):
@@ -54,25 +60,15 @@ class KernelStaticRotational(KernelRotationalCommon):
         self.fund_poly_center = self.fund_poly.verticesP[self.p]
         self.polygons.append(self.fund_poly)
 
-        # prepare container which will be used for duplicate checks
-        if self.center == "vertex":
-            rrad = np.abs(self.fund_poly_center)
-            pphi = math.atan2(self.fund_poly_center.imag, self.fund_poly_center.real)
-        if self.center == "cell":
-            # the initial poly has a center of (0,0) 
-            # therefore we set its angle artificially to phi/2
-            rrad = 0
-            pphi = self.phi / 2
-            
-        
-        # container used for filtering duplicates in the bulk
-        dupl_large = DuplicateContainer(self.p * self.q, rrad, pphi)
-
-        # container used for filtering rotational duplicates at the sector boundary
-        dupl_small = DuplicateContainer(self.p * self.q, rrad, pphi)
+        # prepare sets which will contain the center coordinates
+        # will be used for uniqueness checks
+        dupl_large = DuplicateContainerSimple(self.dgts)
+        dupl_small = DuplicateContainerSimple(self.dgts)
+        dupl_large.add(self.fund_poly.centerP())
 
         # the actual construction
         self._populate_sector(dupl_large, dupl_small)
+
+
+
        
-
-

@@ -9,7 +9,7 @@ from .SRG_util import DuplicateContainerCircular
 PI2 = 2 * np.pi
 
 
-class KernelStaticRotationalGraph(KernelRotationalCommon):
+class StaticRotationalGraph(KernelRotationalCommon):
     """
     Hyperbolic tiling construction kernel
 
@@ -17,7 +17,7 @@ class KernelStaticRotationalGraph(KernelRotationalCommon):
     however, since currently no sector algorithm is used, the construction itself is slower
     """
     def __init__ (self, p, q, n, **kwargs):
-        super(KernelStaticRotationalGraph, self).__init__(p, q, n, **kwargs)
+        super(StaticRotationalGraph, self).__init__(p, q, n, **kwargs)
 
         # define type of neighbour container
         self._nbrs = []
