@@ -1,7 +1,7 @@
 from typing import Callable, Any, List
 import numpy as np
 import hypertiling.kernel.GR_util as util
-import hypertiling.kernel.SGRG_util as graph_util
+import hypertiling.kernel.GRGS_util as graph_util
 from hypertiling.kernel_abc import Graph
 
 """
@@ -22,7 +22,7 @@ LIMITATIONS:
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class StaticReflectionGraph(Graph):
+class GenerativeReflectionGraphStatic(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     p, q, n = 3, 7, 6
     n2 = 3
     t1 = time.time()
-    graph = StaticReflectionGraph(p, q, n)
+    graph = GenerativeReflectionGraphStatic(p, q, n)
     print(f"Took: {time.time() - t1}")
 
     """t1 = time.time()

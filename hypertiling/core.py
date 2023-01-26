@@ -1,3 +1,4 @@
+from typing import Union
 from .ion import htprint
 from .kernel_abc import Tiling, Graph
 from .kernel.SRG import StaticRotationalGraph
@@ -6,24 +7,38 @@ from .kernel.SRL import StaticRotationalLegacy
 from .kernel.DUN import LegacyDunham
 from .kernel.GR import GenerativeReflection
 from .kernel.GRG import GenerativeReflectionGraph
-from .kernel.SGRG import StaticReflectionGraph
+from .kernel.GRGS import GenerativeReflectionGraphStatic
 from enum import Enum
+
+TILINGS = {
+    "SR": StaticRotational,
+    "SRG": StaticRotationalGraph,
+    "SRL": StaticRotationalLegacy,
+    "DUN": LegacyDunham,
+    "GR": GenerativeReflection
+}
+
+GRAPHS = {
+    "GRG": GenerativeReflectionGraph,
+    "GRGS": GenerativeReflectionGraphStatic
+}
 
 
 class TilingKernels(Enum):
-    StaticRotational = StaticRotational
-    StaticRotationalGraph = StaticRotationalGraph
-    StaticRotationalLegacy = StaticRotationalLegacy
-    LegacyDunham = LegacyDunham
-    GenerativeReflection = GenerativeReflection
+    StaticRotational = "SR"
+    StaticRotationalGraph = "SRG"
+    StaticRotationalLegacy = "SRL"
+    LegacyDunham = "DUN"
+    GenerativeReflection = "GR"
 
 
 class GraphKernels(Enum):
-    GenerativeReflectionGraph = GenerativeReflectionGraph
-    StaticReflectionGraph = StaticReflectionGraph
+    GenerativeReflectionGraph = "GRG"
+    GenerativeReflectionGraphStatic = "GRGS"
 
 
-def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKernels.StaticRotational, **kwargs) -> Tiling:
+def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] = TilingKernels.StaticRotational,
+                     **kwargs) -> Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling
 
@@ -38,9 +53,11 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKerne
     kernel : Tiling
         selects the construction kernel
     """
-    if not isinstance(kernel, TilingKernels):
+    if isinstance(kernel, TilingKernels):
+        kernel = kernel.value
+
+    if not (kernel in TILINGS):
         raise AttributeError("Provided kernel is not a TilingKernel")
-    kernel = kernel.value
 
     if (p - 2) * (q - 2) <= 4:
         raise AttributeError(
@@ -59,11 +76,11 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: TilingKernels = TilingKerne
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
 
+    return TILINGS[kernel](p, q, n, **kwargs)
 
-    return kernel(p, q, n, **kwargs)
 
-
-def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.GenerativeReflectionGraph, **kwargs) -> Graph:
+def HyperbolicGraph(p: int, q: int, n: int, kernel: Union[GraphKernels, str] = GraphKernels.GenerativeReflectionGraph,
+                    **kwargs) -> Graph:
     """
     The factory pattern  function which invokes a hyperbolic graph
 
@@ -79,9 +96,11 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.
         selects the construction kernel
     """
 
-    if not isinstance(kernel, GraphKernels):
+    if isinstance(kernel, GraphKernels):
+        kernel = kernel.value
+
+    if not (kernel in GRAPHS):
         raise AttributeError("Provided kernel is not a GraphKernel")
-    kernel = kernel.value
 
     if (p - 2) * (q - 2) <= 4:
         raise AttributeError(
@@ -93,5 +112,4 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: GraphKernels = GraphKernels.
     if kernel == GenerativeReflectionGraph:
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
 
-
-    return kernel(p, q, n, **kwargs)
+    return GRAPHS[kernel](p, q, n, **kwargs)
