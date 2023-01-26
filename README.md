@@ -7,7 +7,7 @@
 <td align="left" width="9999" >
 
 
-
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559394.svg)](https://doi.org/10.5281/zenodo.7559394)
 
 
