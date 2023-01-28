@@ -103,7 +103,8 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         cutoff = 1-cutoff
 
     # loop over polygons
-    for idx in range(len(tiling)):
+    #for idx in range(len(tiling)))
+    for idx in tiling.polygons:
         # extract vertex coordinates
         u = tiling.get_vertices(idx)
 
@@ -268,7 +269,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     """
 
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=dpi)
 
     # draw unit circle
     if unitcircle:
