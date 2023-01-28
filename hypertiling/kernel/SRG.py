@@ -71,6 +71,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             del self.polygons[idx]
             del self._nbrs[idx]
 
+        # important TODO: remove cells also in duplicate containers!!!
 
 
 
@@ -135,7 +136,22 @@ class StaticRotationalGraph(KernelRotationalCommon):
             collect_nbrs = np.array(collect_nbrs)
             collect_nbrs = collect_nbrs[collect_nbrs != self.counter]
 
-            self._nbrs[pgon.idx] = list(np.unique(collect_nbrs))
+            nbr_list = list(np.unique(collect_nbrs))
+            self._nbrs[pgon.idx] = nbr_list
+
+           
+           
+            # establish mutual connections
+            # i.e.connect new cells to their parent polygons
+            # important note: child will only be connected to those parents from which they have been
+            # generated (see documentation notebook)
+            for nb in nbr_list:
+                self._nbrs[nb].append(pgon.idx)
+                self._nbrs[nb] = list(set(self._nbrs[nb]))
+
+
+
+
 
             self.counter += 1
 
@@ -151,31 +167,6 @@ class StaticRotationalGraph(KernelRotationalCommon):
         self.globcount += 1
 
 
-
-    # def add_ghost_boundary(self):
-    #     """
-    #     the construction principle of SRG does not allow to determine the neighbours of the outmost layer points
-    #     during generation of the lattice
-
-    #     calling this function, they will at least be connected to their parents (which can be more than one!)
-    #     connections to their siblings are not being computed! this will become part of a different function
-    #     'close_boundary' which is not yet implemented TODO
-    #     """
-
-    #     k = len(self)-self.layerbounds[-1] # error can not be closed if layerbounds too short
-    #     for kk in range(k):
-    #         self._nbrs.append([])
-
-
-    #     for i in range(self.layerbounds[-2], self.layerbounds[-1]):
-    #         for j in self._nbrs[i]:
-    #             self._nbrs[j].append(i)
-
-    
-    #     for kk in range(self.layerbounds[-3],k):
-    #         self._nbrs[kk] = list(np.unique(np.array(self._nbrs[kk])))
-
-    #     self.closed = True  
 
 
     def _prepare_duplicate_container(self):
