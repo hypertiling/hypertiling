@@ -167,6 +167,7 @@ class KernelStaticBase(Tiling):
         # tiling centered around cell
         # add fundamental cell and set bounds of current layer
         if self.center == "cell":
+            self.fund_poly.idx = 0
             self.polygons.append(self.fund_poly)
             self.outmost_layer_lower = 0
             self.outmost_layer_upper = 1
@@ -183,6 +184,7 @@ class KernelStaticBase(Tiling):
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
                 adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
+                self.adj_pgon.idx = len(self.polygons)
                 self.polygons.append(adj_pgon)
 
             self.outmost_layer_lower = 0

@@ -27,8 +27,49 @@ class StaticRotationalGraph(KernelRotationalCommon):
         self.outmost_layer_lower = 0
         self.outmost_layer_upper = 1
 
+        self.layerbounds = [0]
+        self.closed = False
+
         # construct tiling
         self.generate()
+
+
+
+    def find_poly_by_idx(self, idx):
+        for i,poly in enumerate(self.polygons):
+            if poly.idx == idx:
+                return i
+
+
+
+    def remove_vertices(self, deletelist):
+
+        if self.layerbounds == False:
+            raise Exception("TEst")
+        
+        idxlst = [poly.idx for poly in self.polygons]
+
+
+        # deletelist: indices der polygone selbst
+        # positionen: indices der polygone im array self.polygons und self._nbrs
+        # perhaps this is more elegant using a dictionary?
+
+        positions = [i for i in range(len(idxlst)) if idxlst[i] in deletelist]
+
+        for j,pos in enumerate(positions):
+            for nb in self._nbrs[pos]:
+                #try:
+                self._nbrs[self.find_poly_by_idx(nb)].remove(deletelist[j])
+
+                #except:
+                #    pass
+
+            
+                
+        for index in sorted(deletelist, reverse=True):
+            del self.polygons[index]
+            del self._nbrs[index]
+
 
 
     def add_layer(self, filter=None):
@@ -50,7 +91,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             collect_nbrs = []
             
             # iterate over every vertex of pgon
-            for vert_ind in range(self.p):
+            for vert_ind in reversed(range(self.p)):
 
                 # rotate polygon around current vertex
                 # compute center coordinates of all polygons which share this vertex...
@@ -61,7 +102,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
                     center = adj_centers[rot_ind]
 
-                    # check whether candidate polygon is in fundemantal sector
+                    # check whether candidate polygon is not closed to the origin
                     if filter(center):   
 
                         # check whether candidate polygon already exists
@@ -78,6 +119,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
                             collect_nbrs.append(len(self.polygons))
                             adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                             adj_pgon.layer = self.layers
+                            adj_pgon.idx = len(self.polygons)
                             self.polygons.append(adj_pgon)
 
                         else:
@@ -90,12 +132,33 @@ class StaticRotationalGraph(KernelRotationalCommon):
             self._nbrs.append(list(np.unique(collect_nbrs)))
             self.counter += 1
 
-
         self.outmost_layer_lower = self.outmost_layer_upper
         self.outmost_layer_upper = len(self.polygons)
+        self.layerbounds.append(self.outmost_layer_lower)
 
         #htprint("Status", "Created a new layer with index", self.layers+1, "containing", self.outerlayer_lower-self.outerlayer_upper, "polygons")
 
+
+    def close_layer(self):
+
+
+        k = len(self)-self.layerbounds[-1] # error can not be closed if layerbounds too short
+        for kk in range(k):
+            self._nbrs.append([])
+
+
+        for i in range(self.layerbounds[-2], self.layerbounds[-1]):
+            for j in self._nbrs[i]:
+                self._nbrs[j].append(i)
+
+        self.closed = True
+
+
+            
+
+    
+        for kk in range(self.layerbounds[-3],k):
+            self._nbrs[kk] = list(np.unique(np.array(self._nbrs[kk])))
 
 
     def _prepare_duplicate_container(self):
@@ -129,6 +192,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # clear tiling
         self.polygons = []
 
+
         # add layers repeatedly until nlayers is reached
         if self.center == "cell":
             self._create_first_layer()
@@ -137,7 +201,6 @@ class StaticRotationalGraph(KernelRotationalCommon):
                 self.add_layer(self.not_origin)
 
         elif self.center == "vertex":
-
             self._create_first_layer()
             self._prepare_duplicate_container()
             for _ in range(self.n-1):
