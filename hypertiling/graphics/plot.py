@@ -187,7 +187,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
         cutoff = 1-cutoff
 
     # loop over cells
-    for j, poly in enumerate(tiling):
+    for j, poly in tiling.polygons.items():
 
         # extract vertices
         u = tiling.get_vertices(j)
@@ -341,7 +341,7 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
     """
     
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=120)
 
 
     # default values

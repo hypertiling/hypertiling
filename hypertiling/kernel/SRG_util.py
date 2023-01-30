@@ -41,10 +41,10 @@ class HTCenterTuple:
         return self.angle > other.angle
 
     def __eq__(self, other):
-        return self.z == other.z
+        return self.idx == other.idx
 
     def __ne__(self, other):
-        return self.z != other.z
+        return self.idx != other.idx
 
 
 
@@ -129,20 +129,20 @@ try:
             self.centers.add(HTCenterTuple(z,idx))
 
 
+        # TODO: add this also for fallback implementation
         def remove_by_idx(self, z, idx):
             pos = self.centers.bisect_left(HTCenterTuple(z,idx))
 
             if self.centers[pos-1].idx == idx:
-                self.centers.pop(pos)
-                #print("a")
+                self.centers.pop(pos-1)
             elif self.centers[pos].idx == idx:
                 self.centers.pop(pos)
-                #print("b")
             elif self.centers[pos+1].idx == idx:
-                self.centers.pop(pos)
-                #print("c")
+                self.centers.pop(pos+1)
             else:
-                print("not found", idx, z)   # TODO: add this also for fallback implementation
+                print("something unexpected happend at", idx, z)   
+
+
 
         def is_duplicate(self, z):
             '''

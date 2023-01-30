@@ -43,7 +43,6 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
 
         for idx in deletelist:
-
             # remove from neighbour list
             # remove occurence in neighour lists of other cells
             try:
@@ -63,10 +62,15 @@ class StaticRotationalGraph(KernelRotationalCommon):
             except ValueError:
                 pass
 
-            # remove from polygon list
+
             try:
                 z = self.polygons[idx].centerP()
                 self.dplcts.remove_by_idx(z, idx)
+            except:
+                pass
+
+            # remove from polygon list
+            try:
                 del self.polygons[idx]
             except KeyError:
                 pass
@@ -80,13 +84,15 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
 
         if addlist is None:
-            addlist = self.exposed
+            polylist = self.exposed
+        else:
+            polylist = addlist
 
         if filter is None:
             filter = self.filter_always_pass
 
         newexposed = []
-        for pgonidx in addlist:
+        for pgonidx in polylist:
             pgon = self.polygons[pgonidx]
 
             # center of current polygon
@@ -147,7 +153,11 @@ class StaticRotationalGraph(KernelRotationalCommon):
             self.counter += 1
             self.layercount += 1
 
-        self.exposed = newexposed
+        if addlist is None:
+            self.exposed = newexposed
+        else:
+            self.exposed = [x for x in self.exposed if (x not in addlist)]
+            self.exposed += newexposed
 
 
     def _add_pgon(self, pgon):
@@ -177,18 +187,8 @@ class StaticRotationalGraph(KernelRotationalCommon):
         init with origin, set angle artificially to phi/2
         """
 
-        idx = 0
-        rrad = 0
-        pphi = self.phi / 2
-        self.dplcts = DuplicateContainerCircular(self.p * self.q)#, rrad, pphi, idx)        
+        self.dplcts = DuplicateContainerCircular(self.p * self.q)       
 
-        # # add full first layer for vertex centered tilings
-        # if self.center == "vertex":
-        #     for i in range(0,self.q):
-        #         self.dplcts.add(self.polygons[i].centerP(),i)
-
-        # current layer number
-        self.layers = 1
 
     def _create_first_layer(self, rotate_by=None):
         """
@@ -205,7 +205,8 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # tiling centered around cell
         # add fundamental cell and set bounds of current layer
         if self.center == "cell":
-            self.fund_poly.moeb_origin(0.000001) # necessary for technical reasons since the duplicate container is singular at the origin
+            self.fund_poly.moeb_origin(0.000001) 
+            # necessary for technical reasons since the duplicate container is singular at the origin
             # TODO: add warning
 
             self._add_pgon(self.fund_poly)
@@ -223,8 +224,10 @@ class StaticRotationalGraph(KernelRotationalCommon):
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
                 adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
-                self.adj_pgon.idx = len(self.polygons)
-                self.polygons.append(adj_pgon)
+                newpgonidx = self._add_pgon(adj_pgon)
+                self.exposed.append(newpgonidx)
+
+
 
 
 
@@ -232,18 +235,13 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
         construct full tiling by calling the add_layer function repeatedly
         """
-
-        # clear tiling
         self.polygons = {}
+        self._prepare_duplicate_container()
+        self._create_first_layer()
 
-        if self.center == "cell":
-            self._prepare_duplicate_container()
-            self._create_first_layer()
+        for i in range(self.n-1):
+            self.add_layer()
 
-
-        elif self.center == "vertex":
-            self._create_first_layer()
-            self._prepare_duplicate_container()
 
 
 
