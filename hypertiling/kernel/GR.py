@@ -22,7 +22,7 @@ LIMITATIONS:
 """
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
-MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
+MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
 class GenerativeReflection(Tiling):
@@ -356,7 +356,6 @@ class GenerativeReflection(Tiling):
                     continue
                 self._nbrs[i, c] = index
                 c += 1
-                print(i)
 
     def check_integrity(self):
         """
@@ -877,12 +876,11 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 5)
+    tiling = GenerativeReflection(7, 3, 6)
     t2 = time.time()
     print(tiling.length)
     print(tiling.get_nbrs_geometrical(3))
-    # print(tiling.get_nbrs(3))
-
+    print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
@@ -891,7 +889,7 @@ if __name__ == "__main__":
     # tiling.check_integrity()
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
 
-    for polygon_index, pgon in enumerate(tiling._sector_polys):
+    for polygon_index, pgon in enumerate(tiling):
         # print(polygon_index)
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)

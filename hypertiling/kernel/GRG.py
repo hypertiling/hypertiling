@@ -234,7 +234,7 @@ if __name__ == "__main__":
     import hypertiling.core as core
     from hypertiling.kernel_abc import Tiling
 
-    p, q, n = 3, 7, 6
+    p, q, n = 7, 3, 6
     n2 = 3
     t1 = time.time()
     graph = GenerativeReflectionGraph(p, q, n)
