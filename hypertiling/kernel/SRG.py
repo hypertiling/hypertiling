@@ -39,30 +39,44 @@ class StaticRotationalGraph(KernelRotationalCommon):
     def remove_cells(self, deletelist):
         """
         deletelist : List[int]
-            list of polygon indices to be removed
-            note that this is not their index (position) in the array, but their HyperPolygon.idx!
-            this routine automatically takes care of finding the correct position, though
+            list of polygon indices to be removed from the tiling
         """
 
         for idx in deletelist:
-            nbrs_of_idx = self.nbrs[idx]
-            for nb in nbrs_of_idx:
-                try:
-                    self.nbrs[nb].remove(idx)
-                except ValueError:
-                    pass
 
-            z = self.polygons[idx].centerP()
-            self.dplcts.remove_by_idx(z, idx)
+            # remove from neighbour list
+            # remove occurence in neighour lists of other cells
+            try:
+                nbrs_of_idx = self.nbrs[idx]
+                for nb in nbrs_of_idx:
+                    try:
+                        self.nbrs[nb].remove(idx)
+                    except ValueError:
+                        pass
+                del self.nbrs[idx]
+            except KeyError:
+                pass
 
-            del self.polygons[idx]
-            del self.nbrs[idx]
+            # remove from exposed cells
+            try:
+                self.exposed.remove(idx)
+            except ValueError:
+                pass
+
+            # remove from polygon list
+            try:
+                z = self.polygons[idx].centerP()
+                self.dplcts.remove_by_idx(z, idx)
+                del self.polygons[idx]
+            except KeyError:
+                pass
+            
 
 
 
     def add_layer(self, addlist=None, filter=None):
         """
-        add layer
+        Create new cells around existing ones; A list of polygons indices can be provided, TODO: doc about filter
         """
 
         if addlist is None:
@@ -102,10 +116,10 @@ class StaticRotationalGraph(KernelRotationalCommon):
                             # create copy
                             polycopy = copy.deepcopy(pgon)
 
-                            # generate adjacent polygon and add to large list
+                            # generate adjacent polygon
                             adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
                             adj_pgon.layer = self.layercount
-                            #adj_pgon.idx = len(self.polygons)
+                            # add to tiling
                             newpolyidx = self._add_pgon(adj_pgon)
                             collect_nbrs.append(newpolyidx)
                             newexposed.append(newpolyidx)
@@ -120,8 +134,6 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
             nbr_list = list(np.unique(collect_nbrs))
             self.nbrs[pgon.idx] = nbr_list
-
-            
             
             # establish mutual connections
             # i.e.connect new cells to their parent polygons
@@ -139,11 +151,21 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
 
     def _add_pgon(self, pgon):
+        """
+        Include new polygon in the tiling
+        """
+
+        # assign index to new polygon
         pgon.idx = self.globcount
+        # add polygon to storage
         self.polygons[pgon.idx] = pgon
-        self.nbrs[pgon.idx] = [] # add empty list for this poly in nbrs
+        # add empty list for this poly in nbrs
+        self.nbrs[pgon.idx] = []
+        # add to duplicate container
         self.dplcts.add(pgon.centerP(), pgon.idx)
+        # increment global count
         self.globcount += 1
+        # return index of new polygons
         return pgon.idx
 
 
@@ -208,27 +230,20 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
     def generate(self):
         """
-        do full construction
+        construct full tiling by calling the add_layer function repeatedly
         """
-
 
         # clear tiling
         self.polygons = {}
 
-
-        # add layers repeatedly until nlayers is reached
         if self.center == "cell":
             self._prepare_duplicate_container()
             self._create_first_layer()
 
-            #for _ in range(self.n-1):
-            #    self.add_layer(self.not_origin)
 
         elif self.center == "vertex":
             self._create_first_layer()
             self._prepare_duplicate_container()
-            #for _ in range(self.n-1):
-            #    self.add_layer(self.filter_always_pass)
 
 
 
@@ -239,6 +254,9 @@ class StaticRotationalGraph(KernelRotationalCommon):
         mfull(self.p, k * self.qhi, ind, polygon.verticesP)
         return polygon
 
+
+
+# ------------- Filters -------------
 
     def filter_always_pass(self, z0):
         return True
