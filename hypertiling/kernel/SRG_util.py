@@ -108,7 +108,7 @@ try:
         whether a floating point representative of a given complex number is already present.
         """
 
-        def __init__(self, linlength, r, phi, idx):
+        def __init__(self, linlength):#,: r, phi, idx):
             # the maximum linear length
             self.maxlinlength = linlength  
             # controls the width of the angle interval and is adapted by repeated searches
@@ -116,7 +116,7 @@ try:
             # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
             self.eps = 1e-12
             # array where the actual data is stored
-            self.centers = SortedList([HTCenterTuple(r, phi, idx)])
+            self.centers = SortedList()#[HTCenterTuple(r, phi, idx)])
 
 
         def add(self, z, idx):
@@ -129,6 +129,21 @@ try:
             self.centers.add(HTCenterTuple(z,idx))
 
 
+        def remove_by_idx(self, z, idx):
+            pos = self.centers.bisect_left(HTCenterTuple(z,idx))
+
+            if self.centers[pos-1].idx == idx:
+                self.centers.pop(pos)
+                #print("a")
+            elif self.centers[pos].idx == idx:
+                self.centers.pop(pos)
+                #print("b")
+            elif self.centers[pos+1].idx == idx:
+                self.centers.pop(pos)
+                #print("c")
+            else:
+                print("not found", idx, z)   # TODO: add this also for fallback implementation
+
         def is_duplicate(self, z):
             '''
             Checks whether a representative of z has already been stored.
@@ -137,8 +152,8 @@ try:
                 z (complex): the number to check.
 
             Returns:
-                true if a number that is as close as eps to z has already been stored
-                as well as the index of that number
+                true if a number (representing a cell center) that is as close as eps to z has 
+                already been stored; also returns the index of that number
                 else false
             '''
                         
@@ -204,8 +219,8 @@ except ImportError:
                     z (complex): the number to check.
                     
                 Returns:
-                    true if a number that is as close as eps to z has already been stored
-                    as well as the index of that number
+                    true if a number (cell) that is as close as eps to z has already been stored
+                    as well as the index of that number (cell)
                     else false
                     
             '''
