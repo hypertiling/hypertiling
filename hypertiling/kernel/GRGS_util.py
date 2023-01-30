@@ -87,10 +87,11 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
 
             # check for first order filler on closing
             if j == layer_size - 1 and current_level != 0:
+                # check if
                 connection = any_close_matrix(next_coords[0], current_coords[j])  # (p+1)^2
                 if connection.shape[0] == 2 and child_absolut > 3:
                     # block edges in number-bit-array (see. GRK __init__ for explanation)
-                    next_edges[0] ^= 1
+                    next_edges[0] ^= 1 << 1
                     current_edges[j] ^= 1 << (p - 1)
 
                     # add connection to
