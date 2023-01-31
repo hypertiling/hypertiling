@@ -7,8 +7,7 @@ from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
 from matplotlib.colors import is_color_like
 
-# taken from 
-# plots even very large samples of polygons in less than a second
+
 def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
     """
     Fast plot function
@@ -221,7 +220,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
 def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
                 ycrange=(-1, 1), dpi=120, **kwargs):
     """
-    Plots a hyperbolic tiling.
+    Plots a hyperbolic tiling
 
     Parameters
     ----------

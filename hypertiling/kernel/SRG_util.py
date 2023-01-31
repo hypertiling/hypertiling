@@ -3,7 +3,11 @@ import numpy as np
 PI2 = 6.2831853071795864769
 
 class HTCenterTuple:
-    '''This helper class wraps a complex and enables comparison based on the angle'''
+    '''
+    This helper class wraps a complex and enables comparison based on the angle
+    It provides an extension of the class "HTCenter" hosting tuples of coordinate
+    and index instead of only a coordinate
+    '''
 
     def __init__(self, *args):
         """The constructor.
