@@ -98,7 +98,7 @@ class AnimatorList:
         self.anim.save(path, writer)
 
 
-class HyperanimatorPath:
+class AnimatorPath:
     """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
 
