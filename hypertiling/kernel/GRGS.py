@@ -1,8 +1,9 @@
-from typing import Callable, Any, List
+from typing import List
 import numpy as np
 import hypertiling.kernel.GR_util as util
 import hypertiling.kernel.GRGS_util as graph_util
 from hypertiling.kernel_abc import Graph
+from ..ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -136,7 +137,7 @@ class GenerativeReflectionGraphStatic(Graph):
         :return: List[List[int]] = list of all neighbors for all polygons
         """
         if len(self) == 1:
-            print("Graph consists of one polygon!")
+            htprint("Warning", "Tiling consists of one polygon!")
             return []
         max_number = np.iinfo(self._nbrs.dtype).max
         return [[element for element in line if element != max_number] for line in self._nbrs.tolist()]  # m p
@@ -149,7 +150,7 @@ class GenerativeReflectionGraphStatic(Graph):
         :return: np.array = indices of the neighbors
         """
         if len(self) == 1:
-            print("Graph consists of one polygon!")
+            htprint("Warning", "Tiling consists of one polygon!")
             return []
         neighbor_indices = self._nbrs[sector_index]
 
