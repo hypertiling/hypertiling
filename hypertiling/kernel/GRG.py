@@ -182,6 +182,9 @@ class GenerativeReflectionGraph(Graph):
         Time-complexity: O(m)
         :return: List[List[int]] = List for each polygons neighbors
         """
+        if len(self) == 1:
+            print("Graph consists of one polygon!")
+            return []
         max_number = np.iinfo(self._nbrs.dtype).max
         return [[index for index in row if index != max_number] for row in self._nbrs.tolist()]
 
@@ -191,6 +194,10 @@ class GenerativeReflectionGraph(Graph):
         Time-complexity: O(mp)
         :return: List[List[int]] = list of all neighbors for all polygons
         """
+        if len(self) == 1:
+            print("Graph consists of one polygon!")
+            return []
+
         part = np.copy(self._nbrs[1:]).astype(np.uint32)  # m / p * p = m
         max_number = np.iinfo(self._nbrs.dtype).max  # m / p
 
@@ -208,6 +215,9 @@ class GenerativeReflectionGraph(Graph):
         return neighbors
 
     def get_nbrs(self, index):
+        if len(self) == 1:
+            print("Graph consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs)
 
     def get_reflection_level(self, index) -> int:

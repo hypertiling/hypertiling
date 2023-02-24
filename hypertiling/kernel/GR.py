@@ -460,6 +460,10 @@ class GenerativeReflection(Tiling):
         if method != "default":
             raise AttributeError("Only default implemented yet")
 
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return [[]]
+
         if self._nbrs is None:
             self.map_nbrs(tol=tol)
 
@@ -789,6 +793,9 @@ class GenerativeReflection(Tiling):
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
     def get_nbrs(self, i, method="mapping"):
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return []
         methods = {"mapping": self.get_nbrs_mapping,
                    "generative": self.get_nbrs_generative,
                    "radius": self.get_nbrs_radius,
@@ -802,6 +809,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_generative)
 
     def get_nbrs_geometrical(self, index: int) -> np.array:
@@ -811,6 +821,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
@@ -820,6 +833,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_mapping)
 
     def get_nbrs_radius(self, index: int) -> np.array:
@@ -829,6 +845,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            print("Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_radius)
 
     # Generative #######################################################################################################
@@ -876,9 +895,10 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 6)
+    tiling = GenerativeReflection(7, 3, 1)
     t2 = time.time()
     print(tiling.length)
+    print(tiling.get_nbrs_list())
     print(tiling.get_nbrs_geometrical(3))
     print(tiling.get_nbrs(3))
 

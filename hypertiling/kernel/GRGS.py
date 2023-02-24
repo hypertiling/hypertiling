@@ -135,7 +135,9 @@ class GenerativeReflectionGraphStatic(Graph):
         Time-complexity: O(mp)
         :return: List[List[int]] = list of all neighbors for all polygons
         """
-
+        if len(self) == 1:
+            print("Graph consists of one polygon!")
+            return []
         max_number = np.iinfo(self._nbrs.dtype).max
         return [[element for element in line if element != max_number] for line in self._nbrs.tolist()]  # m p
 
@@ -146,6 +148,9 @@ class GenerativeReflectionGraphStatic(Graph):
         :param sector_index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
+        if len(self) == 1:
+            print("Graph consists of one polygon!")
+            return []
         neighbor_indices = self._nbrs[sector_index]
 
         # get value from nice little overflow
