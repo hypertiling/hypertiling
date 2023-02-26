@@ -6,7 +6,7 @@ from hypertiling.kernel_abc import Tiling
 import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
-from ..ion import htprint
+from hypertiling.ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -909,12 +909,11 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 1)
+    tiling = GenerativeReflection(3, 8, 9)
     t2 = time.time()
     print(tiling.length)
-    print(tiling.get_nbrs_list())
-    print(tiling.get_nbrs_geometrical(3))
-    print(tiling.get_nbrs(3))
+    #print(tiling.get_nbrs_geometrical(3))
+    #print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")

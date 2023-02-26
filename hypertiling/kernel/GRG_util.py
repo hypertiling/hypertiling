@@ -34,7 +34,6 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
             x_ = np.real(center_coords[y])
             y_ = np.imag(center_coords[y])
 
-
         if colors:
             graph.add_node(y, pos=(x_, y_), node_color=colors[y])
         else:
