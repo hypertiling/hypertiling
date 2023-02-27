@@ -215,15 +215,13 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
     # for first poly create only one neighbor
     edge_array[0] = 1
 
-    # boundary correction container
-    first_poly = np.empty((8,), dtype=np.complex128)
-
     c = 1
     counter_shift = 0
     for layer_index, layer_size in enumerate(sector_lengths[:-1]):
         next_level_counter = 0
         for j in range(counter_shift, layer_size + counter_shift):
             poly = sector_polys[j]
+            r = np.abs(poly[0])
 
             if j > 1:
                 # check if parent poly shares edge with last created child -> filler of 1st order
@@ -253,7 +251,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
 
-                if np.angle(z[0]) >= 0:
+                if r <= np.abs(z[0]):
                     sector_polys[c, 0] = z[0]
                     sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
@@ -291,26 +289,8 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                     if next_level_counter == sector_lengths[layer_index + 1]:
                         break
 
-                elif j == counter_shift and i == 0:
-                    first_poly = z
-
             if next_level_counter == sector_lengths[layer_index + 1]:
                 break
-
-        if next_level_counter == sector_lengths[layer_index + 1] - 1:
-            # first generated polygon is bellow boundary but should exist!
-            shift = c - next_level_counter
-
-            # shift old polys away
-            sector_polys[shift + 1: c + 1] = sector_polys[shift: c]
-            edge_array[shift + 1: c + 1] = edge_array[shift: c]
-
-            # add new poly
-            sector_polys[shift, 0] = first_poly[0]
-            sector_polys[shift, 1:] = np.roll(np.flip(first_poly[1:]), 1)
-            reflection_levels[c] = reflection_levels[shift]
-
-            c += 1
 
         counter_shift += layer_size
 
