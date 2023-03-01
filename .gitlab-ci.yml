@@ -4,7 +4,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 stages:
-  - install
+#  - install
   - test
   - docs
 
@@ -24,30 +24,30 @@ before_script:
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
 
-install-latest:
-  stage: build
-  image: python:latest
-  stage: install
-  script:
-    - python setup.py check
-    - pip install .
-#    - pip install tox flake8 
-#    - tox -e py36,flake8
+# install-latest:
+#   stage: build
+#   image: python:latest
+#   stage: install
+#   script:
+#     - python setup.py check
+#     - pip install .
+# #    - pip install tox flake8 
+# #    - tox -e py36,flake8
 
 
-install-slim:
-  stage: build
-  image: python:slim
-  stage: install
-  script:
-    - python setup.py check
-    - pip install .
+# install-slim:
+#   stage: build
+#   image: python:slim
+#   stage: install
+#   script:
+#     - python setup.py check
+#     - pip install .
 
-install-bullseye:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: install
-  script:
-    - pip3 install .
+# install-bullseye:
+#   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+#   stage: install
+#   script:
+#     - pip3 install .
 
 test-pip:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3

@@ -129,7 +129,6 @@ try:
             self.centers.add(HTCenterTuple(z,idx))
 
 
-        # TODO: add this also for fallback implementation
         def remove_by_idx(self, z, idx):
             pos = self.centers.bisect_left(HTCenterTuple(z,idx))
 
@@ -140,7 +139,7 @@ try:
             elif self.centers[pos+1].idx == idx:
                 self.centers.pop(pos+1)
             else:
-                print("something unexpected happend at", idx, z)   
+                print("Something unexpected happend at", idx, z)   
 
 
 
@@ -188,15 +187,15 @@ except ImportError:
             Fallback implementation in case SortedListed is not available
         '''
 
-        def __init__(self, linlength):#, r, phi, idx):
+        def __init__(self, linlength):
             # the maximum linear length
             self.maxlinlength = linlength  
             # controls the width of the angle interval and is adapted by repeated searches
             self.dangle = 0.1  
             # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
             self.eps = 1e-12
-            # array where the actual data is stored
-            self.centers = []#HTCenterTuple(r, phi, idx)]
+            # list where the actual data is stored
+            self.centers = []
 
 
         def add(self, z, idx):
@@ -209,6 +208,21 @@ except ImportError:
             temp = HTCenterTuple(z, idx)
             pos = bisect.bisect_left(self.centers, temp)
             self.centers.insert(pos, temp)
+
+
+
+        def remove_by_idx(self, z, idx):
+            pos = self.centers.bisect_left(HTCenterTuple(z,idx))
+
+            if self.centers[pos-1].idx == idx:
+                del self.centers[pos-1]
+            elif self.centers[pos].idx == idx:
+                del self.centers[pos]
+            elif self.centers[pos+1].idx == idx:
+                del self.centers[pos+1]
+            else:
+                print("Something unexpected happend at", idx, z)   
+        
 
 
         def is_duplicate(self, z):
