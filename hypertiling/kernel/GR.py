@@ -6,7 +6,21 @@ from hypertiling.kernel_abc import Tiling
 import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
+from ..ion import htprint
 
+"""
+p: Number of edges/vertices of a polygon
+q: Number of polygons that meet at a vertex
+n: Number of layers (reflective definition)
+m: Number of polygons
+m = m(p, q, n)
+
+LIMITATIONS:
+- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+  layers size in the fundamental sector
+- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
+"""
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
@@ -371,7 +385,7 @@ class GenerativeReflection(Tiling):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
+                    raise AttributeError(f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
 
@@ -458,7 +472,11 @@ class GenerativeReflection(Tiling):
         :return: List[List[int]] = list of all neighbors for all polygons
         """
         if method != "default":
-            raise AttributeError("Only default implemented yet")
+            raise AttributeError("[hypertiling] Error: Only default implemented yet")
+
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return [[]]
 
         if self._nbrs is None:
             self.map_nbrs(tol=tol)
@@ -487,7 +505,7 @@ class GenerativeReflection(Tiling):
         :return: int = number of the layer
         """
         if self._layers is None:
-            print("Layers are not yet mapped. Start mapping")
+            htprint("Status", "Layers are not yet mapped. Start mapping")
             self.map_layers()
 
         if index == 0:
@@ -740,7 +758,7 @@ class GenerativeReflection(Tiling):
         :return: np.array = indices of the neighbors
         """
         if self._nbrs is None:
-            print("start mapping neighbors")
+            htprint("Status", "start mapping neighbors")
             self.map_nbrs()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
         neighbor_indices = self._nbrs[sector_index]
 
@@ -789,6 +807,9 @@ class GenerativeReflection(Tiling):
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
     def get_nbrs(self, i, method="mapping"):
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         methods = {"mapping": self.get_nbrs_mapping,
                    "generative": self.get_nbrs_generative,
                    "radius": self.get_nbrs_radius,
@@ -802,6 +823,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_generative)
 
     def get_nbrs_geometrical(self, index: int) -> np.array:
@@ -811,6 +835,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
@@ -820,6 +847,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_mapping)
 
     def get_nbrs_radius(self, index: int) -> np.array:
@@ -829,6 +859,9 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_radius)
 
     # Generative #######################################################################################################
@@ -876,9 +909,10 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 6)
+    tiling = GenerativeReflection(7, 3, 1)
     t2 = time.time()
     print(tiling.length)
+    print(tiling.get_nbrs_list())
     print(tiling.get_nbrs_geometrical(3))
     print(tiling.get_nbrs(3))
 
