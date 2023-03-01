@@ -2,8 +2,6 @@ import math
 import numpy as np
 import bisect
 
-from ..ion import htprint
-
 PI2 = 6.2831853071795864769
 
 class HTCenterTuple:
@@ -105,7 +103,7 @@ class DuplicateContainerCircularCommon:
 try:
     from sortedcontainers import SortedList
 
-    htprint("Status", "Found package 'sortedcontainers'!")
+    print("Status", "Found package 'sortedcontainers'!")
 
     # default
     class DuplicateContainerCircular(DuplicateContainerCircularCommon):
@@ -145,7 +143,7 @@ try:
             elif self.centers[pos+1].idx == idx:
                 self.centers.pop(pos+1)
             else:
-                htprint("Warning", "Something unexpected happend!")   
+                print("Warning", "Something unexpected happend!")   
 
 
 
@@ -183,8 +181,9 @@ try:
 
 
 except ImportError:
+    import bisect
 
-    htprint("Status", "Package 'sortedcontainers' not found, using fallback implementation!")
+    print("Status", "Package 'sortedcontainers' not found, using fallback implementation!")
 
 
     # fallback
@@ -218,18 +217,19 @@ except ImportError:
             self.centers.insert(pos, temp)
 
 
-
         def remove_by_idx(self, z, idx):
-            pos = self.centers.bisect_left(HTCenterTuple(z,idx))
+
+            temp = HTCenterTuple(z, idx) # create temp object 
+            pos = bisect.bisect_left(self.centers, temp)
 
             if self.centers[pos-1].idx == idx:
-                del self.centers[pos-1]
+                self.centers.pop(pos-1)
             elif self.centers[pos].idx == idx:
-                del self.centers[pos]
+                self.centers.pop(pos)
             elif self.centers[pos+1].idx == idx:
-                del self.centers[pos+1]
+                self.centers.pop(pos+1)
             else:
-                htprint("Warning", "Something unexpected happend!")   
+                print("Warning", "Something unexpected happend!")   
         
 
 
