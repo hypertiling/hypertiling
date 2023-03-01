@@ -188,7 +188,7 @@ except ImportError:
             Fallback implementation in case SortedListed is not available
         '''
 
-        def __init__(self, linlength, r, phi, idx):
+        def __init__(self, linlength):#, r, phi, idx):
             # the maximum linear length
             self.maxlinlength = linlength  
             # controls the width of the angle interval and is adapted by repeated searches
@@ -196,7 +196,7 @@ except ImportError:
             # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
             self.eps = 1e-12
             # array where the actual data is stored
-            self.centers = [HTCenterTuple(r, phi, idx)]
+            self.centers = []#HTCenterTuple(r, phi, idx)]
 
 
         def add(self, z, idx):
