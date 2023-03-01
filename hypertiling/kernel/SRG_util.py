@@ -2,6 +2,8 @@ import math
 import numpy as np
 import bisect
 
+from ..ion import htprint
+
 PI2 = 6.2831853071795864769
 
 class HTCenterTuple:
@@ -107,7 +109,7 @@ class DuplicateContainerCircularCommon:
 try:
     from sortedcontainers import SortedList
 
-    print("Status", "Found package 'sortedcontainers'!")
+    htprint("Status", "Found package 'sortedcontainers'!")
 
     # default
     class DuplicateContainerCircular(DuplicateContainerCircularCommon):
@@ -147,7 +149,7 @@ try:
             elif self.centers[pos+1].idx == idx:
                 self.centers.pop(pos+1)
             else:
-                print("Warning", "Something unexpected happend!")   
+                htprint("Warning", "Something unexpected happend!")   
 
 
 
@@ -187,7 +189,7 @@ try:
 except ImportError:
     import bisect
 
-    print("Status", "Package 'sortedcontainers' not found, using fallback implementation!")
+    htprint("Status", "Package 'sortedcontainers' not found, using fallback implementation!")
 
 
     # fallback
@@ -233,7 +235,7 @@ except ImportError:
             elif self.centers[pos+1].idx == idx:
                 self.centers.pop(pos+1)
             else:
-                print("Warning", "Something unexpected happend!")   
+                htprint("Warning", "Something unexpected happend!")   
         
 
 
