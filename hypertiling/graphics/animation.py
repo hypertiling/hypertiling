@@ -10,7 +10,7 @@ def moeb_rotate_trafo(phi, z):
 mymoebint = np.vectorize(mymoebint)
 
 
-class animate_live:
+class AnimatorLive:
 
     """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
@@ -55,7 +55,7 @@ class animate_live:
         self.anim.save(path, writer)
 
 
-class animate_list:
+class AnimatorList:
 
     """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
@@ -98,7 +98,7 @@ class animate_list:
         self.anim.save(path, writer)
 
 
-class HyperanimatorPath:
+class AnimatorPath:
     """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
 
