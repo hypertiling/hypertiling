@@ -33,7 +33,7 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
         else:
             x_ = np.real(center_coords[y])
             y_ = np.imag(center_coords[y])
-            sector = 0
+
 
         if colors:
             graph.add_node(y, pos=(x_, y_), node_color=colors[y])
@@ -234,5 +234,10 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
 
     for i in range(1, p):
         neighbors[0, 1 + i] = neighbors[0, i] + child_absolut - 1
+
+    if q == 3:
+        # in 1th layer, the polygon is neighbor to its rotational dublicate
+        neighbors[1, -1] = 1 + jump
+        neighbors[1, -2] = child_absolut
 
     return neighbors[:child_absolut, 1:], center_coords[:child_absolut]

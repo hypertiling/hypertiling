@@ -41,6 +41,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] =
                      **kwargs) -> Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling
+    Choose your kernel using the "kernel" attribute
 
     Parameters
     ----------
@@ -52,7 +53,10 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] =
         number of layers to be constructed
     kernel : Tiling
         selects the construction kernel
+    **kwargs : dictionary
+        further keyword arguments to be passed to the kernel
     """
+
     if isinstance(kernel, TilingKernels):
         kernel = kernel.value
 
@@ -83,7 +87,8 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: Union[GraphKernels, str] = G
                     **kwargs) -> Graph:
     """
     The factory pattern  function which invokes a hyperbolic graph
-
+    Choose your kernel using the "kernel" attribute
+    
     Parameters
     ----------
     p : int
@@ -94,6 +99,8 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: Union[GraphKernels, str] = G
         number of layers to be constructed
     kernel : Graph
         selects the construction kernel
+    **kwargs : dictionary
+        further keyword arguments to be passed to the kernel
     """
 
     if isinstance(kernel, GraphKernels):

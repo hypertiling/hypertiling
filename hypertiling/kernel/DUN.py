@@ -5,16 +5,12 @@ from .SR_base import KernelStaticBase
 from .DUN_util import transformW_poly, transformW_site
 
 
-# NOTE: This kernel implements the "original" construction algorithm of D. Dunham (1982)
-# The algorithm uses Weierstraß (hyperboloid) coordinates; since those are not natively supported
-# by our HyperPolygon class we need transformation functions provided in DUN_util.py
-
 
 class LegacyDunham(KernelStaticBase):
     """
-    Original construction algorithm by D. Dunham (1982)
-    works for every valid combination {p,q}
-    however produces a lot of duplicates
+    This kernel implements the "original" construction algorithm of D. Dunham (1982)
+    The algorithm uses Weierstraß (hyperboloid) coordinates; since those are not natively supported
+    by our HyperPolygon class we need transformation functions provided in DUN_util.py
     """
 
     def __init__ (self, p, q, n, **kwargs):
@@ -37,41 +33,38 @@ class LegacyDunham(KernelStaticBase):
                                            [np.sin(2 * np.pi / p), -np.cos(2 * np.pi / p), 0],
                                            [0, 0, 1]])
 
-        self.RotP = self.ReflectHypotenuse @ self.ReflectEdgeBisector
-        self.RotQ = self.ReflectPgonEdge @ self.ReflectHypotenuse
-        self.Rot2P = self.RotP @ self.RotP  # actually boosts the performance
+        self.RotP  = self.ReflectHypotenuse @ self.ReflectEdgeBisector
+        self.RotQ  = self.ReflectPgonEdge @ self.ReflectHypotenuse
+        self.Rot2P = self.RotP @ self.RotP
         self.Rot3P = self.Rot2P @ self.RotP
-        self.RotCenterG = np.eye(3)  # G for usage in generate()
-        self.RotCenterR = np.eye(3)   # R for usage in replicate(...)
+        self.RotCenterG = np.eye(3)     # will be manipulated in self.generate()
+        self.RotCenterR = np.eye(3)     # will be manipulated in self.replicate()
 
         # fundamental polygon of the tiling
-        #self.fund_poly = self.create_fundamental_polygon(self.phi/2)
         self._create_first_layer(self.phi/2)
 
         # construct tiling
-        self.generate()
+        self._generate()
 
 
-
-    def generate(self):
+    def _generate(self):
         if self.n == 1:
             return
 
         for _ in range(self.p):
             RotVertex = self.RotCenterG @ self.RotQ
-            self.replicate(self.polygons, RotVertex, self.n - 2, "Edge")
+            self._replicate(self.polygons, RotVertex, self.n - 2, "Edge")
             for _ in range(self.q - 3):
                 RotVertex = RotVertex @ self.RotQ
-                self.replicate(self.polygons, RotVertex, self.n - 2, "Vertex")
+                self._replicate(self.polygons, RotVertex, self.n - 2, "Vertex")
 
             self.RotCenterG = self.RotCenterG @ self.RotP
 
 
-    def replicate(self, Polygons, InitialTran, LayersToDo, AdjacencyType):
+    def _replicate(self, Polygons, InitialTran, LayersToDo, AdjacencyType):
         poly = copy.deepcopy(self.fund_poly)
-        #poly.transform(InitialTran)
         transformW_poly(poly,InitialTran)
-        Polygons.append(poly)  # appending anything and removing duplicates afterwards is faster
+        Polygons.append(poly)  # we append any new polygons, including duplicates
         ExposedEdges = 0
         VertexPgons = 0
 
@@ -85,17 +78,18 @@ class LegacyDunham(KernelStaticBase):
 
             for j in range(ExposedEdges):
                 RotVertex = self.RotCenterR @ self.RotQ
-                self.replicate(Polygons, RotVertex, LayersToDo - 1, "Edge")
-                if j < ExposedEdges:  # I do not understand where -3 and -4 comes from
-                    VertexPgons = self.q - 1  # was -3, corrected by trial and error
+                self._replicate(Polygons, RotVertex, LayersToDo - 1, "Edge")
+                if j < ExposedEdges:  # anybody understand where that -3 and -4 come from
+                    VertexPgons = self.q - 1  # was -3 in Dunhams paper, this seems to be a better value though
                 elif j == ExposedEdges:
-                    VertexPgons = self.q - 2  # and -4 in Dunhams paper
+                    VertexPgons = self.q - 2  # was -4 in Dunhams paper
 
                 for _ in range(VertexPgons):
                     RotVertex = RotVertex @ self.RotQ
-                    self.replicate(Polygons, RotVertex, LayersToDo - 1, "Vertex")
+                    self._replicate(Polygons, RotVertex, LayersToDo - 1, "Vertex")
 
                 self.RotCenterR = self.RotCenterR @ self.RotP
+
 
     def add_layer(self):
         htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
