@@ -136,6 +136,7 @@ class AnimatorPath:
         self.tiling = tiling
         self.ax = ax
 
+
         # Check whether path has entries of type int or complex/2d float
         # If int: entries correspond to polygon IDs
         # If complex or 2d float: entries correspond to coordinates
@@ -148,8 +149,8 @@ class AnimatorPath:
         elif path.ndim == 1 and isinstance(path[0].item(), int):
             self.coords = self._poly_id_to_coords(path)
         else:
-            print(" some kind of error message ")
-            return
+            raise ValueError("[hypertiling] Error: Invalid input format for path")
+        
 
         self.path_frames = path_frames
         if not data_frames:
@@ -164,8 +165,10 @@ class AnimatorPath:
         self.kwargs = kwargs
 
 
+
     def _update(self, i):
         self.ax.clear()
+        
         self.tiling.translate(self.s_coords[i])
         self.s_coords = mymoebint(-self.s_coords[i], self.s_coords)[0]
         pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], **self.kwargs)
