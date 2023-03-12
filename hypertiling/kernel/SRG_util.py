@@ -118,7 +118,7 @@ try:
         whether a floating point representative of a given complex number is already present.
         """
 
-        def __init__(self, linlength):#,: r, phi, idx):
+        def __init__(self, linlength):
             # the maximum linear length
             self.maxlinlength = linlength  
             # controls the width of the angle interval and is adapted by repeated searches
@@ -126,7 +126,7 @@ try:
             # 1E-12 is the relative acuuracy here, since for the hyperbolic lattice vertices pile up near |z|~1
             self.eps = 1e-12
             # array where the actual data is stored
-            self.centers = SortedList()#[HTCenterTuple(r, phi, idx)])
+            self.centers = SortedList()
 
 
         def add(self, z, idx):

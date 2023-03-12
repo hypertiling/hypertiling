@@ -5,6 +5,7 @@ from .SR_base import KernelRotationalCommon
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
 from ..arraytransformation import multi_rotation_around_vertex
 from .SRG_util import DuplicateContainerCircular
+from ..ion import htprint
 
 PI2 = 2 * np.pi
 
@@ -39,7 +40,8 @@ class StaticRotationalGraph(KernelRotationalCommon):
     def remove_cells(self, deletelist):
         """
         deletelist : List[int]
-            list of polygon indices to be removed from the tiling
+            list of polygon indices to be removed from the tiling;
+            note that an error is thrown if an index can not be found in the lattice
         """
 
         for idx in deletelist:
@@ -112,7 +114,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
                     center = adj_centers[rot_ind]
 
-                    # check whether candidate polygon is not closed to the origin
+                    # check whether candidate polygon is _not_ close to the origin
                     if filter(center):   
 
                         # check whether candidate polygon already exists
