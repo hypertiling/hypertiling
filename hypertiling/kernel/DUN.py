@@ -51,25 +51,19 @@ class LegacyDunham(KernelStaticBase):
         if self.n == 1:
             return
 
-        for _ in range(1,self.p+1):
+        for _ in range(1, self.p+1):
             RotVertex = self.RotCenterG @ self.RotQ
             self._replicate(RotVertex, self.n - 2, "Edge")
-            for _ in range(1,self.q - 3 + 1):
+            for _ in range(1, self.q - 3 + 1):
                 RotVertex = RotVertex @ self.RotQ
                 self._replicate(RotVertex, self.n - 2, "Vertex")
 
             self.RotCenterG = self.RotCenterG @ self.RotP
 
-
+    
     def _replicate(self, InitialTran, LayersToDo, AdjacencyType):
-        poly = copy.deepcopy(self.fund_poly)
-        transformW_poly(poly,InitialTran)
 
-        # this is where a new polygon is added to the list
-        self.polygons.append(poly)
-
-        ExposedEdges = 0
-        VertexPgons = 0
+        self._draw_pgon_pattern(InitialTran)
 
         if LayersToDo > 0:
             if AdjacencyType == "Edge":
@@ -92,6 +86,16 @@ class LegacyDunham(KernelStaticBase):
                     self._replicate(RotVertex, LayersToDo - 1, "Vertex")
 
                 self.RotCenterR = self.RotCenterR @ self.RotP
+
+
+    def _draw_pgon_pattern(self, Transformation):
+        # create permanent copy of fundamental polygon
+        poly = copy.deepcopy(self.fund_poly)
+        # apply transformation
+        transformW_poly(poly, Transformation)
+        # draw, i.e. add to list
+        self.polygons.append(poly)
+
 
 
     def add_layer(self):
