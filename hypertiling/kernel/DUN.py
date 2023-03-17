@@ -51,20 +51,23 @@ class LegacyDunham(KernelStaticBase):
         if self.n == 1:
             return
 
-        for _ in range(self.p):
+        for _ in range(1,self.p+1):
             RotVertex = self.RotCenterG @ self.RotQ
-            self._replicate(self.polygons, RotVertex, self.n - 2, "Edge")
-            for _ in range(self.q - 3):
+            self._replicate(RotVertex, self.n - 2, "Edge")
+            for _ in range(1,self.q - 3 + 1):
                 RotVertex = RotVertex @ self.RotQ
-                self._replicate(self.polygons, RotVertex, self.n - 2, "Vertex")
+                self._replicate(RotVertex, self.n - 2, "Vertex")
 
             self.RotCenterG = self.RotCenterG @ self.RotP
 
 
-    def _replicate(self, Polygons, InitialTran, LayersToDo, AdjacencyType):
+    def _replicate(self, InitialTran, LayersToDo, AdjacencyType):
         poly = copy.deepcopy(self.fund_poly)
         transformW_poly(poly,InitialTran)
-        Polygons.append(poly)  # we append any new polygons, including duplicates
+
+        # this is where a new polygon is added to the list
+        self.polygons.append(poly)
+
         ExposedEdges = 0
         VertexPgons = 0
 
@@ -76,17 +79,17 @@ class LegacyDunham(KernelStaticBase):
                 ExposedEdges = self.p - 2
                 self.RotCenterR = InitialTran @ self.Rot2P
 
-            for j in range(ExposedEdges):
+            for j in range(1, ExposedEdges + 1):
                 RotVertex = self.RotCenterR @ self.RotQ
-                self._replicate(Polygons, RotVertex, LayersToDo - 1, "Edge")
-                if j < ExposedEdges:  # anybody understand where that -3 and -4 come from
+                self._replicate(RotVertex, LayersToDo - 1, "Edge")
+                if j < ExposedEdges:
                     VertexPgons = self.q - 1  # was -3 in Dunhams paper, this seems to be a better value though
                 elif j == ExposedEdges:
                     VertexPgons = self.q - 2  # was -4 in Dunhams paper
 
-                for _ in range(VertexPgons):
+                for _ in range(1, VertexPgons + 1):
                     RotVertex = RotVertex @ self.RotQ
-                    self._replicate(Polygons, RotVertex, LayersToDo - 1, "Vertex")
+                    self._replicate(RotVertex, LayersToDo - 1, "Vertex")
 
                 self.RotCenterR = self.RotCenterR @ self.RotP
 
