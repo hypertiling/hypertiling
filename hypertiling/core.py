@@ -5,6 +5,7 @@ from .kernel.SRG import StaticRotationalGraph
 from .kernel.SR import StaticRotational
 from .kernel.SRL import StaticRotationalLegacy
 from .kernel.DUN import LegacyDunham
+from .kernel.DUNP import LegacyDunhamPlus
 from .kernel.GR import GenerativeReflection
 from .kernel.GRG import GenerativeReflectionGraph
 from .kernel.GRGS import GenerativeReflectionGraphStatic
@@ -15,6 +16,7 @@ TILINGS = {
     "SRG": StaticRotationalGraph,
     "SRL": StaticRotationalLegacy,
     "DUN": LegacyDunham,
+    "DUNP": LegacyDunhamPlus,
     "GR": GenerativeReflection
 }
 
