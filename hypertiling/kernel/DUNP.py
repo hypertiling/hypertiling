@@ -63,10 +63,6 @@ class LegacyDunhamPlus(KernelStaticBase):
         self.Rot7P = self.Rot6P @ self.RotP
         self.Rot8P = self.Rot7P @ self.RotP
 
-        self.RotCenterG = np.eye(3)     # will be manipulated in self.generate()
-        self.RotCenterR = np.eye(3)     # will be manipulated in self.replicate()
-
-
         # We define the exposure of a p-gon in terms of the number of edges 
         # it has in common with the next layer.
         # A p-gon has minimum exposure if it has the fewest edges in common with 
@@ -78,14 +74,18 @@ class LegacyDunhamPlus(KernelStaticBase):
         self.max_exp = self.p - 2
         self.min_exp = self.p - 3
 
-        # hard coded for (7,X) tiling!!!!!!
-        self.edge_tran = [DunhamTransformation(self.ReflectPgonEdge,            1, 0),
-                          DunhamTransformation(self.ReflectPgonEdge@self.RotP,  1, 1),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot2P, 1, 2),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot3P, 1, 3),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot4P, 1, 4),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot5P, 1, 5),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot6P, 1, 6)]
+
+        # A tiling pattern is determined by how the p-gon pattern is
+        # transformed across p-gon edges. These transformations are given here (TODO)
+        
+        # hard coded for (p,q) with p<8 !!!!!
+        self.edge_tran = [DunhamTransformation(self.ReflectPgonEdge,            -1, 0),
+                          DunhamTransformation(self.ReflectPgonEdge@self.RotP,  -1, 1),
+                          DunhamTransformation(self.ReflectPgonEdge@self.Rot2P, -1, 2),
+                          DunhamTransformation(self.ReflectPgonEdge@self.Rot3P, -1, 3),
+                          DunhamTransformation(self.ReflectPgonEdge@self.Rot4P, -1, 4),
+                          DunhamTransformation(self.ReflectPgonEdge@self.Rot5P, -1, 5),
+                          DunhamTransformation(self.ReflectPgonEdge@self.Rot6P, -1, 6)]
         
 
         # fundamental polygon of the tiling
@@ -136,10 +136,10 @@ class LegacyDunhamPlus(KernelStaticBase):
                 pTran = self.compute_tran(initialTran, pShift)
                 qSkip = -1 if first_i else 0
                 qTran = self.add_to_tran(pTran, qSkip)
-                pgonsToDo = self.p-3 if first_i else self.p-2
+                pgonsToDo = self.q-3 if first_i else self.q-2
 
                 # Iterate about a vertex
-                for j in range(1, pgonsToDo):
+                for j in range(1, pgonsToDo+1):
                     first_j = (j==1)
                     newExposure = self.min_exp if first_j else self.max_exp
                     self.replicate_motif(poly, qTran, layer+1, newExposure)
@@ -152,18 +152,18 @@ class LegacyDunhamPlus(KernelStaticBase):
 
     # top-level driver routine
     def replicate(self, poly):
-        # assume the fundamental polygon itself has already been
+        # the fundamental polygon itself has already been
         # added to the tiling by the init method
         
         # Iterate over each vertex
         for i in range(1, self.p+1):
-            qtran = self.edge_tran[i-1]
+            qTran = self.edge_tran[i-1]
 
             # Iterate about a vertex
             for j in range(1, self.q-2+1):
                 exposure = self.min_exp if (j==1) else self.max_exp
-                self.replicate_motif(poly, qtran, 2, exposure)
-                qtran = self.add_to_tran(qtran, -1)
+                self.replicate_motif(poly, qTran, 2, exposure)
+                qTran = self.add_to_tran(qTran, -1)
 
 
 
