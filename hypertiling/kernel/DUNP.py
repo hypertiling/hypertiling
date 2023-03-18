@@ -3,6 +3,7 @@ import copy
 from ..ion import htprint
 from .SR_base import KernelStaticBase
 from .DUN_util import transformW_poly, transformW_site
+from scipy.stats import circmean
 
 
 # a transformation matrix with some extra information
@@ -18,6 +19,7 @@ class DunhamTransformation:
         self.p_position = p_position
 
     def __mul__(self, other):
+        # 
         new_matrix = self.matrix @ other.matrix
         new_orient = self.orientation * other.orientation
         new_p_pos  = other.p_position
@@ -25,6 +27,14 @@ class DunhamTransformation:
         return DunhamTransformation(new_matrix, new_orient, new_p_pos)
 
 
+def trafoW(xyts, trafo):
+    # Apply Weierstrass transformation matrix
+    return [trafo@k for k in xyts]
+
+
+def rotationW(phi):
+    # return Weierstrass rotation matrix
+    return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
 
 class LegacyDunhamPlus(KernelStaticBase):
@@ -46,22 +56,7 @@ class LegacyDunhamPlus(KernelStaticBase):
         self.ReflectPgonEdge = np.array([[-np.cosh(2 * self.b), 0, np.sinh(2 * self.b)],
                                          [0, 1, 0],
                                          [-np.sinh(2 * self.b), 0, np.cosh(2 * self.b)]])
-        self.ReflectEdgeBisector = np.array([[1, 0, 0],
-                                             [0, -1, 0],
-                                             [0, 0, 1]])
-        self.ReflectHypotenuse = np.array([[np.cos(2 * np.pi / p), np.sin(2 * np.pi / p), 0],
-                                           [np.sin(2 * np.pi / p), -np.cos(2 * np.pi / p), 0],
-                                           [0, 0, 1]])
 
-        self.RotP  = self.ReflectHypotenuse @ self.ReflectEdgeBisector
-        self.RotQ  = self.ReflectPgonEdge @ self.ReflectHypotenuse
-        self.Rot2P = self.RotP @ self.RotP
-        self.Rot3P = self.Rot2P @ self.RotP
-        self.Rot4P = self.Rot3P @ self.RotP
-        self.Rot5P = self.Rot4P @ self.RotP
-        self.Rot6P = self.Rot5P @ self.RotP
-        self.Rot7P = self.Rot6P @ self.RotP
-        self.Rot8P = self.Rot7P @ self.RotP
 
         # We define the exposure of a p-gon in terms of the number of edges 
         # it has in common with the next layer.
@@ -75,24 +70,35 @@ class LegacyDunhamPlus(KernelStaticBase):
         self.min_exp = self.p - 3
 
 
-        # A tiling pattern is determined by how the p-gon pattern is
-        # transformed across p-gon edges. These transformations are given here (TODO)
-        
-        # hard coded for (p,q) with p<8 !!!!!
-        self.edge_tran = [DunhamTransformation(self.ReflectPgonEdge,            -1, 0),
-                          DunhamTransformation(self.ReflectPgonEdge@self.RotP,  -1, 1),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot2P, -1, 2),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot3P, -1, 3),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot4P, -1, 4),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot5P, -1, 5),
-                          DunhamTransformation(self.ReflectPgonEdge@self.Rot6P, -1, 6)]
-        
-
         # fundamental polygon of the tiling
         self._create_first_layer(self.phi/2)
 
+        # A tiling pattern is determined by how the p-gon pattern is
+        # transformed across p-gon edges. These transformations are given here (TODO)
+        self.edge_tran = self._compute_edge_reflections()
+
         # construct tiling
         self._generate()
+
+
+    def _compute_edge_reflections(self):
+
+        trafos = []
+
+        for i in range(self.p):
+            j = int((i+1)%self.p)
+
+            phi1 = np.angle(self.fund_poly.verticesP[i])
+            phi2 = np.angle(self.fund_poly.verticesP[j])
+            phi = circmean([phi1,phi2])
+
+            edge_trafo = rotationW(-phi) @ self.ReflectPgonEdge @ rotationW(phi)
+
+            trafos.append(DunhamTransformation(edge_trafo, -1, i))
+        
+        return trafos
+
+        
 
 
     # add polygon to tiling
