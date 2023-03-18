@@ -1,5 +1,5 @@
 import numpy as np
-from ..representations import p2w_xyt, w2p_xyt
+from ..representations import w2p_xyt, p2w_xyt
 from .SR_base import HyperPolygon
 
 def transformW_poly(polygon: HyperPolygon, transformation):

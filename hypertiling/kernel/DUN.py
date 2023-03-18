@@ -1,99 +1,211 @@
 import numpy as np
+from scipy.stats import circmean
 import copy
 from ..ion import htprint
 from .SR_base import KernelStaticBase
-from .DUN_util import transformW_poly, transformW_site
+from .DUN_util import transformW_poly
 
 
-
-class LegacyDunham(KernelStaticBase):
+class Dunham(KernelStaticBase):
     """
-    This kernel implements the "original" construction algorithm of D. Dunham (1982)
-    The algorithm uses Weierstraß (hyperboloid) coordinates; since those are not natively supported
-    by our HyperPolygon class we need transformation functions provided in DUN_util.py
+    A more or less literal, unoptimized, implementation of the tiling algorithm by Douglas Dunham,
+    translated to Python; specifically, this is the improved version published in [Dun07]
+
+    Sources:
+    - [Dun86] Dunham, Douglas. "Hyperbolic symmetry." Symmetry. Pergamon, 1986. 139-153.
+    - [Dun07] Dunham, Douglas. "An algorithm to generate repeating hyperbolic patterns." the Proceedings of ISAMA (2007): 111-118.
+    - [Dun09] Dunham, Douglas. "Repeating Hyperbolic Pattern Algorithms — Special Cases." unpublished (2009)
+    - [JvR12] von Raumer, Jakob. "Visualisierung hyperbolischer Kachelungen", Bachelor thesis (2012), unpublished
+
     """
 
     def __init__ (self, p, q, n, **kwargs):
-        super(LegacyDunham, self).__init__(p, q, n, **kwargs)
+        super(Dunham, self).__init__(p, q, n, **kwargs)
 
+        if p==3 or q==3:
+            htprint("Warning", "p=3 or q=3 is currently not supported and may lead to duplicates!")
 
         if self.center == "vertex":
-            htprint("Warning", "Dunham kernel does not support vertex centered tilings yet!")
+            htprint("Warning", "This kernel does not support vertex centered tilings!")
 
-        # reflection and rotation matrices
+        # reflection transformation [Dun86]
+        # required to do reflection of the fundamental polygon across its edges
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
-
         self.ReflectPgonEdge = np.array([[-np.cosh(2 * self.b), 0, np.sinh(2 * self.b)],
                                          [0, 1, 0],
                                          [-np.sinh(2 * self.b), 0, np.cosh(2 * self.b)]])
-        self.ReflectEdgeBisector = np.array([[1, 0, 0],
-                                             [0, -1, 0],
-                                             [0, 0, 1]])
-        self.ReflectHypotenuse = np.array([[np.cos(2 * np.pi / p), np.sin(2 * np.pi / p), 0],
-                                           [np.sin(2 * np.pi / p), -np.cos(2 * np.pi / p), 0],
-                                           [0, 0, 1]])
 
-        self.RotP  = self.ReflectHypotenuse @ self.ReflectEdgeBisector
-        self.RotQ  = self.ReflectPgonEdge @ self.ReflectHypotenuse
-        self.Rot2P = self.RotP @ self.RotP
-        self.Rot3P = self.Rot2P @ self.RotP
-        self.RotCenterG = np.eye(3)     # will be manipulated in self.generate()
-        self.RotCenterR = np.eye(3)     # will be manipulated in self.replicate()
+
+        # We define the exposure of a p-gon in terms of the number of edges 
+        # it has in common with the next layer.
+        # A p-gon has minimum exposure if it has the fewest edges in common with 
+        # the next layer, and thus shares an edge with the previous layer.
+        # A p-gon has maximum exposure if it has the most edges in common with the 
+        # next layer, and thus only shares a vertex with the previous layer.
+        # We abbreviate these values as min_exp and max_exp, respectively.
+        self.max_exp = self.p - 2
+        self.min_exp = self.p - 3
+
 
         # fundamental polygon of the tiling
-        self._create_first_layer(self.phi/2)
+        self.fund_poly = self.create_fundamental_polygon()
+
+        # A tiling pattern is determined by how the p-gon pattern is
+        # transformed across p-gon edges. These transformations are stored here
+        self._compute_edge_reflections()
 
         # construct tiling
         self._generate()
 
 
-    def _generate(self):
-        if self.n == 1:
-            return
+    def _compute_edge_reflections(self):
+        """
+        Dunham's algorithm [Dun07] requires a list of reflection transformation
+        across the edges of a fundamental polygon. Those are computed here
+        """
 
-        for _ in range(1,self.p+1):
-            RotVertex = self.RotCenterG @ self.RotQ
-            self._replicate(RotVertex, self.n - 2, "Edge")
-            for _ in range(1,self.q - 3 + 1):
-                RotVertex = RotVertex @ self.RotQ
-                self._replicate(RotVertex, self.n - 2, "Vertex")
+        self.edge_tran = []
 
-            self.RotCenterG = self.RotCenterG @ self.RotP
+        # iterate over edges
+        for i in range(self.p):
+            j = int((i+1)%self.p)
+
+            # compute angle of midpoint of edge
+            phi1 = np.angle(self.fund_poly.verticesP[i])
+            phi2 = np.angle(self.fund_poly.verticesP[j])
+            phi = circmean([phi1,phi2])
+
+            # 1. rotate such that edge becomes parallel to y-axis
+            # 2. perform reflection in x-direction on radius of fundamental cell
+            # 3. rotate back
+            edge_trafo = rotationW(-phi) @ self.ReflectPgonEdge @ rotationW(phi)
+
+            # wrap as class object
+            # note: the proper usage of the orientation value is unexplained in the Dunham's papers, we stick 
+            # with -1 in combination with (0,1,2,3,...) as edge indices, since this produces a proper tiling
+            # compare [JvR12] section 3.2 for further details
+            self.edge_tran.append(DunhamTransformation(edge_trafo, -1, i))
+    
 
 
-    def _replicate(self, InitialTran, LayersToDo, AdjacencyType):
+    def _draw_pgon_pattern(self, trans):
+        """
+        Apply transformation to copy of fundamental polygon and add resulting polygon to tiling
+        Since hypertiling uses Poincare disk coordinates, but this kernel uses Weierstrass (hyperboloid)
+        coordinates, this requires some transformations between the two representations
+        """
         poly = copy.deepcopy(self.fund_poly)
-        transformW_poly(poly,InitialTran)
-
-        # this is where a new polygon is added to the list
+        transformW_poly(poly, trans.matrix)
         self.polygons.append(poly)
 
-        ExposedEdges = 0
-        VertexPgons = 0
 
-        if LayersToDo > 0:
-            if AdjacencyType == "Edge":
-                ExposedEdges = self.p - 3
-                self.RotCenterR = InitialTran @ self.Rot3P
-            if AdjacencyType == "Vertex":
-                ExposedEdges = self.p - 2
-                self.RotCenterR = InitialTran @ self.Rot2P
+    # increment transformation
+    def _add_to_tran(self, tran, shift):
+        if shift % self.p == 0:
+            return tran
+        else:
+            return self._compute_tran(tran, shift)
+        
 
-            for j in range(1, ExposedEdges + 1):
-                RotVertex = self.RotCenterR @ self.RotQ
-                self._replicate(RotVertex, LayersToDo - 1, "Edge")
-                if j < ExposedEdges:
-                    VertexPgons = self.q - 1  # was -3 in Dunhams paper, this seems to be a better value though
-                elif j == ExposedEdges:
-                    VertexPgons = self.q - 2  # was -4 in Dunhams paper
+    # helper
+    def _compute_tran(self, tran, shift):
+        newEdge = (tran.p_position + tran.orientation * shift) % self.p
+        return tran*self.edge_tran[newEdge]
 
-                for _ in range(1, VertexPgons + 1):
-                    RotVertex = RotVertex @ self.RotQ
-                    self._replicate(RotVertex, LayersToDo - 1, "Vertex")
 
-                self.RotCenterR = self.RotCenterR @ self.RotP
+    def _replicate_motif(self, poly, initialTran, layer, exposure):
+        """
+        central recursion step
+        """
+        
+        # Draw polygon
+        self._draw_pgon_pattern(initialTran)
+
+        # Proceed to desired depth
+        if layer < self.n:
+            # Determine which vertex to start at
+            min_exposure = (exposure == self.min_exp)
+            pShift = 1 if min_exposure else 0
+            verticesToDo = self.p-3 if min_exposure else self.p-2
+
+            # Iterate over vertices
+            for i in range(1, verticesToDo+1):
+                first_i = (i==1)
+                pTran = self._compute_tran(initialTran, pShift)
+                qSkip = -1 if first_i else 0
+                qTran = self._add_to_tran(pTran, qSkip)
+                pgonsToDo = self.q-3 if first_i else self.q-2
+
+                # Iterate about a vertex
+                for j in range(1, pgonsToDo+1):
+                    first_j = (j==1)
+                    newExposure = self.min_exp if first_j else self.max_exp
+                    self._replicate_motif(poly, qTran, layer+1, newExposure)
+                    qTran = self._add_to_tran(qTran, -1)
+
+                # Advance to next vertex
+                pShift = (pShift + 1) % self.p
+            
+
+    def _replicate(self, poly):
+        """
+        Top-level driver routine;
+        draws the second layer and kicks off the recursion
+        """
+
+        # Add fundamental polygon to list
+        identity = DunhamTransformation(np.eye(3), -1, 0)
+        self._draw_pgon_pattern(identity)
+
+
+        # Iterate over each vertex
+        for i in range(1, self.p+1):
+            qTran = self.edge_tran[i-1]
+
+            # Iterate about a vertex
+            for j in range(1, self.q-2+1):
+                exposure = self.min_exp if (j==1) else self.max_exp
+                self._replicate_motif(poly, qTran, 2, exposure)
+                qTran = self._add_to_tran(qTran, -1)
+
+
+
+    def _generate(self):
+        self._replicate(self.fund_poly)
+
 
 
     def add_layer(self):
         htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
         return
+
+
+    
+class DunhamTransformation:
+    """
+    Transformations contain:
+    - the transformation matrix
+    - the orientation (-1 or +1)
+    - an index of the edge across which the last transformation was made
+    """
+    def __init__(self, matrix, orientation, p_position):
+        self.matrix = matrix
+        self.orientation = orientation
+        self.p_position = p_position
+
+    def __mul__(self, other):
+        # specify how trafos are multiplied
+        new_matrix = self.matrix @ other.matrix
+        new_orient = self.orientation * other.orientation
+        new_p_pos  = other.p_position
+        return DunhamTransformation(new_matrix, new_orient, new_p_pos)
+
+
+def trafoW(xyts, trafo):
+    # Apply Weierstrass transformation matrix to a list of points
+    return [trafo@k for k in xyts]
+
+
+def rotationW(phi):
+    # return Weierstrass rotation matrix
+    return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])

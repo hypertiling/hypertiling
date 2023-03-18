@@ -4,8 +4,8 @@ from .kernel_abc import Tiling, Graph
 from .kernel.SRG import StaticRotationalGraph
 from .kernel.SR import StaticRotational
 from .kernel.SRL import StaticRotationalLegacy
-from .kernel.DUN import LegacyDunham
-from .kernel.DUNP import LegacyDunhamPlus
+from .kernel.DUN86 import LegacyDunham
+from .kernel.DUN import Dunham
 from .kernel.GR import GenerativeReflection
 from .kernel.GRG import GenerativeReflectionGraph
 from .kernel.GRGS import GenerativeReflectionGraphStatic
@@ -15,8 +15,8 @@ TILINGS = {
     "SR": StaticRotational,
     "SRG": StaticRotationalGraph,
     "SRL": StaticRotationalLegacy,
-    "DUN": LegacyDunham,
-    "DUNP": LegacyDunhamPlus,
+    "DUN86": LegacyDunham,
+    "DUN": Dunham,
     "GR": GenerativeReflection
 }
 
@@ -30,7 +30,8 @@ class TilingKernels(Enum):
     StaticRotational = "SR"
     StaticRotationalGraph = "SRG"
     StaticRotationalLegacy = "SRL"
-    LegacyDunham = "DUN"
+    LegacyDunham = "DUN86"
+    Dunham = "DUN"
     GenerativeReflection = "GR"
 
 
@@ -75,12 +76,9 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] =
     if kernel == StaticRotationalLegacy:
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
     if kernel == GenerativeReflection:
-        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-    if kernel in [StaticRotational, StaticRotationalGraph, StaticRotationalLegacy]:
-        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-    if kernel == LegacyDunham:
-        htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
-        htprint("Warning", "Dunham kernel is only implemented for legacy reasons and largely untested. Use with care!")
+        htprint("Status", "Parameter n is interpreted as number of reflective layers. Compare documentation.")
+    if kernel in [StaticRotational, StaticRotationalGraph, StaticRotationalLegacy, Dunham, LegacyDunham]:
+        htprint("Status", "Parameter n is interpreted as number of layers. Compare documentation.")
 
     return TILINGS[kernel](p, q, n, **kwargs)
 
