@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import circmean
 import copy
 from ..ion import htprint
+from ..representations import w2p_xyt, p2w_xyt
 from .SR_base import KernelStaticBase
 from .DUN_util import transformW_poly
 
@@ -10,6 +11,8 @@ class Dunham(KernelStaticBase):
     """
     A more or less literal, unoptimized, implementation of the tiling algorithm by Douglas Dunham,
     translated to Python; specifically, this is the improved version published in [Dun07]
+
+    Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
 
     Sources:
     - [Dun86] Dunham, Douglas. "Hyperbolic symmetry." Symmetry. Pergamon, 1986. 139-153.
@@ -28,34 +31,87 @@ class Dunham(KernelStaticBase):
         if self.center == "vertex":
             htprint("Warning", "This kernel does not support vertex centered tilings!")
 
-        # reflection transformation [Dun86]
-        # required to do reflection of the fundamental polygon across its edges
-        self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))
-        self.ReflectPgonEdge = np.array([[-np.cosh(2 * self.b), 0, np.sinh(2 * self.b)],
-                                         [0, 1, 0],
-                                         [-np.sinh(2 * self.b), 0, np.cosh(2 * self.b)]])
-
-
-        # We define the exposure of a p-gon in terms of the number of edges 
-        # it has in common with the next layer.
-        # A p-gon has minimum exposure if it has the fewest edges in common with 
-        # the next layer, and thus shares an edge with the previous layer.
-        # A p-gon has maximum exposure if it has the most edges in common with the 
-        # next layer, and thus only shares a vertex with the previous layer.
-        # We abbreviate these values as min_exp and max_exp, respectively.
-        self.max_exp = self.p - 2
-        self.min_exp = self.p - 3
-
 
         # fundamental polygon of the tiling
         self.fund_poly = self.create_fundamental_polygon()
+        # transform to Weierstrass coordinates
+        self.fundW = p2w_xyt_vector(self.fund_poly.verticesP)
 
         # A tiling pattern is determined by how the p-gon pattern is
         # transformed across p-gon edges. These transformations are stored here
         self._compute_edge_reflections()
 
+        # prepare some more variables
+        self._prepare_exposures()
+
         # construct tiling
         self._generate()
+
+
+
+    # ---------- the interface --------------
+   
+    def get_vertices(self, index: int) -> np.array:
+        """
+        Returns the p vertices of the polygon at index in Poincare disk coordinates
+        Since this kernel's internal arithmetic is done in Weierstrass representation,
+        this requires some coordinate transform
+        Time-complexity: O(1)
+        Overwrites method of base class
+        :param index: int = index of the polygon
+        :return: np.array[np.complex128][p] = vertices of the polygon
+        """
+        return w2p_xyt_vector(self.polygons[index][:-1])
+   
+
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index in Poincare disk coordinates
+        Since this kernel's internal arithmetic is done in Weierstrass representation,
+        this requires a coordinate transform
+        Time-complexity: O(1)
+        Overwrites method of base class
+        :param index: int = index of the polygon
+        :return:  -> np.complex128: = center of the polygon
+        """
+        return w2p_xyt(self.polygons[index][-1])
+    
+
+    def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+        Time-complexity: O(1)
+        :param index: int = index of the polygon
+        :return: float = angle of the polygon
+        """
+        return np.angle(self.get_center(index))
+
+
+    def get_layer(self, index: int) -> int:
+        htprint("Warning", "Layer information is currently not implemented in this kernel, doing nothing ...")
+
+
+    def get_sector(self, index: int) -> int:
+        htprint("Warning", "No sectors used in this kernel, doing nothing ...")
+        
+
+
+    # ---------- the algorithm --------------
+
+    def _prepare_exposures(self):
+        """
+        We define the exposure of a p-gon in terms of the number of edges 
+        it has in common with the next layer.
+        A p-gon has minimum exposure if it has the fewest edges in common with 
+        the next layer, and thus shares an edge with the previous layer.
+        A p-gon has maximum exposure if it has the most edges in common with the 
+        next layer, and thus only shares a vertex with the previous layer.
+        We abbreviate these values as min_exp and max_exp, respectively
+        """
+
+        self.max_exp = self.p - 2
+        self.min_exp = self.p - 3
+
 
 
     def _compute_edge_reflections(self):
@@ -66,19 +122,27 @@ class Dunham(KernelStaticBase):
 
         self.edge_tran = []
 
+        # reflection transformation from [Dun86]
+        tb = 2*np.arccosh(np.cos(np.pi / self.q) / np.sin(np.pi / self.p))
+        reflecty = np.array([[-np.cosh(tb), 0, np.sinh(tb)], [0, 1, 0], [-np.sinh(tb), 0, np.cosh(tb)]])
+
         # iterate over edges
         for i in range(self.p):
             j = int((i+1)%self.p)
 
             # compute angle of midpoint of edge
-            phi1 = np.angle(self.fund_poly.verticesP[i])
-            phi2 = np.angle(self.fund_poly.verticesP[j])
-            phi = circmean([phi1,phi2])
+            phi1 = np.arctan2(self.fundW[i][1], self.fundW[i][0])
+            phi2 = np.arctan2(self.fundW[j][1], self.fundW[j][0])
+            phi = circmean([phi1,phi2])     
+
+            # compute associated rotation matrix
+            rotphi = rotationW(phi)
+            rotinv = rotationW(-phi)
 
             # 1. rotate such that edge becomes parallel to y-axis
             # 2. perform reflection in x-direction on radius of fundamental cell
             # 3. rotate back
-            edge_trafo = rotationW(-phi) @ self.ReflectPgonEdge @ rotationW(phi)
+            edge_trafo = rotinv @ reflecty @ rotphi
 
             # wrap as class object
             # note: the proper usage of the orientation value is unexplained in the Dunham's papers, we stick 
@@ -94,9 +158,9 @@ class Dunham(KernelStaticBase):
         Since hypertiling uses Poincare disk coordinates, but this kernel uses Weierstrass (hyperboloid)
         coordinates, this requires some transformations between the two representations
         """
-        poly = copy.deepcopy(self.fund_poly)
-        transformW_poly(poly, trans.matrix)
-        self.polygons.append(poly)
+        vrtsW = copy.deepcopy(self.fundW)
+        vrtsW = trafoW(vrtsW, trans.matrix)
+        self.polygons.append(vrtsW)
 
 
     # increment transformation
@@ -209,3 +273,14 @@ def trafoW(xyts, trafo):
 def rotationW(phi):
     # return Weierstrass rotation matrix
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
+
+
+def p2w_xyt_vector(z_list):
+    # Poincare to Weierstrass
+    return np.array([p2w_xyt(x) for x in z_list])
+
+
+
+def w2p_xyt_vector(xyt_list):
+    # Weierstrass to Poincare
+    return np.array([w2p_xyt(z) for z in xyt_list])
