@@ -1,10 +1,10 @@
 import numpy as np
-from scipy.stats import circmean
 import copy
+from scipy.stats import circmean
 from ..ion import htprint
-from ..representations import w2p_xyt, p2w_xyt
+from ..representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
 from .SR_base import KernelStaticBase
-from .DUN_util import transformW_poly
+
 
 
 class Dunham(KernelStaticBase):
@@ -34,6 +34,7 @@ class Dunham(KernelStaticBase):
 
         # fundamental polygon of the tiling
         self.fund_poly = self.create_fundamental_polygon()
+        
         # transform to Weierstrass coordinates
         self.fundW = p2w_xyt_vector(self.fund_poly.verticesP)
 
@@ -94,6 +95,10 @@ class Dunham(KernelStaticBase):
     def get_sector(self, index: int) -> int:
         htprint("Warning", "No sectors used in this kernel, doing nothing ...")
         
+
+    def add_layer(self):
+        htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
+
 
 
     # ---------- the algorithm --------------
@@ -159,7 +164,7 @@ class Dunham(KernelStaticBase):
         coordinates, this requires some transformations between the two representations
         """
         vrtsW = copy.deepcopy(self.fundW)
-        vrtsW = trafoW(vrtsW, trans.matrix)
+        vrtsW = [trans.matrix@k for k in vrtsW]
         self.polygons.append(vrtsW)
 
 
@@ -239,10 +244,6 @@ class Dunham(KernelStaticBase):
 
 
 
-    def add_layer(self):
-        htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
-        return
-
 
     
 class DunhamTransformation:
@@ -265,22 +266,8 @@ class DunhamTransformation:
         return DunhamTransformation(new_matrix, new_orient, new_p_pos)
 
 
-def trafoW(xyts, trafo):
-    # Apply Weierstrass transformation matrix to a list of points
-    return [trafo@k for k in xyts]
-
-
 def rotationW(phi):
     # return Weierstrass rotation matrix
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
 
-def p2w_xyt_vector(z_list):
-    # Poincare to Weierstrass
-    return np.array([p2w_xyt(x) for x in z_list])
-
-
-
-def w2p_xyt_vector(xyt_list):
-    # Weierstrass to Poincare
-    return np.array([w2p_xyt(z) for z in xyt_list])

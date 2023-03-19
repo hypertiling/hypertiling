@@ -1,8 +1,9 @@
 import numpy as np
 import copy
 from ..ion import htprint
+from ..representations import w2p_xyt, p2w_xyt
 from .SR_base import KernelStaticBase, HyperPolygon
-from .DUN_util import transformW_poly
+
 
 class LegacyDunham(KernelStaticBase):
     """
@@ -68,15 +69,16 @@ class LegacyDunham(KernelStaticBase):
 
 
     def _replicate(self, InitialTran, LayersToDo, AdjacencyType):
+        
+        # create deep copy, apply current transform and add to list
         poly = copy.deepcopy(self.fund_poly)
-        transformW_poly(poly,InitialTran)
-
-        # this is where a new polygon is added to the list
+        transformW_poly(poly, InitialTran)
         self.polygons.append(poly)
 
         ExposedEdges = 0
         VertexPgons = 0
 
+        # iterate layers
         if LayersToDo > 0:
             if AdjacencyType == "Edge":
                 ExposedEdges = self.p - 3
@@ -85,18 +87,21 @@ class LegacyDunham(KernelStaticBase):
                 ExposedEdges = self.p - 2
                 self.RotCenterR = InitialTran @ self.Rot2P
 
+            # iterate exposed edges
             for j in range(1, ExposedEdges + 1):
                 RotVertex = self.RotCenterR @ self.RotQ
                 self._replicate(RotVertex, LayersToDo - 1, "Edge")
                 if j < ExposedEdges:
-                    VertexPgons = self.q - 1  # was -3 in Dunhams paper, this seems to be a better value though
+                    VertexPgons = self.q - 1  # -3 in [Dun86]
                 elif j == ExposedEdges:
-                    VertexPgons = self.q - 2  # was -4 in Dunhams paper
+                    VertexPgons = self.q - 2  # -4 in [Dun86]
 
+                # iterate rotations about that vertex
                 for _ in range(1, VertexPgons + 1):
                     RotVertex = RotVertex @ self.RotQ
                     self._replicate(RotVertex, LayersToDo - 1, "Vertex")
 
+                # increment transformation
                 self.RotCenterR = self.RotCenterR @ self.RotP
 
 
@@ -106,3 +111,21 @@ class LegacyDunham(KernelStaticBase):
     
 
 
+def transformW_poly(polygon: HyperPolygon, transformation):
+    """
+    Apply Weierstraß transformation matrix to entire HyperPolygon, i.e. vertices and center coordiantes
+    """
+    new_verts = np.zeros_like(polygon.verticesP)
+    for i, pointP in enumerate(polygon.verticesP):
+        new_verts[i] = transformW_site(pointP, transformation)
+    polygon.verticesP = new_verts
+
+
+def transformW_site(pointP: np.complex128, transformation):
+    """
+    Apply Weierstraß transformation to Poincare site
+    1. Transform site from Poincare to Weierstraß
+    2. Apply Weierstraß transformation
+    3. Transform back
+    """
+    return w2p_xyt(transformation @ p2w_xyt(pointP))

@@ -37,3 +37,14 @@ def w2p_xyt(point: np.array) -> np.complex128:
     [x, y, t] = point
     factor = 1 / (1 + t)
     return np.complex128(complex(x * factor, y * factor))
+
+
+
+def p2w_xyt_vector(z_list):
+    # Poincare to Weierstrass
+    return np.array([p2w_xyt(x) for x in z_list])
+
+
+def w2p_xyt_vector(xyt_list):
+    # Weierstrass to Poincare
+    return np.array([w2p_xyt(z) for z in xyt_list])
