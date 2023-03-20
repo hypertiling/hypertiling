@@ -105,6 +105,12 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
         next_coords = np.empty((sector_lengths[current_level + 1], p + 1), dtype=np.complex128)
         next_edges = np.full(sector_lengths[current_level + 1], edges, dtype=np.uint16)
 
+        # check for filler on sector boundary (I think it should detect both)
+        connection = any_close_matrix(current_coords[-1] * np.exp(- 1j * dphi), current_coords[0])
+        if connection.shape[0] == 2 and child_absolut > 3:
+            # block first child as it would resemble last poly in parents layer
+            current_edges[0] ^= 1 << (connection[0, 0] - 1)
+
         for j in range(layer_size):
             poly = current_coords[j]
             r = np.abs(poly[0])

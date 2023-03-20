@@ -69,6 +69,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
 
         for j in range(layer_size):
             poly = current_coords[j]
+            r = np.abs(poly[0])
 
             # check for filler polys of 1st order
             if j != 0 and current_level != 0:
@@ -123,6 +124,9 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                 z = np.conjugate(z)  # p + 1
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
+
+                if r > np.abs(z[0]):
+                    continue
 
                 next_coords[next_level_counter, 0] = z[0]
                 next_coords[next_level_counter, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p

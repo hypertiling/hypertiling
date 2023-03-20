@@ -219,6 +219,13 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
     counter_shift = 0
     for layer_index, layer_size in enumerate(sector_lengths[:-1]):
         next_level_counter = 0
+
+        # check for filler on sector boundary (I think it should detect both)
+        connection = any_close_matrix(sector_polys[c - 1] * np.exp(- 1j * dphi), sector_polys[counter_shift])
+        if connection.shape[0] == 2 and c > 3:
+            # block first child as it would resemble last poly in parents layer
+            edge_array[counter_shift] ^= 1 << (connection[0, 0] - 1)
+
         for j in range(counter_shift, layer_size + counter_shift):
             poly = sector_polys[j]
             r = np.abs(poly[0])

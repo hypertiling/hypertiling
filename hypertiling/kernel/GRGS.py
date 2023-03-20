@@ -3,7 +3,7 @@ import numpy as np
 import hypertiling.kernel.GR_util as util
 import hypertiling.kernel.GRGS_util as graph_util
 from hypertiling.kernel_abc import Graph
-from ..ion import htprint
+from hypertiling.ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     import hypertiling.kernel.GRG_util as grg_util
     from hypertiling.kernel_abc import Tiling
 
-    p, q, n = 7, 3, 6
+    p, q, n = 3, 8, 9
     n2 = 3
     t1 = time.time()
     graph = GenerativeReflectionGraphStatic(p, q, n)
