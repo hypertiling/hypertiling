@@ -168,7 +168,7 @@ if __name__ == "__main__":
     import hypertiling.kernel.GRG_util as grg_util
     from hypertiling.kernel_abc import Tiling
 
-    p, q, n = 3, 8, 9
+    p, q, n = 8, 3, 4
     n2 = 3
     t1 = time.time()
     graph = GenerativeReflectionGraphStatic(p, q, n)
