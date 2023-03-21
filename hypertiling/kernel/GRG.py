@@ -69,7 +69,7 @@ class GenerativeReflectionGraph(Graph):
         :param item: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(item, self._get_nbrs)
+        return self.get_nbrs(item)
 
     def __len__(self):
         """
@@ -174,8 +174,7 @@ class GenerativeReflectionGraph(Graph):
                 break
             for nbr in nbrs:  # exec loop p times
                 if dist_ref < util.f_dist_disc(coord, self.get_coord(nbr)):  # 1
-                    print(f"Neighbor {nbr} of polygon {i} out of reach!")
-                    break
+                    raise AttributeError(f"[hypertiling] Error: Neighbor {nbr} of polygon {i} out of reach!")
 
     def get_nbrs_list_sector(self) -> List[List[int]]:
         """

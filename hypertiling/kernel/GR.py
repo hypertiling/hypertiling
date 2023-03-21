@@ -874,6 +874,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
         self._sector_polys = function(self._sector_polys)
@@ -885,6 +887,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_rotate_trafo(-angle, x))
 
     def translate(self, z: np.complex128):
@@ -894,6 +898,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_origin_trafo(z, x))
 
     # Transformations ##################################################################################################
