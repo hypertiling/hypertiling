@@ -6,7 +6,7 @@ from hypertiling.kernel_abc import Tiling
 import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
-from ..ion import htprint
+from hypertiling.ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -874,6 +874,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
         self._sector_polys = function(self._sector_polys)
@@ -885,6 +887,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_rotate_trafo(-angle, x))
 
     def translate(self, z: np.complex128):
@@ -894,6 +898,8 @@ class GenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_origin_trafo(z, x))
 
     # Transformations ##################################################################################################
@@ -909,12 +915,11 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 1)
+    tiling = GenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
-    print(tiling.get_nbrs_list())
-    print(tiling.get_nbrs_geometrical(3))
-    print(tiling.get_nbrs(3))
+    #print(tiling.get_nbrs_geometrical(3))
+    #print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")

@@ -34,7 +34,6 @@ def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int
             x_ = np.real(center_coords[y])
             y_ = np.imag(center_coords[y])
 
-
         if colors:
             graph.add_node(y, pos=(x_, y_), node_color=colors[y])
         else:
@@ -106,8 +105,15 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
         next_coords = np.empty((sector_lengths[current_level + 1], p + 1), dtype=np.complex128)
         next_edges = np.full(sector_lengths[current_level + 1], edges, dtype=np.uint16)
 
+        # check for filler on sector boundary (I think it should detect both)
+        connection = any_close_matrix(current_coords[-1] * np.exp(- 1j * dphi), current_coords[0])
+        if connection.shape[0] == 2 and child_absolut > 3:
+            # block first child as it would resemble last poly in parents layer
+            current_edges[0] ^= 1 << (connection[0, 0] - 1)
+
         for j in range(layer_size):
             poly = current_coords[j]
+            r = np.abs(poly[0])
 
             # check for filler polys of 1st order
             if j != 0 and current_level != 0:
@@ -147,7 +153,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
 
-                if np.angle(z[0]) >= 0:
+                if r <= np.abs(z[0]):
                     next_coords[next_level_counter, 0] = z[0]
                     next_coords[next_level_counter, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
