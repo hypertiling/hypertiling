@@ -80,7 +80,7 @@ class Dunham(Tiling):
     def __len__(self):
         return len(self.polygons)
    
-   
+
     def get_vertices(self, index: int) -> np.array:
         """
         Returns the p vertices of the polygon at index in Poincare disk coordinates
@@ -254,6 +254,9 @@ class Dunham(Tiling):
         # Add fundamental polygon to list
         identity = DunhamTransformation(np.eye(3), -1, 0)
         self._draw_pgon_pattern(identity)
+
+        if self.n == 1:
+            return
 
 
         # Iterate over each vertex
