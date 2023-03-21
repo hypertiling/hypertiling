@@ -135,6 +135,8 @@ try:
         """
 
         def __init__(self, linlength):
+            super().__init__()
+
             # the maximum linear length
             self.maxlinlength = linlength
             # array where the actual data is stored
@@ -229,6 +231,8 @@ except ImportError:
 
 
         def __init__(self, linlength):
+            super().__init__()
+
             # the maximum linear length
             self.maxlinlength = linlength  
             # list where the actual data is stored
