@@ -1,13 +1,15 @@
 import numpy as np
 import copy
+import math
 from scipy.stats import circmean
 from ..ion import htprint
+from ..util import fund_radius
 from ..representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
-from .SR_base import KernelStaticBase
+from ..kernel_abc import Tiling
+from .SR_util import HyperPolygon
 
 
-
-class Dunham(KernelStaticBase):
+class Dunham(Tiling):
     """
     A more or less literal, unoptimized, implementation of the tiling algorithm by Douglas Dunham,
     translated to Python; specifically, this is the improved version published in [Dun07]
@@ -22,24 +24,19 @@ class Dunham(KernelStaticBase):
 
     """
 
-    def __init__ (self, p, q, n, **kwargs):
-        super(Dunham, self).__init__(p, q, n, **kwargs)
+    def __init__ (self, p, q, n):
+        super().__init__(p, q, n)
 
         if p==3 or q==3:
-            htprint("Warning", "p=3 or q=3 is currently not supported and may lead to duplicates!")
+            raise ValueError("[hypertiling] Error: p=3 or q=3 is currently not supported!")
 
-        if self.center == "vertex":
-            htprint("Warning", "This kernel does not support vertex centered tilings!")
-
+        # prepare list to store polygons 
+        self.polygons = []
 
         # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon(0.0)
-        
-        # transform to Weierstrass coordinates
-        self.fundW = p2w_xyt_vector(self.fund_poly.verticesP)
+        self._create_fundamental_polygon()
 
-        # A tiling pattern is determined by how the p-gon pattern is
-        # transformed across p-gon edges. These transformations are stored here
+        # store transformation which reflect the fundamental polygon across its edges
         self._compute_edge_reflections()
 
         # prepare some more variables
@@ -50,7 +47,39 @@ class Dunham(KernelStaticBase):
 
 
 
+    def _create_fundamental_polygon(self):
+        """
+        Constructs the vertices of the fundamental hyperbolic {p,q} polygon
+
+        Parameters
+        ----------
+        center : str
+            decides whether the fundamental cell is construct centered at the origin ("cell", default) 
+            or with the origin being one of its vertices ("vertex")
+        rotate_by : float
+            angle of rotation of the fundamental polygon, default is the magic angle mangle
+        """
+
+        r = fund_radius(self.p, self.q)
+        polygon = HyperPolygon(self.p)
+
+        for i in range(self.p):
+            z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
+            z = z / abs(z)
+            z = r * z
+            polygon.verticesP[i] = z
+
+        # transform to Weierstrass coordinates
+        # TODO: Use hyperboloid coordinates already during construction
+        self.fund_poly = p2w_xyt_vector(polygon.verticesP)
+
+
     # ---------- the interface --------------
+
+
+    def __len__(self):
+        return len(self.polygons)
+   
    
     def get_vertices(self, index: int) -> np.array:
         """
@@ -136,8 +165,8 @@ class Dunham(KernelStaticBase):
             j = int((i+1)%self.p)
 
             # compute angle of midpoint of edge
-            phi1 = np.arctan2(self.fundW[i][1], self.fundW[i][0])
-            phi2 = np.arctan2(self.fundW[j][1], self.fundW[j][0])
+            phi1 = np.arctan2(self.fund_poly[i][1], self.fund_poly[i][0])
+            phi2 = np.arctan2(self.fund_poly[j][1], self.fund_poly[j][0])
             phi = circmean([phi1,phi2])     
 
             # compute associated rotation matrix
@@ -163,7 +192,7 @@ class Dunham(KernelStaticBase):
         Since hypertiling uses Poincare disk coordinates, but this kernel uses Weierstrass (hyperboloid)
         coordinates, this requires some transformations between the two representations
         """
-        vrtsW = copy.deepcopy(self.fundW)
+        vrtsW = copy.deepcopy(self.fund_poly)
         vrtsW = [trans.matrix@k for k in vrtsW]
         self.polygons.append(vrtsW)
 
