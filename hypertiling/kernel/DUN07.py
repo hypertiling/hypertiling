@@ -33,7 +33,7 @@ class Dunham(KernelStaticBase):
 
 
         # fundamental polygon of the tiling
-        self.fund_poly = self.create_fundamental_polygon()
+        self.fund_poly = self.create_fundamental_polygon(0.0)
         
         # transform to Weierstrass coordinates
         self.fundW = p2w_xyt_vector(self.fund_poly.verticesP)
