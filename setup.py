@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '1.2.'
+version = '1.2.0'
 
 try:
     with open('README.md', 'r') as f:
