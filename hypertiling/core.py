@@ -37,7 +37,7 @@ class GraphKernels(Enum):
     GenerativeReflectionGraphStatic = "GRGS"
 
 
-def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] = TilingKernels.StaticRotationalGraph,
+def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] = TilingKernels.StaticRotationalSector,
                      **kwargs) -> Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling
