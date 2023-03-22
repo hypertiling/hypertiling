@@ -43,7 +43,8 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
     def __iter__(self):
         for poly in self.polygons.values():
-            yield poly.verticesP
+            # (center, vertex_1, vertex_2, ..., vertex_p)
+            yield np.roll(poly.verticesP,1)
 
     def __len__(self):
         return len(self.polygons)
