@@ -63,6 +63,7 @@ unit-test-plain:
         - pip3 install .
         - echo "Testing without fancy packages..."
         - python3 -m tests.test_core
+        - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
 
@@ -85,6 +86,7 @@ unit-test-fancy:
         - pip3 install .
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
+        - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
 

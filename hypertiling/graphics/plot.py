@@ -102,7 +102,8 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         cutoff = 1-cutoff
 
     # loop over polygons
-    for idx in range(len(tiling)):
+    #for idx in range(len(tiling)))
+    for idx in tiling.polygons:
         # extract vertex coordinates
         u = tiling.get_vertices(idx)
 
@@ -185,7 +186,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
         cutoff = 1-cutoff
 
     # loop over cells
-    for j, poly in enumerate(tiling):
+    for j, poly in tiling.polygons.items():
 
         # extract vertices
         u = tiling.get_vertices(j)
@@ -267,7 +268,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     """
 
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=dpi)
 
     # draw unit circle
     if unitcircle:
@@ -339,7 +340,7 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
     """
     
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=120)
 
 
     # default values

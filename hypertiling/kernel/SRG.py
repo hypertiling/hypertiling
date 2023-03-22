@@ -5,44 +5,114 @@ from .SR_base import KernelRotationalCommon
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
 from ..arraytransformation import multi_rotation_around_vertex
 from .SRG_util import DuplicateContainerCircular
+from ..ion import htprint
 
 PI2 = 2 * np.pi
 
 
 class StaticRotationalGraph(KernelRotationalCommon):
-    """
-    Hyperbolic tiling construction kernel
+    '''
 
-    unlike the other static rotational kernels, here the neighbours are computed upon construction of the tiling
-    however, since currently no sector algorithm is used, the construction itself is slower
-    """
+    Static Rotational Graph (SRG) kernel
+
+    allows to construct and dynamically manipulate hyperbolic tilings;
+    unlike the other static rotational kernels, here the neighbours are 
+    computed upon construction of the tiling
+    '''
+
     def __init__ (self, p, q, n, **kwargs):
         super(StaticRotationalGraph, self).__init__(p, q, n, **kwargs)
 
-        # define type of neighbour container
-        self._nbrs = []
+        # a place to collect neighbour information
+        self.nbrs = {}
 
-        # some variables
-        self.layers = 1
-        self.outmost_layer_lower = 0
-        self.outmost_layer_upper = 1
+        # a place to collect the cells which constitute the tiling
+        self.polygons = {}
+
+        # a place to store indices of cells which are "exposed" 
+        # (they have incomplete neighbourhood information)
+        self.exposed = []
+
+        # helpers
+        self.globcount = 0
+        self.layercount = 0
 
         # construct tiling
         self.generate()
 
 
-    def add_layer(self, filter=None):
+
+    def __len__(self):
+        return len(self.polygons)
+
+
+    def remove_cells(self, deletelist):
+        '''
+        deletelist : List[int]
+            list of polygon indices to be removed from the tiling;
+            note that an error is thrown if an index can not be found in the lattice
+        '''
+
+        for idx in deletelist:
+            # remove from neighbour list
+            # remove occurence in neighour lists of other cells
+            try:
+                nbrs_of_idx = self.nbrs[idx]
+                for nb in nbrs_of_idx:
+                    try:
+                        self.nbrs[nb].remove(idx)
+                    except ValueError:
+                        pass
+                del self.nbrs[idx]
+            except KeyError:
+                pass
+
+            # remove from exposed cells
+            try:
+                self.exposed.remove(idx)
+            except ValueError:
+                pass
+
+            # remove from duplicate container
+            try:
+                z = self.polygons[idx].centerP()
+                self.dplcts.remove_by_idx(z, idx)
+            except:
+                pass
+
+            # remove from polygon list
+            try:
+                del self.polygons[idx]
+            except KeyError:
+                pass
+            
+
+
+
+    def add_layer(self, addlist=None, filter=None):
         """
-        add layer
+        Create new cells in an existing tiling
+
+        deletelist : List[int]
+            list of polygon indices, all adjacent spots around those cells are filled with new cells
+            In case no input is provided, the list of currently "exposed" cells is used
+        filter : callable
+            user-defined filter function which allows to limit the construction to certain
+            spatial regions based on the (center) coordinate of the cells
         """
 
-        self.layers += 1
+        if addlist is None:
+            polylist = self.exposed
+        else:
+            polylist = addlist
 
         if filter is None:
-            filter = self.not_origin
+            filter = self.filter_always_pass
 
-        # computes all neighbor polygons of layer l
-        for pgon in self.polygons[self.outmost_layer_lower:self.outmost_layer_upper]:
+        newexposed = []
+
+        for pgonidx in polylist:
+            pgon = self.polygons[pgonidx]
 
             # center of current polygon
             pgon_center = pgon.verticesP[self.p]
@@ -50,7 +120,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             collect_nbrs = []
             
             # iterate over every vertex of pgon
-            for vert_ind in range(self.p):
+            for vert_ind in reversed(range(self.p)):
 
                 # rotate polygon around current vertex
                 # compute center coordinates of all polygons which share this vertex...
@@ -61,24 +131,23 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
                     center = adj_centers[rot_ind]
 
-                    # check whether candidate polygon is in fundemantal sector
+                    # check whether candidate polygon is _not_ close to the origin
                     if filter(center):   
 
                         # check whether candidate polygon already exists
                         duplicate, idx = self.dplcts.is_duplicate(center)
                         if not duplicate:
 
-                            # add to duplicate container
-                            self.dplcts.add(center,len(self.polygons))
-
                             # create copy
                             polycopy = copy.deepcopy(pgon)
 
-                            # generate adjacent polygon and add to large list
-                            collect_nbrs.append(len(self.polygons))
+                            # generate adjacent polygon
                             adj_pgon = self.generate_adj_poly(polycopy, vert_ind, rot_ind)
-                            adj_pgon.layer = self.layers
-                            self.polygons.append(adj_pgon)
+                            adj_pgon.layer = self.layercount
+                            # add to tiling
+                            newpolyidx = self._add_pgon(adj_pgon)
+                            collect_nbrs.append(newpolyidx)
+                            newexposed.append(newpolyidx)
 
                         else:
                             collect_nbrs.append(idx)
@@ -87,15 +156,50 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
             collect_nbrs = np.array(collect_nbrs)
             collect_nbrs = collect_nbrs[collect_nbrs != self.counter]
-            self._nbrs.append(list(np.unique(collect_nbrs)))
+
+            nbr_list = list(np.unique(collect_nbrs))
+            self.nbrs[pgon.idx] = nbr_list
+            
+            # establish mutual connections
+            # i.e.connect new cells to their parent polygons
+            # important note: child will only be connected to those parents from which they have been
+            # generated (see documentation notebook)
+            for nb in nbr_list:
+                self.nbrs[nb].append(pgon.idx)
+                self.nbrs[nb] = list(set(self.nbrs[nb]))
+
             self.counter += 1
+            self.layercount += 1
+
+        # we have constructed neighbours around exposed cells, hence
+        # they are no longer exposed; but the newly created ones are
+        if addlist is None:
+            self.exposed = newexposed
+        # merge lists of existing exposed cells which have not been considered
+        # and new exposed cells
+        else:
+            self.exposed = [x for x in self.exposed if (x not in addlist)]
+            self.exposed += newexposed
 
 
-        self.outmost_layer_lower = self.outmost_layer_upper
-        self.outmost_layer_upper = len(self.polygons)
+    def _add_pgon(self, pgon):
+        """
+        Add new polygon to tiling
+        """
 
-        #htprint("Status", "Created a new layer with index", self.layers+1, "containing", self.outerlayer_lower-self.outerlayer_upper, "polygons")
+        # assign index to new polygon
+        pgon.idx = self.globcount
+        # increment global count
+        self.globcount += 1
+        # add polygon to container
+        self.polygons[pgon.idx] = pgon
+        # add empty list for this poly in nbrs
+        self.nbrs[pgon.idx] = []
+        # add to duplicate container
+        self.dplcts.add(pgon.centerP(), pgon.idx)
 
+        # return index of new polygons
+        return pgon.idx
 
 
     def _prepare_duplicate_container(self):
@@ -104,57 +208,73 @@ class StaticRotationalGraph(KernelRotationalCommon):
         init with origin, set angle artificially to phi/2
         """
 
-        idx = 0
-        rrad = 0
-        pphi = self.phi / 2
-        self.dplcts = DuplicateContainerCircular(self.p * self.q, rrad, pphi, idx)        
-
-        # add full first layer for vertex centered tilings
-        if self.center == "vertex":
-            for i in range(0,self.q):
-                self.dplcts.add(self.polygons[i].centerP(),i)
-
-        # current layer number
-        self.layers = 1
+        self.dplcts = DuplicateContainerCircular(self.p * self.q)       
 
 
+    def _create_first_layer(self, rotate_by=None):
+        """
+        generate the first layer
+        this is one polygon for cell-centered and q polygons for vertex-centered
+        """
+
+        # create fundamental polygon
+        self.fund_poly = self.create_fundamental_polygon(rotate_by)
+
+        # prepare polygon counter
+        self.counter = 0
+
+        # tiling centered around cell
+        # add fundamental cell and set bounds of current layer
+        if self.center == "cell":
+            self.fund_poly.moeb_origin(0.000001) 
+            # necessary for technical reasons since the duplicate container is singular at the origin
+            # TODO: add warning
+
+            self._add_pgon(self.fund_poly)
+            self.exposed = [0]
+
+
+        # tiling centered around vertex
+        if self.center == 'vertex':
+
+            # shift fundamental polygon such that one of its vertices is on the origin
+            vertidx = 0           
+            morigin(self.p, self.fund_poly.verticesP[vertidx], self.fund_poly.verticesP)
+            
+            # generate the q polygons of the first layer
+            for rot_ind in range(self.q):
+                polycopy = copy.deepcopy(self.fund_poly)
+                adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
+                newpgonidx = self._add_pgon(adj_pgon)
+                self.exposed.append(newpgonidx)
 
 
     def generate(self):
         """
-        do full construction
+        construct full tiling by calling the add_layer function repeatedly
         """
+        self.polygons = {}
+        self._prepare_duplicate_container()
+        self._create_first_layer()
 
-
-        # clear tiling
-        self.polygons = []
-
-        # add layers repeatedly until nlayers is reached
-        if self.center == "cell":
-            self._create_first_layer()
-            self._prepare_duplicate_container()
-            for _ in range(self.n-1):
-                self.add_layer(self.not_origin)
-
-        elif self.center == "vertex":
-
-            self._create_first_layer()
-            self._prepare_duplicate_container()
-            for _ in range(self.n-1):
-                self.add_layer(self.filter_always_pass)
-
+        for i in range(self.n-1):
+            self.add_layer()
 
 
     def generate_adj_poly(self, polygon, ind, k):
         """
-        finds the next polygon by k-fold rotation of polygon around the vertex number ind
+        construct new polygon by k-fold rotation of "polygon" around its vertex "ind"
         """
         mfull(self.p, k * self.qhi, ind, polygon.verticesP)
         return polygon
 
 
+
+# ------------- Filters -------------
+
     def filter_always_pass(self, z0):
         return True
+
 
     def in_sector(self, z0):
         """
@@ -181,14 +301,14 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
         return neighbour list of entire lattice
         """
-        return self._nbrs
+        return self.nbrs
 
 
     def get_nbrs(self, i):
         """
         return neighbours of cell i as list
         """
-        return self._nbrs[i]
+        return self.nbrs[i]
 
 
         
