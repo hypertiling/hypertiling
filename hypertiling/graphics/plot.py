@@ -183,12 +183,10 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
         lazy = True
         cutoff = 1-cutoff
 
-    # loop over cells
-    for j, poly in tiling.polygons.items():
-
-        # extract vertices
-        u = tiling.get_vertices(j)
-
+    # iterate over cells
+    for poly in tiling:
+        # extract vertex coordinates
+        u = poly[1:]
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
