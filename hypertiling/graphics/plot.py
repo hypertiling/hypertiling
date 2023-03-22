@@ -101,12 +101,10 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         lazy = True
         cutoff = 1-cutoff
 
-    # loop over polygons
-    #for idx in range(len(tiling)))
-    for idx in tiling.polygons:
+    # iterate over tiling
+    for poly in tiling:
         # extract vertex coordinates
-        u = tiling.get_vertices(idx)
-
+        u = poly[1:]
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
@@ -116,7 +114,7 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         stack = np.column_stack((u.real, u.imag))
         polygon = Polygon(stack, True)
         patches.append(polygon)
-        accepted_polys.append(idx)
+        #accepted_polys.append(idx)
 
     # default values
     if colors is None:
@@ -134,7 +132,7 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         # the polygon list has now become a PatchCollection
         pgonpatches = PatchCollection(patches, **kwargs)
         # add colors
-        pgonpatches.set_array(np.array(colors)[accepted_polys])
+        pgonpatches.set_array(np.array(colors))
 
     # identical colors
     elif is_color_like(colors):

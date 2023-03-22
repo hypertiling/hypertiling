@@ -1,23 +1,24 @@
 import numpy as np
 import math
 import copy
-from .SR_base import KernelRotationalCommon
-from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
-from ..arraytransformation import multi_rotation_around_vertex
-from .SRG_util import DuplicateContainerCircular
+from ..util import n_cell_centered, n_vertex_centered
 from ..ion import htprint
+from ..arraytransformation import mfull, morigin, multi_rotation_around_vertex
+from .SRG_util import DuplicateContainerCircular
+from .SR_base import KernelRotationalCommon
 
 PI2 = 2 * np.pi
 
 
 class StaticRotationalGraph(KernelRotationalCommon):
     '''
-
     Static Rotational Graph (SRG) kernel
 
-    allows to construct and dynamically manipulate hyperbolic tilings;
-    unlike the other static rotational kernels, here the neighbours are 
-    computed upon construction of the tiling
+    The default kernel of the hypertiling package
+
+    It provides great flexibility by allowing to construct and dynamically manipulate 
+    hyperbolic tilings; unlike the other static rotational kernels, here the neighbours 
+    are computed upon construction of the tiling
     '''
 
     def __init__ (self, p, q, n, **kwargs):
@@ -40,7 +41,9 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # construct tiling
         self.generate()
 
-
+    def __iter__(self):
+        for poly in self.polygons.values():
+            yield poly.verticesP
 
     def __len__(self):
         return len(self.polygons)
@@ -267,6 +270,16 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
         mfull(self.p, k * self.qhi, ind, polygon.verticesP)
         return polygon
+    
+
+    def _peformance_warning(self):
+        if self.center == "vertex":
+            n_est = n_vertex_centered(self.p, self.q, self.n)
+        if self.center == "center":
+            n_est = n_cell_centered(self.p, self.q, self.n)
+
+        if n_est > 1e6:
+            htprint("Warning", "You requested a very large tiling and might want to consider using a different construction kernel (compare documentation)!")
 
 
 

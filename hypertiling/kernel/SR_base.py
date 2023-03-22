@@ -59,21 +59,15 @@ class KernelStaticBase(Tiling):
     def __getitem__(self, idx):
         return self.polygons[idx]
 
-    def __iter__(self):
-        self.iterctr = 0
-        self.itervar = self.polygons[self.iterctr]
-        return self
 
-    def __next__(self):
-        if self.iterctr < len(self.polygons):
-            retval = self.polygons[self.iterctr]
-            self.iterctr += 1
-            return retval
-        else:
-            raise StopIteration
+    def __iter__(self):
+        for poly in self.polygons:
+            yield poly.verticesP
+
 
     def __len__(self):
         return len(self.polygons)
+
 
     def get_vertices(self, index: int) -> np.array:
         """
