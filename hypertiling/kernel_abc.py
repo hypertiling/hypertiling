@@ -10,6 +10,7 @@ MAGICANGLE = np.radians(0.12345678910111213141516171819202122232425262728293031)
 
 
 class Graph(abc.ABC):
+    """ The abstract base class of a hyperbolic graph """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
 
@@ -43,10 +44,14 @@ class Graph(abc.ABC):
     def __repr__(self):
         return f"Graph {self.p, self.q, self.n}"
 
-    # todo: add __len__
+    @abc.abstractmethod
+    def __len__(self):
+        pass
 
 
 class Tiling(Graph):
+    """ The abstract base class of a hyperbolic tiling """
+
 
     def __repr__(self):
         return f"Tiling {self.p, self.q, self.n}"

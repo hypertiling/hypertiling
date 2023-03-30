@@ -1,6 +1,3 @@
-import csv
-
-
 GLOBAL_VERBOSITY = "Warning"
 
 VERBOSITY_LEVELS = {"Warning": 1, 
@@ -10,6 +7,9 @@ VERBOSITY_LEVELS = {"Warning": 1,
 
 
 def show_verbosity_level():
+    """
+    Display current verbosity level
+    """
     print("[hypertiling] The verbosity level is set to:")
     for key,item in VERBOSITY_LEVELS.items():
         arrow = "     "
@@ -19,6 +19,9 @@ def show_verbosity_level():
 
 
 def set_verbosity_level(verbosity_depth="Warning"):
+    """
+    Set verbosity level globally
+    """
     if verbosity_depth not in VERBOSITY_LEVELS:
         raise ValueError("[hypertiling] Error: Verbosity level not supported. Select one of the following: "+str(list(VERBOSITY_LEVELS.keys())))
     else:
@@ -26,14 +29,24 @@ def set_verbosity_level(verbosity_depth="Warning"):
         GLOBAL_VERBOSITY = verbosity_depth
     show_verbosity_level()
 
+
 def htprint(verbosity_depth, message):
+    """
+    Use this function for print messages
+
+    Parameters:
+        verbosity_depth : str
+            defines the verbosity level of that message
+        message : str
+            the actual message content
+    """
     if VERBOSITY_LEVELS[verbosity_depth] <= VERBOSITY_LEVELS[GLOBAL_VERBOSITY]:
         prefix = "[hypertiling] "+verbosity_depth+": "
         print(prefix+message)
 
 
 
-
+import csv
 
 def write_csv(fname, nbrs):
     """

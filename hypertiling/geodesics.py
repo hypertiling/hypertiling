@@ -1,35 +1,41 @@
 import numpy as np
-
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-
 from .transformation import moeb_origin_trafo
 from .distance import disk_distance
+from .ion import htprint
 
 
-# returns the "minor" of a matrix
 def minor(M, i, j):
+    """
+    return the "minor" of a matrix w.r.t index (i,j)
+    """
     M = np.delete(M, i, 0)
     M = np.delete(M, j, 1)
     return M
 
 
-# perform inversion of "z" w.r.t. the unit circle
 def unit_circle_inversion(z):
+    """
+    perform inversion of input z with respect to the unit circle
+    """
     denom = z.real**2 + z.imag**2
     return complex(z.real/denom, z.imag/denom)
 
 
-# constructs a circle through three points
-# input: three points represented as complex numbers
-# output: center of the circle and radius
-# if the points are collinear within a certain precision
-# the functions returns a radius of -1
+def circle_through_three_points(z1, z2, z3, verbose=False, eps=1e-10):
+    """
+    Construct Euclidean circle through three points (z1, z2, z3)
+    
+    Input: three points represented as complex numbers
+    Output: center of the circle and radius
+    
+    In case the points are collinear within a precision of "eps"
+    a radius of -1 is returned
 
-# formulas from here: 
-# http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
-
-def circle_through_three_points(z1, z2, z3, verbose=False):
+    formulas from here: 
+    http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
+    """
     x1 = z1.real
     y1 = z1.imag
     x2 = z2.real
@@ -50,9 +56,9 @@ def circle_through_three_points(z1, z2, z3, verbose=False):
     M03 = np.linalg.det(minor(A, 0, 3))
     
     # M00 being close to zero indicates collinearity
-    if np.abs(M00) < 1e-10:
+    if np.abs(M00) < eps:
         if verbose:
-            print("Error: Points are collinear!")
+            htprint("Warning", "Points are collinear! A radius of -1 is returned.")
         return complex(0, 0), -1
 
     # compute center and radius
@@ -63,18 +69,22 @@ def circle_through_three_points(z1, z2, z3, verbose=False):
     return complex(x0, y0), radius
 
 
-# return the geodesic midpoint between z1 and z2
 def geodesic_midpoint(z1, z2):
-    z2n = moeb_origin_trafo(z1, z2)  # move z1, z2 such that z0=0
-    d = disk_distance(0, z2n)  # distance betwen 0 and z2new
-    r = np.tanh(d/4)  # compute corresponding Cartesian radius
-    zm = r*np.exp(1j*np.angle(z2n))  # add angle
-    zm = moeb_origin_trafo(-z1, zm)  # and transform back
+    """
+    Compute geodesic midpoint between z1 and z2
+    """
+    z2n = moeb_origin_trafo(z1, z2)     # move z1, z2 such that z0=0
+    d = disk_distance(0, z2n)           # distance betwen 0 and z2new
+    r = np.tanh(d/4)                    # compute corresponding Cartesian radius
+    zm = r*np.exp(1j*np.angle(z2n))     # add angle
+    zm = moeb_origin_trafo(-z1, zm)     # and transform back
     return zm
 
 
-# helper function for "geodesic_arc"
 def geodesic_angles(z1, z2):
+    """
+    Helper function for "geodesic_arc"
+    """
     
     # the origin needs some extra care
     # since it is mapped to infinity
@@ -100,8 +110,10 @@ def geodesic_angles(z1, z2):
     return angle1, angle2, zc, radius
 
 
-# draw hyperbolic line segment connecting z1 and z2
 def geodesic_arc(z1, z2, **kwargs):
+    """
+    Return hyperbolic line segment connecting z1 and z2 as matplotlib drawing object
+    """
     t1, t2, zc, r = geodesic_angles(z1, z2)
 
     # in case the points are collinear, we use matplotlib.patch.Arrow to draw a straight line
@@ -135,5 +147,3 @@ def geodesic_arc(z1, z2, **kwargs):
         return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
     else:
         return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t2), theta2=np.degrees(t1), **kwargs)
-
-

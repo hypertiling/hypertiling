@@ -7,8 +7,7 @@ from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
 from matplotlib.colors import is_color_like
 
-# taken from 
-# plots even very large samples of polygons in less than a second
+
 def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
     """
     Fast plot function
@@ -102,11 +101,10 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         lazy = True
         cutoff = 1-cutoff
 
-    # loop over polygons
-    for idx in range(len(tiling)):
+    # iterate over tiling
+    for poly in tiling:
         # extract vertex coordinates
-        u = tiling.get_vertices(idx)
-
+        u = poly[1:]
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
@@ -116,7 +114,7 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         stack = np.column_stack((u.real, u.imag))
         polygon = Polygon(stack, True)
         patches.append(polygon)
-        accepted_polys.append(idx)
+        #accepted_polys.append(idx)
 
     # default values
     if colors is None:
@@ -134,7 +132,7 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         # the polygon list has now become a PatchCollection
         pgonpatches = PatchCollection(patches, **kwargs)
         # add colors
-        pgonpatches.set_array(np.array(colors)[accepted_polys])
+        pgonpatches.set_array(np.array(colors))
 
     # identical colors
     elif is_color_like(colors):
@@ -185,12 +183,10 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
         lazy = True
         cutoff = 1-cutoff
 
-    # loop over cells
-    for j, poly in enumerate(tiling):
-
-        # extract vertices
-        u = tiling.get_vertices(j)
-
+    # iterate over cells
+    for poly in tiling:
+        # extract vertex coordinates
+        u = poly[1:]
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
@@ -221,7 +217,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
 def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
                 ycrange=(-1, 1), dpi=120, **kwargs):
     """
-    Plots a hyperbolic tiling.
+    Plots a hyperbolic tiling
 
     Parameters
     ----------
@@ -268,7 +264,7 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     """
 
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=dpi)
 
     # draw unit circle
     if unitcircle:
@@ -340,7 +336,7 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
     """
     
     # create figure
-    fig, ax = plt.subplots(figsize=(7, 7), dpi=120)
+    fig, ax = plt.subplots(figsize=(4,4), dpi=120)
 
 
     # default values

@@ -9,7 +9,10 @@ def moeb_rotate_trafo(phi, z):
     
 mymoebint = np.vectorize(mymoebint)
 
-"""
+
+class AnimatorLive:
+
+    """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
 
     use this if you want to calculated new states live
@@ -28,11 +31,7 @@ mymoebint = np.vectorize(mymoebint)
         additional kwargs of function "step"
     animargs : dict, optional
         additional kwargs to be passed to the FuncAnimator
-
-"""
-
-
-class animate_live:
+    """
 
     def __init__(self, state, fig, pgons, step, stepargs={}, animargs={}):
         self.initstate = state
@@ -56,7 +55,9 @@ class animate_live:
         self.anim.save(path, writer)
 
 
-"""
+class AnimatorList:
+
+    """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
 
     use this if you have a pre-computed array of polygon states
@@ -71,11 +72,7 @@ class animate_live:
         the polygon patches to be animated
     animargs : dict, optional
         additional kwargs to be passed to the FuncAnimator
-
-"""
-
-
-class animate_list:
+    """
 
     def __init__(self, data, fig, pgons, animargs={}):
         if "frames" in animargs:
@@ -101,7 +98,8 @@ class animate_list:
         self.anim.save(path, writer)
 
 
-"""
+class AnimatorPath:
+    """
     Wrapper which specializes matplotlibs FuncAnimation for hyperbolic tilings
 
     use this if you have a pre-computed array of polygon states and want to animate a moving tiling
@@ -132,18 +130,16 @@ class animate_list:
     animargs : dict, optional
         additional kwargs to be passed to the FuncAnimator
 
-"""
-
-
-class HyperanimatorPath:
+    """
 
     def __init__(self, data, fig, ax, tiling, path, path_frames=32, data_frames=None, kwargs={}, animargs={}):
         self.tiling = tiling
         self.ax = ax
 
-        ### Check whether path has entries of type int or complex/2d float
-        ### If int: entries correspond to polygon IDs
-        ### If complex or 2d float: entries correspond to coordinates
+
+        # Check whether path has entries of type int or complex/2d float
+        # If int: entries correspond to polygon IDs
+        # If complex or 2d float: entries correspond to coordinates
         if isinstance(path, list):
             path = np.array(path)
         if path.ndim == 2 and isinstance(path[0].item(), float):
@@ -153,8 +149,8 @@ class HyperanimatorPath:
         elif path.ndim == 1 and isinstance(path[0].item(), int):
             self.coords = self._poly_id_to_coords(path)
         else:
-            print(" some kind of error message ")
-            return
+            raise ValueError("[hypertiling] Error: Invalid input format for path")
+        
 
         self.path_frames = path_frames
         if not data_frames:
@@ -168,8 +164,11 @@ class HyperanimatorPath:
         self.anim = animation.FuncAnimation(fig, self._update, frames=self.frames, **animargs)
         self.kwargs = kwargs
 
+
+
     def _update(self, i):
         self.ax.clear()
+        
         self.tiling.translate(self.s_coords[i])
         self.s_coords = mymoebint(-self.s_coords[i], self.s_coords)[0]
         pgons = convert_polygons_to_patches(self.tiling, self.s_data[i], **self.kwargs)
@@ -182,15 +181,17 @@ class HyperanimatorPath:
 
         return self.ax
 
+
     def _poly_id_to_coords(self, path):
-        # Takes list of polygon id's and returns list containing the respective coordinates
+        """ Takes list of polygon id's and returns list containing the respective coordinates """
         coords = np.zeros(len(path), dtype=np.complex128)
         for i in range(len(path)):
             coords[i] = self.tiling.get_center(path[i])
         return coords
 
+
     def _stretch_pair_geodesic(self, pair, factor):
-        # Takes a list containing two coordinates and divides the path between them into "factor" geodesic parts
+        """ Takes a list containing two coordinates and divides the path between them into "factor" geodesic parts """
 
         # t = translated
         # r = rotated
@@ -220,8 +221,9 @@ class HyperanimatorPath:
 
         return stretched
 
+
     def _stretch_coords_geodesic(self, coords, factor):
-        # Takes list of all coordinates to be visited and stretches it "factor" times
+        """ Takes list of all coordinates to be visited and stretches it "factor" times """
 
         stretched_path = []
 
@@ -237,12 +239,14 @@ class HyperanimatorPath:
 
         return np.array(stretched_path)
 
+
     def _stretch_data(self, data, data_frames, len_coords):
         try:
             len(data[0])
             return np.repeat(data, (data_frames + 1), axis=0)
         except:
             return np.tile(data, len_coords).reshape(len_coords, len(data))
+
 
     def save(self, path, fps=5, codec=None):
         writer = animation.FFMpegWriter(fps, codec)

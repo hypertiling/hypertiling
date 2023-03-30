@@ -25,3 +25,18 @@ def maximal_radial_cutoff(T, eps=1e-10):
             boundary[j] = True
 
     return boundary, cutoff_radius
+
+
+
+# computes the variance of the centers of the polygons in the outmost layer
+def border_variance(tiling):
+    border = []
+    mu, var = 0, 0  # mean and variance
+    for pgon in [pgon for pgon in tiling.polygons if pgon.sector == 0]:  # find the outmost polygons of sector
+        if pgon.layer == tiling.polygons[-1].layer:  # if in highest layer
+            mu += weierstrass_distance([0, 0, 1], pgon.centerW)  # [0,0,1] is the origin in weierstrass representation
+            border.append(pgon)
+    mu /= len(border)  # normalize the mean
+    for pgon in border:
+        var += (mu-weierstrass_distance([0, 0, 1], pgon.centerW))**2
+    return var/len(border)

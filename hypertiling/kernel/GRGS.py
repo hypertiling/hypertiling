@@ -1,8 +1,9 @@
-from typing import Callable, Any, List
+from typing import List
 import numpy as np
-import hypertiling.kernels.GR_util as util
-import hypertiling.kernels.GRG_util as graph_util
+import hypertiling.kernel.GR_util as util
+import hypertiling.kernel.GRGS_util as graph_util
 from hypertiling.kernel_abc import Graph
+from hypertiling.ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -22,7 +23,7 @@ LIMITATIONS:
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class KernelGenerativeReflectionGraph(Graph):
+class GenerativeReflectionGraphStatic(Graph):
     """
     Creates the hyperbolic tiling.
     """
@@ -30,7 +31,7 @@ class KernelGenerativeReflectionGraph(Graph):
     def __init__(self, p: int, q: int, n: int, tol: float = 1e-8, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
-        Time-complexity: O(p^2 m + n + m / p * n)
+        Time-complexity: O(p^3 m + p * n + m * n)
         :param p: int = number of vertices per cells
         :param q: int = number of cells meeting at each vertex
         :param n: int =  number of layers to be constructed
@@ -48,13 +49,17 @@ class KernelGenerativeReflectionGraph(Graph):
 
         # estimate some other technical attributes
         if n != 0:
-            lengths = util.get_reflection_n_estimation(p, q, n)  # n
-            self._sector_lengths = np.ceil(lengths / p).astype(np.uint32)  # n
+            self._sector_lengths = util.get_reflection_n_estimation(p, q, n)  # n
         else:
             self._sector_lengths = np.array([1])
 
+        self._sector_lengths_cumulated = np.empty((self._sector_lengths.shape[0] + 1,), dtype=np.uint32)
+        self._sector_lengths_cumulated[0] = 0
+        for i, element in enumerate(self._sector_lengths):  # n loop execs
+            self._sector_lengths_cumulated[i + 1] = element + self._sector_lengths_cumulated[i]
+
         self._nbrs, self.center_coords = self._generate()
-        self.length = (self._nbrs.shape[0] - 1) * self.p + 1
+        self.length = self._nbrs.shape[0]
 
     def __getitem__(self, item):
         """
@@ -63,7 +68,15 @@ class KernelGenerativeReflectionGraph(Graph):
         :param item: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(item, self._get_nbrs)
+        return self.get_nbrs(item)
+
+    def __len__(self):
+        """
+        Return the number of polygons in the tiling
+        Time-complexity: O(1)
+        :return: int = number of polygons in the tiling
+        """
+        return self.length
 
     # Helper ###########################################################################################################
 
@@ -75,45 +88,6 @@ class KernelGenerativeReflectionGraph(Graph):
         return graph_util.generate_nbrs(self.p, self.q, self.r, self._sector_lengths, self.mangle,
                                         self.tol)
 
-    def _expand_sector_index_to_tiling(self, index: int, f: Callable) -> Any:
-        """
-        Protected(!)
-        Takes an index (for the tiling) and a function defined in the fundamental sector.
-        Calculates the corresponding sector_index, applies function f, and corrects the result to index.
-        Time-complexity: O(f(index))
-        :param index: int = index of a polygon in the tiling
-        :param f: Callable = function to apply on sector_index
-        :return: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
-        """
-        if index != 0:
-            # get equivalent poly in sector
-            index -= 1
-            sector_replica = index // (self._nbrs.shape[0] - 1)
-            index %= (self._nbrs.shape[0] - 1)
-            index += 1
-            jump = self._nbrs.shape[0] - 1
-
-            indices = f(index)
-
-            indices = [(i + sector_replica * jump) if i != 0 else 0 for i in indices]
-            return [i if i < self.length else i % self.length + 1 for i in indices]
-
-        return f(index)
-
-    def _get_nbrs(self, sector_index: int) -> np.array:
-        """
-        Protected(!)
-        Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
-        Time-complexity: O(p)
-        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
-        """
-        neighbor_indices = self._nbrs[sector_index]
-
-        # get value from nice little overflow
-        overflow = np.iinfo(neighbor_indices.dtype).max
-        return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
-
     # Helper ###########################################################################################################
 
     def get_coord(self, index: int) -> np.complex128:
@@ -123,13 +97,19 @@ class KernelGenerativeReflectionGraph(Graph):
         :param index: int = index of the node of consideration
         :return: np.complex128 = center of the node in complex coordinates
         """
-        if index >= self.center_coords.shape[0]:
-            sector = (index - 1) // (self.center_coords.shape[0] - 1)
-            index = (index - 1) % (self.center_coords.shape[0] - 1)
-            index += 1
-            return self.center_coords[index] * np.exp(1j * sector * np.pi * 2 / self.p)
-        else:
-            return self.center_coords[index]
+        return self.center_coords[index]
+
+    def get_reflection_level(self, index: int) -> int:
+        """
+        Returns the reflection level the polygon at index belongs to.
+        Time-complexity: O(log(n + 1))
+        :param index: int = index of the polygon
+        :return: int = reflection level
+        """
+        pos = np.searchsorted(self._sector_lengths_cumulated, index)
+        if self._sector_lengths_cumulated[pos] > index:
+            return pos - 1
+        return pos
 
     def check_integrity(self, tol: float = 1e-8):
         """
@@ -150,82 +130,77 @@ class KernelGenerativeReflectionGraph(Graph):
                     print(f"Neighbor {nbr} of polygon {i} out of reach!")
                     break
 
-    def get_nbrs_list_sector(self) -> List[List[int]]:
-        """
-        Returns a list of lists of the neighbors for the graph.
-        Time-complexity: O(m)
-        :return: List[List[int]] = List for each polygons neighbors
-        """
-        max_number = np.iinfo(self._nbrs.dtype).max
-        return [[index for index in row if index != max_number] for row in self._nbrs.tolist()]
-
     def get_nbrs_list(self) -> List[List[int]]:
         """
         Create and return list of all neighbors
         Time-complexity: O(mp)
         :return: List[List[int]] = list of all neighbors for all polygons
         """
-        part = np.copy(self._nbrs[1:]).astype(np.uint32)  # m / p * p = m
-        max_number = np.iinfo(self._nbrs.dtype).max  # m / p
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
+        max_number = np.iinfo(self._nbrs.dtype).max
+        return [[element for element in line if element != max_number] for line in self._nbrs.tolist()]  # m p
 
-        jump = np.uint32(self._nbrs.shape[0] - 1)
-        rotate = np.vectorize(lambda x: x if x == max_number else x if x == 0 else x + jump)
-        neighbors = [[element for element in line if element != max_number] for line in self._nbrs.tolist()]
-        # m / p loop execs: p loop execs: O(1)
+    def get_nbrs(self, sector_index: int) -> np.array:
+        """
+        Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+        Time-complexity: O(p)
+        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
+        :return: np.array = indices of the neighbors
+        """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
+        neighbor_indices = self._nbrs[sector_index]
 
-        for sector_i in range(1, self.p):  # p loop execs
-            part = rotate(part)  # m / p * p = m
-            neighbors += [[i if i < self.length else i % self.length + 1 for i in line if i != max_number] for line in
-                          part.tolist()]
-            # m / p loop execs: p loop execs: O(1)
-
-        return neighbors
-
-    def get_nbrs(self, index):
-        return self._expand_sector_index_to_tiling(index, self._get_nbrs)
+        # get value from nice little overflow
+        overflow = np.iinfo(neighbor_indices.dtype).max
+        return neighbor_indices[np.argwhere(neighbor_indices != overflow)].flatten()  # p
 
 
 if __name__ == "__main__":
     import time
-    from hypertiling.kernels.GR import KernelGenerativeReflection
+    from hypertiling.kernel.GR import GenerativeReflection
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import hypertiling.core as core
+    import hypertiling.kernel.GRG_util as grg_util
     from hypertiling.kernel_abc import Tiling
-    """
-    p, q, n = 3, 7, 7
+
+    p, q, n = 8, 3, 4
     n2 = 3
     t1 = time.time()
-    graph = KernelGenerativeReflectionGraph(p, q, n)
+    graph = GenerativeReflectionGraphStatic(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    t1 = time.time()
+    """t1 = time.time()
     tiling = KernelGenerativeReflection(q, p, n)
     print(f"Took: {time.time() - t1}")
     tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)
+    tiling.rotate(60, deg=True)"""
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     graph.check_integrity()
-    for i, nbrs in enumerate(graph.get_nbrs_list()):
-        if not np.array_equal(nbrs, graph[i]):
-            print(nbrs)
-            print(graph[i])
-            print("\n")
+    # for i, nbrs in enumerate(graph.get_nbrs_list()):
+    #    if not np.array_equal(nbrs, graph[i]):
+    #        print(nbrs)
+    #        print(graph[i])
+    #        print("\n")
 
-    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    """
     # tiling.map_layers()
     for polygon_index, pgon in enumerate(tiling):
         poly_layer = tiling.get_layer(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
-        fig_ax[1].add_patch(patch)
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
-    graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p)
+        fig_ax[1].add_patch(patch)"""
+    # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+    colors = ["#FF000080", "#00FF0080", "#0000FF80"]
+    grg_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p,
+                        colors=[colors[graph.get_reflection_level(i) % len(colors)] for i in range(graph.length)])
     plt.show()
-
-    """

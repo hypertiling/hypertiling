@@ -1,13 +1,26 @@
 from typing import Callable, Any, List
 import numpy as np
-import hypertiling.kernels.GR_util as util
-from hypertiling.kernels.GR_util import PI2
+import hypertiling.kernel.GR_util as util
+from hypertiling.kernel.GR_util import PI2
 from hypertiling.kernel_abc import Tiling
 import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
+from hypertiling.ion import htprint
 
+"""
+p: Number of edges/vertices of a polygon
+q: Number of polygons that meet at a vertex
+n: Number of layers (reflective definition)
+m: Number of polygons
+m = m(p, q, n)
 
+LIMITATIONS:
+- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+  layers size in the fundamental sector
+- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
+"""
 """
 p: Number of edges/vertices of a polygon
 q: Number of polygons that meet at a vertex
@@ -23,10 +36,10 @@ LIMITATIONS:
 """
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
-MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
+MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
-class KernelGenerativeReflection(Tiling):
+class GenerativeReflection(Tiling):
     """
     Creates the hyperbolic tiling.
     """
@@ -372,7 +385,7 @@ class KernelGenerativeReflection(Tiling):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
+                    raise AttributeError(f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
 
@@ -450,13 +463,21 @@ class KernelGenerativeReflection(Tiling):
     # Basics ###########################################################################################################
     # API ##############################################################################################################
 
-    def get_nbrs_list(self, tol: float = 1e-5) -> List[List[int]]:
+    def get_nbrs_list(self, tol: float = 1e-5, method="default") -> List[List[int]]:
         """
         Create and return list of all neighbors
         Time-complexity: O(mp)
         :param tol: float = tolerance to search neighbors in
+        :param method: str = method to use for calculating the neighbors. Currently "default" only
         :return: List[List[int]] = list of all neighbors for all polygons
         """
+        if method != "default":
+            raise AttributeError("[hypertiling] Error: Only default implemented yet")
+
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return [[]]
+
         if self._nbrs is None:
             self.map_nbrs(tol=tol)
 
@@ -484,7 +505,7 @@ class KernelGenerativeReflection(Tiling):
         :return: int = number of the layer
         """
         if self._layers is None:
-            print("Layers are not yet mapped. Start mapping")
+            htprint("Status", "Layers are not yet mapped. Start mapping")
             self.map_layers()
 
         if index == 0:
@@ -560,7 +581,7 @@ class KernelGenerativeReflection(Tiling):
         Protected(!)
         Returns the reflection level the polygon at index belongs to.
         Time-complexity: O(log(n + 1))
-        :param index: int = index of the polygon
+        :param sector_index: int = index of the polygon
         :return: int = reflection level
         """
         pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)
@@ -737,7 +758,7 @@ class KernelGenerativeReflection(Tiling):
         :return: np.array = indices of the neighbors
         """
         if self._nbrs is None:
-            print("start mapping neighbors")
+            htprint("Status", "start mapping neighbors")
             self.map_nbrs()  # m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p]
         neighbor_indices = self._nbrs[sector_index]
 
@@ -786,6 +807,9 @@ class KernelGenerativeReflection(Tiling):
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
     def get_nbrs(self, i, method="mapping"):
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         methods = {"mapping": self.get_nbrs_mapping,
                    "generative": self.get_nbrs_generative,
                    "radius": self.get_nbrs_radius,
@@ -799,6 +823,9 @@ class KernelGenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_generative)
 
     def get_nbrs_geometrical(self, index: int) -> np.array:
@@ -808,6 +835,9 @@ class KernelGenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_geometrical)
 
     def get_nbrs_mapping(self, index: int) -> np.array:
@@ -817,6 +847,9 @@ class KernelGenerativeReflection(Tiling):
         :param index: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_mapping)
 
     def get_nbrs_radius(self, index: int) -> np.array:
@@ -826,6 +859,9 @@ class KernelGenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: np.array = array containing the indices of the neighbors
         """
+        if len(self) == 1:
+            htprint("Warning", "Tiling consists of one polygon!")
+            return []
         return self._expand_sector_index_to_tiling(index, self._get_nbrs_radius)
 
     # Generative #######################################################################################################
@@ -838,6 +874,8 @@ class KernelGenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         if not isinstance(function, np.vectorize):
             function = np.vectorize(function)
         self._sector_polys = function(self._sector_polys)
@@ -849,6 +887,8 @@ class KernelGenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_rotate_trafo(-angle, x))
 
     def translate(self, z: np.complex128):
@@ -858,6 +898,8 @@ class KernelGenerativeReflection(Tiling):
         Time-complexity: O(m / p)
         :return: void
         """
+        raise NotImplementedError(
+            '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
         self.transform(lambda x: transform.moeb_origin_trafo(z, x))
 
     # Transformations ##################################################################################################
@@ -873,10 +915,11 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = KernelGenerativeReflection(7, 3, 4)
+    tiling = GenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
-    print(tiling.get_nbrs_geometrical(1))
+    #print(tiling.get_nbrs_geometrical(3))
+    #print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
