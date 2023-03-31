@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '1.1.3'
+version = '1.2.'
 
 try:
     with open('README.md', 'r') as f:
@@ -14,7 +14,7 @@ except:
 setup(
     name=package_name,
     version=version,
-    description='A high-performance Python 3 library for the generation and visualization of hyperbolic tilings',
+    description='A high-performance Python library for the generation and visualization of hyperbolic tilings',
     long_description=long_desc,
     long_description_content_type='text/markdown',
     author='Manuel Schrauth, Yanick Thurn, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela',

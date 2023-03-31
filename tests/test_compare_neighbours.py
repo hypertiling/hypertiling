@@ -8,7 +8,7 @@ print("Testing different neighbour search algorithms against each other")
 class TestCore(unittest.TestCase):
     def test_comp_nbrs(self):
 
-        kernel = TilingKernels.StaticRotational
+        kernel = TilingKernels.StaticRotationalSector
 
         lattices = [(3, 7, 6,), (7, 3, 6), (5, 4, 5), (4, 5, 5), (9, 3, 3), (4, 10, 3), (3, 8, 3), (6, 4, 3)]
 
