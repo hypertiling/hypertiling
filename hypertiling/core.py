@@ -2,7 +2,7 @@ from typing import Union
 from .ion import htprint
 from .kernel_abc import Tiling, Graph
 from .kernel.SRG import StaticRotationalGraph
-from .kernel.SR import StaticRotational
+from .kernel.SRS import StaticRotationalSector
 from .kernel.SRL import StaticRotationalLegacy
 from .kernel.DUN86 import LegacyDunham
 from .kernel.DUN07 import Dunham
@@ -12,7 +12,7 @@ from .kernel.GRGS import GenerativeReflectionGraphStatic
 from enum import Enum
 
 TILINGS = {
-    "SR": StaticRotational,
+    "SRS": StaticRotationalSector,
     "SRG": StaticRotationalGraph,
     "SRL": StaticRotationalLegacy,
     "DUN86": LegacyDunham,
@@ -21,14 +21,14 @@ TILINGS = {
 }
 
 GRAPHS = {
-    "GRG": GenerativeReflectionGraph,
+    "GRG":  GenerativeReflectionGraph,
     "GRGS": GenerativeReflectionGraphStatic
 }
 
 
 class TilingKernels(Enum):
-    StaticRotational = "SR"
-    StaticRotationalGraph = "SRG"
+    StaticRotationalSector = "SRS"
+    StaticRotationalGraph  = "SRG"
     StaticRotationalLegacy = "SRL"
     LegacyDunham = "DUN86"
     Dunham = "DUN07"
@@ -36,11 +36,11 @@ class TilingKernels(Enum):
 
 
 class GraphKernels(Enum):
-    GenerativeReflectionGraph = "GRG"
+    GenerativeReflectionGraph       = "GRG"
     GenerativeReflectionGraphStatic = "GRGS"
 
 
-def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] = TilingKernels.StaticRotational,
+def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] = TilingKernels.StaticRotationalSector,
                      **kwargs) -> Tiling:
     """
     The factory pattern function which invokes a hyperbolic tiling

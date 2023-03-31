@@ -6,14 +6,19 @@ from .SR_base import KernelRotationalCommon
 
 
 
-class StaticRotational(KernelRotationalCommon):
+class StaticRotationalSector(KernelRotationalCommon):
     """
-    The default lattice construction kernel; New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
+    Static Rotational Sector (SRS) kernel
+
+    New cells are constructed in a semi-brute force way via rotations about vertices of existing ones.
     Duplicates are eliminated using specialized data containers
+
+    This is a variant of the default SRG kernel, where the lattice is only explicetly constructed in one
+    symmetry sector and copied to the remaining sectors
     """
 
     def __init__(self, p, q, n, **kwargs):
-        super(StaticRotational, self).__init__(p, q, n, **kwargs)   
+        super(StaticRotationalSector, self).__init__(p, q, n, **kwargs)   
 
         self.generate()
 

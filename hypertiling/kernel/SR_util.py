@@ -1,6 +1,5 @@
 import math, cmath
 import numpy as np
-#from ..transformation import moeb_translate_trafo
 from ..arraytransformation import mrotate, mfull, morigin
 from ..representations import p2w
 PI2 = 2 * np.pi
@@ -103,14 +102,10 @@ class HyperPolygon:
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):
         morigin(self.p, z0, self.verticesP)
-
-    def moeb_rotate(self, phi):  # rotates each point of the polygon by phi
+        
+    # rotates each point of the polygon by phi
+    def moeb_rotate(self, phi):  
         mrotate(self.p, phi, self.verticesP)
-
-    # def moeb_translate(self, s):
-    #     for i in range(self.p + 1):
-    #         z = moeb_translate_trafo(self.verticesP[i], s)
-    #         self.verticesP[i] = z
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))

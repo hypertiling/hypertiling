@@ -59,21 +59,16 @@ class KernelStaticBase(Tiling):
     def __getitem__(self, idx):
         return self.polygons[idx]
 
-    def __iter__(self):
-        self.iterctr = 0
-        self.itervar = self.polygons[self.iterctr]
-        return self
 
-    def __next__(self):
-        if self.iterctr < len(self.polygons):
-            retval = self.polygons[self.iterctr]
-            self.iterctr += 1
-            return retval
-        else:
-            raise StopIteration
+    def __iter__(self):
+        for poly in self.polygons:
+            # (center, vertex_1, vertex_2, ..., vertex_p)
+            yield np.roll(poly.verticesP,1)
+
 
     def __len__(self):
         return len(self.polygons)
+
 
     def get_vertices(self, index: int) -> np.array:
         """
@@ -167,6 +162,7 @@ class KernelStaticBase(Tiling):
         # tiling centered around cell
         # add fundamental cell and set bounds of current layer
         if self.center == "cell":
+            self.fund_poly.idx = 0
             self.polygons.append(self.fund_poly)
             self.outmost_layer_lower = 0
             self.outmost_layer_upper = 1
@@ -183,6 +179,7 @@ class KernelStaticBase(Tiling):
             for rot_ind in range(self.q):
                 polycopy = copy.deepcopy(self.fund_poly)
                 adj_pgon = self._generate_adj_poly(polycopy, vertidx, rot_ind)
+                self.adj_pgon.idx = len(self.polygons)
                 self.polygons.append(adj_pgon)
 
             self.outmost_layer_lower = 0
