@@ -186,11 +186,11 @@ def rotationW(phi):
 
 
 @NumbaChecker(
-     "int32(int32, int32, int32, float64[:,:,:], int32, float64[:,:,:], int32[:,:], float64[:,:], int32, int32, int32, int32, int32, int32)")
+    "int32(int32, int32, int32, float64[:,:,:], int32, float64[:,:,:], int32[:,:], float64[:,:], int32, int32, int32, int32, int32, int32)")
 def generate_dun(p, q, n, polygons, polygon_counter, transs, transs_props, trans_init, trans_init_orient,
                  trans_init_pos, layer, exposure, min_exp, max_exp):
     # add polygon to polygon array
-    polygons[polygon_counter] = polygons[0] @ np.transpose(trans_init)#
+    polygons[polygon_counter] = polygons[0] @ np.transpose(trans_init)  #
     polygon_counter += 1
 
     # check for end of recursion

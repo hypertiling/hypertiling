@@ -34,12 +34,12 @@ def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
 
     # default kwargs
     if "fc" not in kwargs and "facecolor" not in kwargs:
-        kwargs["fc"] = (1,1,1,1)
+        kwargs["fc"] = (1, 1, 1, 1)
     if "ec" not in kwargs and "edgecolor" not in kwargs:
         kwargs["ec"] = "k"
 
     # actual plot
-    fig, ax = plt.subplots(figsize=(8,7), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(8, 7), dpi=dpi)
 
     # add bounding circle
     if unitcircle:
@@ -61,7 +61,6 @@ def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
     plt.axis('off')
     plt.fill(x, y, **kwargs)
     plt.show()
-
 
 
 def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
@@ -99,12 +98,12 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     lazy = False
     if cutoff is not None:
         lazy = True
-        cutoff = 1-cutoff
+        cutoff = 1 - cutoff
 
     # iterate over tiling
-    for poly in tiling:
+    for i in range(len(tiling)):
         # extract vertex coordinates
-        u = poly[1:]
+        u = tiling.get_vertices(i)
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
@@ -114,12 +113,12 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         stack = np.column_stack((u.real, u.imag))
         polygon = Polygon(stack, True)
         patches.append(polygon)
-        #accepted_polys.append(idx)
+        # accepted_polys.append(idx)
 
     # default values
     if colors is None:
         if "fc" not in kwargs and "facecolor" not in kwargs:
-            kwargs["fc"] = (1,1,1,1)
+            kwargs["fc"] = (1, 1, 1, 1)
         if "ec" not in kwargs and "edgecolor" not in kwargs:
             kwargs["ec"] = "k"
         pgonpatches = PatchCollection(patches, **kwargs)
@@ -127,7 +126,8 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
     # individual colors
     elif len(colors) == len(tiling):
         if "fc" in kwargs or "facecolor" in kwargs:
-            print("[hypertiling] Warning: Since an array of colors is provided, the facecolor argument (fc) is ignored.")
+            print(
+                "[hypertiling] Warning: Since an array of colors is provided, the facecolor argument (fc) is ignored.")
 
         # the polygon list has now become a PatchCollection
         pgonpatches = PatchCollection(patches, **kwargs)
@@ -140,13 +140,15 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         if "ec" not in kwargs and "edgecolor" not in kwargs:
             kwargs["ec"] = "k"
         if "cmap" in kwargs:
-            print("[hypertiling] Warning: Colormap argument (cmap) is being ignored, since only one static color is given.")
-        
+            print(
+                "[hypertiling] Warning: Colormap argument (cmap) is being ignored, since only one static color is given.")
+
         # the polygon list has now become a PatchCollection
-        pgonpatches = PatchCollection(patches, **kwargs)     
+        pgonpatches = PatchCollection(patches, **kwargs)
 
     else:
-        raise ValueError("[hypertiling] Error: Argument 'colors' has no valid format. Must be matplotlib color type or array-like!")
+        raise ValueError(
+            "[hypertiling] Error: Argument 'colors' has no valid format. Must be matplotlib color type or array-like!")
 
     return pgonpatches
 
@@ -181,7 +183,7 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
     lazy = False
     if cutoff is not None:
         lazy = True
-        cutoff = 1-cutoff
+        cutoff = 1 - cutoff
 
     # iterate over cells
     for poly in tiling:
@@ -193,9 +195,9 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
                 continue
 
         # loop over vertices/edges
-        for i in range(tiling.p):   
+        for i in range(tiling.p):
             # extract edges
-            z1 = u[i]  
+            z1 = u[i]
             z2 = u[(i + 1) % tiling.p]
             edge = geodesic_arc(z1, z2, **kwargs)  # compute arc
             edges.append(edge)
@@ -212,9 +214,8 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
     return edges, types
 
 
-
-
-def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None, xcrange=(-1, 1),
+def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, plot_colorbar=False, cutoff=None,
+                xcrange=(-1, 1),
                 ycrange=(-1, 1), dpi=120, **kwargs):
     """
     Plots a hyperbolic tiling
@@ -264,11 +265,11 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     """
 
     # create figure
-    fig, ax = plt.subplots(figsize=(4,4), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=dpi)
 
     # draw unit circle
     if unitcircle:
-        circle = plt.Circle((0, 0), 1, lw=0.7, fc=(0,0,0,0), ec="k")
+        circle = plt.Circle((0, 0), 1, lw=0.7, fc=(0, 0, 0, 0), ec="k")
         ax.add_patch(circle)
 
     # convert to matplotlib format
@@ -292,7 +293,6 @@ def plot_tiling(tiling, colors=None, unitcircle=False, symmetric_colors=False, p
     plt.axis("off")
 
     return ax
-
 
 
 def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1, 1), ycrange=(-1, 1), **kwargs):
@@ -334,10 +334,9 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
         Further properties (such as linewidth, alpha, facecolor, edgecolor, ...)
 
     """
-    
-    # create figure
-    fig, ax = plt.subplots(figsize=(4,4), dpi=120)
 
+    # create figure
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=120)
 
     # default values
     if color is not None:
@@ -346,7 +345,7 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
     else:
         if "ec" not in kwargs and "edgecolor" not in kwargs:
             kwargs["ec"] = "k"
-    
+
     if "fc" in kwargs:
         del kwargs["fc"]
         print("[hypertiling] Warning: Setting a facecolor argument has no effect!")
@@ -356,12 +355,12 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
 
     # draw unit circle
     if unitcircle:
-        circle = plt.Circle((0, 0), 1, fc=(1,1,1,0), **kwargs)
+        circle = plt.Circle((0, 0), 1, fc=(1, 1, 1, 0), **kwargs)
         ax.add_patch(circle)
 
     # transform
     edges, types = convert_edges_to_arcs(tiling, cutoff, **kwargs)
-    
+
     # draw
     for edge in edges:
         ax.add_artist(edge)

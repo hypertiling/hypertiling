@@ -285,7 +285,7 @@ if __name__ == "__main__":
     import time
 
     t1 = time.time()
-    t = Dunham(5, 4, 10)
+    t = Dunham(5, 4, 3)
     print(f"Took: {time.time() - t1} s")
     plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
     plt.show()
