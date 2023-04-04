@@ -2,11 +2,11 @@ import numpy as np
 import copy
 import math
 from scipy.stats import circmean
-from ..ion import htprint
-from ..util import fund_radius
-from ..representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
-from ..kernel_abc import Tiling
-from .SR_util import HyperPolygon
+from hypertiling.ion import htprint
+from hypertiling.util import fund_radius
+from hypertiling.representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
+from hypertiling.kernel_abc import Tiling
+from hypertiling.kernel.SR_util import HyperPolygon
 
 
 class Dunham(Tiling):
@@ -24,10 +24,10 @@ class Dunham(Tiling):
 
     """
 
-    def __init__ (self, p, q, n):
+    def __init__(self, p, q, n):
         super().__init__(p, q, n)
 
-        if p==3 or q==3:
+        if p == 3 or q == 3:
             raise ValueError("[hypertiling] Error: p=3 or q=3 is currently not supported!")
 
         # prepare list to store polygons 
@@ -44,8 +44,6 @@ class Dunham(Tiling):
 
         # construct tiling
         self._generate()
-
-
 
     def _create_fundamental_polygon(self):
         """
@@ -68,18 +66,14 @@ class Dunham(Tiling):
             z = z / abs(z)
             z = r * z
             polygon.verticesP[i] = z
-
         # transform to Weierstrass coordinates
         # TODO: Use hyperboloid coordinates already during construction
         self.fund_poly = p2w_xyt_vector(polygon.verticesP)
 
-
     # ---------- the interface --------------
-
 
     def __len__(self):
         return len(self.polygons)
-   
 
     def get_vertices(self, index: int) -> np.array:
         """
@@ -92,7 +86,6 @@ class Dunham(Tiling):
         :return: np.array[np.complex128][p] = vertices of the polygon
         """
         return w2p_xyt_vector(self.polygons[index][:-1])
-   
 
     def get_center(self, index: int) -> np.complex128:
         """
@@ -105,7 +98,6 @@ class Dunham(Tiling):
         :return:  -> np.complex128: = center of the polygon
         """
         return w2p_xyt(self.polygons[index][-1])
-    
 
     def get_angle(self, index: int) -> float:
         """
@@ -116,19 +108,14 @@ class Dunham(Tiling):
         """
         return np.angle(self.get_center(index))
 
-
     def get_layer(self, index: int) -> int:
         htprint("Warning", "Layer information is currently not implemented in this kernel, doing nothing ...")
 
-
     def get_sector(self, index: int) -> int:
         htprint("Warning", "No sectors used in this kernel, doing nothing ...")
-        
 
     def add_layer(self):
         htprint("Warning", "The requested function is not implemented! Please use a different kernel!")
-
-
 
     # ---------- the algorithm --------------
 
@@ -146,8 +133,6 @@ class Dunham(Tiling):
         self.max_exp = self.p - 2
         self.min_exp = self.p - 3
 
-
-
     def _compute_edge_reflections(self):
         """
         Dunham's algorithm [Dun07] requires a list of reflection transformation
@@ -157,17 +142,17 @@ class Dunham(Tiling):
         self.edge_tran = []
 
         # reflection transformation from [Dun86]
-        tb = 2*np.arccosh(np.cos(np.pi / self.q) / np.sin(np.pi / self.p))
+        tb = 2 * np.arccosh(np.cos(np.pi / self.q) / np.sin(np.pi / self.p))
         reflecty = np.array([[-np.cosh(tb), 0, np.sinh(tb)], [0, 1, 0], [-np.sinh(tb), 0, np.cosh(tb)]])
 
         # iterate over edges
         for i in range(self.p):
-            j = int((i+1)%self.p)
+            j = int((i + 1) % self.p)
 
             # compute angle of midpoint of edge
             phi1 = np.arctan2(self.fund_poly[i][1], self.fund_poly[i][0])
             phi2 = np.arctan2(self.fund_poly[j][1], self.fund_poly[j][0])
-            phi = circmean([phi1,phi2])     
+            phi = circmean([phi1, phi2])
 
             # compute associated rotation matrix
             rotphi = rotationW(phi)
@@ -183,8 +168,6 @@ class Dunham(Tiling):
             # with -1 in combination with (0,1,2,3,...) as edge indices, since this produces a proper tiling
             # compare [JvR12] section 3.2 for further details
             self.edge_tran.append(DunhamTransformation(edge_trafo, -1, i))
-    
-
 
     def _draw_pgon_pattern(self, trans):
         """
@@ -193,9 +176,8 @@ class Dunham(Tiling):
         coordinates, this requires some transformations between the two representations
         """
         vrtsW = copy.deepcopy(self.fund_poly)
-        vrtsW = [trans.matrix@k for k in vrtsW]
+        vrtsW = [trans.matrix @ k for k in vrtsW]
         self.polygons.append(vrtsW)
-
 
     # increment transformation
     def _add_to_tran(self, tran, shift):
@@ -203,19 +185,19 @@ class Dunham(Tiling):
             return tran
         else:
             return self._compute_tran(tran, shift)
-        
 
     # helper
     def _compute_tran(self, tran, shift):
         newEdge = (tran.p_position + tran.orientation * shift) % self.p
-        return tran*self.edge_tran[newEdge]
 
+        res = tran * self.edge_tran[newEdge]
+        return res
 
     def _replicate_motif(self, poly, initialTran, layer, exposure):
         """
         central recursion step
         """
-        
+
         # Draw polygon
         self._draw_pgon_pattern(initialTran)
 
@@ -224,26 +206,25 @@ class Dunham(Tiling):
             # Determine which vertex to start at
             min_exposure = (exposure == self.min_exp)
             pShift = 1 if min_exposure else 0
-            verticesToDo = self.p-3 if min_exposure else self.p-2
+            verticesToDo = self.p - 3 if min_exposure else self.p - 2
 
             # Iterate over vertices
-            for i in range(1, verticesToDo+1):
-                first_i = (i==1)
+            for i in range(1, verticesToDo + 1):
+                first_i = (i == 1)
                 pTran = self._compute_tran(initialTran, pShift)
                 qSkip = -1 if first_i else 0
                 qTran = self._add_to_tran(pTran, qSkip)
-                pgonsToDo = self.q-3 if first_i else self.q-2
+                pgonsToDo = self.q - 3 if first_i else self.q - 2
 
                 # Iterate about a vertex
-                for j in range(1, pgonsToDo+1):
-                    first_j = (j==1)
+                for j in range(1, pgonsToDo + 1):
+                    first_j = (j == 1)
                     newExposure = self.min_exp if first_j else self.max_exp
-                    self._replicate_motif(poly, qTran, layer+1, newExposure)
+                    self._replicate_motif(poly, qTran, layer + 1, newExposure)
                     qTran = self._add_to_tran(qTran, -1)
 
                 # Advance to next vertex
                 pShift = (pShift + 1) % self.p
-            
 
     def _replicate(self, poly):
         """
@@ -258,26 +239,20 @@ class Dunham(Tiling):
         if self.n == 1:
             return
 
-
         # Iterate over each vertex
-        for i in range(1, self.p+1):
-            qTran = self.edge_tran[i-1]
+        for i in range(1, self.p + 1):
+            qTran = self.edge_tran[i - 1]
 
             # Iterate about a vertex
-            for j in range(1, self.q-2+1):
-                exposure = self.min_exp if (j==1) else self.max_exp
+            for j in range(1, self.q - 2 + 1):
+                exposure = self.min_exp if (j == 1) else self.max_exp
                 self._replicate_motif(poly, qTran, 2, exposure)
                 qTran = self._add_to_tran(qTran, -1)
-
-
 
     def _generate(self):
         self._replicate(self.fund_poly)
 
 
-
-
-    
 class DunhamTransformation:
     """
     Transformations contain:
@@ -285,6 +260,7 @@ class DunhamTransformation:
     - the orientation (-1 or +1)
     - an index of the edge across which the last transformation was made
     """
+
     def __init__(self, matrix, orientation, p_position):
         self.matrix = matrix
         self.orientation = orientation
@@ -294,7 +270,7 @@ class DunhamTransformation:
         # specify how trafos are multiplied
         new_matrix = self.matrix @ other.matrix
         new_orient = self.orientation * other.orientation
-        new_p_pos  = other.p_position
+        new_p_pos = other.p_position
         return DunhamTransformation(new_matrix, new_orient, new_p_pos)
 
 
@@ -303,3 +279,13 @@ def rotationW(phi):
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
 
+if __name__ == "__main__":
+    from hypertiling.graphics.plot import plot_tiling
+    import matplotlib.pyplot as plt
+    import time
+
+    t1 = time.time()
+    t = Dunham(5, 4, 10)
+    print(f"Took: {time.time() - t1} s")
+    plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
+    plt.show()
