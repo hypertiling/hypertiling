@@ -1,3 +1,54 @@
+## v1.2
+Date: 2023-23-04
+
+
+**Release Notes**
+
+In hypertiling v1.2 we are proud to introduce a number of exciting new features
+
+- The **hyperbolic graph**:<br> What is the difference between a `HyperbolicTiling` and a `HyperbolicGraph`? In many application one is interested in the adjacency relations between the cells of a tiling, rather than in their coordinates. Neighborhood relations can be constructed from an existing tiling using the `get_nbrs_list` method. However, in order to avoid this detour, we introduce kernels which construct **only** the graph structure of a hyperbolic lattice, independent from a coordinate representation of cells. These objects yield reduced features and functionality compared to a full `HyperbolicTiling`. A tiling on the other hand _can_, but not necessarily needs to provide graph relations between its individual cells. Even though tilings and graphs are different objects, neighbors are accessed in the same way, using the following two methods
+
+```python
+   # let T be a HyperbolicTiling or HyperbolicGraph
+   T.get_nbrs(i)   # return neighbors of cell i
+   T.get_nbrs_list()   # return neighbors of all cells
+```
+
+- New kernel: **GRG (generative reflection graph)**: <br>This is a variant of the GR kernel, which constructs neighborhood relations already during the construction of the lattice. Cell coordinates are not stored. It is hence a `Graph` kernel. The kernel follows the GR construction principles. Only one symmetry sector is explicitly stored, whereas any information outside this sector will be generated on demand.
+
+- New kernel: **GRGS (generative reflection graph static)**:<br> This is a static variant of the GRG kernel. Adjacency relations for all cells are stored explicitly. No sector construction and and no on-demand generation is used. Hence the memory requirement is about a factor p larger compared to GRG. Nonetheless GRGS is still blazing fast and therefore particularly suited for large-scale scientific simulations of systems with local interactions.
+
+- New kernel: **SRG (static rotational graph)**:<br> Currently in a testing state, this kernel will become the default kernel in a future release. It uses the construction principle of the SR (static rotational) kernel family and is able to manipulate existing lattices by dynamically adding, removing and filter cells. A demonstration notebook is already available. More coming soon!
+
+- Rename SR (static rotational) kernel to SRS (static rotational sector), which becomes necessary due to the introduction of SRG
+
+- hypertiling now supports **verbosity levels** for printed output. Available rules are "Warning", "Status", "Debug" and "Develop", where "Warning" is set default. The verbosity can be adjusted globally using the `set_verbosity_level` helper function
+
+- Kernels can now be selected by their abbreviation as well as by their class name, e.g.:
+
+```python
+   from hypertiling import TilingKernels
+   T = HyperbolicTiling(7,3,2, kernel=TilingKernels.GenerativeReflection)
+```
+
+**Further changes**
+
+- minor fixes in the GR kernel
+- improved unit tests
+- adjusted kernel class names (remove Kernel... prefix)
+- adjusted file names
+- tidied up abstract base classes
+- improved naming of utility functions
+- Tilings and Graphs are required to implement __len__ method
+
+
+**Coming up soon**
+
+- SRG kernel feature presentation
+- path animations!
+- new example notebooks
+
+
 ## v1.1.3
 Date: 2022-12-02
 

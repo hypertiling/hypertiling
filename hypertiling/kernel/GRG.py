@@ -3,7 +3,7 @@ import numpy as np
 import hypertiling.kernel.GR_util as util
 import hypertiling.kernel.GRG_util as graph_util
 from hypertiling.kernel_abc import Graph
-from ..ion import htprint
+from hypertiling.ion import htprint
 
 """
 p: Number of edges/vertices of a polygon
@@ -69,7 +69,7 @@ class GenerativeReflectionGraph(Graph):
         :param item: int = index of the polygon for whom the neighbors will be searched for
         :return: np.array = indices of the neighbors
         """
-        return self._expand_sector_index_to_tiling(item, self._get_nbrs)
+        return self.get_nbrs(item)
 
     def __len__(self):
         """
@@ -174,8 +174,7 @@ class GenerativeReflectionGraph(Graph):
                 break
             for nbr in nbrs:  # exec loop p times
                 if dist_ref < util.f_dist_disc(coord, self.get_coord(nbr)):  # 1
-                    print(f"Neighbor {nbr} of polygon {i} out of reach!")
-                    break
+                    raise AttributeError(f"[hypertiling] Error: Neighbor {nbr} of polygon {i} out of reach!")
 
     def get_nbrs_list_sector(self) -> List[List[int]]:
         """
@@ -245,7 +244,7 @@ if __name__ == "__main__":
     import hypertiling.core as core
     from hypertiling.kernel_abc import Tiling
 
-    p, q, n = 7, 3, 6
+    p, q, n = 7, 3, 4
     n2 = 3
     t1 = time.time()
     graph = GenerativeReflectionGraph(p, q, n)
@@ -262,12 +261,12 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     graph.check_integrity()
-    for i, nbrs in enumerate(graph.get_nbrs_list()):
-        print(nbrs)
-        if not np.array_equal(nbrs, graph[i]):
-            print(nbrs)
-            print(graph[i])
-            print("\n")
+    #for i, nbrs in enumerate(graph.get_nbrs_list()):
+    #    print(nbrs)
+    #    if not np.array_equal(nbrs, graph[i]):
+    #        print(nbrs)
+    #        print(graph[i])
+    #        print("\n")
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
     """# tiling.map_layers()
