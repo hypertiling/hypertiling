@@ -162,7 +162,7 @@ class DunhamX(Tiling):
         # Iterate over each vertex
         c = 1
         for i in range(1, self.p + 1):
-            trans = self.edge_trans[i - 1]
+            trans = np.copy(self.edge_trans[i - 1])
             trans_orient = self.trans_props[i - 1, 0]
             trans_pos = self.trans_props[i - 1, 1]
 
@@ -178,7 +178,7 @@ class DunhamX(Tiling):
 # ---------- numba optimized functions --------------
 
 @NumbaChecker(
-    "Tuple((float64[:,:], int32, int32))(int32, int32[:,:], float64[:,:,:], float64[:,:], int32, int32, int32)")
+    "Tuple((float64[:,::1], int32, int32))(int32, int32[:,::1], float64[:,:,::1], float64[:,::1], int32, int32, int32)")
 def comp_tran(p: int, transs_props: np.array, transs: np.array, trans: np.array, trans_orient: int, trans_pos: int,
               shift: int) -> Tuple[np.array, int, int]:
     """
@@ -200,7 +200,7 @@ def comp_tran(p: int, transs_props: np.array, transs: np.array, trans: np.array,
 
 
 @NumbaChecker(
-    "Tuple((float64[:,:], int32, int32))(int32, int32[:,:], float64[:,:,:], float64[:,:], int32, int32, int32)")
+    "Tuple((float64[:,::1], int32, int32))(int32, int32[:,::1], float64[:,:,::1], float64[:,::1], int32, int32, int32)")
 def add_trans(p: int, transs_props: np.array, transs: np.array, trans: np.array, trans_orient: int, trans_pos: int,
               shift: int) -> Tuple[np.array, int, int]:
     """
@@ -220,7 +220,7 @@ def add_trans(p: int, transs_props: np.array, transs: np.array, trans: np.array,
         return comp_tran(p, transs_props, transs, trans, trans_orient, trans_pos, shift)
 
 
-@NumbaChecker("float64[:,:](complex128[:])")
+@NumbaChecker("float64[:,::1](complex128[::1])")
 def p2w_xyt_vector(z_array: np.array) -> np.array:
     """
     Calculate the Weierstrass coordinates for the coordinates given in z_array
@@ -233,7 +233,7 @@ def p2w_xyt_vector(z_array: np.array) -> np.array:
     return result
 
 
-@NumbaChecker("float64[:,:](float64)")
+@NumbaChecker("float64[:,::1](float64)")
 def rotationW(phi: float) -> np.array:
     """
     Calculates the rotational matrix for a given phi
@@ -253,7 +253,7 @@ def rotationW(phi: float) -> np.array:
 
 
 @DelayChecker(
-    "int32(int32, int32, int32, float64[:,:,:], int32, float64[:,:,:], int32[:,:], float64[:,:], int32, int32, int32, int32, int32, int32)")
+    "int32(int32, int32, int32, float64[:,:,::1], int32, float64[:,:,::1], int32[:,::1], float64[:,::1], int32, int32, int32, int32, int32, int32)")
 def generate_dun(p: int, q: int, n: int, polygons: np.array, polygon_counter: int, transs: np.array,
                  transs_props: np.array, trans_init: np.array, trans_init_orient: int, trans_init_pos: int, layer: int,
                  exposure: int, min_exp: int, max_exp: int) -> int:
@@ -319,7 +319,7 @@ if __name__ == "__main__":
     import time
 
     t1 = time.time()
-    t = DunhamX(5, 4, 10)
+    t = DunhamX(5, 4, 5)
     print(f"Took: {time.time() - t1} s")
     plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
     plt.show()
