@@ -6,7 +6,7 @@ from hypertiling.kernel_abc import Tiling
 from hypertiling.util import n_cell_centered
 from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
 from hypertiling.ion import htprint
-from hypertiling.check_numba import NumbaChecker
+from hypertiling.check_numba import NumbaChecker, DelayChecker
 
 
 class DunhamX(Tiling):
@@ -252,7 +252,7 @@ def rotationW(phi: float) -> np.array:
     return rot
 
 
-@NumbaChecker(
+@DelayChecker(
     "int32(int32, int32, int32, float64[:,:,:], int32, float64[:,:,:], int32[:,:], float64[:,:], int32, int32, int32, int32, int32, int32)")
 def generate_dun(p: int, q: int, n: int, polygons: np.array, polygon_counter: int, transs: np.array,
                  transs_props: np.array, trans_init: np.array, trans_init_orient: int, trans_init_pos: int, layer: int,
@@ -319,7 +319,7 @@ if __name__ == "__main__":
     import time
 
     t1 = time.time()
-    t = DunhamX(5, 4, 3)
+    t = DunhamX(5, 4, 10)
     print(f"Took: {time.time() - t1} s")
     plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
     plt.show()
