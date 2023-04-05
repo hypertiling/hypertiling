@@ -3,11 +3,26 @@ from scipy.stats import circmean
 from hypertiling.util import fund_radius
 from hypertiling.kernel_abc import Tiling
 from hypertiling.util import n_cell_centered
-from hypertiling.representations import w2p_xyt, w2p_xyt_vector
+from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
 from hypertiling.ion import htprint
+from hypertiling.check_numba import NumbaChecker
 
 
-class Dunham(Tiling):
+class DunhamX(Tiling):
+    """
+    Performance optimized implementation of the tiling algorithm by Douglas Dunham, published in [Dun07]
+    It achieves a factor 10-15x speed up compared to the literal, unoptimized implementation,
+    which is available as kernel "Dunham" in DUN07.py
+
+    Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
+
+    Sources:
+    - [Dun86] Dunham, Douglas. "Hyperbolic symmetry." Symmetry. Pergamon, 1986. 139-153.
+    - [Dun07] Dunham, Douglas. "An algorithm to generate repeating hyperbolic patterns." the Proceedings of ISAMA (2007): 111-118.
+    - [Dun09] Dunham, Douglas. "Repeating Hyperbolic Pattern Algorithms — Special Cases." unpublished (2009)
+    - [JvR12] von Raumer, Jakob. "Visualisierung hyperbolischer Kachelungen", Bachelor thesis (2012), unpublished
+
+    """
 
     def __init__(self, p, q, n):
         super().__init__(p, q, n)
@@ -34,6 +49,7 @@ class Dunham(Tiling):
         # construct tiling
         self._generate()
 
+
     def _create_fundamental_polygon(self):
         zs = np.empty((self.p + 1,), dtype=np.complex128)
         phis = np.arange(0, self.p) * self.phi
@@ -41,6 +57,7 @@ class Dunham(Tiling):
         zs[:self.p] = (zs_ / np.abs(zs_)) * fund_radius(self.p, self.q)
         zs[self.p] = 0
         return p2w_xyt_vector(zs)
+    
 
     def _compute_edge_reflections(self):
         # reflection transformation from [Dun86]
@@ -58,6 +75,7 @@ class Dunham(Tiling):
             trans_props[i, 0] = -1
             trans_props[i, 1] = i
         return trans, trans_props
+    
 
     # ---------- the interface --------------
 
@@ -128,10 +146,7 @@ class Dunham(Tiling):
                                                            trans_orient, trans_pos, -1)
 
 
-# ========================================================================================================= NUMBA FUNCS
-from hypertiling.representations import p2w_xyt
-from hypertiling.check_numba import NumbaChecker
-
+# ---------- numba optimized functions --------------
 
 @NumbaChecker(
     "Tuple((float64[:,:], int32, int32))(int32, int32[:,:], float64[:,:,:], float64[:,:], int32, int32, int32)")
@@ -225,15 +240,3 @@ def generate_dun(p, q, n, polygons, polygon_counter, transs, transs_props, trans
         p_shift = (p_shift + 1) % p
 
     return polygon_counter
-
-
-if __name__ == "__main__":
-    from hypertiling.graphics.plot import plot_tiling
-    import matplotlib.pyplot as plt
-    import time
-
-    t1 = time.time()
-    t = Dunham(5, 4, 10)
-    print(f"Took: {time.time() - t1} s")
-    plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
-    plt.show()
