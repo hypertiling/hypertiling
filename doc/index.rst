@@ -52,9 +52,11 @@ Welcome to the official documentation of the hypertiling package! This page is u
    :maxdepth: 1
    :caption: Modules
 
-   hyperpolygon
-   tiling
+
+   core
    kernels
+   abc
+   hyperpolygon
    transformations
    geodesics
    neighbours
