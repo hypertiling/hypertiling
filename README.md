@@ -71,6 +71,9 @@ Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling at 
   <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/hyp6.svg" width="300" />                                                                                                                         
 </p>
 
+<p align="center">                                                                                                                                                                                                                           
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/im01.svg" width="300" />                                                                                                                         
+</p>
 
 
 Further information and examples can be found in our Jupyter notebooks in /examples subfolder. 
