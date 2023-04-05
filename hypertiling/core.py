@@ -80,7 +80,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] =
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
     if kernel == GenerativeReflection:
         htprint("Status", "Parameter n is interpreted as number of reflective layers. Compare documentation.")
-    if kernel in [StaticRotational, StaticRotationalGraph, StaticRotationalLegacy, Dunham, DunhamX, LegacyDunham]:
+    if kernel in [StaticRotationalSector, StaticRotationalGraph, StaticRotationalLegacy, Dunham, DunhamX, LegacyDunham]:
         htprint("Status", "Parameter n is interpreted as number of layers. Compare documentation.")
 
     return TILINGS[kernel](p, q, n, **kwargs)
