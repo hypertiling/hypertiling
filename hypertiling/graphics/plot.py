@@ -101,10 +101,8 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
         cutoff = 1 - cutoff
 
     # iterate over tiling
-    #for i in range(len(tiling)):
     for poly in tiling:
         # extract vertex coordinates
-        #u = tiling.get_vertices(i)
         u = poly[1:]
         # lazy plotting
         if lazy:
