@@ -2,8 +2,18 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from .transformation import moeb_origin_trafo
-from .distance import disk_distance
+from .distance import disk_distance, lorentzian_distance
 from .ion import htprint
+
+
+
+
+def centroid(pointsW):
+    num = np.sum(pointsW)
+    denom = lorentzian_distance(num,num)
+    return num / np.sqrt(denom)
+
+
 
 
 def minor(M, i, j):

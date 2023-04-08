@@ -103,20 +103,23 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
 
     # loop through tiling
     for idx, pgon in enumerate(tiling):
+
+        #vertices = np.conj(pgon[1:]) # collect vertices and mirror on x-axis in order to match matplotlib orientation
+        vertices = tiling.get_vertices(idx)
+
         if individual_colors:
             start = f"\t<path   style='fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
         else:
             start = f"\t<path  "
         svg.write(start + "\r")
-        z0 = np.conj(tiling.get_vertices(idx)[0])
+        z0 = vertices[1] # start at first vertex
         x0, y0 = to_px(z0)
         path = f"       d = 'M {np.round(x0,digits)} {np.round(y0,digits)} "
 
-        verts = tiling.get_vertices(idx)
 
-        for i in range(len(verts)):
-            z1 = np.conj(verts[i])
-            z2 = np.conj(verts[(i+1)%len(verts)])
+        for i in range(len(vertices)):
+            z1 = vertices[i]
+            z2 = vertices[(i+1)%len(vertices)]
             orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
