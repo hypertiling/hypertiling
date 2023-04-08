@@ -108,11 +108,11 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         else:
             start = f"\t<path  "
         svg.write(start + "\r")
-        z0 = np.conj(tiling.get_vertices(idx)[0])
+        z0 = np.conj(pgon[1])
         x0, y0 = to_px(z0)
         path = f"       d = 'M {np.round(x0,digits)} {np.round(y0,digits)} "
 
-        verts = tiling.get_vertices(idx)
+        verts = pgon[1:]
 
         for i in range(len(verts)):
             z1 = np.conj(verts[i])
