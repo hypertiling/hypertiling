@@ -124,3 +124,24 @@ class Tiling(Graph):
             return find_radius_optimized_single(self, i, **kwargs)
         else:
             return self._nbrs[i]
+        
+
+
+    def refine(self, iterations = 1):
+        """ 
+        Refine a regular lattice, by subdividing each triangle into four new polygons
+        If the tiling is not triangular, in the first step, all cells will be subdivided
+        into p triangular cells
+        Note that new cells are not isometric anymore!
+        
+        Parameters
+        ----------
+        
+        iterations: int
+            Determines how many times the lattice will be refined; for each iteration the
+            total number of polygons will be multiplied by a factor of four
+            
+        """
+
+        htprint("Warning", "This feature is not implemented for this kernel! Doing nothing ...")
+        pass

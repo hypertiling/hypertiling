@@ -432,8 +432,14 @@ class KernelRotationalCommon(KernelStaticBase):
 
 # ------------- Refinements -------------
 
-
+    
     def refine_lattice(self, iterations=1):
+        # old method name, keep for compatibility reasons
+        self.refine(iterations)
+        return
+    
+
+    def refine(self, iterations=1):
         """ 
         Refine a regular lattice, by subdividing each triangle into four new polygons
         If the tiling is not triangular, in the first step, all cells will be subdivided
