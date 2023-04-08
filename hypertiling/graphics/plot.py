@@ -189,16 +189,17 @@ def convert_edges_to_arcs(tiling, cutoff=None, **kwargs):
     for poly in tiling:
         # extract vertex coordinates
         u = poly[1:]
+        nv = len(u)
         # lazy plotting
         if lazy:
             if np.all(np.abs(u) > cutoff):
                 continue
 
         # loop over vertices/edges
-        for i in range(tiling.p):
+        for i in range(nv):
             # extract edges
             z1 = u[i]
-            z2 = u[(i + 1) % tiling.p]
+            z2 = u[(i + 1) % nv]
             edge = geodesic_arc(z1, z2, **kwargs)  # compute arc
             edges.append(edge)
 
