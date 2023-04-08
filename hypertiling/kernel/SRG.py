@@ -344,61 +344,62 @@ class StaticRotationalGraph(KernelRotationalCommon):
             
         """
 
-        if iterations == 0:
-            return
-
-        # if tiling is not triangular, the first refinement steps subdivided all cells
-        # into p triangles
-        if self.p > 3:
-            newpolygons = {}
-            for idx in self.polygons:
-                vertices = self.get_vertices(idx)
-                center = self.get_center(idx)
-                for v in range(self.p):
-                    child = HyperPolygon(3) 
-                    child.verticesP[0] = vertices[v]
-                    child.verticesP[1] = vertices[(v+1)%self.p]
-                    child.verticesP[2] = center
-                    child.verticesP[3] = euclidean_center(vertices)
-                    #child.layer = pgon.layer
-                    childidx = idx+1000# + [vrtx]
-                    newpolygons[childidx] = child
-            self.polygons.update(newpolygons)
-            iterations -= 1 # we have already done one iteration
-
-        
         for _ in range(iterations):
-            p = 3 # we use this quite frequently, hence the short form
-            newpolygons = []  # stores the new polygons
-            for num, pgon in enumerate(self.polygons):  # find the new vertices of each polygon
-                ref_vertices = []  # stores newly found vertices through refinement
-                # loop through polygon edges
-                for vrtx in range(p):
-                    # find geodesic midpoint
-                    zm = geodesic_midpoint( pgon.verticesP[vrtx], pgon.verticesP[(vrtx+1)%p] )
-                    ref_vertices.append(zm)
 
+            counter = 0
+            newpolygons = {}
 
-                # one "mother" triangle bears 4 "children" triangles, one in its mid
-                # and three that each share one vertex with their mother
+            for idx in self.polygons:
 
-                child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
-                child.layer = pgon.layer
-                for i in range(p):
-                    child.verticesP[i] = ref_vertices[i]
-                child.verticesP[-1] = pgon.centerP()  # the center triangle shares its center with its mother
-                child.idx = 4*num+1  # assigning a unique number
-                newpolygons.append(child)
+                vertices = self.get_vertices(idx)
+                    
+                # if cell is not triangular, subdivide into triangles meeting at its center
+                if len(vertices) > 3:
 
-                for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
-                    child = HyperPolygon(p)  # these are the non-center children
-                    child.layer = pgon.layer
-                    vP = [pgon.verticesP[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
-                    for i in range(p):
-                        child.verticesP[i] = vP[i]
-                    child.verticesP[-1] = euclidean_center(child.verticesP[:-1])
-                    child.idx = (4*num+1)+1+vrtx  # assign a unique number
-                    newpolygons.append(child)
+                    center = self.get_center(idx)
+                    for v in range(self.p):
+                        child = HyperPolygon(3) 
+                        child.verticesP[0] = vertices[v]
+                        child.verticesP[1] = vertices[(v+1)%self.p]
+                        child.verticesP[2] = center
+                        child.verticesP[3] = euclidean_center(vertices)
+
+                        newpolygons[counter] = child
+                        counter += 1
+
+                # if mother cell is a triangular, subdivide into 4 children
+                elif len(vertices) == 3:
+
+                    ref_vertices = []  # stores newly found vertices through refinement
+                    # loop through polygon edges
+                    for vrtx in range(3):
+                        # find geodesic midpoint
+                        zm = geodesic_midpoint( vertices[vrtx], vertices[(vrtx+1)%3] )
+                        ref_vertices.append(zm)
+
+                    # central child
+                    child = HyperPolygon(3) 
+                    for i in range(3):
+                        child.verticesP[i] = ref_vertices[i]
+                    # center is shared with mother
+                    child.verticesP[-1] = self.get_center(idx) 
+                    
+                    newpolygons[counter] = child
+                    counter += 1
+
+                    # outer children
+                    for vrtx in range(3):
+                        child = HyperPolygon(3)
+                        vP = [vertices[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
+                        for i in range(3):
+                            child.verticesP[i] = vP[i]
+                        child.verticesP[-1] = euclidean_center(child.verticesP[:-1])
+                        
+                        newpolygons[counter] = child
+                        counter += 1
+                    
+                else:
+                    raise IndexError("[hypertiling] Error: Found cell with less than 3 edges; Lattice mus be corrupt!")
 
             self.polygons = newpolygons
         return

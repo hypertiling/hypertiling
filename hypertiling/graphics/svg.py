@@ -103,9 +103,6 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
 
     # loop through tiling
     for idx, pgon in enumerate(tiling):
-        # extract vertex coordinates
-        vertices = tiling.get_vertices(idx)
-
         if individual_colors:
             start = f"\t<path   style='fill:rgb{colors[idx,0], colors[idx,1], colors[idx,2]}' "
         else:
@@ -117,10 +114,9 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
 
         verts = pgon[1:]
 
-        # loop over vertices
-        for i in range(len(vertices)):
-            z1 = vertices[i]
-            z2 = vertices[(i+1)%len(vertices)]
+        for i in range(len(verts)):
+            z1 = np.conj(verts[i])
+            z2 = np.conj(verts[(i+1)%len(verts)])
             orientation = False
             a1 = np.angle(z1) + pi2 if np.angle(z1) < 0 else np.angle(z1)
             a2 = np.angle(z2) + pi2 if np.angle(z2) < 0 else np.angle(z2)
