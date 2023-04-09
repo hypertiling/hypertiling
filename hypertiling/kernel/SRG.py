@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import copy
+from typing import List
 from ..util import n_cell_centered, n_vertex_centered, euclidean_center
 from ..ion import htprint
 from ..arraytransformation import mfull, morigin, multi_rotation_around_vertex
@@ -41,25 +42,36 @@ class StaticRotationalGraph(KernelRotationalCommon):
         self.globcount = 0
         self.layercount = 0
 
+        # lock to prevent specific actions
+        self.lock = False
+
         # construct tiling
         self.generate()
+
 
     def __iter__(self):
         for poly in self.polygons.values():
             # (center, vertex_1, vertex_2, ..., vertex_p)
             yield np.roll(poly.verticesP,1)
 
+
     def __len__(self):
         return len(self.polygons)
 
 
-    def remove_cells(self, deletelist):
+
+    def remove(self, deletelist):
         '''
         deletelist : List[int]
             list of polygon indices to be removed from the tiling;
-            note that an error is thrown if an index can not be found in the lattice
         '''
+        if self.lock:
+            self._remove_static(deletelist)
+        else:
+            self._remove_dynamic(deletelist)
 
+
+    def _remove_dynamic(self, deletelist):
         for idx in deletelist:
             # remove from neighbour list
             # remove occurence in neighour lists of other cells
@@ -92,11 +104,18 @@ class StaticRotationalGraph(KernelRotationalCommon):
                 del self.polygons[idx]
             except KeyError:
                 pass
+
+    
+    def _remove_static(self, deletelist):
+        for idx in deletelist:
+            # remove from polygon list
+            try:
+                del self.polygons[idx]
+            except KeyError:
+                pass
             
 
-
-
-    def add_layer(self, addlist=None, filter=None):
+    def add(self, addlist=None, filter=None):
         """
         Create new cells in an existing tiling
 
@@ -107,6 +126,10 @@ class StaticRotationalGraph(KernelRotationalCommon):
             user-defined filter function which allows to limit the construction to certain
             spatial regions based on the (center) coordinate of the cells
         """
+
+        if self.lock == True:
+            htprint("Warning", "Addition of cells not possible due to previous refinement steps")
+            return
 
         if addlist is None:
             polylist = self.exposed
@@ -258,14 +281,14 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
     def generate(self):
         """
-        construct full tiling by calling the add_layer function repeatedly
+        construct full tiling by calling the add method repeatedly
         """
         self.polygons = {}
         self._prepare_duplicate_container()
         self._create_first_layer()
 
         for i in range(self.n-1):
-            self.add_layer()
+            self.add()
 
 
     def generate_adj_poly(self, polygon, ind, k):
@@ -328,6 +351,42 @@ class StaticRotationalGraph(KernelRotationalCommon):
         return self.nbrs[i]
 
 
+    def new_ind(self, update_nbrs=True):
+
+        translator = dict(zip(list(self.polygons), range(len(self.polygons))))
+
+
+        self._lock()
+
+        newpolygons = {}
+        for oldidx in self.polygons:
+            newpolygons[translator[oldidx]] = self.polygons[oldidx]
+
+        self.polygons = newpolygons
+
+        newnbrs = []
+        for k in self.nbrs:
+            nbrs = [translator.get(item,item)  for item in self.nbrs[k] ]
+            newnbrs.append(nbrs)
+
+        self.nbrs = dict(zip(range(len(self), newnbrs)))
+
+        # todo: update dplcts and exposed as well
+
+
+
+    def _lock(self):
+        self.lock = True
+        htprint("Status", "Addition of further cells is now locked")
+        self.dplcts = None
+        htprint("Status", "Clearing duplicate management container")
+
+
+
+
+
+# ------------- Refinements -------------
+
     def refine(self, iterations=1):
         """ 
         Refine a regular lattice, by subdividing each triangle into four new polygons
@@ -349,8 +408,16 @@ class StaticRotationalGraph(KernelRotationalCommon):
             counter = 0
             newpolygons = {}
 
+            # once the lattice has been refined, cells can no longer be added
+            self._lock()
+
+            self.nbrs = []
+            htprint("Status", "Clearing existing neighbour relations")
+
+            # loop over cells
             for idx in self.polygons:
 
+                # get vertex coordinates of cell
                 vertices = self.get_vertices(idx)
                     
                 # if cell is not triangular, subdivide into triangles meeting at its center
