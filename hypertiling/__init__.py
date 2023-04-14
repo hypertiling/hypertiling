@@ -1,4 +1,12 @@
 from .core import HyperbolicTiling, HyperbolicGraph, TilingKernels, GraphKernels
+from . import operators
+from . import neighbors
+from . import representations
+from . import transformation
+from . import arraytransformation
+from . import distance
+from . import util
+
 
 __all__ = ['HyperbolicTiling', 'HyperbolicGraph', 'TilingKernels', 'GraphKernels']
 

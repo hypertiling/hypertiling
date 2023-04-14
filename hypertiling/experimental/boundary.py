@@ -14,14 +14,13 @@ def maximal_radial_cutoff(T, eps=1e-10):
     boundary = np.zeros(len(T)).astype("bool")
 
     maxlayer_centers = []
-    for poly in T:
-        if poly.layer == T.n: # improve me!
-            maxlayer_centers.append(radial_distance_polar(poly.centerP()))
+    for j in range(len(T)):
+        maxlayer_centers.append(radial_distance_polar(T.get_center(j)))
 
     cutoff_radius = np.min(maxlayer_centers) - eps
 
     for j in range(len(T)):
-        if radial_distance_polar(T[j].centerP()) > cutoff_radius:
+        if radial_distance_polar(T.get_center(j)) > cutoff_radius:
             boundary[j] = True
 
     return boundary, cutoff_radius

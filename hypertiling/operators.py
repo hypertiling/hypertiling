@@ -4,8 +4,7 @@ from scipy.sparse import coo_matrix
 # These are building blocks to construct differential operators on a discrete lattice
 # in a finite difference setting
 
-
-def adjacency_matrix_sparse(neighbours, weights=None, boundary=None):
+def adjacency(neighbours, weights=None, boundary=None):
     """
     Adjacency matrix of a tiling/graph with optional weights in sparse matrix form
 
@@ -47,7 +46,7 @@ def adjacency_matrix_sparse(neighbours, weights=None, boundary=None):
     return coo_matrix((data, (rows, cols)), shape=(size,size))
 
 
-def degree_matrix_sparse(neighbours, weights=None, boundary=None):
+def degree(neighbours, weights=None, boundary=None):
 
     """
     Degree matrix of a tiling/graph with optional weights in sparse matrix form
@@ -92,7 +91,7 @@ def degree_matrix_sparse(neighbours, weights=None, boundary=None):
 # Identity matrix with optional weights
 # points on the boundary are filtered out (rows left empty)
 
-def identity_matrix_sparse(neighbours, weights=None, boundary=None):
+def identity(neighbours, weights=None, boundary=None):
 
     """
     Identity matrix completing the matrix tool kit
@@ -134,16 +133,16 @@ def identity_matrix_sparse(neighbours, weights=None, boundary=None):
 
 
 
-# The following two discretization method are different with respect to how boundary conditions are implemented, 
+# The following discretization method is different with respect to how boundary conditions are implemented, 
 # but nonetheless equivalent!
 
-def helmholtz_matrix_from_hypergraph_sparse(neighbours, mass, q, weight):
+def helmholtz_from_hypergraph_sparse(neighbours, mass, q, weight):
     """
     return the discretized Helmholtz operator matrix
     for a graph of constant coordination number q
 
-    use this method if boundary conditions are implement
-    in the right hand side of the resulting linear system
+    use this method if boundary conditions are implemented
+    on the right hand side of the resulting linear system
     """
 
     # preparations
