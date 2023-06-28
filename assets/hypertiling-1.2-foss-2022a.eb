@@ -1,0 +1,35 @@
+# Note:
+easyblock = 'PythonPackage'
+
+name = 'hypertiling'
+version = '1.2'
+
+homepage = 'http://hypertiling.de'
+description = 'hypertiling'
+
+toolchain = {'name': 'foss', 'version': '2022a'}
+#toolchainopts = {}  # toolchain options, e.g. opt, pic, usempi, optarch, ...
+
+# For sources line to work correctly with --try-software-version, you MUST employ %s OR use a construct like SOURCE_TAR_GZ
+source_urls = [PYPI_LOWER_SOURCE]
+sources = [SOURCELOWER_TAR_GZ]
+
+dependencies = [
+('Python', '3.10.4'),
+('matplotlib', '3.5.2'),
+('networkx', '2.8.4')
+]
+
+
+# The PyPI sanity check is sufficient for hypertiling
+#sanity_check_paths = {
+#    'files': [],
+#    'dirs': ["."]
+#}
+
+use_pip = True
+sanity_pip_check = True
+
+options = {'modulename': 'hypertiling'}
+
+moduleclass = 'phys'
