@@ -53,6 +53,8 @@ install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
   script:
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
     - python3 -m pip install .
 
 test-pip:
