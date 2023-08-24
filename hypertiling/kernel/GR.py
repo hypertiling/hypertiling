@@ -573,7 +573,6 @@ class GenerativeReflection(Tiling):
         disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])  # m / p
         index = int(np.argmin(dists))  # m / p
-
         if dists[index] - util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2 < eps:
             return index
         return False
