@@ -560,7 +560,7 @@ class GenerativeReflection(Tiling):
     # API ##############################################################################################################
     # Sector only ######################################################################################################
 
-    def _find(self, sector_proj: np.complex128, eps: float = 1e-5) -> int:
+    def _find(self, sector_proj: np.complex128, eps: float = 1e-12) -> int:
         """
         Protected(!)
         Find the polygons index sector_projection belongs to.
