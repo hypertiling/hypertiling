@@ -63,16 +63,26 @@ This project is developed at:
 [Institute for Theoretical Physics and Astrophysics](https://www.physik.uni-wuerzburg.de/en/tp3/home/)  
 [University of Wuerzburg](https://www.uni-wuerzburg.de/en/home/)
 
+## Citation
+
+If you use _hypertiling_, we encourage you to cite or reference this work as you would any other scientific research. The package is a result of a huge amount of time and effort invested by the authors. Citing us allows us to measure the impact of the research and encourages others to use the library.
+
+Cite us:
+
+> Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson S.E. Portela, Dietmar Herdt and Felix Dusel. (2023). The _hypertiling_ project. Zenodo. https://doi.org/10.5281/zenodo.7559393
+
+
+
 ## Examples
 
 
 ### Tilings
 
-Selection of regular hyperbolic tilings projected onto the Poincare disk. Tilings in the upper row are centered about a cell, in the lower row about a vertex.
+The core functionality of the package is the generation of regular hyperbolic tilings projected onto the Poincare disk. Tilings in the upper row are centered about a cell, in the lower row about a vertex.
 
 
 <p align="center">   
- <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/tilings.png" width="900" />   
+ <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/tilings.png" width="700" />   
 </p>
 
 
@@ -102,7 +112,7 @@ Solution of an electrostatic Helmholtz problem on a refined (3,7) tiling, where 
 
 
 <p align="center">                                                                                                                                                                                                                           
-  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/helmholtz.png" width="571" />                                                                                                                         
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/helmholtz.png" width="450" />                                                                                                                         
 </p>
 
 
