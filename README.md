@@ -65,10 +65,44 @@ This project is developed at:
 
 ## Examples
 
-Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling at low temperature. One readily recognizes a number of magnetic domains of opposite spin orientation (red/blue areas). The domain walls are approximately given by arcs of Euclidean circles contained within the disk and orthogonal to its boundary. These arcs represent straight lines in the Poincare disk representation of the hyperbolic plane.
+
+### Tilings
+
+Selection of regular hyperbolic tilings projected onto the Poincare disk. Tilings in the upper row are centered about a cell, in the lower row about a vertex.
+
+
+<p align="center">   
+ <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/tilings.png" width="900" />   
+</p>
+
+
+
+### Refinements
+
+The hypertiling package allows to perform triangle refinements, such as shown here
+
+<p align="center">   
+ <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/refinments.png" width="700" />   
+</p>
+
+
+
+
+## Applications
+
+### Hyperbolic Magnet
+Simulation of a Ising-like Boltzmann spin model with anti-ferromagnetic interactions on a hyperbolic (7,3) tiling, quenched at low temperature. The hyperbolic antiferromagnet (left) exhibits geometrical frustration, whereas on a flat lattice (right) an ordered anti-parallel alignment can be observed.
+<p align="center">                                                                                                                                                                                                                           
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/magnet.png" width="900" />                                                                                                                         
+</p>
+
+
+### Helmholtz Equation
+Solution of an electrostatic Helmholtz problem on a refined (3,7) tiling, where boundary values have been fixed to either -1 (red) or +1 (blue). One readily recognizes a field value separation according to geodesic arcs in the Poincare disk representation of the hyperbolic plane.
+
 
 <p align="center">                                                                                                                                                                                                                           
-  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/hyp6.svg" width="300" />                                                                                                                         
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/helmholtz.png" width="571" />                                                                                                                         
 </p>
 
 
