@@ -385,7 +385,8 @@ class GenerativeReflection(Tiling):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
+                    raise AttributeError(
+                        f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
 
@@ -559,20 +560,20 @@ class GenerativeReflection(Tiling):
     # API ##############################################################################################################
     # Sector only ######################################################################################################
 
-    def _find(self, sector_proj: np.complex128) -> int:
+    def _find(self, sector_proj: np.complex128, eps: float = 1e-12) -> int:
         """
         Protected(!)
         Find the polygons index sector_projection belongs to.
         However, sector_projection has to be in the fundamental sector.
         Time-complexity: O(m / p)
         :param sector_proj: np.complex128 = position to search polygon for
+        :param eps: float = threshold for comparison
         :return: int = index of the corresponding polygon
         """
         disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])  # m / p
         index = int(np.argmin(dists))  # m / p
-
-        if dists[index] < util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
+        if dists[index] - util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2 < eps:
             return index
         return False
 
@@ -918,8 +919,8 @@ if __name__ == "__main__":
     tiling = GenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
-    #print(tiling.get_nbrs_geometrical(3))
-    #print(tiling.get_nbrs(3))
+    # print(tiling.get_nbrs_geometrical(3))
+    # print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
