@@ -2,7 +2,7 @@ from setuptools import setup
 
 name = "hypertiling"
 package_name = name
-version = '1.2.0'
+version = '1.2.1'
 
 try:
     with open('README.md', 'r') as f:
@@ -17,7 +17,7 @@ setup(
     description='A high-performance Python library for the generation and visualization of hyperbolic tilings',
     long_description=long_desc,
     long_description_content_type='text/markdown',
-    author='Manuel Schrauth, Yanick Thurn, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela',
+    author='Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson S. E. Portela, Dietmar Herdt, and Felix Dusel'
     author_email='manuel.schrauth@uni-wuerzburg.de',
     url='http://www.hypertiling.de/',
     license='MIT',

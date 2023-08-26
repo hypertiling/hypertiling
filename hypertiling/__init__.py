@@ -10,8 +10,8 @@ from . import util
 
 __all__ = ['HyperbolicTiling', 'HyperbolicGraph', 'TilingKernels', 'GraphKernels']
 
-__version__ = "1.2"
-__author__ = 'Manuel Schrauth, Yanick Thurn, Felix Dusel, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela'
+__version__ = "1.2.1"
+__author__ = 'Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson S. E. Portela, Dietmar Herdt, and Felix Dusel'
 __credits__ = 'Institute for Theoretical Physics and Astrophysics, University of Wuerzburg'
 __packages__ = []
 
