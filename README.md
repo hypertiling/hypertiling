@@ -17,7 +17,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559394.svg)](https://doi.org/10.5281/zenodo.7559394)
 
 
-**hypertiling** is a high-performance Python 3 library for the generation and visualization of hyperbolic lattices, embedded in the Poincare disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with millions of vertices can be created in a matter of minutes on a single workstation computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.
+**hypertiling** is a high-performance Python library for the generation and visualization of regular hyperbolic lattices embedded in the Poincare disk model. Using highly optimized, efficient algorithms, hyperbolic tilings with millions of vertices can be created in a matter of minutes on a single workstation computer. Facilities including computation of adjacent vertices, dynamic lattice manipulation, refinements, as well as powerful plotting and animation capabilities are provided to support advanced uses of hyperbolic graphs. 
 
 
 ## Installation
@@ -54,10 +54,10 @@ Further examples are available in our [documentation](https://gitpages.physik.un
 * Manuel Schrauth  
 mschrauth@physik.uni-wuerzburg.de
 * Yanick Thurn
-* Felix Dusel
 * Florian Goth
-* Dietmar Herdt
 * Jefferson S. E. Portela
+* Dietmar Herdt
+* Felix Dusel
 
 This project is developed at:  
 [Institute for Theoretical Physics and Astrophysics](https://www.physik.uni-wuerzburg.de/en/tp3/home/)  
