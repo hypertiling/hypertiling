@@ -5,7 +5,7 @@ from .distance import weierstrass_distance, lorentzian_distance
 from .representations import p2w
 from .ion import htprint
 
-
+# This module contains neighbour search algorithms that can be applied to any tiling
 
 def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """

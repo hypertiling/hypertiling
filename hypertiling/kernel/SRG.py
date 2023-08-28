@@ -18,7 +18,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
     It provides great flexibility by allowing to construct and dynamically manipulate 
     hyperbolic tilings; unlike the other static rotational kernels, here the neighbours 
-    are computed upon construction of the tiling
+    are computed during construction of the tiling
     '''
 
     def __init__ (self, p, q, n, **kwargs):

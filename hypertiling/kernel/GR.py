@@ -8,40 +8,26 @@ import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 from hypertiling.ion import htprint
 
-"""
-p: Number of edges/vertices of a polygon
-q: Number of polygons that meet at a vertex
-n: Number of layers (reflective definition)
-m: Number of polygons
-m = m(p, q, n)
-
-LIMITATIONS:
-- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
-  layers size in the fundamental sector
-- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
-"""
-"""
-p: Number of edges/vertices of a polygon
-q: Number of polygons that meet at a vertex
-n: Number of layers (reflective definition)
-m: Number of polygons
-m = m(p, q, n)
-
-LIMITATIONS:
-- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
-  layers size in the fundamental sector
-- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
-"""
-
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
 class GenerativeReflection(Tiling):
     """
-    Creates the hyperbolic tiling.
+    Very fast and lightweight tiling construction kernel, using reflections on ``open'' edges to generate new cells. 
+    Only one symmetry sector is held on storage, with cells outside of this sector being generated on demand.
+
+    p: Number of edges/vertices of a polygon
+    q: Number of polygons that meet at a vertex
+    n: Number of layers (reflective definition)
+    m: Number of polygons
+    m = m(p, q, n)
+
+    LIMITATIONS:
+    - A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+    - The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+    layers size in the fundamental sector
+    - The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MANGLE):

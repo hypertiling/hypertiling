@@ -1,3 +1,5 @@
+# this file contains the logging settings of HYPERTILINGS's printed messages
+
 GLOBAL_VERBOSITY = "Warning"
 
 VERBOSITY_LEVELS = {"Warning": 1, 

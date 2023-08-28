@@ -5,6 +5,7 @@ from .transformation import moeb_origin_trafo
 from .distance import disk_distance
 from .ion import htprint
 
+# Helpers to construct geodesic lines
 
 def minor(M, i, j):
     """
