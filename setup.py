@@ -1,14 +1,15 @@
 from setuptools import setup
+import logging
 
 name = "hypertiling"
 package_name = name
-version = '1.2.1'
+version = '1.3'
 
 try:
     with open('README.md', 'r') as f:
         long_desc = f.read()
 except:
-    logger.warning('Could not open README.md.  long_description will be set to None.')
+    logging.warning('Could not open README.md.  long_description will be set to None.')
     long_desc = None
 
 setup(

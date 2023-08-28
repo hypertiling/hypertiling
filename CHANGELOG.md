@@ -1,5 +1,41 @@
+## v1.3
+Date: 2023-08-28
+
+
+**Release Notes**
+
+An important milestone in the development of algorithms for the construction of hyperbolic tilings is the combinatorial method presented by Douglas Dunham and coworkers in a series of publications in the early 1980s [1,2]. With hypertiling v1.3, we not only bring this influential algorithm into the package, but also provide modern implementations, based on Ref. [3]. Specifically, the new features are:
+
+
+- New kernel: **DUN07 (Dunham)**: An modern implementation of the construction algorithm by Douglas Dunham. Recursive calls to a hierarchical tree structure are used to build duplicate free tilings in hyperboloid coordinates rather than in the Poincare disk representation.
+
+- New kernel: **DUN07X (DunhamX)**: A heavily optimized variant of `DUN07`, with a performance increase of more than one order of magnitude.
+
+- The previously existing, experimental implementation of Dunham's algorithm becomes deprecated and is renamed to **DUN86 (DunhamLegacy)**. It will be removed in one of the following releases.
+
+Owed to the construction mechanism, the `get_layer` function is not available for tilings created by the two new kernels.
+
+
+**Further changes**
+
+- several bug fixes across the package
+- minor performance optimizations
+- improved documentation
+- new example notebooks
+- auto-import submoduls
+
+References
+ > [1] D. Dunham, J. Lindgren and D. Witte, Creating repeating hyperbolic patterns, In Pro-
+ceedings of the 8th annual conference on Computer graphics and interactive techniques,
+pp. 215–223 (1981)
+
+> [2] D. Dunham, Hyperbolic symmetry, In Symmetry, pp. 139 – 153. Pergamon (1986)
+
+> [3] D. Dunham, An algorithm to generate repeating hyperbolic patterns, the Proceedings of
+ISAMA pp. 111–118 (2007).
+
 ## v1.2
-Date: 2023-23-03
+Date: 2023-03-23
 
 
 **Release Notes**
