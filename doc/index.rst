@@ -47,6 +47,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
    examples/srg-kernel.ipynb
    examples/gr-kernel.ipynb
+   examples/graph-kernels.ipynb
 
 .. toctree::
    :maxdepth: 1
