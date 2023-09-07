@@ -162,6 +162,7 @@ coverage:
     - ''
   script:
     - pip install .[test]
+    - pip install pytest
     - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
     - coverage xml
