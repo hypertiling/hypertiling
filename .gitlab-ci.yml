@@ -162,6 +162,7 @@ coverage:
     - python -m venv env
     - source env/bin/activate
     - pip install pytest
+    - pip install pytest-cov
   script:
     - pip install .[test]
     - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
