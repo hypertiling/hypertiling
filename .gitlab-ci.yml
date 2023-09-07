@@ -155,9 +155,9 @@ coverage:
     - coverage xml
     - pip install anybadge==1.9.0
     - mkdir -p build/badges
- artifacts:
-  reports:
-   cobertura: 'coverage.xml'
+  artifacts:
+    reports:
+      cobertura: 'coverage.xml'
 
 
 
