@@ -1,5 +1,6 @@
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
+
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -15,6 +16,7 @@ stages:
 #
 # If you want to also cache the installed packages, you have to install
 # them in a virtualenv and cache it as well.
+
 cache:
   paths:
     - .cache/pip
@@ -33,9 +35,6 @@ install-latest:
   script:
     - python setup.py check
     - pip install .
-#    - pip install tox flake8 
-#    - tox -e py36,flake8
-
 
 install-slim:
   stage: install
@@ -75,11 +74,13 @@ unit-test-plain:
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
+        
         - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
+        
         - echo "Testing reflection kernel without numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
@@ -93,11 +94,14 @@ unit-test-fancy:
     script:
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip3 install .
+        
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
+        
+        - echo "Testing reflection kernel without numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
@@ -155,13 +159,13 @@ coverage:
     - coverage xml
     - pip install anybadge==1.9.0
     - mkdir -p build/badges
+
+    # MAINTAINABILITY BADGE
     - pip install radon==5.1.0
-    - python -m radon cc --total-average -nc hypertiling
+    - python -m radon cc --total-average -nB -s hypertiling
     
     # generate a badge for the maintainability index with the total average of cyclomatic complexity as value
     - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
-    
-
     
     # DOCUMENTATION BADGE
     # generate a badge for the documentation with the current version as label
