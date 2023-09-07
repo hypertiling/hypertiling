@@ -28,7 +28,6 @@ before_script:
 install-latest:
   stage: build
   image: python:latest
-  stage: install
   script:
     - python setup.py check
     - pip install .
@@ -39,7 +38,6 @@ install-latest:
 install-slim:
   stage: build
   image: python:slim
-  stage: install
   script:
     - python setup.py check
     - pip install .
