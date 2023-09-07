@@ -75,23 +75,16 @@ unit-test-plain:
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
-        - echo "Testing without fancy packages..."
+        - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-
-unit-test-reflection-plain:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    when: manual
-    script:
-        - apt-get install -y python3-networkx
-        - pip3 install .
         - echo "Testing reflection kernel without numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
+
 
 unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -105,18 +98,10 @@ unit-test-fancy:
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-
-unit-test-reflection-fancy:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    when: manual
-    script:
-        - echo "Testing reflection kernel with numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
-        - apt-get install -y python3-numba python3-networkx
-        - pip3 install .
+
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
