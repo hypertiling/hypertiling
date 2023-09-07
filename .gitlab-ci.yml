@@ -160,6 +160,7 @@ coverage:
 
 pages:
   stage: publish
+  image: python:latest
   needs:
     - coverage
   before_script:
