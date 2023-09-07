@@ -155,9 +155,19 @@ coverage:
     - coverage xml
     - pip install anybadge==1.9.0
     - mkdir -p build/badges
+  coverage: '/TOTAL.*\s+(\d+\%)/'
   artifacts:
+    when: always
     reports:
-      cobertura: 'coverage.xml'
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+    paths:
+      - build/coverage
+      - build/badges
+      - env/
 
 
 
