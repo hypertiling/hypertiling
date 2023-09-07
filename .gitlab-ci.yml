@@ -160,7 +160,7 @@ coverage:
 pages:
   stage: publish
   needs:
-    - test
+    - coverage
   #only:
   #  - main
   #  - staging
