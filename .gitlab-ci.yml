@@ -7,7 +7,6 @@ variables:
 stages:
   - install
   - test
-  - coverage
   - docs
   - publish
 
@@ -144,8 +143,8 @@ send-snapshot:
 
 
 
-coverage:
-  stage: coverage
+tests:
+  stage: test
   image: python:latest
   before_script:
     - python -m venv env
@@ -154,6 +153,8 @@ coverage:
     - pip install pytest-cov
   script:
     - pip install .[test]
+    
+    # COVERAGE BADGE
     - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
     - coverage xml
@@ -194,7 +195,7 @@ pages:
   stage: publish
   image: python:latest
   needs:
-    - coverage
+    - test
   before_script:
     - ''
   #only:
