@@ -156,7 +156,7 @@ coverage:
     - pip install anybadge==1.9.0
     - mkdir -p build/badges
     - pip install radon==5.1.0
-    #- make maintainability
+    - python -m radon cc --total-average -nc hypertiling
     
     # generate a badge for the maintainability index with the total average of cyclomatic complexity as value
     - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
