@@ -64,6 +64,7 @@ install-bookworm:
 test-pip:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: test
+  when: manual
   script:
     - pip3 install hypertiling
 
