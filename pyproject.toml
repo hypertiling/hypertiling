@@ -60,7 +60,7 @@ maintainers = [
 #
 # For an analysis of this field vs pip's requirements files see:
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
-dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontainers", "scipy"] # Optional
+dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontainers", "scipy", "ipython"] # Optional
 
 
 # List additional groups of dependencies here (e.g. development
