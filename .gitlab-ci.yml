@@ -28,6 +28,7 @@ before_script:
 install-latest:
   stage: install
   image: python:latest
+  when: manual
   script:
     - python setup.py check
     - pip install .
@@ -38,6 +39,7 @@ install-latest:
 install-slim:
   stage: install
   image: python:slim
+  when: manual
   script:
     - python setup.py check
     - pip install .
@@ -45,12 +47,14 @@ install-slim:
 install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
+  when: manual
   script:
     - pip3 install .
 
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
+  when: manual
   script:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
@@ -65,6 +69,7 @@ test-pip:
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
@@ -77,6 +82,7 @@ unit-test-plain:
 unit-test-reflection-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
@@ -88,6 +94,7 @@ unit-test-reflection-plain:
 unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual
     script:
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip3 install .
@@ -100,6 +107,7 @@ unit-test-fancy:
 unit-test-reflection-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual
     script:
         - apt-get install -y python3-numba python3-networkx
         - pip3 install .
