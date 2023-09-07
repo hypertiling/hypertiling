@@ -167,7 +167,7 @@ coverage:
     paths:
       - build/coverage
       - build/badges
-      - env/
+      #- env/   # too large ...
 
 
 
