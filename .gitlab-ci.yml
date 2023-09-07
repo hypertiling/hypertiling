@@ -141,3 +141,37 @@ send-snapshot:
     - ./assets/zenodo.sh
     - git archive --format zip --output ${CI_COMMIT_TAG#v}.zip ${CI_COMMIT_TAG}
     - g2z-send -p -m .zenodo.json ${CI_COMMIT_TAG#v}.zip
+
+
+
+
+
+coverage:
+  stage: test
+  script:
+    - pip install .[test]
+    - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
+    - coverage report
+    - coverage xml
+    - pip install anybadge==1.9.0
+    - mkdir -p build/badges
+
+
+
+pages:
+  stage: publish
+  needs:
+    - test
+  #only:
+  #  - main
+  #  - staging
+  script:
+    - mkdir -p public
+    - source env/bin/activate
+    - pip install .[doc]
+    #- DOCS_TARGET=public make docs
+    - mv build/badges public/.
+    - mv build/coverage public/.
+  artifacts:
+    paths:
+      - public
