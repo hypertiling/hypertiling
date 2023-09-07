@@ -155,6 +155,18 @@ coverage:
     - coverage xml
     - pip install anybadge==1.9.0
     - mkdir -p build/badges
+    - pip install radon==5.1.0
+    - make maintainability
+    
+    # generate a badge for the maintainability index with the total average of cyclomatic complexity as value
+    - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc src | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc src | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
+    
+    # generate a badge for the documentation with the current version as label
+    # - color: #1082C2 corresponds to the default "informational" color set by https://shields.io
+    
+    # commented this out since currently the main program is running forever, and so will the pipeline if this is active
+    #- python -m anybadge --label=Documentation --value="v$(python -m message_control --version)" --color "#1082C2" -f build/badges/documentation -o
+    - python -m anybadge --label=Documentation --value="v1.3" --color "#1082C2" -f build/badges/documentation -o
   coverage: '/TOTAL.*\s+(\d+\%)/'
   artifacts:
     when: always
