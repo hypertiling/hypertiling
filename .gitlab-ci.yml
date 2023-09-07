@@ -111,12 +111,12 @@ unit-test-reflection-fancy:
     stage: test
     when: manual
     script:
-        - apt-get install -y python3-numba python3-networkx
-        - pip3 install .
         - echo "Testing reflection kernel with numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
+        - apt-get install -y python3-numba python3-networkx
+        - pip3 install .
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -159,10 +159,11 @@ coverage:
   stage: coverage
   image: python:latest
   before_script:
-    - ''
+    - python -m venv env
+    - source env/bin/activate
+    - pip install pytest
   script:
     - pip install .[test]
-    - pip install pytest
     - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
     - coverage xml
