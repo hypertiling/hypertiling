@@ -26,7 +26,7 @@ class TestCore(unittest.TestCase):
 
             for p,q in [(7,3), (8,3), (4,5), (4,6), (4,7), (4,8), (5,5), (5,6)]:
 
-                for n in range(1 maxlayer):
+                for n in range(1, maxlayer):
                     print("Constructing lattice (p,q,n) = ", p, q, n)
                     T = HyperbolicTiling(p, q, n, center="vertex", kernel=k)
                     self.assertEqual(n_vertex_centered(p, q, n), len(T))
