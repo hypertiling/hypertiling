@@ -159,14 +159,17 @@ coverage:
     #- make maintainability
     
     # generate a badge for the maintainability index with the total average of cyclomatic complexity as value
-    - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc src | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc src | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
+    - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
     
+
+    
+    # DOCUMENTATION BADGE
     # generate a badge for the documentation with the current version as label
     # - color: #1082C2 corresponds to the default "informational" color set by https://shields.io
-    
-    # commented this out since currently the main program is running forever, and so will the pipeline if this is active
-    #- python -m anybadge --label=Documentation --value="v$(python -m message_control --version)" --color "#1082C2" -f build/badges/documentation -o
-    - python -m anybadge --label=Documentation --value="v1.3" --color "#1082C2" -f build/badges/documentation -o
+    # this is some magic to retrieve the package version:
+    # - python -m anybadge --label=Documentation --value="v$(python -m hypertiling --version)" --color "#1082C2" -f build/badges/documentation -o
+    # here it is set manually:
+    # - python -m anybadge --label=Documentation --value="v1.3" --color "#1082C2" -f build/badges/documentation -o
   coverage: '/TOTAL.*\s+(\d+\%)/'
   artifacts:
     when: always
