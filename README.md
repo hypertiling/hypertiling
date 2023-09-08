@@ -15,14 +15,13 @@
 
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559393.svg)](https://doi.org/10.5281/zenodo.7559393)
+
 [![badge_coverage][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/coverage)
 [![badge_maintainability][]]()
-
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
 
 [badge_coverage]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/coverage.svg
-[badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/maintainability.svg
-
+[badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/maintainability.svg
 [badge_pipeline]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/pipeline.svg
 
 
