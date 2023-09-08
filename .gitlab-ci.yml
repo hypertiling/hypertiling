@@ -6,6 +6,7 @@ variables:
 stages:
   - install
   - test
+  - misc
   - docs
 
 # Pip's cache doesn't store the python packages
@@ -25,17 +26,14 @@ before_script:
   - source hypervenv/bin/activate
 
 install-latest:
-  stage: build
+  stage: install
   image: python:latest
   script:
     - python setup.py check
     - pip install .
-#    - pip install tox flake8 
-#    - tox -e py36,flake8
-
 
 install-slim:
-  stage: build
+  stage: install
   image: python:slim
   script:
     - python setup.py check
@@ -55,54 +53,49 @@ install-bookworm:
     - source hypervenv/bin/activate
     - python3 -m pip install .
 
-test-pip:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: test
+install-pypi:
+  image: python:latest
+  stage: install
+  when: manual # only for debugging
   script:
     - pip3 install hypertiling
+
 
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual # only for debugging
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
-        - echo "Testing without fancy packages..."
+        
+        - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-
-unit-test-reflection-plain:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    script:
-        - apt-get install -y python3-networkx
-        - pip3 install .
+        
         - echo "Testing reflection kernel without numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
 
+
 unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
+    when: manual # only for debugging
     script:
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip3 install .
+        
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
         - python3 -m tests.test_dynamic
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
-
-unit-test-reflection-fancy:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-    stage: test
-    script:
-        - apt-get install -y python3-numba python3-networkx
-        - pip3 install .
-        - echo "Testing reflection kernel with numba"
+        
+        - echo "Testing reflection kernel without numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
@@ -131,7 +124,7 @@ sphinx-doc:
 
 send-snapshot:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: install
+  stage: misc
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
   script:
