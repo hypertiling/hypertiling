@@ -28,17 +28,27 @@ before_script:
   - source hypervenv/bin/activate
 
 install-latest:
+<<<<<<< HEAD
   stage: install
   image: python:latest
   when: manual # only for debugging
+=======
+  stage: build
+  image: python:latest
+>>>>>>> master
   script:
     - python setup.py check
     - pip install .
 
 install-slim:
+<<<<<<< HEAD
   stage: install
   image: python:slim
   when: manual # only for debugging
+=======
+  stage: build
+  image: python:slim
+>>>>>>> master
   script:
     - python setup.py check
     - pip install .
