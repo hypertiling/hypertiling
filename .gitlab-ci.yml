@@ -8,6 +8,7 @@ stages:
   - install
   - test
   - docs
+  - publish
   - release
 
 # Pip's cache doesn't store the python packages
@@ -30,7 +31,7 @@ before_script:
 install-latest:
   stage: install
   image: python:latest
->>>>>>> master
+  when: manual # only for debugging
   script:
     - python setup.py check
     - pip install .
@@ -38,7 +39,7 @@ install-latest:
 install-slim:
   stage: install
   image: python:slim
->>>>>>> master
+  when: manual # only for debugging
   script:
     - python setup.py check
     - pip install .
