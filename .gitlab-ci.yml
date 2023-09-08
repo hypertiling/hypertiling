@@ -206,7 +206,10 @@ report-and-badges:
     - ''
   script:
     - mkdir -p public
-    - source env/bin/activate # activate cached venv
+    - ls build
+    - ls build/badges
+    - ls build/coverage
+    #- source env/bin/activate # activate cached venv
     - mv build/badges public/.
     - mv build/coverage public/.
   artifacts:
