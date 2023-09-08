@@ -3,7 +3,7 @@ import logging
 
 name = "hypertiling"
 package_name = name
-version = '1.3'
+version = '1.3.0'
 
 try:
     with open('README.md', 'r') as f:
