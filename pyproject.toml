@@ -88,7 +88,7 @@ command_line = "-m pytest --cov --cov-config=pyproject.toml --cov-branch --cov-r
 source = ["hypertiling", "tests"]
 
 [tool.coverage.report]
-omit = ["**/setup.py", "**/__init__.py", "**/__main__.py"]
+omit = ["**/setup.py", "**/setup-old.py", "**/__init__.py", "**/__main__.py"]
 
 exclude_lines = [
   "pragma: no cover",
