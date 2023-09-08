@@ -59,12 +59,14 @@ install-bookworm:
     - source hypervenv/bin/activate
     - python3 -m pip install .
 
-test-pip:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
-  stage: test
+
+install-pypi:
+  image: python:latest
+  stage: install
   when: manual # only for debugging
   script:
     - pip3 install hypertiling
+
 
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -128,6 +130,7 @@ sphinx-doc:
     - ls
     - sphinx-build . html
 
+
 send-snapshot:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
@@ -140,10 +143,7 @@ send-snapshot:
     - g2z-send -p -m .zenodo.json ${CI_COMMIT_TAG#v}.zip
 
 
-
-
-
-tests:
+tests-full-cov:
   stage: test
   cache: # reuse venv in subsequent jobs
     key: $CI_JOB_NAME
@@ -200,7 +200,7 @@ pages:
   stage: publish
   image: python:latest
   needs:
-    - tests
+    - tests-full-cov
   before_script:
     - ''
   #only:
@@ -208,8 +208,8 @@ pages:
   #  - dev
   script:
     - mkdir -p public
-    - python -m venv env
-    - source env/bin/activate
+    #- python -m venv env
+    - source env/bin/activate # activate cached venv
     - pip install .[doc]
     #- DOCS_TARGET=public make docs
     - mv build/badges public/.
