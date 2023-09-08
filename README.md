@@ -14,7 +14,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559393.svg)](https://doi.org/10.5281/zenodo.7559393)
 
-[![badge_coverage][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/157-test-coverage-badge/coverage)
+[![badge_coverage][]]()
 [![badge_maintainability][]]()
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
 
