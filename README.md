@@ -7,8 +7,6 @@
 <td align="left" width="9999" >
 
 
-
-
 ![PyPI](https://img.shields.io/pypi/v/hypertiling)
 ![Discord](https://img.shields.io/discord/990718743455883336?label=discord)
 ![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=http%3A%2F%2Fwww.hypertiling.de%2F)
@@ -16,7 +14,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559393.svg)](https://doi.org/10.5281/zenodo.7559393)
 
-[![badge_coverage][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/coverage)
+[![badge_coverage][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/157-test-coverage-badge/coverage)
 [![badge_maintainability][]]()
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
 
