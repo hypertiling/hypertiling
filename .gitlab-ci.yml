@@ -180,6 +180,7 @@ tests-full-cov:
     # - python -m anybadge --label=Documentation --value="v$(python -m hypertiling --version)" --color "#1082C2" -f build/badges/documentation -o
     # here it is set manually:
     # - python -m anybadge --label=Documentation --value="v1.3" --color "#1082C2" -f build/badges/documentation -o
+  
   coverage: '/TOTAL.*\s+(\d+\%)/'
   artifacts:
     when: always
@@ -196,22 +197,16 @@ tests-full-cov:
 
 
 
-pages:
+report-and-badges:
   stage: publish
   image: python:latest
   needs:
     - tests-full-cov
   before_script:
     - ''
-  #only:
-  #  - master
-  #  - dev
   script:
     - mkdir -p public
-    #- python -m venv env
     - source env/bin/activate # activate cached venv
-    - pip install .[doc]
-    #- DOCS_TARGET=public make docs
     - mv build/badges public/.
     - mv build/coverage public/.
   artifacts:
