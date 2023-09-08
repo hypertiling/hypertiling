@@ -153,7 +153,7 @@ tests:
     - pip install pytest-cov
   script:
     - pip install .[test]
-    
+
     # COVERAGE BADGE
     - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
@@ -195,7 +195,7 @@ pages:
   stage: publish
   image: python:latest
   needs:
-    - test
+    - tests
   before_script:
     - ''
   #only:
