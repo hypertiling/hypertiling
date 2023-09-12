@@ -3,7 +3,9 @@ from hypertiling.distance import lorentzian_distance, weierstrass_distance, disk
 from hypertiling.representations import valid_weierstrass_point
 
 class TestDistance(unittest.TestCase):
-
+    """
+    This class 
+    """
 
     def test_valid_weierstrass_point(self):
         self.assertFalse(valid_weierstrass_point([1, 0, 0]))
