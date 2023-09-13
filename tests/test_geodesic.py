@@ -15,3 +15,9 @@ class TestGeodesic(unittest.TestCase):
         self.assertEqual(circle_through_three_points(1, 1j, -1j), (0, 1))
         self.assertEqual(circle_through_three_points(1, -2j, -1), (- 0.75j, 1.25))
 
+    def test_geodesic_midpoint(self):
+        self.assertAlmostEqual(geodesic_midpoint(0.5, -0.5), 0)
+        self.assertAlmostEqual(geodesic_midpoint(0.5j, -0.5j), 0)
+        self.assertAlmostEqual(geodesic_midpoint(0.6, 0.6j), 0.24764464962+0.247644649627j)
+
+    # to be extended
