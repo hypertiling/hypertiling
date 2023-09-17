@@ -72,7 +72,7 @@ unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
     script:
-        - apt purge python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+        - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         - apt-get install -y python3-networkx
         - pip3 install .
         
@@ -92,7 +92,7 @@ unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
     script:
-        - apt purge python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+        - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip3 install .
         
