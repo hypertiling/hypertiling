@@ -47,6 +47,18 @@ install-slim:
     - python setup.py check
     - pip install .
 
+install-latest:
+  stage: install
+  image: python:3.7
+  script:
+    - pip install .
+
+install-latest:
+  stage: install
+  image: python:3.5
+  script:
+    - pip install .
+
 install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
@@ -70,8 +82,11 @@ install-pypi:
   script:
     - pip3 install hypertiling
 
+
+
 #### ----------- TEST ------------ ####
 
+# runs tests without numba and sortedcontainers
 unit-test-plain:
     image: python:latest
     stage: test
@@ -94,6 +109,7 @@ unit-test-plain:
         #- python3 -m tests.test_grgs
 
 
+# runs tests with numba and sortedcontainers
 unit-test-fancy:
     image: python:latest
     stage: test
@@ -102,8 +118,6 @@ unit-test-fancy:
       - source env/bin/activate
       - pip install pytest
     script:
-        #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        #- apt -y autoremove
         - pip install numba
         - pip install sortedcontainers
         - pip install .[test]
@@ -120,8 +134,7 @@ unit-test-fancy:
         #- python3 -m tests.test_grgs
 
 
-
-
+# runs all tests and generates a coverage report
 tests-full-cov:
   stage: test
   cache: # reuse venv in subsequent jobs
@@ -200,7 +213,10 @@ sphinx-doc:
     - ls
     - sphinx-build . html
 
+
+
 #### ----------- PUBLISH ------------ ####
+
 
 send-snapshot:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
