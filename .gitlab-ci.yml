@@ -74,7 +74,7 @@ unit-test-plain:
     script:
         - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         - apt-get install -y python3-networkx
-        - pip install .
+        - pip install .[test]
         
         - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
@@ -94,7 +94,7 @@ unit-test-fancy:
     script:
         - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
-        - pip install .
+        - pip install .[test]
         
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
@@ -102,7 +102,7 @@ unit-test-fancy:
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
         
-        - echo "Testing reflection kernel without numba"
+        - echo "Testing reflection kernel with numba"
         - python3 -m tests.test_reflectionkernel
         - python3 -m tests.test_grg
         - python3 -m tests.test_grgs
