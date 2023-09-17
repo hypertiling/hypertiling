@@ -6,17 +6,24 @@
 <tr>
 <td align="left" width="9999" >
 
+<div align="center">
 
-![PyPI](https://img.shields.io/pypi/v/hypertiling)
-![Discord](https://img.shields.io/discord/990718743455883336?label=discord)
-![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=http%3A%2F%2Fwww.hypertiling.de%2F)
-
+[![PyPI](https://img.shields.io/pypi/v/hypertiling)](https://pypi.org/project/hypertiling/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559393.svg)](https://doi.org/10.5281/zenodo.7559393)
+[![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=http%3A%2F%2Fwww.hypertiling.de%2F)](http://www.hypertiling.de)
+[![Discord](https://img.shields.io/discord/990718743455883336?label=discord)](https://discord.gg/f9GW9B2Ezs)
+
+
 
 [![badge_coverage][]]()
 [![badge_maintainability][]]()
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
+
+</div>
+
+
+
 
 [badge_coverage]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/coverage.svg
 [badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/jobs/298389/artifacts/raw/public/badges/maintainability.svg
