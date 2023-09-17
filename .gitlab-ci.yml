@@ -63,7 +63,6 @@ install-bookworm:
 install-pypi:
   image: python:latest
   stage: install
-  when: manual # only for debugging
   script:
     - pip3 install hypertiling
 
@@ -71,7 +70,6 @@ install-pypi:
 unit-test-plain:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
-    when: manual # only for debugging
     script:
         - apt-get install -y python3-networkx
         - pip3 install .
@@ -91,7 +89,6 @@ unit-test-plain:
 unit-test-fancy:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: test
-    when: manual # only for debugging
     script:
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip3 install .
