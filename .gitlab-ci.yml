@@ -73,7 +73,7 @@ unit-test-plain:
     stage: test
     script:
         - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        - apt autoremove
+        - apt -y autoremove
         - apt-get install -y python3-networkx
         - pip install .[test]
         
@@ -94,9 +94,9 @@ unit-test-fancy:
     stage: test
     script:
         - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        - apt autoremove
+        - apt -y autoremove
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
-        - pip install .[test]
+        - pip install --verbose .[test]
         
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
