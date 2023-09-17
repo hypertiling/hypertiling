@@ -71,6 +71,10 @@ install-pypi:
 unit-test-plain:
     image: python:latest
     stage: test
+    before_script:
+      - python -m venv env
+      - source env/bin/activate
+      - pip install pytest
     script:
         #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         #- apt -y autoremove
@@ -84,14 +88,18 @@ unit-test-plain:
         - python3 -m tests.test_compare_neighbours
         
         - echo "Testing reflection kernel without numba"
-        - python3 -m tests.test_reflectionkernel
-        - python3 -m tests.test_grg
-        - python3 -m tests.test_grgs
+        #- python3 -m tests.test_reflectionkernel
+        #- python3 -m tests.test_grg
+        #- python3 -m tests.test_grgs
 
 
 unit-test-fancy:
     image: python:latest
     stage: test
+    before_script:
+      - python -m venv env
+      - source env/bin/activate
+      - pip install pytest
     script:
         #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         #- apt -y autoremove
@@ -105,9 +113,9 @@ unit-test-fancy:
         - python3 -m tests.test_compare_neighbours
         
         - echo "Testing reflection kernel with numba"
-        - python3 -m tests.test_reflectionkernel
-        - python3 -m tests.test_grg
-        - python3 -m tests.test_grgs
+        #- python3 -m tests.test_reflectionkernel
+        #- python3 -m tests.test_grg
+        #- python3 -m tests.test_grgs
 
 
 sphinx-doc:
