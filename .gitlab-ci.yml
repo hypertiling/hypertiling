@@ -69,12 +69,12 @@ install-pypi:
 
 
 unit-test-plain:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    image: python:latest
     stage: test
     script:
-        - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        - apt -y autoremove
-        - apt-get install -y python3-networkx
+        #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+        #- apt -y autoremove
+        #- apt-get install -y python3-networkx
         - pip install .[test]
         
         - echo "Testing without fancy packages, such as numba..."
@@ -90,11 +90,11 @@ unit-test-plain:
 
 
 unit-test-fancy:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    image: python:latest
     stage: test
     script:
-        - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        - apt -y autoremove
+        #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+        #- apt -y autoremove
         - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
         - pip install .[test]
         
