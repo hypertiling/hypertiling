@@ -19,7 +19,7 @@
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
 
 [badge_coverage]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/coverage.svg
-[badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/job/artifacts/157-test-coverage-badge/public/badges/maintainability.svg
+[badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/jobs/298389/artifacts/raw/public/badges/maintainability.svg
 [badge_pipeline]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/157-test-coverage-badge/pipeline.svg
 
 
