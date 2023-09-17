@@ -78,7 +78,7 @@ install-bullseye:
     - python3 --version
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
-    - pip3 install .
+    - pip install .
 
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
