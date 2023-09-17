@@ -76,10 +76,7 @@ unit-test-plain:
       - source env/bin/activate
       - pip install pytest
     script:
-        #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-        #- apt -y autoremove
-        #- apt-get install -y python3-networkx
-        - pip install .[test]
+        - pip install .
         
         - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
@@ -103,7 +100,8 @@ unit-test-fancy:
     script:
         #- apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
         #- apt -y autoremove
-        - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
+        - pip install numba
+        - pip install sortedcontainer
         - pip install .[test]
         
         - echo "Testing with numba and sortedcontainers..."
