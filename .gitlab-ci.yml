@@ -71,9 +71,9 @@ install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
   before_script:
-    - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
-    - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
-    - apt -y autoremove
+   # - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
+   # - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+   # - apt -y autoremove
   script:
     - python3 --version
     - python3 -m venv hypervenv --system-site-packages
