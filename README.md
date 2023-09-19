@@ -39,11 +39,18 @@ hypertiling is available in the [PyPI](https://pypi.org/) package index and can 
 ```
 $ pip install hypertiling
 ```
+
+For optimal performance, we highly recommand to use hypertiling together with `python-numba`, which, if not already present on your system can be installed automatically using the `[numba]`-suffix, i.e.
+```
+$ pip install hypertiling[numba]
+```
 The package can also be locally installed from our public [git repository](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling) via
 ```
 $ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
 $ pip install .
 ```
+
+
 ## Usage
 
 In Python, import tiling object from the **hypertiling** library
