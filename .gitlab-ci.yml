@@ -225,6 +225,7 @@ sphinx-doc:
     - pip install --upgrade pip
     - pip install pypandoc sphinx-mdinclude
     - pip install sphinx --upgrade
+    - pip3 install --upgrade ipython
     - pip install sphinx-rtd-theme --upgrade
     - pip install nbsphinx --upgrade
     - cd doc
