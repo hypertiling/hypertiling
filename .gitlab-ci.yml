@@ -79,6 +79,7 @@ install-bullseye:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
   script:
+    - pip3 install --upgrade pip
     - pip3 install .
 
 install-bookworm:
