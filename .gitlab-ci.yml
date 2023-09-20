@@ -91,18 +91,18 @@ install-bookworm:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
   script:
-    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - python3 -m venv hypervenv
     - source hypervenv/bin/activate
-    - python3 -m pip install .
+    - hypervenv/bin/pip install .
 
 install-from-pypi:
   image: python:latest
   stage: install
   script:
     - python3 --version
-    - python3 -m venv hypervenv 
+    - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
-    - hypervenv/bin/pip install hypertiling
+    - pip install hypertiling
 
 
 
