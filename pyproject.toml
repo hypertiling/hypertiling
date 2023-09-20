@@ -1,0 +1,58 @@
+[project]
+
+name = "hypertiling"
+version = "1.3.1"
+
+
+description = "hypertiling is a high-performance Python library for the generation and visualization of regular hyperbolic lattices"
+readme = "README.md" # Optional
+requires-python = ">=3.5"
+
+authors = [
+  { name = "Manuel Schrauth", email = "manuel.schrauth@physik.uni-wuerzburg.de" }, 
+  { name = "Yanick Thurn"},
+  { name = "Florian Goth"},
+  { name = "Jefferson S. E. Portela"},
+  { name = "Dietmar Herdt"},
+  { name = "Felix Dusel"},
+]
+
+maintainers = [
+  { name = "Manuel Schrauth", email = "manuel.schrauth@physik.uni-wuerzburg.de" }, 
+  { name = "Yanick Thurn"},
+  { name = "Florian Goth"},
+  { name = "Jefferson S. E. Portela"},
+  { name = "Dietmar Herdt"},
+  { name = "Felix Dusel"},]
+
+dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontainers", "scipy", "ipython"]
+
+
+[project.optional-dependencies] # Optional
+numba = ["numba"]
+dev = ["black", "radon"]
+test = ["pytest", "pytest-cov", "coverage[toml]"]
+doc = ["sphinx"]
+
+[tool.setuptools]
+py-modules = ["hypertiling"]
+
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.coverage.run]
+command_line = "-m pytest --cov --cov-config=pyproject.toml --cov-branch --cov-report term-missing --cov-report html:build/coverage"
+source = ["hypertiling", "tests"]
+
+[tool.coverage.report]
+omit = ["**/__init__.py", "**/__main__.py"]
+
+exclude_lines = [
+  "pragma: no cover",
+  "# nocov",
+  "if __name__ == .__main__.",
+]
+
+[tool.coverage.html]
+directory = "build/coverage"
