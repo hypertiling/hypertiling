@@ -1,3 +1,25 @@
+## v1.3.1
+Date: 2023-09-20
+
+Today, we are updating the build system of hypertiling, simultaneously with the publication of our release manuscript on the arXiv preprint server. As a user, you should not notice any changes as a result of this update. Owed to the new configuration, hypertiling can now be installed with numba using
+
+```
+pip install hypertiling[numba]
+```
+or
+```
+pip install .[numba]
+```
+
+for a local installation, after the latest version has been cloned from our repository.
+
+**Further changes**
+
+- bug fixes
+- improved pipeline
+- more unit tests
+- introduction of test coverage
+
 ## v1.3
 Date: 2023-08-28
 
