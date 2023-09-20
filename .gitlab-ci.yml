@@ -100,9 +100,9 @@ install-from-pypi:
   stage: install
   script:
     - python3 --version
-    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - python3 -m venv hypervenv 
     - source hypervenv/bin/activate
-    - pip install hypertiling
+    - hypervenv/bin/pip install hypertiling
 
 
 
