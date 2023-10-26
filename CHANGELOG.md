@@ -1,3 +1,9 @@
+## v1.3.2
+Date: 2023-10-26
+
+- Fix installation on Windows systems
+
+
 ## v1.3.1
 Date: 2023-09-20
 
