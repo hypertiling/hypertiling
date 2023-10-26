@@ -133,7 +133,7 @@ unit-test-plain:
 
 # runs tests with numba and sortedcontainers
 unit-test-fancy:
-    image: python:latest
+    image: python:3.10
     stage: test
     before_script:
       - python -m venv env
@@ -164,7 +164,7 @@ tests-full-cov:
     paths:
       - .cache/pip
       - env/
-  image: python:latest
+  image: python:3.10
   before_script:
     - python -m venv env
     - source env/bin/activate
