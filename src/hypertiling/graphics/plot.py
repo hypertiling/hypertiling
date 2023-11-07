@@ -111,7 +111,7 @@ def convert_polygons_to_patches(tiling, colors=None, cutoff=None, **kwargs):
 
         # transform to matplotlib Polygon format
         stack = np.column_stack((u.real, u.imag))
-        polygon = Polygon(stack, True)
+        polygon = Polygon(stack, closed=True)
         patches.append(polygon)
         # accepted_polys.append(idx)
 
