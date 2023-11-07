@@ -1,3 +1,8 @@
+## v1.3.3
+Date: 2023-11-07
+
+PyPI installation was broken since we introduced the new build system (pyproject.toml replaces setup.py) in v1.3.1. This update is supposed to fix all related issues. This requires us to adjust the project layout slightly and introduce a top-level folder 'src' which contains the actual source code. There should be no effect of this change on the usage of the package whatsoever.
+
 ## v1.3.2
 Date: 2023-10-26
 
