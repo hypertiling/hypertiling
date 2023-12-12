@@ -1,10 +1,11 @@
 import numpy as np
 import math
 
-# signature of the embedding three-dimensional Minkowski space 
+# define signature of the embedding three-dimensional Minkowski space 
 global signature
 signature = np.array([1,-1,-1])
 
+# Common distance metrics
 
 def lorentzian_distance(a, b):
     """

@@ -1,6 +1,6 @@
 import numpy as np
 import math
-from .distance import weierstrass_distance, disk_distance
+from .distance import disk_distance
 
 
 def lattice_spacing_weierstrass(p, q):

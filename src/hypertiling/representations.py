@@ -3,6 +3,12 @@ from hypertiling.check_numba import NumbaChecker
 from numpy import array as nparray
 
 
+def valid_weierstrass_point(point):
+    '''Check that a point is a valid Weierstrass point'''
+    [t, x, y] = point
+    return t > 0 and (1 + x * x + y * y) * t * t > 1
+
+
 @NumbaChecker("float64[::1](complex128)")
 def p2w(z: np.complex128) -> np.array:
     '''Convert Poincare to Weierstraß representation '''

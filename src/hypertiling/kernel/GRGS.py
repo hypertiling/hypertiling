@@ -5,27 +5,29 @@ import hypertiling.kernel.GRGS_util as graph_util
 from hypertiling.kernel_abc import Graph
 from hypertiling.ion import htprint
 
-"""
-p: Number of edges/vertices of a polygon
-q: Number of polygons that meet at a vertex
-n: Number of layers (reflective definition)
-m: Number of polygons
-m = m(p, q, n)
-
-LIMITATIONS:
-- A reflection layer can hold at max 4.294.967.295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can hold at max 34.359.738.353 polys as the size of _sector_polys is determined as sum of uint32 of the 
-  layers size in the fundamental sector
-- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
-"""
-
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
 class GenerativeReflectionGraphStatic(Graph):
     """
-    Creates the hyperbolic tiling.
+    A static variant of the GRG kernel. Adjacency relations for all cells are explicitly computed, 
+    such that no sector construction and no on-demand generation is required. Hence the memory 
+    requirement is about a factor p larger compared to GRG. Nonetheless, GRGS is still very 
+    fast and therefore particularly suited for large-scale simulations of systems with local interactions.
+
+
+    p: Number of edges/vertices of a polygon
+    q: Number of polygons that meet at a vertex
+    n: Number of layers (reflective definition)
+    m: Number of polygons
+    m = m(p, q, n)
+
+    LIMITATIONS:
+    - A reflection layer can hold at max 4.294.967.295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+    - The whole tiling can hold at max 34.359.738.353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+    layers size in the fundamental sector
+    - The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
     """
 
     def __init__(self, p: int, q: int, n: int, tol: float = 1e-8, mangle: float = MANGLE):

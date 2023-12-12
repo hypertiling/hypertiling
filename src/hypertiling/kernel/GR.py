@@ -8,40 +8,26 @@ import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 from hypertiling.ion import htprint
 
-"""
-p: Number of edges/vertices of a polygon
-q: Number of polygons that meet at a vertex
-n: Number of layers (reflective definition)
-m: Number of polygons
-m = m(p, q, n)
-
-LIMITATIONS:
-- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
-  layers size in the fundamental sector
-- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
-"""
-"""
-p: Number of edges/vertices of a polygon
-q: Number of polygons that meet at a vertex
-n: Number of layers (reflective definition)
-m: Number of polygons
-m = m(p, q, n)
-
-LIMITATIONS:
-- A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
-- The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
-  layers size in the fundamental sector
-- The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
-"""
-
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
 
 
 class GenerativeReflection(Tiling):
     """
-    Creates the hyperbolic tiling.
+    Very fast and lightweight tiling construction kernel, using reflections on ``open'' edges to generate new cells. 
+    Only one symmetry sector is held on storage, with cells outside of this sector being generated on demand.
+
+    p: Number of edges/vertices of a polygon
+    q: Number of polygons that meet at a vertex
+    n: Number of layers (reflective definition)
+    m: Number of polygons
+    m = m(p, q, n)
+
+    LIMITATIONS:
+    - A reflection layer can hold at max 4294967295 polys as the size is stored as uint32 (util.get_reflection_n_estimation)
+    - The whole tiling can holy at max 34359738353 polys as the size of _sector_polys is determined as sum of uint32 of the 
+    layers size in the fundamental sector
+    - The number of reflection layers is limited to 255 at max, as util.generate stores the layers as uint8
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MANGLE):
@@ -385,7 +371,8 @@ class GenerativeReflection(Tiling):
             self._sector_polys[i, 0] = 0
             try:
                 if self.find(poly_center):  #
-                    raise AttributeError(f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
+                    raise AttributeError(
+                        f"[hypertiling] Error: Duplicate detected at index {i} at layer {self.get_reflection_level(i)}")
             finally:
                 self._sector_polys[i, 0] = poly_center
 
@@ -559,20 +546,20 @@ class GenerativeReflection(Tiling):
     # API ##############################################################################################################
     # Sector only ######################################################################################################
 
-    def _find(self, sector_proj: np.complex128) -> int:
+    def _find(self, sector_proj: np.complex128, eps: float = 1e-12) -> int:
         """
         Protected(!)
         Find the polygons index sector_projection belongs to.
         However, sector_projection has to be in the fundamental sector.
         Time-complexity: O(m / p)
         :param sector_proj: np.complex128 = position to search polygon for
+        :param eps: float = threshold for comparison
         :return: int = index of the corresponding polygon
         """
         disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])  # m / p
         index = int(np.argmin(dists))  # m / p
-
-        if dists[index] < util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2:
+        if dists[index] - util.f_dist_disc(self._sector_polys[0, 0], self._sector_polys[1, 0]) / 2 < eps:
             return index
         return False
 
@@ -918,8 +905,8 @@ if __name__ == "__main__":
     tiling = GenerativeReflection(7, 3, 4)
     t2 = time.time()
     print(tiling.length)
-    #print(tiling.get_nbrs_geometrical(3))
-    #print(tiling.get_nbrs(3))
+    # print(tiling.get_nbrs_geometrical(3))
+    # print(tiling.get_nbrs(3))
 
     print(f"Polygons in total :{len(tiling)}")
     print(f"Polygons in sector:{len(tiling._sector_polys)}")
