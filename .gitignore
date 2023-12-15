@@ -9,3 +9,5 @@
 /src/hypertiling/kernel/__pycache__
 venv
 /build
+/hypertiling
+/hypertiling.egg-info

@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable, Any, List
 import numpy as np
 import hypertiling.kernel.GR_util as util
@@ -7,6 +8,7 @@ import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 from hypertiling.ion import htprint
+from hypertiling.kernel.SR_util import HyperPolygon
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -755,6 +757,24 @@ class GenerativeReflection(Tiling):
 
     # Sector only ######################################################################################################
     # Generative #######################################################################################################
+
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object
+        :param index: int = index of the polygon
+        :return: HyperPolygon = polygon at index
+        """
+        htprint(1, "Method exists only for compatibility reasons. Usage is strongly discouraged!")
+
+        polygon = HyperPolygon(self.p)
+        polygon.idx = index
+        polygon.layer = self.get_reflection_level(index)
+        polygon.sector = self.get_sector(index)
+        polygon.anlge = self.get_angle(index)
+        polygon.orientation = None
+        polygon.verticesP = self[index]
+
+        return polygon
 
     def find(self, v: np.complex128) -> int:
         """
