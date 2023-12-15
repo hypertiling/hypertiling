@@ -57,7 +57,8 @@ class KernelStaticBase(Tiling):
 
 
     def __getitem__(self, idx):
-        return self.polygons[idx]
+        # (center, vertex_1, vertex_2, ..., vertex_p)
+        return np.roll(self.polygons[idx].verticesP,1)
 
 
     def __iter__(self):
@@ -68,6 +69,15 @@ class KernelStaticBase(Tiling):
 
     def __len__(self):
         return len(self.polygons)
+    
+
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object
+        :param index: int = index of the polygon
+        :return: HyperPolygon = polygon at index
+        """
+        return self.polygons[index]
 
 
     def get_vertices(self, index: int) -> np.array:
