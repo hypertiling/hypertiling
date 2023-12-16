@@ -15,7 +15,7 @@ class HyperPolygon:
     p : int
         number of outer vertices (edges)
 
-    verticesP : ndarray
+    vertices : ndarray
         1D array of np.complex128 type, containting positions of vertices and the polygon center
         in Poincare disk coordinates
 
@@ -73,14 +73,23 @@ class HyperPolygon:
         self.orientation = 0
 
         # Poincare disk coordinates
-        self.verticesP = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
+        self.vertices = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
 
 
+    # returns the center of the polygon in Poincare coordinates
     def centerP(self):
-        return self.verticesP[self.p]
+        return self.vertices[self.p]
+    
 
+    # returns an array containing the outer vertices in Poincare coordinates
+    def verticesP(self):
+        return self.vertices[:-1]
+    
+
+    # returns the center of the polygon in Weierstrass coordinates
     def centerW(self):
-        return p2w(self.verticesP[self.p])
+        return p2w(self.vertices[self.p])
+
 
     # checks whether two polygons are equal
     def __eq__(self, other):
@@ -97,22 +106,22 @@ class HyperPolygon:
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
-        mfull(self.p, phi, ind, self.verticesP)
+        mfull(self.p, phi, ind, self.vertices)
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):
-        morigin(self.p, z0, self.verticesP)
+        morigin(self.p, z0, self.vertices)
         
     # rotates each point of the polygon by phi
     def moeb_rotate(self, phi):  
-        mrotate(self.p, phi, self.verticesP)
+        mrotate(self.p, phi, self.vertices)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
         for i in range(self.p + 1):
-            z = self.verticesP[i]
+            z = self.vertices[i]
             z = z * rotation
-            self.verticesP[i] = z
+            self.vertices[i] = z
 
     # compute angle between center and the positive x-axis
     def find_angle(self):
@@ -136,12 +145,12 @@ class HyperPolygon:
     # mirror on the x-axis
     def mirror(self):
         for i in range(self.p + 1):
-            self.verticesP[i] = complex(self.verticesP[i].real, -self.verticesP[i].imag)
+            self.vertices[i] = complex(self.vertices[i].real, -self.vertices[i].imag)
         self.find_angle()
 
     # returns value between -pi and pi
     def find_orientation(self):
-        self.orientation = np.angle(self.verticesP[0] - self.centerP())
+        self.orientation = np.angle(self.vertices[0] - self.centerP())
 
 
 

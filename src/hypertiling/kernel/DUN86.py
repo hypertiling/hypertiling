@@ -125,10 +125,10 @@ def transformW_poly(polygon: HyperPolygon, transformation):
     """
     Apply Weierstraß transformation matrix to entire HyperPolygon, i.e. vertices and center coordiantes
     """
-    new_verts = np.zeros_like(polygon.verticesP)
-    for i, pointP in enumerate(polygon.verticesP):
+    new_verts = np.zeros_like(polygon.vertices)
+    for i, pointP in enumerate(polygon.vertices):
         new_verts[i] = transformW_site(pointP, transformation)
-    polygon.verticesP = new_verts
+    polygon.vertices = new_verts
 
 
 def transformW_site(pointP: np.complex128, transformation):

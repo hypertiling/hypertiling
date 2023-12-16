@@ -65,10 +65,10 @@ class Dunham(Tiling):
             z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
             z = z / abs(z)
             z = r * z
-            polygon.verticesP[i] = z
+            polygon.vertices[i] = z
         # transform to Weierstrass coordinates
         # TODO: Use hyperboloid coordinates already during construction
-        self.fund_poly = p2w_xyt_vector(polygon.verticesP)
+        self.fund_poly = p2w_xyt_vector(polygon.vertices)
 
     # ---------- the interface --------------
 

@@ -51,12 +51,12 @@ class StaticRotationalSector(KernelRotationalCommon):
 
             # shift fundamental polygon such that one of its vertices is on the origin
             # if centered around a vertex, shift one vertex to origin
-            morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
-            vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
-            mrotate(self.p, vertangle-self.mangle, self.fund_poly.verticesP)
+            morigin(self.p, self.fund_poly.vertices[0], self.fund_poly.vertices)
+            vertangle = math.atan2(self.fund_poly.vertices[1].imag, self.fund_poly.vertices[1].real)
+            mrotate(self.p, vertangle-self.mangle, self.fund_poly.vertices)
 
 
-        self.fund_poly_center = self.fund_poly.verticesP[self.p]
+        self.fund_poly_center = self.fund_poly.vertices[self.p]
         self.polygons.append(self.fund_poly)
 
         # prepare container which will be used for duplicate checks
