@@ -80,6 +80,31 @@ class Dunham(Tiling):
 
     def __len__(self):
         return len(self.polygons)
+    
+
+    def __getitem__(self, idx):
+        # (center, vertex_1, vertex_2, ..., vertex_p)
+        return np.roll(self.polygons[idx], 1)
+    
+
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object
+        :param index: int = index of the polygon
+        :return: HyperPolygon = polygon at index
+        """
+        htprint("Warning", "Method exists only for compatibility reasons. Usage is discouraged!")
+
+        polygon = HyperPolygon(self.p)
+        polygon.idx = index
+        polygon.layer = None
+        polygon.sector = None
+        polygon.angle = self.get_angle(index)
+        polygon.orientation = None
+        polygon.vertices = self[index]
+
+        return polygon
+    
 
     def get_vertices(self, index: int) -> np.array:
         """

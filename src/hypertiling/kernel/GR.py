@@ -764,13 +764,13 @@ class GenerativeReflection(Tiling):
         :param index: int = index of the polygon
         :return: HyperPolygon = polygon at index
         """
-        htprint(1, "Method exists only for compatibility reasons. Usage is strongly discouraged!")
+        htprint("Warning", "Method exists only for compatibility reasons. Usage is discouraged!")
 
         polygon = HyperPolygon(self.p)
         polygon.idx = index
         polygon.layer = self.get_reflection_level(index)
         polygon.sector = self.get_sector(index)
-        polygon.anlge = self.get_angle(index)
+        polygon.angle = self.get_angle(index)
         polygon.orientation = None
         polygon.vertices = self[index]
 
