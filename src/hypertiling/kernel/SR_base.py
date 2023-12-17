@@ -58,13 +58,13 @@ class KernelStaticBase(Tiling):
 
     def __getitem__(self, idx):
         # (center, vertex_1, vertex_2, ..., vertex_p)
-        return np.roll(self.polygons[idx].vertices,1)
+        return np.roll(self.polygons[idx]._vertices, 1)
 
 
     def __iter__(self):
         for poly in self.polygons:
             # (center, vertex_1, vertex_2, ..., vertex_p)
-            yield np.roll(poly.vertices,1)
+            yield np.roll(poly._vertices, 1)
 
 
     def __len__(self):
@@ -87,7 +87,7 @@ class KernelStaticBase(Tiling):
         :param index: int = index of the polygon
         :return: np.array[np.complex128][p] = vertices of the polygon
         """
-        return self.polygons[index].vertices[:-1]
+        return self.polygons[index]._vertices[:-1]
 
     def get_center(self, index: int) -> np.complex128:
         """
@@ -96,7 +96,7 @@ class KernelStaticBase(Tiling):
         :param index: int = index of the polygon
         :return: np.complex128 = center of the polygon
         """
-        return self.polygons[index].vertices[-1]
+        return self.polygons[index]._vertices[-1]
 
     def get_sector(self, index: int) -> int:
         """
@@ -149,10 +149,10 @@ class KernelStaticBase(Tiling):
             z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
             z = z / abs(z)
             z = r * z
-            polygon.vertices[i] = z
+            polygon._vertices[i] = z
 
         # rotate by angle (to get away from the coordinate axis)
-        mrotate(self.p, -rotate_by, polygon.vertices)
+        mrotate(self.p, -rotate_by, polygon._vertices)
 
         return polygon
 
@@ -183,7 +183,7 @@ class KernelStaticBase(Tiling):
 
             # shift fundamental polygon such that one of its vertices is on the origin
             vertidx = 0           
-            morigin(self.p, self.fund_poly.vertices[vertidx], self.fund_poly.vertices)
+            morigin(self.p, self.fund_poly._vertices[vertidx], self.fund_poly._vertices)
             
             # generate the q polygons of the first layer
             for rot_ind in range(self.q):
@@ -200,7 +200,7 @@ class KernelStaticBase(Tiling):
         """
         finds the next polygon by k-fold rotation of polygon around the vertex number ind
         """
-        mfull(self.p, k * self.qhi, ind, polygon.vertices)
+        mfull(self.p, k * self.qhi, ind, polygon._vertices)
         return polygon
 
 
@@ -260,14 +260,14 @@ class KernelRotationalCommon(KernelStaticBase):
             for pgon in self.polygons[startpgon:endpgon]:
 
                 # center of current polygon
-                pgon_center = pgon.vertices[self.p]
+                pgon_center = pgon._vertices[self.p]
                 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
 
                     # rotate polygon around current vertex
                     # compute center coordinates of all polygons which share this vertex...
-                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.vertices[vert_ind], pgon_center)            
+                    adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon._vertices[vert_ind], pgon_center)            
                     
                     # ... and iterate over them
                     for rot_ind in range(self.q):
@@ -307,12 +307,12 @@ class KernelRotationalCommon(KernelStaticBase):
         
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
-            center = pgon.vertices[self.p]
+            center = pgon._vertices[self.p]
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
             if self._in_slice_upper(center): 
                 # rotate center of poly back by sector angle
-                center = moeb_rotate_trafo(-self.sect_angle, pgon.vertices[self.p])
+                center = moeb_rotate_trafo(-self.sect_angle, pgon._vertices[self.p])
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
                 if dupl_small.is_duplicate(center):
@@ -344,7 +344,7 @@ class KernelRotationalCommon(KernelStaticBase):
         for p in range(1, k):
             for polygon in polygons:
                 pgon = copy.deepcopy(polygon)
-                mrotate(self.p, -p * angle, pgon.vertices)
+                mrotate(self.p, -p * angle, pgon._vertices)
                 self.polygons.append(pgon)
 
         # assign index and angles 
@@ -394,7 +394,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
         for poly in self.polygons:
             poly.edges = []
-            verts = np.round(poly.vertices[0:-1], digits)
+            verts = np.round(poly._vertices[0:-1], digits)
 
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):
@@ -422,7 +422,7 @@ class KernelRotationalCommon(KernelStaticBase):
             angle = angle * math.pi / 180
 
         for poly in self.polygons:
-            mrotate(self.p, angle, poly.vertices)
+            mrotate(self.p, angle, poly._vertices)
 
     def translate(self, z):
         """ 
@@ -435,7 +435,7 @@ class KernelRotationalCommon(KernelStaticBase):
         """
 
         for poly in self.polygons:
-            morigin(self.p, z, poly.vertices)
+            morigin(self.p, z, poly._vertices)
 
 
 
@@ -469,10 +469,10 @@ class KernelRotationalCommon(KernelStaticBase):
             for pgon in self.polygons:
                 for vrtx in range(self.p):
                     child = HyperPolygon(3) 
-                    child.vertices[0] = pgon.vertices[vrtx]
-                    child.vertices[1] = pgon.vertices[(vrtx+1)%self.p]
-                    child.vertices[2] = pgon.vertices[-1]
-                    child.vertices[3] = euclidean_center(child.vertices[:-1])
+                    child._vertices[0] = pgon._vertices[vrtx]
+                    child._vertices[1] = pgon._vertices[(vrtx+1)%self.p]
+                    child._vertices[2] = pgon._vertices[-1]
+                    child._vertices[3] = euclidean_center(child._vertices[:-1])
                     child.layer = pgon.layer
                     newpolygons.append(child)
             self.polygons = newpolygons
@@ -487,7 +487,7 @@ class KernelRotationalCommon(KernelStaticBase):
                 # loop through polygon edges
                 for vrtx in range(p):
                     # find geodesic midpoint
-                    zm = geodesic_midpoint( pgon.vertices[vrtx], pgon.vertices[(vrtx+1)%p] )
+                    zm = geodesic_midpoint( pgon._vertices[vrtx], pgon._vertices[(vrtx+1)%p] )
                     ref_vertices.append(zm)
 
 
@@ -497,18 +497,18 @@ class KernelRotationalCommon(KernelStaticBase):
                 child = HyperPolygon(p)  # the center triangle whose vertices are the newly found refined ones
                 child.layer = pgon.layer
                 for i in range(p):
-                    child.vertices[i] = ref_vertices[i]
-                child.vertices[-1] = pgon.get_center()  # the center triangle shares its center with its mother
+                    child._vertices[i] = ref_vertices[i]
+                child._vertices[-1] = pgon.get_center()  # the center triangle shares its center with its mother
                 child.idx = 4*num+1  # assigning a unique number
                 newpolygons.append(child)
 
                 for vrtx in range(p):  # for each vertex of the mother triangle that is being refined
                     child = HyperPolygon(p)  # these are the non-center children
                     child.layer = pgon.layer
-                    vP = [pgon.vertices[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
+                    vP = [pgon._vertices[vrtx], ref_vertices[vrtx], ref_vertices[vrtx-1]]
                     for i in range(p):
-                        child.vertices[i] = vP[i]
-                    child.vertices[-1] = euclidean_center(child.vertices[:-1])
+                        child._vertices[i] = vP[i]
+                    child._vertices[-1] = euclidean_center(child._vertices[:-1])
                     child.idx = (4*num+1)+1+vrtx  # assign a unique number
                     newpolygons.append(child)
 

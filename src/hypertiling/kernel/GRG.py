@@ -251,33 +251,14 @@ if __name__ == "__main__":
     graph = GenerativeReflectionGraph(p, q, n)
     print(f"Took: {time.time() - t1}")
 
-    """t1 = time.time()
-    tiling = GenerativeReflection(q, p, n)
-    print(f"Took: {time.time() - t1}")
-    tiling = core.HyperbolicTiling(q, p, n2, center="vertex")
-    tiling.rotate(60, deg=True)"""
-
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     graph.check_integrity()
-    #for i, nbrs in enumerate(graph.get_nbrs_list()):
-    #    print(nbrs)
-    #    if not np.array_equal(nbrs, graph[i]):
-    #        print(nbrs)
-    #        print(graph[i])
-    #        print("\n")
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    """# tiling.map_layers()
-    for polygon_index, pgon in enumerate(tiling):
-        poly_layer = tiling.get_layer(polygon_index)
-        facecolor = colors[poly_layer % len(colors)]
-        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon.verticesP[:-1]]),
-                                    facecolor=facecolor, edgecolor="#FFFFFF")
-        fig_ax[1].add_patch(patch)"""
-        # fig_ax[1].text(np.real(pgon[0]), np.imag(pgon[0]), str(polygon_index))
+
     graph_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p,
                           colors=[colors[graph.get_reflection_level(i) % len(colors)] for i in range(graph.length)])
     plt.show()

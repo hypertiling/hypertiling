@@ -76,22 +76,22 @@ class HyperPolygon:
         self.orientation = 0
 
         # Poincare disk coordinates
-        self.vertices = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
+        self._vertices = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
 
 
     # returns the center of the polygon in Poincare coordinates
     def get_center(self):
-        return self.vertices[self.p]
+        return self._vertices[self.p]
     
 
     # returns an array containing the outer vertices in Poincare coordinates
     def get_vertices(self):
-        return self.vertices[:-1]
+        return self._vertices[:-1]
     
 
     # returns the center of the polygon in Weierstrass coordinates
     def centerW(self):
-        return p2w(self.vertices[self.p])
+        return p2w(self._vertices[self.p])
 
 
     # checks whether two polygons are equal
@@ -109,22 +109,22 @@ class HyperPolygon:
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
-        mfull(self.p, phi, ind, self.vertices)
+        mfull(self.p, phi, ind, self._vertices)
 
     # transforms the entire polygon such that z0 is mapped to origin
     def moeb_origin(self, z0):
-        morigin(self.p, z0, self.vertices)
+        morigin(self.p, z0, self._vertices)
         
     # rotates each point of the polygon by phi
     def moeb_rotate(self, phi):  
-        mrotate(self.p, phi, self.vertices)
+        mrotate(self.p, phi, self._vertices)
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
         for i in range(self.p + 1):
-            z = self.vertices[i]
+            z = self._vertices[i]
             z = z * rotation
-            self.vertices[i] = z
+            self._vertices[i] = z
 
     # compute angle between center and the positive x-axis
     def find_angle(self):
@@ -148,9 +148,9 @@ class HyperPolygon:
     # mirror on the x-axis
     def mirror(self):
         for i in range(self.p + 1):
-            self.vertices[i] = complex(self.vertices[i].real, -self.vertices[i].imag)
+            self._vertices[i] = complex(self._vertices[i].real, -self._vertices[i].imag)
         self.find_angle()
 
     # returns value between -pi and pi
     def find_orientation(self):
-        self.orientation = np.angle(self.vertices[0] - self.get_center())
+        self.orientation = np.angle(self._vertices[0] - self.get_center())
