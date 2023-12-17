@@ -7,6 +7,7 @@ from hypertiling.util import n_cell_centered
 from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
 from hypertiling.ion import htprint
 from hypertiling.check_numba import NumbaChecker, DelayChecker
+from hypertiling.kernel.SR_util import HyperPolygon
 
 
 class DunhamX(Tiling):
@@ -106,6 +107,25 @@ class DunhamX(Tiling):
         :return: int = number of polygons
         """
         return self.length
+
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object
+        :param index: int = index of the polygon
+        :return: HyperPolygon = polygon at index
+        """
+        htprint("Warning",
+                "Method exists only for compatibility reasons. Usage is discouraged! Moreover, some of the functionality is not accessible for this kernel")
+
+        polygon = HyperPolygon(self.p)
+        polygon.idx = index
+        polygon.layer = None  # self.get_reflection_level(index)
+        polygon.sector = None
+        polygon.angle = self.get_angle(index)
+        polygon.orientation = None
+        polygon.vertices = self[index]
+
+        return polygon
 
     def get_vertices(self, index: int) -> np.array:
         """
