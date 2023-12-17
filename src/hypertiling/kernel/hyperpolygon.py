@@ -89,10 +89,28 @@ class HyperPolygon:
         return self._vertices[:-1]
     
 
-    # returns an array containing center + outer vertices  in Poincare coordinates
+    # returns an array containing center + outer vertices in Poincare coordinates
     def get_polygon(self):
         return self._vertices
     
+
+
+    # sets the center of the polygon in Poincare coordinates
+    def set_center(self, center):
+        self._vertices[self.p] = center
+
+    # sets the outer vertices of the polygon in Poincare coordinates
+    def set_vertices(self, vertices):
+        if len(vertices) != self.p:
+            raise ValueError(f"Expected {self.p} vertices, got {len(vertices)}")
+        self._vertices[:-1] = vertices
+
+    # sets the entire polygon: center + outer vertices in Poincare coordinates
+    def set_polygon(self, polygon):
+        if len(polygon) != self.p + 1:
+            raise ValueError(f"Expected {self.p + 1} points, got {len(polygon)}")
+        self._vertices = polygon
+
 
     # returns the center of the polygon in Weierstrass coordinates
     def centerW(self):

@@ -61,13 +61,15 @@ class Dunham(Tiling):
         r = fund_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
+        verts = []
         for i in range(self.p):
             z = complex(math.cos(i * self.phi), math.sin(i * self.phi))  # = exp(i*phi)
             z = z / abs(z)
             z = r * z
-            polygon._vertices[i] = z
-        # transform to Weierstrass coordinates
-        # TODO: Use hyperboloid coordinates already during construction
+            verts.append(z)
+        polygon.set_vertices(verts)
+
+        # transform to Weierstrass coordinates (TODO: Use those coordinates already during construction)
         self.fund_poly = p2w_xyt_vector(polygon._vertices)
 
     # ---------- the interface --------------
@@ -101,7 +103,7 @@ class Dunham(Tiling):
         polygon.sector = None
         polygon.angle = self.get_angle(index)
         polygon.orientation = None
-        polygon._vertices = self[index]
+        polygon.set_polygon = self[index]
 
         return polygon
     

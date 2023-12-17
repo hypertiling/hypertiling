@@ -772,7 +772,7 @@ class GenerativeReflection(Tiling):
         polygon.sector = self.get_sector(index)
         polygon.angle = self.get_angle(index)
         polygon.orientation = None
-        polygon._vertices = self[index]
+        polygon.set_polygon(self[index])
 
         return polygon
 
