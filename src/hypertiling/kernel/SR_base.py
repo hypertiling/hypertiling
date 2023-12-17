@@ -260,7 +260,7 @@ class KernelRotationalCommon(KernelStaticBase):
             for pgon in self.polygons[startpgon:endpgon]:
 
                 # center of current polygon
-                pgon_center = pgon.get_polygon()[self.p]
+                pgon_center = pgon.get_center()
                 
                 # iterate over every vertex of pgon
                 for vert_ind in range(self.p):
@@ -307,12 +307,12 @@ class KernelRotationalCommon(KernelStaticBase):
         
         # go through every polygon
         for kk, pgon in enumerate(self.polygons):
-            center = pgon.get_polygon()[self.p]
+            center = pgon.get_center()
             # if poly is inside soft boundary 
             # it has to be considered for rotational duplicate check
             if self._in_slice_upper(center): 
                 # rotate center of poly back by sector angle
-                center = moeb_rotate_trafo(-self.sect_angle, pgon.get_polygon()[self.p])
+                center = moeb_rotate_trafo(-self.sect_angle, pgon.get_center())
                 # check whether we already have this rotated center
                 # if so: rotational duplicate
                 if dupl_small.is_duplicate(center):
@@ -394,7 +394,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
         for poly in self.polygons:
             poly.edges = []
-            verts = np.round(poly.get_polygon()[0:-1], digits)
+            verts = np.round(poly.vertices(), digits)
 
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):
