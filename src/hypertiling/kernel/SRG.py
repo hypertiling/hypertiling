@@ -44,7 +44,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
     def __iter__(self):
         for poly in self.polygons.values():
             # (center, vertex_1, vertex_2, ..., vertex_p)
-            yield np.roll(poly._vertices,1)
+            yield np.roll(poly.get_polygon(),1)
 
     def __len__(self):
         return len(self.polygons)
@@ -119,7 +119,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             pgon = self.polygons[pgonidx]
 
             # center of current polygon
-            pgon_center = pgon._vertices[self.p]
+            pgon_center = pgon.get_polygon()[self.p]
 
             collect_nbrs = []
             
@@ -128,7 +128,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
                 # rotate polygon around current vertex
                 # compute center coordinates of all polygons which share this vertex...
-                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon._vertices[vert_ind], pgon_center)            
+                adj_centers = multi_rotation_around_vertex(self.q, self.qhi, pgon.get_polygon()[vert_ind], pgon_center)            
                 
                 # ... and iterate over them
                 for rot_ind in range(self.q):
@@ -243,7 +243,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
             # shift fundamental polygon such that one of its vertices is on the origin
             vertidx = 0           
-            morigin(self.p, self.fund_poly._vertices[vertidx], self.fund_poly._vertices)
+            morigin(self.p, self.fund_poly.get_polygon()[vertidx], self.fund_poly.get_polygon())
             
             # generate the q polygons of the first layer
             for rot_ind in range(self.q):
@@ -269,7 +269,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
         """
         construct new polygon by k-fold rotation of "polygon" around its vertex "ind"
         """
-        mfull(self.p, k * self.qhi, ind, polygon._vertices)
+        mfull(self.p, k * self.qhi, ind, polygon.get_polygon())
         return polygon
     
 
