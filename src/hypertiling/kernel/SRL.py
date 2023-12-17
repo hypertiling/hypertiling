@@ -64,7 +64,7 @@ class StaticRotationalLegacy(KernelRotationalCommon):
         # will be used for uniqueness checks
         dupl_large = DuplicateContainerSimple(self.dgts)
         dupl_small = DuplicateContainerSimple(self.dgts)
-        dupl_large.add(self.fund_poly.centerP())
+        dupl_large.add(self.fund_poly.get_center())
 
         # the actual construction
         self._populate_sector(dupl_large, dupl_small)

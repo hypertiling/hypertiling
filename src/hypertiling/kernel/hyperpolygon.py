@@ -41,8 +41,11 @@ class HyperPolygon:
     Methods
     -------
 
-    centerP()
+    get_center()
         returns the center of the polygon in Poincare coordinates
+
+    get_vertices()
+        
 
     centerW()
         returns the center of the polygon in Weierstrass coordinates
@@ -77,12 +80,12 @@ class HyperPolygon:
 
 
     # returns the center of the polygon in Poincare coordinates
-    def centerP(self):
+    def get_center(self):
         return self.vertices[self.p]
     
 
     # returns an array containing the outer vertices in Poincare coordinates
-    def verticesP(self):
+    def get_vertices(self):
         return self.vertices[:-1]
     
 
@@ -94,7 +97,7 @@ class HyperPolygon:
     # checks whether two polygons are equal
     def __eq__(self, other):
         if isinstance(other, HyperPolygon):
-            centers = cmath.isclose(self.centerP, other.centerP)
+            centers = cmath.isclose(self.get_center, other.get_center)
             if not centers:
                 return False
             orientations = cmath.isclose(self.orientation, other.orientation)
@@ -125,7 +128,7 @@ class HyperPolygon:
 
     # compute angle between center and the positive x-axis
     def find_angle(self):
-        self.angle = math.atan2(self.centerP().imag, self.centerP().real)
+        self.angle = math.atan2(self.get_center().imag, self.get_center().real)
         self.angle += PI2 if self.angle < 0 else 0
 
     def find_sector(self, k, offset=0):
@@ -150,4 +153,4 @@ class HyperPolygon:
 
     # returns value between -pi and pi
     def find_orientation(self):
-        self.orientation = np.angle(self.vertices[0] - self.centerP())
+        self.orientation = np.angle(self.vertices[0] - self.get_center())

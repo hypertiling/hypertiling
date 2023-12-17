@@ -498,7 +498,7 @@ class KernelRotationalCommon(KernelStaticBase):
                 child.layer = pgon.layer
                 for i in range(p):
                     child.vertices[i] = ref_vertices[i]
-                child.vertices[-1] = pgon.centerP()  # the center triangle shares its center with its mother
+                child.vertices[-1] = pgon.get_center()  # the center triangle shares its center with its mother
                 child.idx = 4*num+1  # assigning a unique number
                 newpolygons.append(child)
 

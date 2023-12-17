@@ -79,7 +79,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
             # remove from duplicate container
             try:
-                z = self.polygons[idx].centerP()
+                z = self.polygons[idx].get_center()
                 self.dplcts.remove_by_idx(z, idx)
             except:
                 pass
@@ -200,7 +200,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # add empty list for this poly in nbrs
         self.nbrs[pgon.idx] = []
         # add to duplicate container
-        self.dplcts.add(pgon.centerP(), pgon.idx)
+        self.dplcts.add(pgon.get_center(), pgon.idx)
 
         # return index of new polygons
         return pgon.idx
