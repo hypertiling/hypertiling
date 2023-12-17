@@ -41,13 +41,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # construct tiling
         self.generate()
 
-    def __iter__(self):
-        for poly in self.polygons.values():
-            # (center, vertex_1, vertex_2, ..., vertex_p)
-            yield np.roll(poly.get_polygon(),1)
 
-    def __len__(self):
-        return len(self.polygons)
 
 
     def remove_cells(self, deletelist):
@@ -119,7 +113,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             pgon = self.polygons[pgonidx]
 
             # center of current polygon
-            pgon_center = pgon.get_polygon()[self.p]
+            pgon_center = pgon.get_center()
 
             collect_nbrs = []
             
@@ -243,7 +237,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
 
             # shift fundamental polygon such that one of its vertices is on the origin
             vertidx = 0           
-            morigin(self.p, self.fund_poly.get_polygon()[vertidx], self.fund_poly.get_polygon())
+            morigin(self.p, self.fund_poly.get_vertices()[vertidx], self.fund_poly.get_polygon())
             
             # generate the q polygons of the first layer
             for rot_ind in range(self.q):
