@@ -8,7 +8,7 @@ import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 from hypertiling.ion import htprint
-from hypertiling.kernel.SR_util import HyperPolygon
+from hypertiling.kernel.hyperpolygon import HyperPolygon
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995

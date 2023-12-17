@@ -8,7 +8,7 @@ from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from ..distance import lorentzian_distance
 from ..neighbors import find_radius_brute_force, find_radius_optimized
-from .SR_util import HyperPolygon
+from .hyperpolygon import HyperPolygon
 
 PI2 = 2 * np.pi
 
