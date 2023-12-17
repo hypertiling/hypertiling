@@ -7,62 +7,17 @@ PI2 = 2 * np.pi
 
 class HyperPolygon:
     """
-    Hyperbolic polygon object
-
-    Attributes
-    ----------
-
-    p : int
-        number of outer vertices (edges)
-
-    vertices : ndarray
-        1D array of np.complex128 type, containting positions of vertices and the polygon center
-        in Poincare disk coordinates
-
-    idx : int
-        auxiliary scalar index; can be used, e.g, for easy identifaction inside a tiling
-
-    layer : int
-        encodes in which layer of a tessellation this polygons is located
-        
-    sector : int
-        index of the sector this polygons is located
-
-    angle : float
-        angle between center and the positive x-axis
-
-    val : float
-        assign a value (useful in any application)
-
-    orientation : float
-        the angle between the line defined by the center and vertices 0, and the abscissa
-
-
-    Methods
-    -------
-
-    get_center()
-        returns the center of the polygon in Poincare coordinates
-
-    get_vertices()
-        
-
-    centerW()
-        returns the center of the polygon in Weierstrass coordinates
+    Represents a hyperbolic polygon with operations suitable for tiling hyperbolic planes.
     
-    __equal__()
-        checks whether two polygons are equal by comparing centers and orientations
-
-    transform(tmat)
-        apply Moebius transformation matrix "tmat" to  all points (vertices + center) of the polygon
-
-    tf_full(ind, phi)
-        transforms the entire polygon: to the origin, rotate it and back again
-
-
-    ... to be completed
-
-
+    Attributes:
+        p (int): The number of edges of the polygon.
+        idx (int): The unique identifier of the polygon.
+        layer (int): The layer number in the tiling where the polygon belongs.
+        sector (int): The sector of the tiling where the polygon is located.
+        angle (float): The internal angle of the polygon.
+        val (float): The value associated with the polygon (custom usage).
+        orientation (float): The orientation of the polygon in the tiling.
+        _vertices (np.array[np.complex128]): The center and vertices in Poincare disk coordinates.
     """
 
     def __init__(self, p):
@@ -94,21 +49,22 @@ class HyperPolygon:
         return self._vertices
     
 
-
     # sets the center of the polygon in Poincare coordinates
     def set_center(self, center):
         self._vertices[self.p] = center
 
+
     # sets the outer vertices of the polygon in Poincare coordinates
     def set_vertices(self, vertices):
         if len(vertices) != self.p:
-            raise ValueError(f"Expected {self.p} vertices, got {len(vertices)}")
+            raise ValueError(f"[hypertiling] Error: Expected {self.p} vertices, got {len(vertices)}")
         self._vertices[:-1] = vertices
+
 
     # sets the entire polygon: center + outer vertices in Poincare coordinates
     def set_polygon(self, polygon):
         if len(polygon) != self.p + 1:
-            raise ValueError(f"Expected {self.p + 1} points, got {len(polygon)}")
+            raise ValueError(f"[hypertiling] Error: Expected {self.p + 1} points, got {len(polygon)}")
         self._vertices = polygon
 
 
