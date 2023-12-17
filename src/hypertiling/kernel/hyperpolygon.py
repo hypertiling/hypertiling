@@ -89,6 +89,11 @@ class HyperPolygon:
         return self._vertices[:-1]
     
 
+    # returns an array containing center + outer vertices  in Poincare coordinates
+    def get_polygon(self):
+        return self._vertices
+    
+
     # returns the center of the polygon in Weierstrass coordinates
     def centerW(self):
         return p2w(self._vertices[self.p])
