@@ -107,6 +107,9 @@ class StaticRotationalGraph(KernelRotationalCommon):
             user-defined filter function which allows to limit the construction to certain
             spatial regions based on the (center) coordinate of the cells
         """
+        
+        # increment layer count
+        self.layercount += 1
 
         if addlist is None:
             polylist = self.exposed
@@ -176,7 +179,6 @@ class StaticRotationalGraph(KernelRotationalCommon):
                 self.nbrs[nb] = list(set(self.nbrs[nb]))
 
             self.counter += 1
-            self.layercount += 1
 
         # we have constructed neighbours around exposed cells, hence
         # they are no longer exposed; but the newly created ones are
@@ -188,6 +190,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
             self.exposed = [x for x in self.exposed if (x not in addlist)]
             self.exposed += newexposed
 
+        
 
     def _add_pgon(self, pgon):
         """
