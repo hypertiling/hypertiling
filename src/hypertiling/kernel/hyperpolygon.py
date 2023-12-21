@@ -20,18 +20,24 @@ class HyperPolygon:
         _vertices (np.array[np.complex128]): The center and vertices in Poincare disk coordinates.
     """
 
-    def __init__(self, p):
-
+    
+    def __init__(self, p, vertices=None, idx=None, layer=None, sector=None, angle=None, val=None, orientation=None):
+        
         self.p = p
-        self.idx = 1
-        self.layer = 1
-        self.sector = 0
-        self.angle = 0
-        self.val = 0
-        self.orientation = 0
+        self.idx = idx
+        self.layer = layer
+        self.sector = sector
+        self.angle = angle
+        self.val = val
+        self.orientation = orientation
 
-        # Poincare disk coordinates
-        self._vertices = np.zeros(shape=self.p + 1, dtype=np.complex128)  # vertices + center
+        if vertices is not None:
+            if len(vertices) != self.p + 1 or not isinstance(vertices, np.ndarray):
+                raise ValueError("[hypertiling] Error: Argument 'vertices' must be a numpy array of length p + 1 (center + vertices)!")
+            self._vertices = vertices
+        else:
+            self._vertices = np.zeros(shape=self.p + 1, dtype=np.complex128) # vertices + center
+
 
 
     # returns the center of the polygon in Poincare coordinates
