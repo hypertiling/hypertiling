@@ -150,6 +150,7 @@ class KernelStaticBase(Tiling):
             z = z / abs(z)
             z = r * z
             polygon.get_polygon()[i] = z
+            polygon.layer = 0
 
         # rotate by angle (to get away from the coordinate axis)
         mrotate(self.p, -rotate_by, polygon.get_polygon())

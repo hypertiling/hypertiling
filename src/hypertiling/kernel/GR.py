@@ -766,7 +766,7 @@ class GenerativeReflection(Tiling):
         """
         htprint("Warning", "Method exists only for compatibility reasons. Usage is discouraged!")
 
-        polygon = HyperPolygon(self.p)
+        polygon = HyperPolygon(self.p, )
         polygon.idx = index
         polygon.layer = self.get_reflection_level(index)
         polygon.sector = self.get_sector(index)
