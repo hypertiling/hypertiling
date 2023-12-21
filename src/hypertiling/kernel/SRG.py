@@ -6,6 +6,7 @@ from ..ion import htprint
 from ..arraytransformation import mfull, morigin, multi_rotation_around_vertex
 from .SRG_util import DuplicateContainerCircular
 from .SR_base import KernelRotationalCommon
+from .hyperpolygon import HyperPolygon
 
 PI2 = 2 * np.pi
 
@@ -42,6 +43,14 @@ class StaticRotationalGraph(KernelRotationalCommon):
         self.generate()
 
 
+
+    def __iter__(self):
+        """
+        Override default __iter__ since self.polygons is a dictionary in this kernel
+        """
+        # (center, vertex_1, vertex_2, ..., vertex_p)
+        for poly in self.polygons.values():
+            yield np.roll(poly.get_polygon(),1)
 
 
     def remove_cells(self, deletelist):
