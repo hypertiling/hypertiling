@@ -74,12 +74,18 @@ def geodesic_midpoint(z1, z2):
     """
     Compute geodesic midpoint between z1 and z2
     """
-    z2n = moeb_origin_trafo(z1, z2)     # move z1, z2 such that z0=0
-    d = disk_distance(0, z2n)           # distance betwen 0 and z2new
-    r = np.tanh(d/4)                    # compute corresponding Cartesian radius
-    zm = r*np.exp(1j*np.angle(z2n))     # add angle
-    zm = moeb_origin_trafo(-z1, zm)     # and transform back
-    return zm
+    z1c = z1.conjugate()
+    z2c = z2.conjugate()
+    
+    a = 1 - z1*z1c
+    b = 1 - z1*z2c
+    c = 1 - z2*z1c
+    d = 1 - z2*z2c
+    sqrt = np.sqrt(a*b*c*d)
+    den = 1 - z1*z1c*z2*z2c - sqrt
+    num = z1c + z2c - (z1 + z2)*z1c*z2c
+    
+    return den/num
 
 
 def geodesic_angles(z1, z2):
