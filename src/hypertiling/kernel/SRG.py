@@ -22,7 +22,7 @@ class StaticRotationalGraph(KernelRotationalCommon):
     are computed during construction of the tiling
     '''
 
-    def __init__ (self, p, q, n, **kwargs):
+    def __init__ (self, p, q, n, offset=1e-9, **kwargs):
         super(StaticRotationalGraph, self).__init__(p, q, n, **kwargs)
 
         # a place to collect neighbour information
@@ -38,6 +38,13 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # helpers
         self.globcount = 0
         self.layercount = 0
+
+        # offset
+        if offset < 1e-12:
+            htprint('Warning: For technical reasons offset can not be zero and is set to 1e-9 by default')
+            self.offset = 1e-9
+        else:
+            self.offset = offset
 
         # construct tiling
         self.generate()
@@ -236,9 +243,11 @@ class StaticRotationalGraph(KernelRotationalCommon):
         # tiling centered around cell
         # add fundamental cell and set bounds of current layer
         if self.center == "cell":
-            self.fund_poly.moeb_origin(0.000001) 
             # necessary for technical reasons since the duplicate container is singular at the origin
-            # TODO: add warning
+            self.fund_poly.moeb_origin(self.offset) 
+            htprint("Status", "You have requested a tiling where the center of the fundamental cell is on the origin. \
+                    For technical reasons, we have shifted the lattice away from the origin by some small amount. \
+                    This offset can be controlled as a kwarg 'offset' to the constructor (default: 1e-9).")
 
             self._add_pgon(self.fund_poly)
             self.exposed = [0]
