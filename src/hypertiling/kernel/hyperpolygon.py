@@ -81,17 +81,19 @@ class HyperPolygon:
 
 
     # checks whether two polygons are equal
-    def __eq__(self, other):
-        if isinstance(other, HyperPolygon):
-            centers = cmath.isclose(self.get_center, other.get_center)
-            if not centers:
-                return False
-            orientations = cmath.isclose(self.orientation, other.orientation)
-            if not orientations:
-                return False
-            if self.p == other.p:
-                return True
-        return False
+def __eq__(self, other):
+    if isinstance(other, HyperPolygon):
+
+        if self.p != other.p:
+            return False
+        
+        centers_close = cmath.isclose(self.get_center, other.get_center)
+        orientations_close = cmath.isclose(self.orientation, other.orientation)
+        if centers_close and orientations_close:
+            return True
+        else:
+            return False
+
 
     # transforms the entire polygon: to the origin, rotate it and back again
     def tf_full(self, ind, phi):
@@ -107,10 +109,7 @@ class HyperPolygon:
 
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
-        for i in range(self.p + 1):
-            z = self._vertices[i]
-            z = z * rotation
-            self._vertices[i] = z
+        self._vertices = [z * rotation for z in self._vertices]
 
     # compute angle between center and the positive x-axis
     def find_angle(self):
@@ -119,7 +118,7 @@ class HyperPolygon:
 
     def find_sector(self, k, offset=0):
         """ 
-        compute in which sector out of k sectors the polygon resides
+        Compute - based on complex angle -in which sector out of k sectors the polygon is located
 
         Arguments
         ---------
