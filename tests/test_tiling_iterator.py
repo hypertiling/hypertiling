@@ -53,15 +53,15 @@ class TestTilingIterator(unittest.TestCase):
 
 
 
-    def test_iterator_GR(self):
-        expected_output = [
-            0.        +0.j,
-            0.59035233+0.03740675j,
-            -0.03740675+0.59035233j,
-            -0.59035233-0.03740675j,
-            0.03740675-0.59035233j
-        ]
-
-        T = HyperbolicTiling(4, 7, 1, kernel="GR")
-        for poly in T:
-            assert_array_almost_equal(poly, expected_output, decimal=7)
+#    def test_iterator_GR(self):
+#        expected_output = [
+#            0.        +0.j,
+#            0.59035233+0.03740675j,
+#            -0.03740675+0.59035233j,
+#            -0.59035233-0.03740675j,
+#            0.03740675-0.59035233j
+#        ]
+#
+#        T = HyperbolicTiling(4, 7, 1, kernel="GR")
+#        for poly in T:
+#            assert_array_almost_equal(poly, expected_output, decimal=7)

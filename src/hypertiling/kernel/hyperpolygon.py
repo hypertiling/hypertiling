@@ -81,18 +81,18 @@ class HyperPolygon:
 
 
     # checks whether two polygons are equal
-def __eq__(self, other):
-    if isinstance(other, HyperPolygon):
+    def __eq__(self, other):
+        if isinstance(other, HyperPolygon):
 
-        if self.p != other.p:
-            return False
-        
-        centers_close = cmath.isclose(self.get_center, other.get_center)
-        orientations_close = cmath.isclose(self.orientation, other.orientation)
-        if centers_close and orientations_close:
-            return True
-        else:
-            return False
+            if self.p != other.p:
+                return False
+            
+            centers_close = cmath.isclose(self.get_center, other.get_center)
+            orientations_close = cmath.isclose(self.orientation, other.orientation)
+            if centers_close and orientations_close:
+                return True
+            else:
+                return False
 
 
     # transforms the entire polygon: to the origin, rotate it and back again
