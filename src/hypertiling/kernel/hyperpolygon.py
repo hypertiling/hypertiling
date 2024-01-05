@@ -30,6 +30,7 @@ class HyperPolygon:
         self.angle = angle
         self.val = val
         self.orientation = orientation
+        self.edges = None
 
         if vertices is not None:
             if len(vertices) != self.p + 1 or not isinstance(vertices, np.ndarray):

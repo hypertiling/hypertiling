@@ -393,9 +393,12 @@ class KernelRotationalCommon(KernelStaticBase):
         hence these will later be identified via floating point comparison and we need to round
         """
 
-        for poly in self.polygons:
+        for i in range(len(self)):
+            poly = self.get_polygon(i)
             poly.edges = []
-            verts = np.round(poly.vertices(), digits)
+
+            vertices = self.get_vertices(i)
+            verts = np.round(vertices, digits)
 
             # append edges as tuples
             for i, vert in enumerate(verts[:-1]):
