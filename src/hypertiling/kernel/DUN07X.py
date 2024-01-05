@@ -7,7 +7,7 @@ from hypertiling.util import n_cell_centered
 from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
 from hypertiling.ion import htprint
 from hypertiling.check_numba import NumbaChecker, DelayChecker
-from hypertiling.kernel.SR_util import HyperPolygon
+from hypertiling.kernel.hyperpolygon import HyperPolygon
 
 
 class DunhamX(Tiling):
@@ -100,6 +100,11 @@ class DunhamX(Tiling):
         for poly in self.polygons:
             # (center, vertex_1, vertex_2, ..., vertex_p)
             yield np.roll(w2p_xyt_vector(poly), 1)
+
+
+    def __getitem__(self, idx):
+        # (center, vertex_1, vertex_2, ..., vertex_p)
+        return np.roll(self.polygons[idx], 1)
 
     def __len__(self) -> int:
         """
