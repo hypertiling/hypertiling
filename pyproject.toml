@@ -40,7 +40,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
 command_line = "-m pytest --cov --cov-config=pyproject.toml --cov-branch --cov-report term-missing --cov-report html:build/coverage"
-source = ["hypertiling", "tests"]
+source = ["hypertiling"] 
 
 [tool.coverage.report]
 omit = ["**/__init__.py", "**/__main__.py"]
