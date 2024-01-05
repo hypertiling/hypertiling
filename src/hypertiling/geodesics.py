@@ -82,10 +82,10 @@ def geodesic_midpoint(z1, z2):
     c = 1 - z2*z1c
     d = 1 - z2*z2c
     sqrt = np.sqrt(a*b*c*d)
-    den = 1 - z1*z1c*z2*z2c - sqrt
-    num = z1c + z2c - (z1 + z2)*z1c*z2c
+    num = 1 - z1*z1c*z2*z2c - sqrt
+    den = z1c + z2c - (z1 + z2)*z1c*z2c
     
-    return den/num
+    return np.where(den != 0, num/den, 0+0j)
 
 
 def geodesic_angles(z1, z2):
