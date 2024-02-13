@@ -17,13 +17,6 @@ class DunhamX(Tiling):
     which is available as kernel "Dunham" in DUN07.py
 
     Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
-
-    Sources:
-    - [Dun86] Dunham, Douglas. "Hyperbolic symmetry." Symmetry. Pergamon, 1986. 139-153.
-    - [Dun07] Dunham, Douglas. "An algorithm to generate repeating hyperbolic patterns." the Proceedings of ISAMA (2007): 111-118.
-    - [Dun09] Dunham, Douglas. "Repeating Hyperbolic Pattern Algorithms — Special Cases." unpublished (2009)
-    - [JvR12] von Raumer, Jakob. "Visualisierung hyperbolischer Kachelungen", Bachelor thesis (2012), unpublished
-
     """
 
     def __init__(self, p: int, q: int, n: int):
@@ -59,8 +52,12 @@ class DunhamX(Tiling):
 
     def _create_fundamental_polygon(self) -> np.array:
         """
-        Calculates the fundamental polygon
-        :return: np.array[p + 1, 3] = [center, vertex1, ...] in Weierstrass coordinates
+        Calculates the fundamental polygon.
+
+        Returns
+        -------
+        np.array
+            A 3D array of shape [p + 1, 3]. The array represents [center, vertex1, ...] in Weierstrass coordinates.
         """
         zs = np.empty((self.p + 1,), dtype=np.complex128)
         phis = np.arange(0, self.p) * self.phi
@@ -69,11 +66,16 @@ class DunhamX(Tiling):
         zs[self.p] = 0
         return p2w_xyt_vector(zs)
 
+
     def _compute_edge_reflections(self) -> Tuple[np.array, np.array]:
         """
-        Calculate the fundamental transformations on the edges
-        :return: Tuple[np.array[p, 3, 3], np.array[p, 2]] = ([trans1, ...], [[orient, pos], ...]]) transformations and
-                                                            their properties
+        Calculate the fundamental transformations on the edges.
+
+        Returns
+        -------
+        tuple
+            A tuple containing two numpy arrays. The first array is of shape [p, 3, 3] representing transformations 
+            ([trans1, ...]). The second array is of shape [p, 2] representing their properties ([[orient, pos], ...]).
         """
         # reflection transformation from [Dun86]
         tb = 2 * np.arccosh(np.cos(np.pi / self.q) / np.sin(np.pi / self.p))
@@ -91,7 +93,9 @@ class DunhamX(Tiling):
             trans_props[i, 1] = i
         return trans, trans_props
 
+
     # ---------- the interface --------------
+
     def __iter__(self) -> np.array:
         """
         Iterate over the polygons in the tiling
@@ -179,7 +183,6 @@ class DunhamX(Tiling):
     def _generate(self):
         """
         Generate the tiling according to the Dunham algorithm
-        :return: void
         """
         if self.n == 1:
             return
@@ -200,22 +203,37 @@ class DunhamX(Tiling):
                                                            trans_orient, trans_pos, -1)
 
 
-# ---------- numba optimized functions --------------
+
+# ---------- numba optimized helper functions --------------
 
 @NumbaChecker(
     "Tuple((float64[:,::1], int32, int32))(int32, int32[:,::1], float64[:,:,::1], float64[:,::1], int32, int32, int32)")
 def comp_tran(p: int, transs_props: np.array, transs: np.array, trans: np.array, trans_orient: int, trans_pos: int,
               shift: int) -> Tuple[np.array, int, int]:
     """
-    Calculate the new transformation for the edge
-    :param p: int = number of edges
-    :param transs_props: np.array[p, 2] = [[orient, pos], ...] for edge trans
-    :param transs: np.array[p, 3, 3] = [trans, ...] for edge trans
-    :param trans: np.array[3, 3] = transformation (current)
-    :param trans_orient: int = orientation of transformation (current) in {-1, 1}
-    :param trans_pos: int = position of transformation (current)
-    :param shift: int = -1
-    :return: Tuple[np.array[3, 3], int, int] = transformation, orientation, position
+    Calculate the new transformation for the edge.
+
+    Parameters
+    ----------
+    p : int
+        Number of edges.
+    transs_props : np.array
+        Array of shape [p, 2] representing [[orient, pos], ...] for edge trans.
+    transs : np.array
+        Array of shape [p, 3, 3] representing [trans, ...] for edge trans.
+    trans : np.array
+        Current transformation of shape [3, 3].
+    trans_orient : int
+        Orientation of transformation (current) in {-1, 1}.
+    trans_pos : int
+        Position of transformation (current).
+    shift : int
+        Fixed value -1.
+
+    Returns
+    -------
+    Tuple[np.array, int, int]
+        Transformation, orientation and position.
     """
     new_edge = (trans_pos + trans_orient * shift) % p
     trans = trans @ transs[new_edge]
@@ -229,15 +247,29 @@ def comp_tran(p: int, transs_props: np.array, transs: np.array, trans: np.array,
 def add_trans(p: int, transs_props: np.array, transs: np.array, trans: np.array, trans_orient: int, trans_pos: int,
               shift: int) -> Tuple[np.array, int, int]:
     """
-    Calculate the new transformation for the edge by adding a shift
-    :param p: int = number of edges
-    :param transs_props: np.array[p, 2] = [[orient, pos], ...] for edge trans
-    :param transs: np.array[p, 3, 3] = [trans, ...] for edge trans
-    :param trans: np.array[3, 3] = transformation (current)
-    :param trans_orient: int = orientation of transformation (current) in {-1, 1}
-    :param trans_pos: int = position of transformation (current)
-    :param shift: int = -1
-    :return: Tuple[np.array[3, 3], int, int] = transformation, orientation, position
+    Calculate the new transformation for the edge by adding a shift.
+
+    Parameters
+    ----------
+    p : int
+        Number of edges.
+    transs_props : np.array
+        Array of shape [p, 2] representing [[orient, pos], ...] for edge trans.
+    transs : np.array
+        Array of shape [p, 3, 3] representing [trans, ...] for edge trans.
+    trans : np.array
+        Current transformation of shape [3, 3].
+    trans_orient : int
+        Orientation of transformation (current) in {-1, 1}.
+    trans_pos : int
+        Position of transformation (current).
+    shift : int
+        Fixed value -1.
+
+    Returns
+    -------
+    Tuple[np.array, int, int]
+        Transformation, orientation and position.
     """
     if shift % p == 0:
         return trans, trans_orient, trans_pos
@@ -249,8 +281,16 @@ def add_trans(p: int, transs_props: np.array, transs: np.array, trans: np.array,
 def p2w_xyt_vector(z_array: np.array) -> np.array:
     """
     Calculate the Weierstrass coordinates for the coordinates given in z_array
-    :param z_array: np.array[p + 1] = coordinates in Poincaré coordinates
-    :return: np.array[p + 1, 3] = coordinates in Weierstrass coordinates
+
+    Parameters
+    ----------
+    z_array : np.array
+        coordinates in Poincaré coordinates
+
+    Returns
+    -------
+    np.array
+        coordinates in Weierstrass coordinates
     """
     result = np.empty((len(z_array), 3), dtype=np.float64)
     for index, z in enumerate(z_array):
@@ -262,10 +302,18 @@ def p2w_xyt_vector(z_array: np.array) -> np.array:
 def rotationW(phi: float) -> np.array:
     """
     Calculates the rotational matrix for a given phi
-    :param phi: float = angle of the rotation
-    :return: np.array[3, 3] = rotation matrix
+
+    Parameters
+    ----------
+    phi : float
+        angle of the rotation
+
+    Returns
+    -------
+    np.array
+        Weierstrass rotation matrix
     """
-    # return Weierstrass rotation matrix
+
     c = np.cos(phi)
     s = np.sin(phi)
     rot = np.zeros((3, 3), dtype=np.float64)
@@ -284,22 +332,44 @@ def generate_dun(p: int, q: int, n: int, polygons: np.array, polygon_counter: in
                  exposure: int, min_exp: int, max_exp: int) -> int:
     """
     Calculates the tiling and stores the polygons in polygons. Returns the number of constructed polygons
-    :param p: int = number of edges
-    :param q: int = number of polygons at a vertex
-    :param n: int = number of layers to construct
-    :param polygons: np.array[m, p + 1] = [[center, vertex1, ...], ...] = polygons in the tiling
-    :param polygon_counter: int = counter of how many polygons are already constructed
-    :param transs: np.array[p, 3, 3] = [trans, ...] for edge trans
-    :param transs_props: np.array[p, 2] = [[orient, pos], ...] for edge trans
-    :param trans_init: np.array[3, 3] = transformation (current)
-    :param trans_init_orient: int = orientation of transformation (current) in {-1, 1}
-    :param trans_init_pos: int = position of transformation (current)
-    :param layer: int = current layer in construction
-    :param exposure: int = number of open edges
-    :param min_exp: int = minimal number of open edges
-    :param max_exp: int = maximal number of open edges
-    :return: int = polygon counter after construction
+
+    Parameters
+    ----------
+    p : int
+        Number of edges
+    q : int
+        Number of polygons at a vertex
+    n : int
+        Number of layers to construct
+    polygons : np.array
+        Shape [m, p + 1]. Polygons in the tiling in format [[center, vertex1, ...], ...]
+    polygon_counter : int
+        Counter of how many polygons are already constructed
+    transs : np.array
+        Shape [p, 3, 3]. Each subarray represents a transformation for edge trans
+    transs_props : np.array
+        Shape [p, 2]. Each subarray represents [orient, pos] for edge trans
+    trans_init : np.array
+        Shape [3, 3]. Transformation (current)
+    trans_init_orient : int
+        Orientation of transformation (current) in {-1, 1}
+    trans_init_pos : int
+        Position of transformation (current)
+    layer : int
+        Current layer in construction
+    exposure : int
+        Number of open edges
+    min_exp : int
+        Minimal number of open edges
+    max_exp : int
+        Maximal number of open edges
+
+    Returns
+    -------
+    int
+        Polygon counter after construction
     """
+
     # add polygon to polygon array
     polygons[polygon_counter] = polygons[0] @ np.transpose(trans_init)  #
     polygon_counter += 1
@@ -336,15 +406,3 @@ def generate_dun(p: int, q: int, n: int, polygons: np.array, polygon_counter: in
         p_shift = (p_shift + 1) % p
 
     return polygon_counter
-
-
-if __name__ == "__main__":
-    from hypertiling.graphics.plot import plot_tiling
-    import matplotlib.pyplot as plt
-    import time
-
-    t1 = time.time()
-    t = DunhamX(5, 4, 5)
-    print(f"Took: {time.time() - t1} s")
-    plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
-    plt.show()
