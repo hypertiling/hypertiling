@@ -63,9 +63,10 @@ Welcome to the official documentation of the hypertiling package! This page is u
    neighbours
    transformations
    arithmetics
-   abc
+   representations
    graphics
    operators
+   abc
 
 
 
