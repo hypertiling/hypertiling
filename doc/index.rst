@@ -64,6 +64,12 @@ Welcome to the official documentation of the hypertiling package! This page is u
    abc
    misc
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Kernel API Reference
+
+   kernel_dun07
+
 
 Indices and tables
 ==================
