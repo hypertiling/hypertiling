@@ -5,6 +5,6 @@
 Source
 ============
 
-The package can be found and downloaded in our public `git
+The source code of the latest release is always available via the `PyPI project website <https://pypi.org/project/hypertiling>`__ and in our public `git
 repository <https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling>`__.
 

@@ -1,6 +1,6 @@
+import math
 import numpy as np
 from typing import List
-import math
 from .distance import weierstrass_distance, lorentzian_distance
 from .representations import p2w
 from .ion import htprint
