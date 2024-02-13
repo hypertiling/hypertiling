@@ -82,7 +82,37 @@ def circle_through_three_points(z1, z2, z3, verbose=False, eps=1e-10):
     Formulas used are derived from:
         http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
     """
-    ...
+    x1 = z1.real
+    y1 = z1.imag
+    x2 = z2.real
+    y2 = z2.imag
+    x3 = z3.real
+    y3 = z3.imag
+    
+    a1 = np.array([0, 0, 0, 1])
+    a2 = np.array([x1*x1+y1*y1, x1, y1, 1])
+    a3 = np.array([x2*x2+y2*y2, x2, y2, 1])
+    a4 = np.array([x3*x3+y3*y3, x3, y3, 1])
+    
+    A = np.stack([a1, a2, a3, a4])
+    
+    M00 = np.linalg.det(minor(A, 0, 0))
+    M01 = np.linalg.det(minor(A, 0, 1))
+    M02 = np.linalg.det(minor(A, 0, 2))
+    M03 = np.linalg.det(minor(A, 0, 3))
+    
+    # M00 being close to zero indicates collinearity
+    if np.abs(M00) < eps:
+        if verbose:
+            htprint("Warning", "Points are collinear! A radius of -1 is returned.")
+        return complex(0, 0), -1
+
+    # compute center and radius
+    x0 = 0.5 * M01 / M00
+    y0 = - 0.5 * M02 / M00
+    radius = np.sqrt(x0*x0 + y0*y0 + M03 / M00)
+    
+    return complex(x0, y0), radius
 
 
 def geodesic_midpoint(z1, z2):
