@@ -1,4 +1,4 @@
-.. Copyright (c) 2022, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2024, Manuel Schrauth, Florian Goth
 
 
 

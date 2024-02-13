@@ -1,4 +1,4 @@
-.. Copyright (c) 2022-2023, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2022-2024, Manuel Schrauth, Florian Goth
 
 .. raw:: html
 
@@ -55,12 +55,13 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
    core
-   abc
    distance
    hyperpolygon
-   transformations
    geodesics
    neighbours
+   transformations
+   arithmetics
+   abc
    misc
 
 
