@@ -51,7 +51,7 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 .. toctree::
    :maxdepth: 1
-   :caption: Modules
+   :caption: API Reference
 
 
    core
