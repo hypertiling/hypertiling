@@ -48,6 +48,8 @@ Welcome to the official documentation of the hypertiling package! This page is u
    examples/srg-kernel.ipynb
    examples/gr-kernel.ipynb
    examples/graph-kernels.ipynb
+   kernel_dun07x
+   kernel_dun07
 
 .. toctree::
    :maxdepth: 1
@@ -62,14 +64,11 @@ Welcome to the official documentation of the hypertiling package! This page is u
    transformations
    arithmetics
    abc
-   misc
+   graphics
+   operators
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Kernel API Reference
 
-   kernel_dun07x
-   kernel_dun07
+
 
 
 Indices and tables
