@@ -55,8 +55,8 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 
    core
-   kernels
    abc
+   distance
    hyperpolygon
    transformations
    geodesics
