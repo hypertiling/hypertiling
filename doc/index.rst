@@ -1,4 +1,4 @@
-.. Copyright (c) 2022-2023, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2022-2024, Manuel Schrauth, Florian Goth
 
 .. raw:: html
 
@@ -51,16 +51,17 @@ Welcome to the official documentation of the hypertiling package! This page is u
 
 .. toctree::
    :maxdepth: 1
-   :caption: Modules
+   :caption: API Reference
 
 
    core
-   kernels
-   abc
+   distance
    hyperpolygon
-   transformations
    geodesics
    neighbours
+   transformations
+   arithmetics
+   abc
    misc
 
 

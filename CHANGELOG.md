@@ -1,3 +1,16 @@
+
+## v1.3.4
+Date: 2024-01-05
+
+**Release Notes**
+
+- unified iterator behaviour: In this update we unify the iterator behaviour for tilings constructed with any kernel. Iteration will now return arrays of length p+1, which contain the coordinates of the corresponding cell center and its p outer vertices. Accessing a tiling element by index will also return this array.
+- new getter functions: we extend the existing getter functions by providing consistent behaviour for `get_center` and `get_vertices` all accross the tiling kernels and we introduce the `get_polygon` method which returns a dedicated polygon object.
+- all examples have been adjusted to the new interfaces
+- more unit tests
+- several minor bug fixes
+
+
 ## v1.3.3
 Date: 2023-11-07
 
