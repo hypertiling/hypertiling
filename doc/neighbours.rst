@@ -14,7 +14,7 @@ Spatial proximity search
 ------------------------
 Given these difficulties, a conceptually straightforward way of identifying adjacent cells in any regular geometry is by radius search, which is available as a standalone function in the
 ``neighbors`` module and used as the default algorithm behind `get_nbrs_list` in some kernels, such as DUN07. However, it should be emphasized that any neighbor search method that
-makes explicit use of Poincaré disk coordinates risks becoming inaccurate close to the unit circle, where the Euclidean distance between adjacent cells vanishes. For this reason, we recommend performing additional consistency checks whenever very large lattices are required. 
+makes explicit use of Poincaré disk coordinates risks becoming inaccurate close to the unit circle, where the Euclidean distance between adjacent cells vanishes. For this reason, we recommend performing additional consistency checks whenever very large lattices are required. Compare our `release publication <https://arxiv.org/abs/2309.10844>`__ for further information on adjacency in hyperbolic lattices.
 
 We provide the following functions:
 
