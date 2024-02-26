@@ -30,7 +30,7 @@ def lorentzian_distance(a, b):
 def weierstrass_distance(a, b):
     """
     Compute distance between two points given in the Weierstraß (also called hyperboloid)
-    coordinate representation (t,x,y)
+    coordinate representation (t,x,y).
 
     Parameters
     ----------
@@ -55,7 +55,7 @@ def weierstrass_distance(a, b):
 
 def disk_distance(z1, z2):
     """
-    Compute distance between two points given in terms of their Poincare disk coordinates
+    Compute distance between two points given in terms of their Poincare disk coordinates.
 
     Parameters
     ----------
