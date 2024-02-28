@@ -22,9 +22,15 @@ class DunhamX(Tiling):
     def __init__(self, p: int, q: int, n: int):
         """
         Initialize a tiling with parameters p, q, n
-        :param p: int = number of edges per polygon
-        :param q: int = number of polygons meeting at a vertex
-        :param n: int = number of layers
+
+        Parameters
+        ----------
+        p : int
+            Number of edges per polygon.
+        q : int
+            Number of polygons meeting at a vertex.
+        n : int
+            Number of layers.
         """
         super().__init__(p, q, n)
 
@@ -99,7 +105,11 @@ class DunhamX(Tiling):
     def __iter__(self) -> np.array:
         """
         Iterate over the polygons in the tiling
-        :yield: np.array[p + 1] = [center, vertex1, ...] polygon in Poincaré coordinates
+
+        Yields
+        ------
+        np.array
+            Array of shape (p + 1) representing [center, vertex1, ...] polygon in Poincaré coordinates
         """
         for poly in self.polygons:
             # (center, vertex_1, vertex_2, ..., vertex_p)
@@ -113,15 +123,27 @@ class DunhamX(Tiling):
     def __len__(self) -> int:
         """
         Returns the number of polygons in the tiling
-        :return: int = number of polygons
+
+        Returns
+        -------
+        int
+            Number of polygons.
         """
         return self.length
 
     def get_polygon(self, index: int) -> HyperPolygon:
         """
-        Returns the polygon at index as HyperPolygon object
-        :param index: int = index of the polygon
-        :return: HyperPolygon = polygon at index
+        Returns the polygon at index as HyperPolygon object.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        HyperPolygon
+            Polygon at index.
         """
         htprint("Warning",
                 "Method exists only for compatibility reasons. Usage is discouraged! Moreover, some of the functionality is not accessible for this kernel")
@@ -138,34 +160,61 @@ class DunhamX(Tiling):
 
     def get_vertices(self, index: int) -> np.array:
         """
-        Returns the p vertices of the polygon at index in Poincare disk coordinates
+        Returns the p vertices of the polygon at index in Poincare disk coordinates.
         Since this kernel's internal arithmetic is done in Weierstrass representation,
-        this requires some coordinate transform
+        this requires some coordinate transform.
+
         Time-complexity: O(1)
-        Overwrites method of base class
-        :param index: int = index of the polygon
-        :return: np.array[np.complex128][p] = vertices of the polygon
+        Overwrites method of base class.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array of shape (p,) containing vertices of the polygon.
         """
         return w2p_xyt_vector(self.polygons[index][:-1])
 
     def get_center(self, index: int) -> np.complex128:
         """
-        Returns the center of the polygon at index in Poincare disk coordinates
+        Returns the center of the polygon at index in Poincare disk coordinates.
         Since this kernel's internal arithmetic is done in Weierstrass representation,
-        this requires a coordinate transform
+        this requires a coordinate transform.
+
         Time-complexity: O(1)
-        Overwrites method of base class
-        :param index: int = index of the polygon
-        :return:  -> np.complex128: = center of the polygon
+        Overwrites method of base class.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
         """
         return w2p_xyt(self.polygons[index][-1])
 
     def get_angle(self, index: int) -> float:
         """
         Returns the angle to the center of the polygon at index.
+
         Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: float = angle of the polygon
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        float
+            Angle of the polygon.
         """
         return np.angle(self.get_center(index))
 
