@@ -190,7 +190,7 @@ class Dunham(Tiling):
         the next layer, and thus shares an edge with the previous layer.
         A p-gon has maximum exposure if it has the most edges in common with the 
         next layer, and thus only shares a vertex with the previous layer.
-        We abbreviate these values as min_exp and max_exp, respectively
+        We abbreviate these values as min_exp and max_exp, respectively.
         """
 
         self.max_exp = self.p - 2
