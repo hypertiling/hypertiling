@@ -32,14 +32,23 @@ class GenerativeReflectionGraph(Graph):
     def __init__(self, p: int, q: int, n: int, tol: float = 1e-8, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
+
         Time-complexity: O(p^2 m + n + m / p * n)
-        :param p: int = number of vertices per cells
-        :param q: int = number of cells meeting at each vertex
-        :param n: int =  number of layers to be constructed
-        :param degtol: int = tolerance at boundary in degrees
-        :param tol: int = tolerance at boundary for neighbor matching
-        :param mangle: float = rotation of the center polygon in degrees
-                               (prevents boundaries from being along symmetry axis)
+
+        Parameters
+        ----------
+        p : int
+            Number of vertices per cells.
+        q : int
+            Number of cells meeting at each vertex.
+        n : int
+            Number of layers to be constructed.
+        degtol : int
+            Tolerance at boundary in degrees.
+        tol : int
+            Tolerance at boundary for neighbor matching.
+        mangle : float
+            Rotation of the center polygon in degrees (prevents boundaries from being along symmetry axis).
         """
         super().__init__(p, q, n, mangle)
 
@@ -66,17 +75,31 @@ class GenerativeReflectionGraph(Graph):
     def __getitem__(self, item):
         """
         Get neighbor of the polygon at index.
+
         Time-complexity (single polygon): O(p)
-        :param item: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        item : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         return self.get_nbrs(item)
 
     def __len__(self):
         """
         Return the number of polygons in the tiling
+
         Time-complexity: O(1)
-        :return: int = number of polygons in the tiling
+
+        Returns
+        -------
+        int
+            Number of polygons in the tiling
         """
         return self.length
 
@@ -85,7 +108,11 @@ class GenerativeReflectionGraph(Graph):
     def _generate(self):
         """
         Generates the graph structure for the specified tiling.
-        :return: np.array[uint32, uint32] = array containing the neighbor relations
+
+        Returns
+        -------
+        np.array[uint32, uint32]
+            Array containing the neighbor relations.
         """
         return graph_util.generate_nbrs(self.p, self.q, self.r, self._sector_lengths, self.mangle,
                                         self.tol)
@@ -95,10 +122,20 @@ class GenerativeReflectionGraph(Graph):
         Protected(!)
         Takes an index (for the tiling) and a function defined in the fundamental sector.
         Calculates the corresponding sector_index, applies function f, and corrects the result to index.
+
         Time-complexity: O(f(index))
-        :param index: int = index of a polygon in the tiling
-        :param f: Callable = function to apply on sector_index
-        :return: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
+
+        Parameters
+        ----------
+        index : int
+            Index of a polygon in the tiling.
+        f : Callable
+            Function to apply on sector_index.
+
+        Returns
+        -------
+        np.array[p + 1]
+            Polygon of the segment polys or its rotational duplicates.
         """
         if index != 0:
             # get equivalent poly in sector
@@ -119,9 +156,18 @@ class GenerativeReflectionGraph(Graph):
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+
         Time-complexity: O(p)
-        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         neighbor_indices = self._nbrs[sector_index]
 
@@ -133,9 +179,18 @@ class GenerativeReflectionGraph(Graph):
         """
         Protected(!)
         Returns the reflection level the polygon at index belongs to.
+
         Time-complexity: O(log(n + 1))
-        :param sector_index: int = index of the polygon
-        :return: int = reflection level
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Reflection level.
         """
         pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)
         if self._sector_lengths_cumulated[pos] > sector_index:
@@ -146,10 +201,19 @@ class GenerativeReflectionGraph(Graph):
 
     def get_coord(self, index: int) -> np.complex128:
         """
-        Get the coordinates for the center of the node at index
+        Get the coordinates for the center of the node at index.
+
         Time-complexity: O(1)
-        :param index: int = index of the node of consideration
-        :return: np.complex128 = center of the node in complex coordinates
+
+        Parameters
+        ----------
+        index : int
+            Index of the node of consideration.
+
+        Returns
+        -------
+        np.complex128
+            Center of the node in complex coordinates.
         """
         if index >= self.center_coords.shape[0]:
             sector = (index - 1) // (self.center_coords.shape[0] - 1)
@@ -162,9 +226,17 @@ class GenerativeReflectionGraph(Graph):
     def check_integrity(self, tol: float = 1e-8):
         """
         Controls the integrity of the tiling. Checks for correct number of neighbors and their distances.
+
         Time-complexity: O(mp)
-        :param tol: float = tolerance of the neighboring distance (to accept)
-        :return: void
+
+        Parameters
+        ----------
+        tol : float
+            Tolerance of the neighboring distance (to accept).
+
+        Returns
+        -------
+        void
         """
         dist_ref = util.f_dist_disc(self.get_coord(0), self.get_coord(1)) + tol  # 1
         for i in range(self.length):  # exec loop m times
@@ -180,8 +252,13 @@ class GenerativeReflectionGraph(Graph):
     def get_nbrs_list_sector(self) -> List[List[int]]:
         """
         Returns a list of lists of the neighbors for the graph.
+
         Time-complexity: O(m)
-        :return: List[List[int]] = List for each polygons neighbors
+
+        Returns
+        -------
+        List[List[int]]
+            List for each polygon's neighbors.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -192,8 +269,13 @@ class GenerativeReflectionGraph(Graph):
     def get_nbrs_list(self) -> List[List[int]]:
         """
         Create and return list of all neighbors
+
         Time-complexity: O(mp)
-        :return: List[List[int]] = list of all neighbors for all polygons
+
+        Returns
+        -------
+        List[List[int]]
+            List of all neighbors for all polygons.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -215,7 +297,17 @@ class GenerativeReflectionGraph(Graph):
 
         return neighbors
 
-    def get_nbrs(self, index):
+    def get_nbrs(self, index: int) -> List[int]:
+        """
+        Create and return list of all neighbors of index
+
+        Time-complexity: O(p)
+
+        Returns
+        -------
+        List[int]
+            List of all neighbors for polygon at index.
+        """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
             return []
@@ -224,9 +316,18 @@ class GenerativeReflectionGraph(Graph):
     def get_reflection_level(self, index) -> int:
         """
         Get the neighbors of a polygon at index
+
         Time-complexity: O(log(n + 1))
-        :param index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if index == 0:
             return 0
