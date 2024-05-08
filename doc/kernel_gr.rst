@@ -2,7 +2,7 @@
 
 
 Generative Reflection (GR) Kernel
-=============
+=================================
 
 With the GR family, ``hypertiling`` offers a set of
 generators that utilize python's generator functions
@@ -31,7 +31,7 @@ The actual algorithm is implemented in the GR kernel
 
 
 Methods
-##########
+#######
 
 To hide the generative nature, the kernel provides an interface shielding
 the user from its generator mechanics. Many of the protected methods, i.e.
@@ -39,7 +39,7 @@ methods who's name start with an underscore '_', act on the generative nature.
 Methods without underscore hide the generative nature and can be used as with the other kernels.
 
 Integrity
-***************
+*********
 
 One speciality of the GR-family is the implementation of a '''check_integrity''' method.
 The exact tests performed are, even within the GR-family, kernel dependent.
@@ -87,7 +87,7 @@ disadvantages. Please see [hyp] for a more detailed performance measurement.
 
 
 Miscellaneous methods
-******************
+*********************
 
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection.generate
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection.find
@@ -102,7 +102,7 @@ Special methods
 
 
 Generator methods (protected)
-*****************
+*****************************
 
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection._find
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection._get_reflection_level_in_sector
@@ -113,7 +113,7 @@ Generator methods (protected)
 
 
 Support methods (protected)
-***************
+***************************
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection._polygen
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection._wiggle_index
 .. autoclass:: hypertiling.kernel.GR.GenerativeReflection._index_from_ref_layer_index
