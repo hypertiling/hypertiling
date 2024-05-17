@@ -215,7 +215,7 @@ tests-full-cov:
 #### ----------- DOCS ------------ ####
 
 sphinx-doc:
-  image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+  image: python:3.10
   stage: install
   artifacts:
     paths:
