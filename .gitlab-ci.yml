@@ -216,7 +216,7 @@ tests-full-cov:
 
 sphinx-doc:
   image: python:3.10
-  stage: install
+  stage: docs
   artifacts:
     paths:
       - doc/*
