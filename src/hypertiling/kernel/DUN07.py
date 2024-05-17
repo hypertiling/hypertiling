@@ -15,13 +15,6 @@ class Dunham(Tiling):
     translated to Python; specifically, this is the improved version published in [Dun07]
 
     Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
-
-    Sources:
-    - [Dun86] Dunham, Douglas. "Hyperbolic symmetry." Symmetry. Pergamon, 1986. 139-153.
-    - [Dun07] Dunham, Douglas. "An algorithm to generate repeating hyperbolic patterns." the Proceedings of ISAMA (2007): 111-118.
-    - [Dun09] Dunham, Douglas. "Repeating Hyperbolic Pattern Algorithms — Special Cases." unpublished (2009)
-    - [JvR12] von Raumer, Jakob. "Visualisierung hyperbolischer Kachelungen", Bachelor thesis (2012), unpublished
-
     """
 
     def __init__(self, p, q, n):
@@ -45,17 +38,10 @@ class Dunham(Tiling):
         # construct tiling
         self._generate()
 
+
     def _create_fundamental_polygon(self):
         """
-        Constructs the vertices of the fundamental hyperbolic {p,q} polygon
-
-        Parameters
-        ----------
-        center : str
-            decides whether the fundamental cell is construct centered at the origin ("cell", default) 
-            or with the origin being one of its vertices ("vertex")
-        rotate_by : float
-            angle of rotation of the fundamental polygon, default is the magic angle mangle
+        This function constructs the vertices of the fundamental hyperbolic {p,q} polygon.
         """
 
         r = fund_radius(self.p, self.q)
@@ -71,6 +57,7 @@ class Dunham(Tiling):
 
         # transform to Weierstrass coordinates (TODO: Use those coordinates already during construction)
         self.fund_poly = p2w_xyt_vector(polygon._vertices)
+
 
     # ---------- the interface --------------
 
@@ -91,11 +78,19 @@ class Dunham(Tiling):
 
     def get_polygon(self, index: int) -> HyperPolygon:
         """
-        Returns the polygon at index as HyperPolygon object
-        :param index: int = index of the polygon
-        :return: HyperPolygon = polygon at index
+        Returns the polygon at index as HyperPolygon object. Method exists mainly for compatibility reasons. Usage is discouraged!
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        HyperPolygon
+            Polygon at index.
         """
-        htprint("Warning", "Method exists only for compatibility reasons. Usage is discouraged!")
+        htprint("Warning", "Method exists mainly for compatibility reasons. Usage is discouraged!")
 
         polygon = HyperPolygon(self.p)
         polygon.idx = index
@@ -107,37 +102,72 @@ class Dunham(Tiling):
 
         return polygon
     
-
     def get_vertices(self, index: int) -> np.array:
         """
-        Returns the p vertices of the polygon at index in Poincare disk coordinates
+        Returns the p vertices of the polygon at index in Poincare disk coordinates.
         Since this kernel's internal arithmetic is done in Weierstrass representation,
-        this requires some coordinate transform
-        Time-complexity: O(1)
-        Overwrites method of base class
-        :param index: int = index of the polygon
-        :return: np.array[np.complex128][p] = vertices of the polygon
+        this requires some coordinate transform.
+        
+        This method overwrites the method of the base class.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            p vertices of the polygon.
+
+        Notes
+        -----
+        Time complexity of this method is O(1).
         """
         return w2p_xyt_vector(self.polygons[index][:-1])
+    
 
     def get_center(self, index: int) -> np.complex128:
         """
-        Returns the center of the polygon at index in Poincare disk coordinates
+        Returns the center of the polygon at index in Poincare disk coordinates.
         Since this kernel's internal arithmetic is done in Weierstrass representation,
-        this requires a coordinate transform
+        this requires a coordinate transform.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
+
+        Notes
+        -----
         Time-complexity: O(1)
-        Overwrites method of base class
-        :param index: int = index of the polygon
-        :return:  -> np.complex128: = center of the polygon
+        Overwrites method of base class.
         """
         return w2p_xyt(self.polygons[index][-1])
+
 
     def get_angle(self, index: int) -> float:
         """
         Returns the angle to the center of the polygon at index.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        float
+            Angle of the polygon.
+
+        Notes
+        -----
         Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: float = angle of the polygon
         """
         return np.angle(self.get_center(index))
 
@@ -160,7 +190,7 @@ class Dunham(Tiling):
         the next layer, and thus shares an edge with the previous layer.
         A p-gon has maximum exposure if it has the most edges in common with the 
         next layer, and thus only shares a vertex with the previous layer.
-        We abbreviate these values as min_exp and max_exp, respectively
+        We abbreviate these values as min_exp and max_exp, respectively.
         """
 
         self.max_exp = self.p - 2
@@ -168,8 +198,25 @@ class Dunham(Tiling):
 
     def _compute_edge_reflections(self):
         """
-        Dunham's algorithm [Dun07] requires a list of reflection transformation
-        across the edges of a fundamental polygon. Those are computed here
+        Computes a list of reflection transformations across the edges of a fundamental polygon as required by Dunham's algorithm [Dun07].
+
+        Generates a list of DunhamTransformation objects, each representing a reflection transformation associated with an edge of the fundamental polygon.
+
+        Steps:
+        1. Computes the reflection transformation matrix using the formula from [Dun86].
+        2. Iterates over all edges of the polygon.
+        3. Computes the angle of the midpoint of the current edge.
+        4. Computes the associated rotation matrices.
+        5. Performs the following transformations in sequence:
+            - Rotates the edge to make it parallel to the y-axis.
+            - Performs a reflection in the x-direction on the radius of the fundamental cell.
+            - Rotates the edge back to its original orientation.
+        6. Wraps the resulting transformation matrix in a DunhamTransformation object and adds it to the list.
+
+        Note: The proper usage of the orientation value is unexplained in Dunham's papers, 
+        so we stick with -1 in combination with (0,1,2,3,...) as edge indices. 
+        This produces a proper tiling (compare [JvR12] section 3.2 for further details).
+        
         """
 
         self.edge_tran = []
@@ -202,33 +249,96 @@ class Dunham(Tiling):
             # compare [JvR12] section 3.2 for further details
             self.edge_tran.append(DunhamTransformation(edge_trafo, -1, i))
 
+
     def _draw_pgon_pattern(self, trans):
         """
-        Apply transformation to copy of fundamental polygon and add resulting polygon to tiling
+        This method applies a given transformation to a copy of the fundamental polygon and adds the 
+        resulting polygon to the tiling.
+
         Since hypertiling uses Poincare disk coordinates, but this kernel uses Weierstrass (hyperboloid)
-        coordinates, this requires some transformations between the two representations
+        coordinates, it requires transformations between the two representations.
+
+        Parameters
+        ----------
+        trans : Transformation
+            The transformation to apply to the fundamental polygon.
+
+        Returns
+        -------
+        None
         """
         vrtsW = copy.deepcopy(self.fund_poly)
         vrtsW = [trans.matrix @ k for k in vrtsW]
         self.polygons.append(vrtsW)
 
-    # increment transformation
+
     def _add_to_tran(self, tran, shift):
+        """
+        Helper function to adjust the transformation used in the Dunham tiling algorithm
+
+        Parameters
+        ----------
+        tran : object
+            The original transformation.
+        shift : int
+            The shift value used to adjust the transformation.
+
+        Returns
+        -------
+        object
+            The adjusted transformation.
+        """
         if shift % self.p == 0:
             return tran
         else:
             return self._compute_tran(tran, shift)
 
-    # helper
-    def _compute_tran(self, tran, shift):
-        newEdge = (tran.p_position + tran.orientation * shift) % self.p
 
+    def _compute_tran(self, tran, shift):
+        """
+        Helper function to adjust the transformation used in the Dunham tiling algorithm
+        
+        Parameters
+        ----------
+        tran : DunhamTransformation
+            The original transformation object.
+        shift : int
+            The amount to shift the transformation.
+
+        Returns
+        -------
+        DunhamTransformation
+            The new transformation object after applying the edge transformations.
+        """
+        newEdge = (tran.p_position + tran.orientation * shift) % self.p
         res = tran * self.edge_tran[newEdge]
         return res
 
+
     def _replicate_motif(self, poly, initialTran, layer, exposure):
         """
-        central recursion step
+        This is the central recursion step for the Dunham tiling algorithm.
+
+        This function draws a polygon pattern, then if the current layer is less than the desired layers `self.n`,
+        it determines which vertex to start at based on the exposure. It then iterates over the vertices and polygons,
+        updating the transformations and exposures accordingly, and recursively calls itself.
+
+        Parameters
+        ----------
+        poly : object
+            The polygonal object to be replicated.
+        initialTran : DunhamTransformation
+            The initial transformation to be applied.
+        layer : int
+            The current layer of the recursion.
+        exposure : int
+            The current exposure level.
+
+        Notes
+        -----
+        The function first draws a polygon pattern using `initialTran`. If `layer` is less than `self.n`, it determines
+        which vertex to start at based on whether `exposure` is equal to `self.min_exp`. It then iterates over the vertices
+        and polygons, updating transformations and exposures, and recursively calls itself.
         """
 
         # Draw polygon
@@ -236,7 +346,7 @@ class Dunham(Tiling):
 
         # Proceed to desired depth
         if layer < self.n:
-            # Determine which vertex to start at
+            # Determine which vertex to start at based on exposure
             min_exposure = (exposure == self.min_exp)
             pShift = 1 if min_exposure else 0
             verticesToDo = self.p - 3 if min_exposure else self.p - 2
@@ -244,25 +354,45 @@ class Dunham(Tiling):
             # Iterate over vertices
             for i in range(1, verticesToDo + 1):
                 first_i = (i == 1)
+                # Compute transformation to be applied
                 pTran = self._compute_tran(initialTran, pShift)
                 qSkip = -1 if first_i else 0
+                # Adjust transformation
                 qTran = self._add_to_tran(pTran, qSkip)
                 pgonsToDo = self.q - 3 if first_i else self.q - 2
 
                 # Iterate about a vertex
                 for j in range(1, pgonsToDo + 1):
                     first_j = (j == 1)
+                    # Determine new exposure level
                     newExposure = self.min_exp if first_j else self.max_exp
+                    # Recursive call
                     self._replicate_motif(poly, qTran, layer + 1, newExposure)
+                    # Adjust transformation
                     qTran = self._add_to_tran(qTran, -1)
 
                 # Advance to next vertex
                 pShift = (pShift + 1) % self.p
 
+
     def _replicate(self, poly):
         """
-        Top-level driver routine;
-        draws the second layer and kicks off the recursion
+        This is the top-level driver routine for the Dunham tiling algorithm.
+
+        This function initiates the drawing of the second layer and starts the recursion.
+
+        Parameters
+        ----------
+        poly : object
+            The polygonal object to be replicated.
+
+        Notes
+        -----
+        This function first creates an identity transformation and uses it to draw a fundamental polygon pattern.
+        If the number of desired layers (self.n) is 1, the function returns immediately.
+        Otherwise, it iterates over each vertex of the polygon (self.p), and for each vertex, it further iterates
+        over a certain number of polygons (self.q - 2).
+        For each polygon, it determines the exposure level, replicates the motif, and modifies the transformation.
         """
 
         # Add fundamental polygon to list
@@ -282,25 +412,65 @@ class Dunham(Tiling):
                 self._replicate_motif(poly, qTran, 2, exposure)
                 qTran = self._add_to_tran(qTran, -1)
 
+
     def _generate(self):
+        """
+        This function generates the tiling starting from a fundamental polygon
+        """
         self._replicate(self.fund_poly)
 
 
 class DunhamTransformation:
     """
-    Transformations contain:
-    - the transformation matrix
-    - the orientation (-1 or +1)
-    - an index of the edge across which the last transformation was made
+    The DunhamTransformation class is used to represent transformations that include a transformation matrix,
+    an orientation value (-1 or +1), and an index of the last transformation's edge.
+
+    Attributes
+    ----------
+    matrix : np.array
+        The transformation matrix.
+    orientation : int
+        The orientation of the transformation (-1 or +1).
+    p_position : int
+        The index of the edge across which the last transformation was made.
+
+    Methods
+    -------
+    __mul__(self, other)
+        Specifies how two `DunhamTransformation` objects are multiplied.
     """
 
     def __init__(self, matrix, orientation, p_position):
+        """
+        Parameters
+        ----------
+        matrix : np.array
+            The transformation matrix.
+        orientation : int
+            The orientation of the transformation (-1 or +1).
+        p_position : int
+            The index of the edge across which the last transformation was made.
+        """
+
         self.matrix = matrix
         self.orientation = orientation
         self.p_position = p_position
 
     def __mul__(self, other):
-        # specify how trafos are multiplied
+        """
+        Specifies how two `DunhamTransformation` objects are multiplied.
+
+        Parameters
+        ----------
+        other : DunhamTransformation
+            The other `DunhamTransformation` object.
+
+        Returns
+        -------
+        DunhamTransformation
+            The product of the multiplication of two `DunhamTransformation` objects.
+        """
+
         new_matrix = self.matrix @ other.matrix
         new_orient = self.orientation * other.orientation
         new_p_pos = other.p_position
@@ -311,14 +481,3 @@ def rotationW(phi):
     # return Weierstrass rotation matrix
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
-
-if __name__ == "__main__":
-    from hypertiling.graphics.plot import plot_tiling
-    import matplotlib.pyplot as plt
-    import time
-
-    t1 = time.time()
-    t = Dunham(5, 4, 3)
-    print(f"Took: {time.time() - t1} s")
-    plot_tiling(t, np.ones(len(t)), alpha=0.5, ec="k")
-    plt.show()

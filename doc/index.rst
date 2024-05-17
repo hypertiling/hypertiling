@@ -1,4 +1,4 @@
-.. Copyright (c) 2022-2023, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2022-2024, Manuel Schrauth, Florian Goth
 
 .. raw:: html
 
@@ -16,12 +16,12 @@
 The hypertiling documentation
 =============================
 
-Welcome to the official documentation of the hypertiling package! This page is under construction and therefore may not contain the entire functionality of the package yet.
+Welcome to the official hypertiling package documentation! This guide provides comprehensive instructions on how to install and use the package. Additionally, it offers an overview of the package's functionalities and capabilities, complemented by an extensive API reference.
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Get Hypertiling
+   :caption: Get hypertiling
 
    installation
    source
@@ -48,28 +48,26 @@ Welcome to the official documentation of the hypertiling package! This page is u
    examples/srg-kernel.ipynb
    examples/gr-kernel.ipynb
    examples/graph-kernels.ipynb
+   kernel_dun07x
+   kernel_dun07
 
 .. toctree::
    :maxdepth: 1
-   :caption: Modules
+   :caption: API Reference
 
 
    core
-   kernels
-   abc
+   distance
    hyperpolygon
-   transformations
    geodesics
    neighbours
-   misc
+   transformations
+   arithmetics
+   representations
+   graphics
+   operators
+   abc
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 
 
