@@ -11,6 +11,9 @@ except Exception as error:
 
 
 class NumbaChecker:
+    """
+    A class that checks if Numba is available and applies jit compilation to a function if possible.
+    """
 
     def __init__(self, signature=None, *args, **kwargs):
         self.args = args
@@ -18,6 +21,16 @@ class NumbaChecker:
         self.signature = signature
 
     def __call__(self, f):
+        """
+        Applies Numba's jit compilation to the function if Numba is available. If a signature is provided,
+        it will be used in the compilation, otherwise a warning is issued and lazy compilation is used.
+
+        Args:
+        f (Callable): The function to be compiled.
+
+        Returns:
+        Callable: The compiled function if Numba is available, else the original function.
+        """
         if AVAILABLE:
             if not (self.signature is None):
                 return njit(self.signature, *self.args, **self.kwargs, cache=True)(f)

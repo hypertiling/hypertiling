@@ -9,7 +9,22 @@ from .ion import htprint
 
 def minor(M, i, j):
     """
-    return the "minor" of a matrix w.r.t index (i,j)
+    Return the "minor" of a matrix with respect to index (i,j).
+
+    Parameters
+    ----------
+    M : ndarray
+        Input matrix.
+    i : int
+        Row index to be deleted.
+    j : int
+        Column index to be deleted.
+
+    Returns
+    -------
+    M : ndarray
+        Minor of the input matrix.
+
     """
     M = np.delete(M, i, 0)
     M = np.delete(M, j, 1)
@@ -18,7 +33,18 @@ def minor(M, i, j):
 
 def unit_circle_inversion(z):
     """
-    perform inversion of input z with respect to the unit circle
+    Perform inversion of input z with respect to the unit circle.
+
+    Parameters
+    ----------
+    z : complex
+        Complex number to be inverted.
+
+    Returns
+    -------
+    z : complex
+        Inverted complex number.
+
     """
     denom = z.real**2 + z.imag**2
     return complex(z.real/denom, z.imag/denom)
@@ -26,16 +52,35 @@ def unit_circle_inversion(z):
 
 def circle_through_three_points(z1, z2, z3, verbose=False, eps=1e-10):
     """
-    Construct Euclidean circle through three points (z1, z2, z3)
-    
-    Input: three points represented as complex numbers
-    Output: center of the circle and radius
-    
-    In case the points are collinear within a precision of "eps"
-    a radius of -1 is returned
+    Construct Euclidean circle through three points (z1, z2, z3).
 
-    formulas from here: 
-    http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
+    Calculates the center and radius of the circle passing through the three points.
+    In case the points are collinear within a precision of "eps", a radius of -1 is returned.
+
+    Parameters
+    ----------
+    z1 : complex
+        First point represented as a complex number.
+    z2 : complex
+        Second point represented as a complex number.
+    z3 : complex
+        Third point represented as a complex number.
+    verbose : bool, optional
+        If True, prints a warning when the points are collinear. Default is False.
+    eps : float, optional
+        Precision for collinearity check. Default is 1e-10.
+
+    Returns
+    -------
+    complex
+        Center of the circle represented as a complex number.
+    float
+        Radius of the circle. Returns -1 if the points are collinear.
+
+    References
+    ----------
+    Formulas used are derived from:
+        http://web.archive.org/web/20161011113446/http://www.abecedarical.com/zenosamples/zs_circle3pts.html
     """
     x1 = z1.real
     y1 = z1.imag
@@ -72,7 +117,27 @@ def circle_through_three_points(z1, z2, z3, verbose=False, eps=1e-10):
 
 def geodesic_midpoint(z1, z2):
     """
-    Compute geodesic midpoint between z1 and z2
+    Compute the geodesic midpoint between two complex numbers, `z1` and `z2`.
+
+    The function first applies a Möbius transformation to move `z1` and `z2`
+    such that `z1` is at the origin (0). It then calculates the distance 
+    between the origin and the new location of `z2` (`z2n`). 
+    This distance is transformed into a Cartesian radius `r` using the hyperbolic tangent function.
+    An angle is added to `r` (using Euler's formula), which is then transformed back 
+    to the original location by applying the inverse Möbius transformation.
+
+    Parameters
+    ----------
+    z1 : complex
+        First point on the Poincare disk
+    z2 : complex
+        Second point on the Poincare disk
+
+    Returns
+    -------
+    complex
+        The geodesic midpoint of `z1` and `z2`.
+
     """
     z1c = z1.conjugate()
     z2c = z2.conjugate()
@@ -90,11 +155,40 @@ def geodesic_midpoint(z1, z2):
 
 def geodesic_angles(z1, z2):
     """
-    Helper function for "geodesic_arc"
+    Compute the angles of a geodesic between two complex numbers `z1` and `z2`.
+
+    This function serves as a helper for "geodesic_arc". It first checks if `z1` is not too close to the origin,
+    and if so, calculates the inverse of `z1` on the unit circle and computes the circle that passes through `z1`, `z2`, and the inversion point.
+    If `z1` is too close to the origin, it sets the center of the circle to infinity and the radius to -1.
+
+    If the calculated radius is -1 (indicating that the points are collinear), it returns 0 for both angles, the center of the circle, and the radius.
+    Otherwise, it calculates the angles from the center of the circle to `z1` and `z2` and returns these angles, the center of the circle, and the radius.
+
+    Parameters
+    ----------
+    z1 : complex
+        First point on the Poincare disk
+    z2 : complex
+        Second point on the Poincare disk
+
+    Returns
+    -------
+    angle1 : float
+        The angle from the center of the circle to `z1`.
+    angle2 : float
+        The angle from the center of the circle to `z2`.
+    zc : complex
+        The center of the circle.
+    radius : float
+        The radius of the circle. If the points are collinear, this is -1.
+
+    Notes
+    -----
+    The origin needs some extra care since it is mapped to infinity.
+    In case points are collinear, a radius of -1 is returned.
     """
     
-    # the origin needs some extra care
-    # since it is mapped to infinity
+    # handle points close to the origin
     if np.abs(z1) > 1e-15:
         z3 = unit_circle_inversion(z1)
         zc, radius = circle_through_three_points(z1, z2, z3)
@@ -119,7 +213,30 @@ def geodesic_angles(z1, z2):
 
 def geodesic_arc(z1, z2, **kwargs):
     """
-    Return hyperbolic line segment connecting z1 and z2 as matplotlib drawing object
+    Returns a hyperbolic line segment connecting z1 and z2 as a matplotlib drawing object.
+
+    If the points are collinear, a straight line is drawn using matplotlib.patch.Arrow. 
+    Otherwise, a hyperbolic arc is drawn using matplotlib.patch.Arc.
+
+    Parameters
+    ----------
+    z1 : complex
+        First point represented as a complex number.
+    z2 : complex
+        Second point represented as a complex number.
+    **kwargs : dict
+        Additional parameters to be passed to the drawing function.
+
+    Returns
+    -------
+    matplotlib.lines.Line2D or matplotlib.patches.Arc
+        A matplotlib object representing the line or arc.
+
+    Notes
+    -----
+    The function uses the geodesic_angles function to compute necessary parameters 
+    for the arc. It also performs angle normalization to ensure that negative angles 
+    are correctly handled.
     """
     t1, t2, zc, r = geodesic_angles(z1, z2)
 

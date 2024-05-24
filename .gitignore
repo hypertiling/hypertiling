@@ -7,5 +7,8 @@
 *.pyc
 /src/hypertiling/kernels/__pycache__
 /src/hypertiling/kernel/__pycache__
+/.venv
 venv
 /build
+/hypertiling
+/hypertiling.egg-info

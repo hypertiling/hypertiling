@@ -88,13 +88,15 @@ def degree(neighbours, weights=None, boundary=None):
         return coo_matrix((bulkval, (bulkpos,bulkpos)), shape=(size,size))
 
 
-# Identity matrix with optional weights
-# points on the boundary are filtered out (rows left empty)
+
 
 def identity(neighbours, weights=None, boundary=None):
 
     """
     Identity matrix completing the matrix tool kit
+
+    Identity matrix with optional weights
+    points on the boundary are filtered out (rows left empty)
 
     Arguments:
     ----------

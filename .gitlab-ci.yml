@@ -85,6 +85,7 @@ install-bullseye:
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
+  when: manual
   before_script:
     - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
     - python3 --version

@@ -25,11 +25,22 @@ PI2 = 2 * np.pi
 def any_is_close(zs: np.array, z: np.complex128, tol: float) -> bool:
     """
     Compares if the complex z is in the array zs, with tolerance tol
+
     Time-complexity: O(p)
-    :param zs: np.array[complex] = array with p complex to compare
-    :param z: complex = the value to search for
-    :param tol: float = tolerance of the comparison (absolut)
-    :result: bool = True if float is in array else False
+
+    Parameters
+    ----------
+    zs : np.array[complex]
+        Array with p complex numbers to compare.
+    z : complex
+        The value to search for.
+    tol : float
+        Tolerance of the comparison (absolute).
+
+    Returns
+    -------
+    bool
+        True if float is in array else False
     """
     return np.any(np.abs(zs - z) <= tol)
 
@@ -40,11 +51,22 @@ def any_is_close(zs: np.array, z: np.complex128, tol: float) -> bool:
 def is_close_within_tol(z1: complex, z2: complex, tol: float) -> bool:
     """
     Compares if the complex z1 is equal to z2 up to tol
+
     Time-complexity: O(1)
-    :param z1: Union[complex, float, int] = first value
-    :param z2: Union[complex, float, int] = second value
-    :param tol: float = tolerance of the comparison (absolut)
-    :result: bool = True if both are equal up to tol
+
+    Parameters
+    ----------
+    z1 : Union[complex, float, int]
+        First value.
+    z2 : Union[complex, float, int]
+        Second value.
+    tol : float
+        Tolerance of the comparison (absolute).
+
+    Returns
+    -------
+    bool
+        True if both are equal up to tol
     """
     return np.abs(z1 - z2) <= tol
 
@@ -60,11 +82,22 @@ def is_close(z1: complex, z2: complex) -> bool:
 def any_close_matrix_within_tol(zs1: np.array, zs2: np.array, tol: float) -> np.array:
     """
     Returns which points of zs1 and zs2 are closer (equal) to tol.
+
     Time-complexity: O(pq)
-    :param zs1: np.array[complex] = array with p complex to compare
-    :param zs2: np.array[complex] = array with q complex to compare
-    :param tol: float = tolerance of the comparison (absolut)
-    :result: np.array = positions where the points match
+
+    Parameters
+    ----------
+    zs1 : np.array[complex]
+        Array with p complex numbers to compare.
+    zs2 : np.array[complex]
+        Array with q complex numbers to compare.
+    tol : float
+        Tolerance of the comparison (absolute).
+
+    Returns
+    -------
+    np.array
+        Positions where the points match.
     """
     return np.argwhere(np.abs(zs1 - zs2.reshape(zs2.shape[0], 1)) <= tol)
 
@@ -77,10 +110,19 @@ def any_close_matrix(zs1: np.array, zs2: np.array) -> np.array:
 @NumbaChecker("complex128[::1](complex128[::1])")
 def generate_raw(poly: np.array) -> np.array:
     """
-    Generates the neigboring polygons for a single polygon poly
+    Generates the neighboring polygons for a single polygon poly
+
     Time-complexity: O(p^2)
-    :param poly: np.array[np.complex128][p + 1] = polygon to grow with p vertices
-    :return: np.array[np.complex128][p] = centers of the neigboring polygons
+
+    Parameters
+    ----------
+    poly : np.array[np.complex128][p + 1]
+        Polygon to grow with p vertices.
+
+    Returns
+    -------
+    np.array[np.complex128][p]
+        Centers of the neighboring polygons.
     """
     reflection_centers = np.empty((poly.shape[0] - 1,), dtype=np.complex128)
     for k, vertex in enumerate(poly[1:]):
@@ -102,10 +144,20 @@ def generate_raw(poly: np.array) -> np.array:
 def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
     """
     Calculates the distance between the points z and z_hat.
+
     Time-complexity: O(1)
-    :param z: np.complex128 = first point
-    :param z_hat: np.complex128 = second point
-    :return: float = distance on disk
+
+    Parameters
+    ----------
+    z : np.complex128
+        First point.
+    z_hat : np.complex128
+        Second point.
+
+    Returns
+    -------
+    float
+        Distance on disk.
     """
     return 2 * np.arctanh(np.abs(z - z_hat) / np.abs(1 - z * z_hat.conjugate()))
 
@@ -118,10 +170,20 @@ def f_dist_disc(z: np.complex128, z_hat: np.complex128) -> float:
 def get_reflection_n_estimation(p: int, q: int, n: int) -> np.array:
     """
     Estimates the number of tiles the tiling will have.
-    :param p: int = number of edges
-    :param q: int = number of polys per vertex
-    :param n: int = number of layers (reflective)
-    :return: np.array[np.uint32] = number of tildes per layer
+
+    Parameters
+    ----------
+    p : int
+        Number of edges.
+    q : int
+        Number of polys per vertex.
+    n : int
+        Number of layers (reflective).
+
+    Returns
+    -------
+    np.array[np.uint32]
+        Number of tiles per layer.
     """
     lengths = np.empty((n,), dtype=np.uint32)
     lengths[0] = 0
@@ -185,16 +247,30 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
              edge_array: np.array, mangle: float) -> np.array:
     """
     Generates the tiling with the given parameters p, q, n.
+
     Time-complexity: O(p^2 m(p, q, n) + n), with m(p, q, n) is the number of polygons
-    :param p: int = number of edges
-    :param q: int = number of polys per vertex
-    :param r: float = radius of the fundamental polygon
-    :param sector_polys: np.array[complex][p + 1, x] = array containing the polygons [[center, vertices],...]
-    :param sector_lengths: np.array[int] = length
-    :param edge_array: np.array[int] = binary of number represents which edges are free
-    (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0])
-    :param mangle: float = rotation of the center polygon
-    :return: np.array[np.uint8] = stores for every polygon which reflection level it has
+
+    Parameters
+    ----------
+    p : int
+        Number of edges.
+    q : int
+        Number of polys per vertex.
+    r : float
+        Radius of the fundamental polygon.
+    sector_polys : np.array[complex][p + 1, x]
+        Array containing the polygons [[center, vertices],...].
+    sector_lengths : np.array[int]
+        Length.
+    edge_array : np.array[int]
+        Binary of number represents which edges are free (will be determined, just give it an array with edge_array.shape[0] == sector_polys.shape[0]).
+    mangle : float
+        Rotation of the center polygon.
+
+    Returns
+    -------
+    np.array[np.uint8]
+        Stores for every polygon which reflection level it has.
     """
     dphi = PI2 / p
     phis = np.array([dphi * i + mangle for i in range(p)])  # p

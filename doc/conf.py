@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'hypertiling'
-copyright = '2022, The Hypertiling project'
-author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth, Jefferson S. E. Portela'
+copyright = '2022-2024, The HYPERTILING project'
+author = 'Manuel Schrauth, Yanick Thurn, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela, Felix Dusel'
 
 
 # -- General configuration ---------------------------------------------------
