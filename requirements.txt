@@ -1,5 +1,0 @@
-matplotlib~=3.3.3
-networkx
-numpy~=1.19.5
-setuptools~=49.2.1
-sortedcontainers~=2.3.0

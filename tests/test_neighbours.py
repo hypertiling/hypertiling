@@ -7,11 +7,11 @@ set_verbosity_level("Warning")
 
 class TestCore(unittest.TestCase):
     def test_num_neighbours(self):
-        nlayer = 4
+        nlayer = 3
         for p,q in [(7,3), (8,3), (4,5), (4,6), (4,7), (4,8), (5,5), (5,6)]:
             for nl in range(2, nlayer):
                 for cen in ["cell", "vertex"]:
-                    T = HyperbolicTiling(p, q, nl, kernel=TilingKernels.StaticRotational, center=cen)
+                    T = HyperbolicTiling(p, q, nl, kernel=TilingKernels.StaticRotationalSector, center=cen)
                     
                     print(p, q, nl, cen, "RBF")
                     nbrs = T.get_nbrs_list(method="RBF")

@@ -1,34 +1,33 @@
-.. Copyright (c) 2022, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2024, Manuel Schrauth, Florian Goth
 
 
 
 Installation
 ============
 
-Hypertiling is available in the `PyPI <https://pypi.org/>`__ package
-index and can be installed using
+``hypertiling`` package is available in the `PyPI <https://pypi.org/>`__ package index and can be installed using
 
-::
+.. code-block:: bash
 
-$ pip install hypertiling
+    pip install hypertiling
 
-The package can also be locally installed. First download or clone the
-package, using
+For optimal performance, we recommend using hypertiling together with python-numba. If it is not already present on your system, it can be installed automatically using the ``[numba]``-suffix, i.e.
 
-::
+.. code-block:: bash
 
-$ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
+    pip install hypertiling[numba]
 
-Now execute
+The package can also be locally installed from our public git repository via
 
-::
+.. code-block:: bash
 
-$ pip install .
+        git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
+        cd hypertiling
+        pip install .
 
-in the package's root directory to install the package in-place.
+For developer installation use
 
-For developer mode use
+.. code-block:: bash
 
-::
+    pip install -e .
 
-$ pip install -e .

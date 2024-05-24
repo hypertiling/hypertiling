@@ -6,18 +6,31 @@
 <tr>
 <td align="left" width="9999" >
 
+<div align="center">
 
-
-
-![PyPI](https://img.shields.io/pypi/v/hypertiling)
-![Discord](https://img.shields.io/discord/990718743455883336?label=discord)
-![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=http%3A%2F%2Fwww.hypertiling.de%2F)
-
+[![PyPI](https://img.shields.io/pypi/v/hypertiling)](https://pypi.org/project/hypertiling/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/hypertiling)](https://pypistats.org/packages/hypertiling)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559394.svg)](https://doi.org/10.5281/zenodo.7559394)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7559393.svg)](https://doi.org/10.5281/zenodo.7559393)
+[![Website](https://img.shields.io/website?down_message=offline&up_message=online&url=http%3A%2F%2Fwww.hypertiling.de%2F)](http://www.hypertiling.de)
+[![Discord](https://img.shields.io/discord/990718743455883336?label=discord)](https://discord.gg/f9GW9B2Ezs)
 
 
-**hypertiling** is a high-performance Python 3 library for the generation and visualization of hyperbolic lattices, embedded in the Poincare disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with millions of vertices can be created in a matter of minutes on a single workstation computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.
+
+[![badge_coverage][]]()
+[![badge_maintainability][]]()
+[![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
+
+</div>
+
+
+
+
+[badge_coverage]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/master/coverage.svg
+[badge_maintainability]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/jobs/298389/artifacts/raw/public/badges/maintainability.svg
+[badge_pipeline]: https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/badges/master/pipeline.svg
+
+
+**hypertiling** is a high-performance Python library for the generation and visualization of regular hyperbolic lattices embedded in the Poincare disk model. Using highly optimized, efficient algorithms, hyperbolic tilings with millions of vertices can be created in a matter of minutes on a single workstation computer. Facilities including computation of adjacent vertices, dynamic lattice manipulation, refinements, as well as powerful plotting and animation capabilities are provided to support advanced uses of hyperbolic graphs. 
 
 
 ## Installation
@@ -26,11 +39,18 @@ hypertiling is available in the [PyPI](https://pypi.org/) package index and can 
 ```
 $ pip install hypertiling
 ```
+
+For optimal performance, we highly recommand to use hypertiling together with `python-numba`, which, if not already present on your system can be installed automatically using the `[numba]`-suffix, i.e.
+```
+$ pip install hypertiling[numba]
+```
 The package can also be locally installed from our public [git repository](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling) via
 ```
 $ git clone https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling
 $ pip install .
 ```
+
+
 ## Usage
 
 In Python, import tiling object from the **hypertiling** library
@@ -54,23 +74,66 @@ Further examples are available in our [documentation](https://gitpages.physik.un
 * Manuel Schrauth  
 mschrauth@physik.uni-wuerzburg.de
 * Yanick Thurn
-* Felix Dusel
 * Florian Goth
-* Dietmar Herdt
 * Jefferson S. E. Portela
+* Dietmar Herdt
+* Felix Dusel
 
 This project is developed at:  
 [Institute for Theoretical Physics and Astrophysics](https://www.physik.uni-wuerzburg.de/en/tp3/home/)  
 [University of Wuerzburg](https://www.uni-wuerzburg.de/en/home/)
 
+## Citation
+
+If you use _hypertiling_, we encourage you to cite or reference this work as you would any other scientific research. The package is a result of a huge amount of time and effort invested by the authors. Citing us allows us to measure the impact of the research and encourages others to use the library.
+
+Cite us:
+
+> Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson S.E. Portela, Dietmar Herdt and Felix Dusel. (2023). The _hypertiling_ project. Zenodo. https://doi.org/10.5281/zenodo.7559393
+
+
+
 ## Examples
 
-Simulation of a Ising-like Boltzmann spin model on a hyperbolic (7,3) tiling at low temperature. One readily recognizes a number of magnetic domains of opposite spin orientation (red/blue areas). The domain walls are approximately given by arcs of Euclidean circles contained within the disk and orthogonal to its boundary. These arcs represent straight lines in the Poincare disk representation of the hyperbolic plane.
 
-<p align="center">                                                                                                                                                                                                                           
-  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/hyp6.svg" width="300" />                                                                                                                         
+### Tilings
+
+The core functionality of the package is the generation of regular hyperbolic tilings projected onto the Poincare disk. Tilings in the upper row are centered about a cell, in the lower row about a vertex.
+
+
+<p align="center">   
+ <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/tilings.png" width="700" />   
 </p>
 
+
+
+### Refinements
+
+The hypertiling package allows to perform triangle refinements, such as shown here
+
+<p align="center">   
+ <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/refinments.png" width="700" />   
+</p>
+
+
+
+
+## Applications
+
+### Hyperbolic Magnet
+Simulation of a Ising-like Boltzmann spin model with anti-ferromagnetic interactions on a hyperbolic (7,3) tiling, quenched at low temperature. The hyperbolic antiferromagnet (left) exhibits geometrical frustration, whereas on a flat lattice (right) an ordered anti-parallel alignment can be observed.
+<p align="center">                                                                                                                                                                                                                           
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/magnet.png" width="900" />                                                                                                                         
+</p>
+
+
+### Helmholtz Equation
+Solution of an electrostatic Helmholtz problem on a refined (3,7) tiling, where boundary values have been fixed to either -1 (red) or +1 (blue). One readily recognizes a field value separation according to geodesic arcs in the Poincare disk representation of the hyperbolic plane.
+
+
+<p align="center">                                                                                                                                                                                                                           
+  <img src="https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/raw/master/assets/helmholtz.png" width="450" />                                                                                                                         
+</p>
 
 
 Further information and examples can be found in our Jupyter notebooks in /examples subfolder. 
