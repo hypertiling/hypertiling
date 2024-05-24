@@ -142,14 +142,18 @@ class AnimatorPath:
         # If complex or 2d float: entries correspond to coordinates
         if isinstance(path, list):
             path = np.array(path)
-        if path.ndim == 2 and isinstance(path[0].item(), float):
-            self.coords = path + 1j * path
+        if path.ndim == 2 and isinstance(path[0][0].item(), float):
+            self.coords = path[0] + 1j * path[1]
         elif path.ndim == 1 and isinstance(path[0].item(), complex):
             self.coords = path
         elif path.ndim == 1 and isinstance(path[0].item(), int):
             self.coords = self._poly_id_to_coords(path)
         else:
             raise ValueError("[hypertiling] Error: Invalid input format for path")
+            
+        if np.any(np.abs(self.coords) >= 1):
+            print("[hypertiling] Warning: Path contains points that lay outside the unit circle. This will break" \
+                  " the animation. Plase make sure every point is inside the unit circle.")
         
 
         self.path_frames = path_frames
