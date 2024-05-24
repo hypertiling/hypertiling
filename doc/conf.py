@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'hypertiling'
-copyright = '2022, The Hypertiling project'
-author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth, Jefferson S. E. Portela'
+copyright = '2022-2024, The HYPERTILING project'
+author = 'Manuel Schrauth, Yanick Thurn, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela, Felix Dusel'
 
 
 # -- General configuration ---------------------------------------------------
@@ -27,7 +27,7 @@ author = 'Manuel Schrauth, Felix Dusel, Dietmar Herdt, Florian Goth, Jefferson S
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx', 'sphinx.ext.mathjax', 'sphinx_mdinclude']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx', 'sphinx.ext.mathjax', 'sphinx_mdinclude', 'IPython.sphinxext.ipython_console_highlighting']
 nbsphinx_execute = 'never'
 nbsphinx_allow_errors = True
 source_suffix = ['.rst', '.md']
@@ -39,7 +39,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'html']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'html', '_build', '**.ipynb_checkpoints']
 
 
 # -- Options for HTML output -------------------------------------------------

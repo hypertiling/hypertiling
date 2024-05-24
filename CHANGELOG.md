@@ -1,3 +1,49 @@
+
+## v1.3.4
+Date: 2024-01-05
+
+**Release Notes**
+
+- unified iterator behaviour: In this update we unify the iterator behaviour for tilings constructed with any kernel. Iteration will now return arrays of length p+1, which contain the coordinates of the corresponding cell center and its p outer vertices. Accessing a tiling element by index will also return this array.
+- new getter functions: we extend the existing getter functions by providing consistent behaviour for `get_center` and `get_vertices` all accross the tiling kernels and we introduce the `get_polygon` method which returns a dedicated polygon object.
+- all examples have been adjusted to the new interfaces
+- more unit tests
+- several minor bug fixes
+
+
+## v1.3.3
+Date: 2023-11-07
+
+PyPI installation was broken since we introduced the new build system (pyproject.toml replaces setup.py) in v1.3.1. This update is supposed to fix all related issues. This requires us to adjust the project layout slightly and introduce a top-level folder 'src' which contains the actual source code. There should be no effect of this change on the usage of the package whatsoever.
+
+## v1.3.2
+Date: 2023-10-26
+
+- Fix installation on Windows systems
+
+
+## v1.3.1
+Date: 2023-09-20
+
+Today, we are updating the build system of hypertiling, simultaneously with the publication of our release manuscript on the arXiv preprint server. As a user, you should not notice any changes as a result of this update. Owed to the new configuration, hypertiling can now be installed with numba using
+
+```
+pip install hypertiling[numba]
+```
+or
+```
+pip install .[numba]
+```
+
+for a local installation, after the latest version has been cloned from our repository.
+
+**Further changes**
+
+- bug fixes
+- improved pipeline
+- more unit tests
+- introduction of test coverage
+
 ## v1.3
 Date: 2023-08-28
 

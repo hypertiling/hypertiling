@@ -1,5 +1,6 @@
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
+
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
@@ -7,6 +8,7 @@ stages:
   - install
   - test
   - docs
+  - publish
   - release
 
 # Pip's cache doesn't store the python packages
@@ -14,6 +16,7 @@ stages:
 #
 # If you want to also cache the installed packages, you have to install
 # them in a virtualenv and cache it as well.
+
 cache:
   paths:
     - .cache/pip
@@ -25,47 +28,97 @@ before_script:
   - python3 -m venv hypervenv --without-pip --system-site-packages
   - source hypervenv/bin/activate
 
+
+#### ----------- INSTALL ------------ ####
+
 install-latest:
   stage: install
   image: python:latest
-  script:
-    - python setup.py check
+  script:  
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
     - pip install .
 
 install-slim:
   stage: install
   image: python:slim
   script:
-    - python setup.py check
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
+    - pip install .
+
+install-python-3.7:
+  stage: install
+  image: python:3.7
+  script:
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
+    - pip install .
+
+install-python-3.5:
+  stage: install
+  image: python:3.5
+  script:
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
     - pip install .
 
 install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
+  before_script:
+   # - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
+   # - apt purge -y python3-setuptools # uninstal system setuptools, will be installed by pip later automatically
+   # - apt -y autoremove
+    - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
   script:
+    - pip3 install --upgrade pip
     - pip3 install .
 
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: install
-  script:
+  when: manual
+  before_script:
+    - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
+    - python3 --version
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
-    - python3 -m pip install .
+  script:
+    - python3 -m venv hypervenv
+    - source hypervenv/bin/activate
+    - hypervenv/bin/pip install .
 
-install-pypi:
+install-from-pypi:
   image: python:latest
   stage: install
   script:
-    - pip3 install hypertiling
+    - python3 --version
+    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - source hypervenv/bin/activate
+    - pip install hypertiling
 
 
+
+#### ----------- TEST ------------ ####
+
+# runs tests without numba and sortedcontainers
 unit-test-plain:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    image: python:latest
     stage: test
+    before_script:
+      - python -m venv env
+      - source env/bin/activate
+      - pip install pytest
     script:
-        - apt-get install -y python3-networkx
-        - pip3 install .
+        - pip install .
         
         - echo "Testing without fancy packages, such as numba..."
         - python3 -m tests.test_core
@@ -74,17 +127,23 @@ unit-test-plain:
         - python3 -m tests.test_compare_neighbours
         
         - echo "Testing reflection kernel without numba"
-        - python3 -m tests.test_reflectionkernel
-        - python3 -m tests.test_grg
-        - python3 -m tests.test_grgs
+        #- python3 -m tests.test_reflectionkernel
+        #- python3 -m tests.test_grg
+        #- python3 -m tests.test_grgs
 
 
+# runs tests with numba and sortedcontainers
 unit-test-fancy:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    image: python:3.10
     stage: test
+    before_script:
+      - python -m venv env
+      - source env/bin/activate
+      - pip install pytest
     script:
-        - apt-get install -y python3-sortedcontainers python3-numba python3-networkx
-        - pip3 install .
+        - pip install numba
+        - pip install sortedcontainers
+        - pip install .[test]
         
         - echo "Testing with numba and sortedcontainers..."
         - python3 -m tests.test_core
@@ -92,10 +151,68 @@ unit-test-fancy:
         - python3 -m tests.test_neighbours
         - python3 -m tests.test_compare_neighbours
         
-        - echo "Testing reflection kernel without numba"
-        - python3 -m tests.test_reflectionkernel
-        - python3 -m tests.test_grg
-        - python3 -m tests.test_grgs
+        - echo "Testing reflection kernel with numba"
+        #- python3 -m tests.test_reflectionkernel
+        #- python3 -m tests.test_grg
+        #- python3 -m tests.test_grgs
+
+
+# runs all tests and generates a coverage report
+tests-full-cov:
+  stage: test
+  cache: # reuse venv in subsequent jobs
+    key: $CI_JOB_NAME
+    paths:
+      - .cache/pip
+      - env/
+  image: python:3.10
+  before_script:
+    - python -m venv env
+    - source env/bin/activate
+    - pip install pytest
+    - pip install pytest-cov
+  script:
+    - pip install .[test]
+
+    # COVERAGE BADGE
+    - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
+    - coverage report
+    - coverage xml
+    - pip install anybadge==1.9.0
+    - mkdir -p build/badges
+
+    # MAINTAINABILITY BADGE
+    - pip install radon==5.1.0
+    - python -m radon cc --total-average -nB -s hypertiling
+    
+    # generate a badge for the maintainability index with the total average of cyclomatic complexity as value
+    - python -m anybadge --label=Maintainability --value="$(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 3) ($(python -m radon cc --total-average -nc hypertiling | tail -n 1 | cut -d' ' -f 4 | cut -c 2-4))" -f build/badges/maintainability -o
+    
+    # DOCUMENTATION BADGE
+    # generate a badge for the documentation with the current version as label
+    # - color: #1082C2 corresponds to the default "informational" color set by https://shields.io
+    # this is some magic to retrieve the package version:
+    # - python -m anybadge --label=Documentation --value="v$(python -m hypertiling --version)" --color "#1082C2" -f build/badges/documentation -o
+    # here it is set manually:
+    # - python -m anybadge --label=Documentation --value="v1.3" --color "#1082C2" -f build/badges/documentation -o
+  
+  coverage: '/TOTAL.*\s+(\d+\%)/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+    paths:
+      - build/coverage
+      - build/badges
+      #- env/   # too large ...
+
+
+
+#### ----------- DOCS ------------ ####
 
 sphinx-doc:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -109,6 +226,7 @@ sphinx-doc:
     - pip install --upgrade pip
     - pip install pypandoc sphinx-mdinclude
     - pip install sphinx --upgrade
+    - pip3 install --upgrade ipython
     - pip install sphinx-rtd-theme --upgrade
     - pip install nbsphinx --upgrade
     - cd doc
@@ -118,6 +236,11 @@ sphinx-doc:
     - cd ..
     - ls
     - sphinx-build . html
+
+
+
+#### ----------- PUBLISH ------------ ####
+
 
 send-snapshot:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -129,3 +252,22 @@ send-snapshot:
     - ./assets/zenodo.sh
     - git archive --format zip --output ${CI_COMMIT_TAG#v}.zip ${CI_COMMIT_TAG}
     - g2z-send -p -m .zenodo.json ${CI_COMMIT_TAG#v}.zip
+
+report-and-badges:
+  stage: publish
+  image: python:latest
+  needs:
+    - tests-full-cov
+  before_script:
+    - ''
+  script:
+    - mkdir -p public
+    - ls build
+    - ls build/badges
+    - ls build/coverage
+    #- source env/bin/activate # activate cached venv
+    - mv build/badges public/.
+    - mv build/coverage public/.
+  artifacts:
+    paths:
+      - public
