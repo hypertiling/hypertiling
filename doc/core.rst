@@ -7,11 +7,11 @@ The core of the ``hypertiling`` package is its ability to generate and manipulat
 
 Regular Tilings
 ---------------
-A significant emphasis is placed on regular tilings, which are characterized by their Schläfli symbols, denoted as (p, q). These symbols describe tilings where each polygonal cell has p sides, and each vertex is shared by q cells. For a tiling to be considered hyperbolic, the product (p-2)(q-2) must exceed 4. In these regular tilings, all cells are geometrically congruent, ensuring uniformity across the tiling. For visual examples of these tilings, please refer to Figure 1 in the documentation.
+A significant emphasis is placed on regular tilings, which are characterized by their Schläfli symbols, denoted as (p, q). These symbols describe tilings where each polygonal cell has p sides, and each vertex is shared by q cells. For a tiling to be considered hyperbolic, the product (p-2)(q-2) must exceed 4. In these regular tilings, all cells are geometrically congruent, ensuring uniformity across the tiling.
 
 Graph Construction
 ------------------
-Beyond the creation of hyperbolic tilings, the hypertiling package also facilitates the construction of graphs. These graphs serve as simplified, coordinate-free representations of the tilings, focusing solely on the adjacency relationships between the vertices. This functionality broadens the scope of the package, allowing for the exploration of hyperbolic geometry through both visual and structural perspectives.
+Beyond the creation of hyperbolic tilings, the hypertiling package also facilitates the construction of graphs. These graphs serve as simplified, coordinate-free representations of the tilings, focusing solely on the adjacency relationships between the vertices. 
 
 Interface
 ---------
