@@ -55,7 +55,7 @@ Welcome to the official hypertiling package documentation! This guide provides c
    :maxdepth: 1
    :caption: API Reference
 
-
+   codemap
    core
    distance
    hyperpolygon
