@@ -18,13 +18,26 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
     """
     Generates the tiling with the given parameters p, q, n.
     Time-complexity: O(p^2 m(p, q, n) + n), with m(p, q, n) is the number of polygons
-    :param p: int = number of edges
-    :param q: int = number of polys per vertex
-    :param r: float = radius of the fundamental polygon
-    :param sector_lengths: np.array[int] = length
-    :param mangle: float = rotation of the center polygon
-    :param tol: float = tolerance in the neighbor detection for the boundary
-    :return: np.array[np.uint8] = stores for every polygon which reflection level it has
+
+    Parameters
+    ----------
+    p : int
+        Number of edges
+    q : int
+        Number of polys per vertex
+    r : float
+        Radius of the fundamental polygon
+    sector_lengths : np.array[int]
+        Length
+    mangle : float
+        Rotation of the center polygon
+    tol : float
+        Tolerance in the neighbor detection for the boundary
+
+    Returns
+    -------
+    np.array[np.uint8]
+        Stores for every polygon which reflection level it has
     """
     dphi = PI2 / p
     phis = np.array([dphi * i + mangle for i in range(p)])  # p

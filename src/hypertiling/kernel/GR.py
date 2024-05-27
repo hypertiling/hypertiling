@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable, Any, List
 import numpy as np
 import hypertiling.kernel.GR_util as util
@@ -7,6 +8,7 @@ import hypertiling.transformation as transform
 import hypertiling.arraytransformation as arraytransform
 import hypertiling.distance as distance
 from hypertiling.ion import htprint
+from hypertiling.kernel.hyperpolygon import HyperPolygon
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = 3.6256099082219083119306851558676720029951676828800654674333779995
@@ -33,13 +35,22 @@ class GenerativeReflection(Tiling):
     def __init__(self, p: int, q: int, n: int, mangle: float = MANGLE):
         """
         Initialize a hyperbolic tiling. CELL CENTERED ONLY!
+
         Time-complexity: O(p^2 m + n + m / p * n)
-        :param p: int = number of vertices per cells
-        :param q: int = number of cells meeting at each vertex
-        :param n: int =  number of layers to be constructed
-        :param degtol: int = tolerance at boundary in degrees
-        :param mangle: float = rotation of the center polygon in degrees
-                               (prevents boundaries from being along symmetry axis)
+
+        Parameters
+        ----------
+        p : int
+            Number of vertices per cells.
+        q : int
+            Number of cells meeting at each vertex.
+        n : int
+            Number of layers to be constructed.
+        degtol : int
+            Tolerance at boundary in degrees.
+        mangle : float
+            Rotation of the center polygon in degrees
+            (prevents boundaries from being along symmetry axis).
         """
         super().__init__(p, q, n, mangle)
 
@@ -89,9 +100,18 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Generator for iterating over polygons.
-        Time-complexity (single polygon,  cf. last yield): O(p)
-        :param polys: np.array[n, p + 1] = segment the generator will create the rotations duplicates for and rotate over
-        :yield: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
+
+        Time-complexity (single polygon, cf. last yield): O(p)
+
+        Parameters
+        ----------
+        polys : np.array
+        Array of shape (n, p + 1) representing the segments the generator will create the rotations duplicates for and rotate over.
+
+        Yields
+        ------
+        np.array
+        Polygon of the segment polys or its rotational duplicates.
         """
         for poly in polys:
             yield poly
@@ -113,10 +133,20 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Changes the position of index2 until the polygon shares a boundary with index 1.
+
         Time-complexity (single polygon): O(tol p^2)
-        :param index1: int = index of primary polygon
-        :param index2: int = index of searched polygon
-        :return: int = index of searched polygon
+
+        Parameters
+        ----------
+        index1 : int
+            Index of the primary polygon.
+        index2 : int
+            Index of the searched polygon.
+
+        Returns
+        -------
+        int
+            Index of the searched polygon.
         """
         layer = self._get_reflection_level_in_sector(index2)
         connection = util.any_close_matrix(self._sector_polys[index1], self._sector_polys[index2])
@@ -139,10 +169,20 @@ class GenerativeReflection(Tiling):
         Protected(!)
         Calculates the index in the tiling a polygon in ref_layer would have when the reference layer would have been
         created circular.
+
         Time-complexity: O(1)
-        :param index: int = index the polygon would have if ref_layer would have been created circular
-        :param ref_layer: int = index of the reflection layer the polygons are created in
-        :return: int = index of the polygon in the tiling
+
+        Parameters
+        ----------
+        index : int
+            Index the polygon would have if ref_layer would have been created circular.
+        ref_layer : int
+            Index of the reflection layer the polygons are created in.
+
+        Returns
+        -------
+        int
+            Index of the polygon in the tiling.
         """
         if index < self._sector_lengths_cumulated[ref_layer]:
             index += self._sector_lengths[ref_layer]
@@ -157,10 +197,20 @@ class GenerativeReflection(Tiling):
         Protected(!)
         Takes an index (for the tiling) and a function defined in the fundamental sector.
         Calculates the corresponding sector_index, applies function f, and corrects the result to index.
+
         Time-complexity: O(f(index))
-        :param index: int = index of a polygon in the tiling
-        :param f: Callable = function to apply on sector_index
-        :return: np.array[p + 1] = polygon of the segment polys or its rotational duplicates
+
+        Parameters
+        ----------
+        index : int
+            Index of a polygon in the tiling.
+        f : Callable
+            Function to apply on sector_index.
+
+        Returns
+        -------
+        np.array
+            Polygon of the segment polys or its rotational duplicates.
         """
         if index != 0:
             # get equivalent poly in sector
@@ -181,10 +231,19 @@ class GenerativeReflection(Tiling):
     def _to_weierstrass(polygons: np.array) -> np.array:
         """
         Protected(!)
-        Calculates the weierstrass coordinates for an array of polygons in poincare disks.
+        Calculates the Weierstrass coordinates for an array of polygons in Poincaré disks.
+
         Time-complexity: O(m / p)
-        :param polygons: np.array[n, p + 1] = polygons to calculate weierstrass coordinates for
-        :return: np.array[p + 1, 3] = polygons in weierstrass coordinates
+
+        Parameters
+        ----------
+        polygons : np.array
+            Array of shape (n, p + 1) representing polygons to calculate Weierstrass coordinates for.
+
+        Returns
+        -------
+        np.array
+            Array of shape (p + 1, 3) representing polygons in Weierstrass coordinates.
         """
         weierstrass = np.empty((len(polygons), 3), dtype=np.float64)
         weierstrass[:, 0] = 1
@@ -202,9 +261,13 @@ class GenerativeReflection(Tiling):
 
     def generate(self):
         """
-        Calculate the tilings polygons for an angular sector.
+        Calculate the tiling polygons for an angular sector.
+
         Time-complexity: O(p^2 m + n)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         return util.generate(self.p, self.q, self.r, self._sector_polys, self._sector_lengths, self._edge_array,
                              self.mangle)
@@ -217,8 +280,12 @@ class GenerativeReflection(Tiling):
         """
         This function is numerically expensive!
         Calculates the layer to each polygon.
+
         Time-complexity: O(m + p)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         self._layers = np.empty(self._sector_polys.shape[0], dtype=np.uint8)
         self._layers.fill(self.n)  # m / p
@@ -257,9 +324,17 @@ class GenerativeReflection(Tiling):
         """
         This function is numerically expensive!
         Calculates the neighbors for each polygon.
+
         Time-complexity: O(m[ld(n + 1) / p + p^(log(m)) + ld(m / p) / p])
-        :param tol: float = tolerance to search neighbors in
-        :return: void
+
+        Parameters
+        ----------
+        tol : float
+            Tolerance to search neighbors in.
+
+        Returns
+        -------
+        void
         """
 
         dtype = np.min_scalar_type(self.length)
@@ -362,8 +437,12 @@ class GenerativeReflection(Tiling):
         This function is numerically expensive!
         Checks the integrity of the grid. The number of neighbors as well as a search for duplicates is applied.
         Raises AttributeError if the grid seems to be invalid.
+
         Time-complexity: O(m p^2 n)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         # check if one polygon is shifted in the range of another or if duplicates exist
         for i in range(len(self._sector_polys)):  # m / p loop execs
@@ -386,9 +465,14 @@ class GenerativeReflection(Tiling):
 
     def __len__(self):
         """
-        Return the number of polygons in the tiling
+        Return the number of polygons in the tiling.
+
         Time-complexity: O(1)
-        :return: int = number of polygons in the tiling
+
+        Returns
+        -------
+        int
+            Number of polygons in the tiling.
         """
         return self.length
 
@@ -396,7 +480,8 @@ class GenerativeReflection(Tiling):
         """
         Iterates over the whole grid. As only one sector is stored in the memory, the others are generated when needed.
         Time-complexity (single polygon): O(p)
-        :yield: .array = [center, vertices]
+        :yield: np.array
+            Array of shape [center, vertices].
         """
         for poly in self._sector_polys:
             yield poly
@@ -419,8 +504,16 @@ class GenerativeReflection(Tiling):
         Returns the center and vertices of the polygon at index. As only one sector is stored,
         the corresponding polygon is calculated if necessary.
         Time-complexity: O(p)
-        :param index: int = index of the polygon
-        :return: np.array[p + 1] = [center, vertices]
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array of shape (p + 1) representing [center, vertices].
         """
         if index == 0:
             return self._sector_polys[0]
@@ -453,10 +546,20 @@ class GenerativeReflection(Tiling):
     def get_nbrs_list(self, tol: float = 1e-5, method="default") -> List[List[int]]:
         """
         Create and return list of all neighbors
+
         Time-complexity: O(mp)
-        :param tol: float = tolerance to search neighbors in
-        :param method: str = method to use for calculating the neighbors. Currently "default" only
-        :return: List[List[int]] = list of all neighbors for all polygons
+
+        Parameters
+        ----------
+        tol : float
+            Tolerance to search neighbors in.
+        method : str
+            Method to use for calculating the neighbors. Currently "default" only.
+
+        Returns
+        -------
+        List[List[int]]
+            List of all neighbors for all polygons.
         """
         if method != "default":
             raise AttributeError("[hypertiling] Error: Only default implemented yet")
@@ -486,10 +589,19 @@ class GenerativeReflection(Tiling):
 
     def get_layer(self, index: int) -> int:
         """
-        Returns the layer, the polygon at index refers to.
+        Returns the layer that the polygon at index refers to.
+
         Time-complexity (without map.): O(1)
-        :param index: int = index of the polygon
-        :return: int = number of the layer
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Number of the layer.
         """
         if self._layers is None:
             htprint("Status", "Layers are not yet mapped. Start mapping")
@@ -505,10 +617,19 @@ class GenerativeReflection(Tiling):
 
     def get_sector(self, index: int) -> int:
         """
-        Returns the sector, the polygon at index refers to.
+        Returns the sector that the polygon at index refers to.
+
         Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: int = number of the sector
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Number of the sector.
         """
         if index == 0:
             return 0
@@ -519,27 +640,54 @@ class GenerativeReflection(Tiling):
     def get_center(self, index: int) -> np.complex128:
         """
         Returns the center of the polygon at index.
+
         Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: np.complex128 = center of the polygon
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
         """
         return self[index][0]
 
     def get_vertices(self, index: int) -> np.array:
         """
         Returns the p vertices of the polygon at index.
+
         Time-complexity: O(p)
-        :param index: int = index of the polygon
-        :return: np.array[np.complex128][p] = vertices of the polygon
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array of shape (p,) containing vertices of the polygon.
         """
         return self[index][1:]
 
     def get_angle(self, index: int) -> float:
         """
         Returns the angle to the center of the polygon at index.
+
         Time-complexity: O(1)
-        :param index: int = index of the polygon
-        :return: np.complex128 = center of the polygon
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
         """
         return np.angle(self[index][0])
 
@@ -551,10 +699,20 @@ class GenerativeReflection(Tiling):
         Protected(!)
         Find the polygons index sector_projection belongs to.
         However, sector_projection has to be in the fundamental sector.
+
         Time-complexity: O(m / p)
-        :param sector_proj: np.complex128 = position to search polygon for
-        :param eps: float = threshold for comparison
-        :return: int = index of the corresponding polygon
+
+        Parameters
+        ----------
+        sector_proj : np.complex128
+            Position to search polygon for.
+        eps : float
+            Threshold for comparison.
+
+        Returns
+        -------
+        int
+            Index of the corresponding polygon.
         """
         disk_distance = np.vectorize(lambda z: util.f_dist_disc(z, sector_proj))
         dists = disk_distance(self._sector_polys[:, 0])  # m / p
@@ -567,9 +725,18 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Returns the reflection level the polygon at index belongs to.
+
         Time-complexity: O(log(n + 1))
-        :param sector_index: int = index of the polygon
-        :return: int = reflection level
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Reflection level.
         """
         pos = np.searchsorted(self._sector_lengths_cumulated, sector_index)
         if self._sector_lengths_cumulated[pos] > sector_index:
@@ -580,9 +747,18 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+
         Time-complexity (single polygon): O(m + p^2)
-        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         if sector_index == 0:
             neigbor_centers = util.generate_raw(self._sector_polys[sector_index])  # p^2
@@ -598,9 +774,18 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+
         Time-complexity (single polygon): O(m / p + n)
-        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         if sector_index == 0:
             jump = len(self._sector_polys) - 1
@@ -632,9 +817,18 @@ class GenerativeReflection(Tiling):
         Protected(!)
         Get the neighbors of the polygon at sector_index using an experimental method.
         Has to be in the fundamental sector!
+
         Time-complexity: O(p^3 + n)
-        :param sector_index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if sector_index == 0:
             return np.array([1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)])  # p
@@ -740,9 +934,18 @@ class GenerativeReflection(Tiling):
         """
         Protected(!)
         Get neighbor of the polygon at sector_index. Has to be in the fundamental sector!
+
         Time-complexity (without map.): O(p)
-        :param sector_index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        sector_index : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         if self._nbrs is None:
             htprint("Status", "start mapping neighbors")
@@ -756,12 +959,47 @@ class GenerativeReflection(Tiling):
     # Sector only ######################################################################################################
     # Generative #######################################################################################################
 
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        HyperPolygon
+            Polygon at index.
+        """
+        htprint("Warning", "Method exists only for compatibility reasons. Usage is discouraged!")
+
+        polygon = HyperPolygon(self.p, )
+        polygon.idx = index
+        polygon.layer = self.get_reflection_level(index)
+        polygon.sector = self.get_sector(index)
+        polygon.angle = self.get_angle(index)
+        polygon.orientation = None
+        polygon.set_polygon(self[index])
+
+        return polygon
+
     def find(self, v: np.complex128) -> int:
         """
         Find the polygons index v belongs to.
+
         Time-complexity: O(m / p + p)
-        :param v: complex = position to search polygon for
-        :return: int = index of the corresponding polygon
+
+        Parameters
+        ----------
+        v : complex
+            Position to search polygon for.
+
+        Returns
+        -------
+        int
+            Index of the corresponding polygon.
         """
         angle = np.angle(v)
         factor = int(np.floor(angle / (PI2 / self.p)))
@@ -780,10 +1018,18 @@ class GenerativeReflection(Tiling):
 
     def get_reflection_level(self, index) -> int:
         """
-        Get the neighbors of a polygon at index
+        Get the neighbors of a polygon at index.
         Time-complexity: O(log(n + 1))
-        :param index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if index == 0:
             return 0
@@ -794,6 +1040,21 @@ class GenerativeReflection(Tiling):
         return self._get_reflection_level_in_sector(index)  # log(n + 1)
 
     def get_nbrs(self, i, method="mapping"):
+        """
+        Get the neighbors of a polygon at index with method.
+
+        Parameters
+        ----------
+        i : int
+            Index of the polygon.
+        method : str
+            Method to use.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
+        """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
             return []
@@ -805,10 +1066,18 @@ class GenerativeReflection(Tiling):
 
     def get_nbrs_generative(self, index: int) -> np.array:
         """
-        Get the neighbors of a polygon at index
+        Get the neighbors of a polygon at index.
         Time-complexity: O(m + p^2)
-        :param index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -819,8 +1088,16 @@ class GenerativeReflection(Tiling):
         """
         Get the neighbors of the polygon at index using an experimental method.
         Time-complexity: O(?)
-        :param index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -831,8 +1108,16 @@ class GenerativeReflection(Tiling):
         """
         Get neighbor of the polygon at index.
         Time-complexity (single polygon): O(p)
-        :param index: int = index of the polygon for whom the neighbors will be searched for
-        :return: np.array = indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon for whom the neighbors will be searched for.
+
+        Returns
+        -------
+        np.array
+            Indices of the neighbors.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -841,10 +1126,18 @@ class GenerativeReflection(Tiling):
 
     def get_nbrs_radius(self, index: int) -> np.array:
         """
-        Get the neighbors of a polygon at index
+        Get the neighbors of a polygon at index.
         Time-complexity: O(m / p)
-        :param index: int = index of the polygon
-        :return: np.array = array containing the indices of the neighbors
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.array
+            Array containing the indices of the neighbors.
         """
         if len(self) == 1:
             htprint("Warning", "Tiling consists of one polygon!")
@@ -856,10 +1149,18 @@ class GenerativeReflection(Tiling):
 
     def transform(self, function: Callable):
         """
-        Applies function to each polygon
-        :param function: callable = function to apply on each polygon
+        Applies function to each polygon.
+
+        Parameters
+        ----------
+        function : callable
+            Function to apply on each polygon.
+
         Time-complexity: O(m / p)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         raise NotImplementedError(
             '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
@@ -869,10 +1170,18 @@ class GenerativeReflection(Tiling):
 
     def rotate(self, angle: float):
         """
-        Rotates the grid around angle
-        :param angle: float = angle to rotate the polygon
+        Rotates the grid around angle.
+
+        Parameters
+        ----------
+        angle : float
+            Angle to rotate the polygon.
+
         Time-complexity: O(m / p)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         raise NotImplementedError(
             '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')
@@ -880,10 +1189,18 @@ class GenerativeReflection(Tiling):
 
     def translate(self, z: np.complex128):
         """
-        Translates the grid to z
-        :param z: complex = position of the new origin
+        Translates the grid to z.
+
+        Parameters
+        ----------
+        z : complex
+            Position of the new origin.
+
         Time-complexity: O(m / p)
-        :return: void
+
+        Returns
+        -------
+        void
         """
         raise NotImplementedError(
             '[hypertiling]: Error: The requested function is not implemented! Please use a different kernel!')

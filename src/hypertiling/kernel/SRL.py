@@ -52,19 +52,19 @@ class StaticRotationalLegacy(KernelRotationalCommon):
 
             # shift fundamental polygon such that one of its vertices is on the origin
             # if centered around a vertex, shift one vertex to origin
-            morigin(self.p, self.fund_poly.verticesP[0], self.fund_poly.verticesP)
-            vertangle = math.atan2(self.fund_poly.verticesP[1].imag, self.fund_poly.verticesP[1].real)
-            mrotate(self.p, vertangle-self.mangle, self.fund_poly.verticesP)
+            morigin(self.p, self.fund_poly.get_polygon()[0], self.fund_poly.get_polygon())
+            vertangle = math.atan2(self.fund_poly.get_polygon()[1].imag, self.fund_poly.get_polygon()[1].real)
+            mrotate(self.p, vertangle-self.mangle, self.fund_poly.get_polygon())
 
 
-        self.fund_poly_center = self.fund_poly.verticesP[self.p]
+        self.fund_poly_center = self.fund_poly.get_polygon()[self.p]
         self.polygons.append(self.fund_poly)
 
         # prepare sets which will contain the center coordinates
         # will be used for uniqueness checks
         dupl_large = DuplicateContainerSimple(self.dgts)
         dupl_small = DuplicateContainerSimple(self.dgts)
-        dupl_large.add(self.fund_poly.centerP())
+        dupl_large.add(self.fund_poly.get_center())
 
         # the actual construction
         self._populate_sector(dupl_large, dupl_small)

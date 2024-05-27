@@ -4,7 +4,7 @@ from hypertiling.check_numba import NumbaChecker
 
 
 @NumbaChecker("(int64, complex128, complex128[:])")
-def morigin(p, z0, verticesP):
+def morigin(p, z0, vertices):
     """
     Apply Moebius transform to an array of length (p+1) of vertices.
     
@@ -14,13 +14,13 @@ def morigin(p, z0, verticesP):
         Number of outer vertices.
     z0 : complex128
         Vertex that we transform around.
-    verticesP : Hyperpolygon
-        Array of vertices + the center that make up the polygon.
+    vertices : np.array[complex128]
+        Array containing center of the polygon and the list of vertices.
     """
 
     for i in range(p + 1):
-        z = trans.moeb_origin_trafo(z0, verticesP[i])
-        verticesP[i] = z
+        z = trans.moeb_origin_trafo(z0, vertices[i])
+        vertices[i] = z
 
 
 @NumbaChecker("(int64, complex128, complex128[:])")
@@ -44,7 +44,7 @@ def moeb_origin_vector(p, z0, points):
 
 
 @NumbaChecker("(int64, float64, complex128[:])")
-def mrotate(p, phi, verticesP):
+def mrotate(p, phi, vertices):
     """
     Rotate an array of length (p + 1) of complex vertices.
     
@@ -54,13 +54,13 @@ def mrotate(p, phi, verticesP):
         Number of outer vertices.
     phi : float
         Angle of rotation
-    verticesP : complex[]
-        Array of vertices + the center that make up the polygon.
+    vertices : np.array[complex128]
+        Array containing center of the polygon and the list of vertices.
     """
     for i in range(p + 1):
-        # FIXME: I do not like the - in front of phi as it makes the behaviour more hidden
-        z = trans.moeb_rotate_trafo(-phi, verticesP[i])
-        verticesP[i] = z
+        # FIXME: remove the minus in front of phi as it makes the behaviour more hidden
+        z = trans.moeb_rotate_trafo(-phi, vertices[i])
+        vertices[i] = z
 
 
 @NumbaChecker("complex128(complex128, float64, complex128)")
@@ -108,7 +108,7 @@ def multi_rotation_around_vertex(qn, dqhi, z0, p):
 
 
 @NumbaChecker("(int64, float64, int64, complex128[:])")
-def mfull(p, phi, ind, verticesP):
+def mfull(p, phi, ind, vertices):
     """ 
     Apply all transformations(origin, rotate, inv_origin) in dd precision to the vertices of an entire polygon.
 
@@ -120,15 +120,15 @@ def mfull(p, phi, ind, verticesP):
         Angle of roatation
     ind : int
         Index of vertex that defines the Moebius Transform
-    verticesP : Hyperpolygon
-        Array of vertices + the center that make up the polygon.
+    vertices : np.array[complex128]
+        Array containing center of the polygon and the list of vertices.
     """
-    z0 = verticesP[ind]
+    z0 = vertices[ind]
     dz0 = complex(0, 0)
 
     for i in range(p + 1):
-        z, dz = trans.moeb_origin_trafodd(z0, dz0, verticesP[i], dz0)
+        z, dz = trans.moeb_origin_trafodd(z0, dz0, vertices[i], dz0)
         z, dz = trans.moeb_rotate_trafodd(z, dz, -phi)
         z, dz = trans.moeb_origin_trafo_inversedd(z0, dz0, z, dz)
-        verticesP[i] = z
+        vertices[i] = z
         # verticesdP[i] = dz

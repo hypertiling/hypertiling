@@ -51,7 +51,7 @@ $ pip install .
 ```
 
 
-## Usage
+## Quick Start
 
 In Python, import tiling object from the **hypertiling** library
 
@@ -68,7 +68,9 @@ nlayers = 5
 T = HyperbolicTiling(p,q,nlayers) 
 ```
 
-Further examples are available in our [documentation](https://gitpages.physik.uni-wuerzburg.de/hypertiling/hyperweb/doc/examples/quickstart.html) and Jupyter demo notebooks.
+## Documentation
+
+Further usage examples and a full API reference are available in our [documentation](https://gitpages.physik.uni-wuerzburg.de/hypertiling/hyperweb/doc/examples/quickstart.html).
 
 ## Authors
 * Manuel Schrauth  

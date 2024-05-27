@@ -1,0 +1,373 @@
+<mxfile host="Electron" modified="2024-05-09T05:05:43.320Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.0.4 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="Sbc4OnqqRNKpkRoG7XVK" version="24.0.4" type="device">
+  <diagram name="Seite-1" id="yrPAQhULpU5_7DlVjPJM">
+    <mxGraphModel dx="2972" dy="1883" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;fontSize=12;fontFamily=Frutiger LT Com;dashed=1;endArrow=block;endFill=0;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-55" target="hzOGWNR_dyhMRqMV_x-T-39" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-59" value="act on" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontFamily=Frutiger LT Com;labelBorderColor=#FFFFFF;" parent="hzOGWNR_dyhMRqMV_x-T-57" vertex="1" connectable="0">
+          <mxGeometry x="0.181" y="-1" relative="1" as="geometry">
+            <mxPoint x="10" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-55" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=11;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="570" y="-20" width="320" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-51" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=8;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="-50" y="360" width="250" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-39" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="-53.5" y="-30" width="540" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-93" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.804;entryY=0.015;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;endArrow=block;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-1" target="hzOGWNR_dyhMRqMV_x-T-77" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-94" value="use" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;" parent="hzOGWNR_dyhMRqMV_x-T-93" vertex="1" connectable="0">
+          <mxGeometry x="-0.2028" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-1" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="520" y="360" width="370" height="510" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-2" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="610" y="520" width="180" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-3" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;HyperbolicGraph&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;factory pattern&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="6.5" width="135" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-4" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;HyperbolicTiling&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;factory pattern&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="269.25" width="135" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-5" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Graph&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;abstract class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="-6" y="90" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-7" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;Tiling&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;/font&gt;&lt;i style=&quot;border-color: var(--border-color); font-size: 12px;&quot;&gt;abstract class&lt;/i&gt;" style="rounded=0;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="256.5" y="90" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-8" value="creates" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=12;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-3" target="hzOGWNR_dyhMRqMV_x-T-5" edge="1">
+          <mxGeometry x="-0.2" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="11.5" y="285" as="sourcePoint" />
+            <mxPoint x="61.5" y="235" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-9" value="creates" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=12;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-4" target="hzOGWNR_dyhMRqMV_x-T-7" edge="1">
+          <mxGeometry x="-0.2007" y="3" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="24.5" y="155" as="sourcePoint" />
+            <mxPoint x="84.5" y="155" as="targetPoint" />
+            <mxPoint as="offset" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-107" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-10" target="hzOGWNR_dyhMRqMV_x-T-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="270" />
+              <mxPoint x="337" y="270" />
+              <mxPoint x="337" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-10" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;KernelStaticBase&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="620" y="380" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-11" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;KernelRotationalCommon&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;labelBackgroundColor=none;" parent="1" vertex="1">
+          <mxGeometry x="620" y="450" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-13" value="extends" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=12;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;entryX=1;entryY=0.5;entryDx=0;entryDy=0;align=left;exitX=0;exitY=0.5;exitDx=0;exitDy=0;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-7" target="hzOGWNR_dyhMRqMV_x-T-5" edge="1">
+          <mxGeometry x="0.2976" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="106.5" y="190" as="sourcePoint" />
+            <mxPoint x="111.5" y="235" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-14" value="extends" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=11;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;entryX=0.5;entryY=1;entryDx=0;entryDy=0;align=left;labelBackgroundColor=none;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endFill=0;" parent="1" edge="1" target="hzOGWNR_dyhMRqMV_x-T-11" source="hzOGWNR_dyhMRqMV_x-T-2">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="619.8299999999999" y="500" as="sourcePoint" />
+            <mxPoint x="619.8299999999999" y="480" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-15" value="extends" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=11;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;entryX=0.5;entryY=1;entryDx=0;entryDy=0;align=left;labelBackgroundColor=none;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endFill=0;" parent="1" edge="1" target="hzOGWNR_dyhMRqMV_x-T-10" source="hzOGWNR_dyhMRqMV_x-T-11">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="669.8299999999999" y="440" as="sourcePoint" />
+            <mxPoint x="669.8299999999999" y="420" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-16" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;HyperPolygon&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="750" y="280" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-20" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;DuplCont&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="677.5" y="690" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-21" value="DuplContCircCom&lt;br&gt;&lt;i&gt;class&lt;/i&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="677.5" y="750" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-22" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;DuplContCirc&lt;br&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="677.5" y="810" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-23" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;HTCenter&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="540" y="690" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-24" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;HTCenterTuple&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="540" y="750" width="90" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-25" value="extends" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=11;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;entryX=0.5;entryY=1;entryDx=0;entryDy=0;align=left;labelBackgroundColor=none;endFill=0;" parent="1" edge="1">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="757.3899999999999" y="750" as="sourcePoint" />
+            <mxPoint x="757.3899999999999" y="730" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-26" value="extends" style="endArrow=blockThin;html=1;rounded=0;fontFamily=Frutiger LT Com;fontSize=11;spacing=0;spacingLeft=0;verticalAlign=middle;labelBorderColor=none;entryX=0.5;entryY=1;entryDx=0;entryDy=0;align=left;labelBackgroundColor=none;endFill=0;" parent="1" edge="1">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="757.3899999999999" y="810" as="sourcePoint" />
+            <mxPoint x="757.3899999999999" y="790" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-27" value="uses" style="endArrow=blockThin;dashed=1;html=1;rounded=0;labelBorderColor=none;fontFamily=Frutiger LT Com;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;startArrow=none;startFill=0;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-35" target="hzOGWNR_dyhMRqMV_x-T-20" edge="1">
+          <mxGeometry x="0.1218" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="686.11" y="546" as="sourcePoint" />
+            <mxPoint x="753.36" y="670" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="560" y="576" />
+              <mxPoint x="560" y="670" />
+              <mxPoint x="758" y="670" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-28" value="uses" style="endArrow=blockThin;dashed=1;html=1;rounded=0;labelBorderColor=none;fontFamily=Frutiger LT Com;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-34" target="hzOGWNR_dyhMRqMV_x-T-22" edge="1">
+          <mxGeometry x="-0.68" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="705" y="545" as="sourcePoint" />
+            <mxPoint x="765" y="445" as="targetPoint" />
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="860" y="620" />
+              <mxPoint x="860" y="830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-29" value="uses" style="endArrow=blockThin;dashed=1;html=1;rounded=0;labelBorderColor=none;fontFamily=Frutiger LT Com;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;startArrow=none;startFill=0;endFill=0;labelBackgroundColor=none;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-20" target="hzOGWNR_dyhMRqMV_x-T-23" edge="1">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="705" y="565" as="sourcePoint" />
+            <mxPoint x="765" y="455" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-30" value="uses" style="endArrow=blockThin;dashed=1;html=1;rounded=0;labelBorderColor=none;fontFamily=Frutiger LT Com;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;edgeStyle=orthogonalEdgeStyle;startArrow=none;startFill=0;endFill=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=none;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-21" target="hzOGWNR_dyhMRqMV_x-T-24" edge="1">
+          <mxGeometry y="-10" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="925" y="455" as="sourcePoint" />
+            <mxPoint x="945" y="500" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-31" value="uses" style="endArrow=blockThin;dashed=1;html=1;rounded=0;labelBorderColor=none;fontFamily=Frutiger LT Com;fontSize=11;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;edgeStyle=orthogonalEdgeStyle;startArrow=none;startFill=0;endFill=0;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-10" target="hzOGWNR_dyhMRqMV_x-T-16" edge="1">
+          <mxGeometry x="-0.4182" width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="705" y="545" as="sourcePoint" />
+            <mxPoint x="765" y="435" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-32" value="SR kernel family" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;strokeColor=none;fillColor=#f5f5f5;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="539" y="830" width="85" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-33" value="Kernels" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;strokeColor=none;fillColor=#f5f5f5;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="657.5" y="522" width="85" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-34" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;StaticRotationalGraph&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="620" y="599" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-35" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;StaticRotationalSector&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="620" y="546" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-103" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-37" target="hzOGWNR_dyhMRqMV_x-T-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="105" y="270" />
+              <mxPoint x="690" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-37" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GenerativeReflection&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="-23.13" y="380" width="196.25" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-40" value="Module: core" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;strokeColor=none;fillColor=#f5f5f5;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="390" y="160" width="85" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-42" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;neighbors&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="750" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-44" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;animation&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="597.5" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-45" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;svg&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="597.5" y="60" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-46" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;plot&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="597.5" y="120" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-47" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;geodesics&lt;/span&gt;&lt;/font&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="750" y="60" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-52" value="GR kernel family" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;strokeColor=none;fillColor=#f5f5f5;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="100" y="782" width="85" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-53" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="259" y="360" width="201" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-54" value="DUN kernel family" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=12;strokeColor=none;fillColor=#f5f5f5;fontColor=#333333;" parent="1" vertex="1">
+          <mxGeometry x="349.5" y="646" width="85" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-60" target="hzOGWNR_dyhMRqMV_x-T-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="460" />
+              <mxPoint x="230" y="270" />
+              <mxPoint x="337" y="270" />
+              <mxPoint x="337" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-60" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;Dunham&lt;br&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="279.5" y="440" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-66" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-61" target="hzOGWNR_dyhMRqMV_x-T-7" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="400" />
+              <mxPoint x="230" y="270" />
+              <mxPoint x="337" y="270" />
+              <mxPoint x="337" y="130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-108" value="implements" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;labelBorderColor=#FFFFFF;" parent="hzOGWNR_dyhMRqMV_x-T-66" vertex="1" connectable="0">
+          <mxGeometry x="0.4274" relative="1" as="geometry">
+            <mxPoint x="-47" y="18" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-61" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;DunhamX&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="279.5" y="380" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-67" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-62" target="hzOGWNR_dyhMRqMV_x-T-10" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="390" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="500" y="600" />
+              <mxPoint x="500" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-76" value="extends" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rotation=270;fontFamily=Frutiger LT Com;labelBorderColor=#FFFFFF;" parent="hzOGWNR_dyhMRqMV_x-T-67" vertex="1" connectable="0">
+          <mxGeometry x="-0.4162" y="-2" relative="1" as="geometry">
+            <mxPoint x="-4" y="-46" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-62" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;DunhamLegacy&lt;br&gt;&lt;/span&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="279.5" y="586" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontFamily=Frutiger LT Com;endArrow=blockThin;endFill=0;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-63" target="hzOGWNR_dyhMRqMV_x-T-60" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-68" value="uses" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;labelBackgroundColor=#f5f5f5;" parent="hzOGWNR_dyhMRqMV_x-T-64" vertex="1" connectable="0">
+          <mxGeometry x="-0.2727" y="-2" relative="1" as="geometry">
+            <mxPoint x="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-63" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;DunhamTransformation&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="279.5" y="522" width="160" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-77" value="" style="rounded=0;html=1;fontFamily=Frutiger LT Com;fontSize=11;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="-50" y="920" width="940" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-78" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;arraytransformation&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="156.5" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-79" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;distance&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="289.5" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-81" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;representations&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="423.5" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-85" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;geodesics&lt;/span&gt;&lt;/font&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="22.5" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-86" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;ion&lt;/span&gt;&lt;/font&gt;&lt;div style=&quot;font-size: 12px;&quot;&gt;&lt;font style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="556.5" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-87" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;transformation&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;module&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fontSize=12;fontFamily=Frutiger LT Com;flipH=0;" parent="1" vertex="1">
+          <mxGeometry x="690" y="950" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-102" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-96" target="hzOGWNR_dyhMRqMV_x-T-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-70" y="670" />
+              <mxPoint x="-70" y="230" />
+              <mxPoint x="74" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-96" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GenerativeReflectionGraph&lt;br&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="-23.13" y="650" width="196.25" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-101" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=blockThin;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-97" target="hzOGWNR_dyhMRqMV_x-T-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-70" y="536" />
+              <mxPoint x="-70" y="230" />
+              <mxPoint x="74" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-111" value="implements" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;labelBorderColor=#FFFFFF;" parent="hzOGWNR_dyhMRqMV_x-T-101" vertex="1" connectable="0">
+          <mxGeometry x="0.5617" y="-1" relative="1" as="geometry">
+            <mxPoint x="-56" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-97" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GenerativeReflectionGraphStatic&lt;br&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="-23.119999999999997" y="516" width="196.25" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-104" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;startArrow=blockThin;startFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-98" target="hzOGWNR_dyhMRqMV_x-T-37" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tM5aBaoBS90rSrAh2t9p-1" value="uses" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;labelBackgroundColor=#f5f5f5;" vertex="1" connectable="0" parent="hzOGWNR_dyhMRqMV_x-T-104">
+          <mxGeometry x="-0.0131" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-98" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GR_util&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="19.990000000000002" y="452" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-106" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;startArrow=blockThin;startFill=0;fontFamily=Frutiger LT Com;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-99" target="hzOGWNR_dyhMRqMV_x-T-96" edge="1">
+          <mxGeometry x="0.0159" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-99" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GRG_util&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="19.990000000000006" y="720" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-105" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;startArrow=blockThin;startFill=0;fontFamily=Frutiger LT Com;labelBackgroundColor=#f5f5f5;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-100" target="hzOGWNR_dyhMRqMV_x-T-97" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-100" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;GRGS_util&lt;br style=&quot;font-size: 12px;&quot;&gt;&lt;i style=&quot;font-size: 12px;&quot;&gt;class&lt;/i&gt;&lt;/font&gt;" style="rounded=0;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontFamily=Frutiger LT Com;" parent="1" vertex="1">
+          <mxGeometry x="19.999999999999986" y="590" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-109" value="use" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.435;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;endArrow=block;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-53" target="hzOGWNR_dyhMRqMV_x-T-77" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hzOGWNR_dyhMRqMV_x-T-110" value="use" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=-0.005;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;endArrow=block;endFill=0;fontFamily=Frutiger LT Com;" parent="1" source="hzOGWNR_dyhMRqMV_x-T-51" target="hzOGWNR_dyhMRqMV_x-T-77" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tM5aBaoBS90rSrAh2t9p-4" value="implements" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Frutiger LT Com;labelBorderColor=#FFFFFF;" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="490.0029208232993" y="270.00439024390266" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

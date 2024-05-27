@@ -1,7 +1,7 @@
 [project]
 
 name = "hypertiling"
-version = "1.3.3"
+version = "1.3.4"
 
 
 description = "hypertiling is a high-performance Python library for the generation and visualization of regular hyperbolic lattices"
@@ -40,7 +40,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.coverage.run]
 command_line = "-m pytest --cov --cov-config=pyproject.toml --cov-branch --cov-report term-missing --cov-report html:build/coverage"
-source = ["hypertiling", "tests"]
+source = ["hypertiling"] 
 
 [tool.coverage.report]
 omit = ["**/__init__.py", "**/__main__.py"]
