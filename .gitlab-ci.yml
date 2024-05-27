@@ -89,7 +89,7 @@ install-bookworm:
   before_script:
     - apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
     - python3 --version
-    - python3 -m venv hypervenv --without-pip --system-site-packages
+    - python3 -m venv hypervenv --system-site-packages
   script:
     - source hypervenv/bin/activate
     - hypervenv/bin/pip install .
