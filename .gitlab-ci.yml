@@ -92,8 +92,6 @@ install-bookworm:
     - python3 -m venv hypervenv --without-pip --system-site-packages
   script:
     - source hypervenv/bin/activate
-    - python3 -m venv hypervenv
-    - source hypervenv/bin/activate
     - hypervenv/bin/pip install .
 
 install-from-pypi:
