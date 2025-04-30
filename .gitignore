@@ -12,3 +12,4 @@ venv
 /build
 /hypertiling
 /hypertiling.egg-info
+test.py
