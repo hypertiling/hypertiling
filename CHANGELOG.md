@@ -1,4 +1,15 @@
 
+## v1.3.5
+Date: 2025-04-30
+
+**Release Notes**
+
+The Wormhole Update!
+
+In this release we demonstrate how tilings generated with hypertiling can be transformed beyond the usual Poincaré disk representation using conformal mappings. By applying specific conformal mappings, one can, e.g. generate what is known as a type-II hyperbolic lattice. This structure is mathematically equivalent to a constant-time slice of a three-dimensional BTZ black hole. In a new demo notebook, we illustrate how these mappings work and explore the resulting geometric transformations.
+
+The new demo notebook can be found in examples/conformal-transformation.ipynb
+
 ## v1.3.4
 Date: 2024-01-05
 

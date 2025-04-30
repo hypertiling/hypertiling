@@ -2,7 +2,8 @@ import os
 import numpy as np
 from ..geodesics import geodesic_arc
 import matplotlib.lines as mlines
-from matplotlib import cm
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from IPython.display import SVG, display
 
 
@@ -84,7 +85,7 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
     if isinstance(facecolors, str):
         individual_colors = False
     else:
-        ccmap = cm.get_cmap(f"{cmap}")
+        ccmap = plt.get_cmap(f"{cmap}")
         colors = array_to_rgb(norm_0_1(facecolors), ccmap)
 
     # attribute group
