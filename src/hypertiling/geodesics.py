@@ -268,6 +268,6 @@ def geodesic_arc(z1, z2, **kwargs):
     
     # draw hyperbolic arc connection z1 and z2 as a matplotlib.patch.Arc
     if dt1<dt2:
-        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
+        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, theta1=np.degrees(t1), theta2=np.degrees(t2), **kwargs)
     else:
-        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, 0, theta1=np.degrees(t2), theta2=np.degrees(t1), **kwargs)
+        return mpatches.Arc((np.real(zc), np.imag(zc)), 2*r, 2*r, theta1=np.degrees(t2), theta2=np.degrees(t1), **kwargs)
