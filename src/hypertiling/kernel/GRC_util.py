@@ -1,5 +1,7 @@
+from typing import Tuple
 import numpy as np
 from hypertiling.check_numba import NumbaChecker
+import hypertiling.arraytransformation as array_trans
 
 D = 0  # default = regular
 L = 1  # left symmetric filler
@@ -7,15 +9,34 @@ F = 2  # asymmetric filler
 R = 3  # right symmetric filler
 
 
-@NumbaChecker("void(complex128[:], complex128)")
-def tf(z, z0):
-    divi = (1 - z * np.conjugate(z0))
-    z -= z0
-    z /= divi
+# @NumbaChecker("void(complex128[:], complex128)")
+# def tf(z, z0):
+#    divi = (1 - z * np.conjugate(z0))
+#    z -= z0
+#    z /= divi
 
 
 @NumbaChecker("int32[:](int32, int32, int32)")
 def n2polyN(p, q, n):
+    """
+    Calculates the number of cells the tesselation requires.
+    This method is similar to get_reflection_n_estimation in GR_util.py.
+    However, as GR, GRG and GRGS are deprecated and will be moved to legacy in the future, this function was moved here
+
+    Parameters
+    ----------
+    p : int
+        Number of edges.
+    q : int
+        Number of polys per vertex.
+    n : int
+        Number of layers (reflective).
+
+    Returns
+    -------
+    np.array[np.uint32]
+        Number of tiles per layer.
+    """
     lengths = np.empty((n,), dtype=np.int32)
     lengths[0] = 0
 
@@ -74,7 +95,29 @@ def n2polyN(p, q, n):
 
 
 @NumbaChecker("void(int32, int32, int32, int32[:,:], int32[:], int32, int32, int32)")
-def register(q, p_index, c_index, nbrs, types, mipi, mapi, mici):
+def register(q: int, p_index: int, c_index: int, nbrs: np.array, types: np.array, mipi: int, mapi: int, mici: int):
+    """
+    Function for tracking the neighbor relations
+
+    Parameters
+    ----------
+    q: int
+        Number of cells per vertex
+    p_index : int
+       Index of the parent polygon
+    c_index : int
+       Index of the child to be created
+    nbrs : np.array[int, int]
+       Array yielding the nbr relations for all polygons
+    types : np.array[int]
+       Array yielding the type of each cell
+    mipi : int
+       MInimal Parent Index = index of the first cell in the same layer as parent
+    mapi : int
+       MAximal Parent Index = index of the last cell in the same layer as parent
+    mici : int
+       MInimal Child Index = index of the first cell in the same layer as the child
+   """
     # connect parents
     nbrs[c_index, nbrs[c_index, 0]] = p_index
     nbrs[c_index, 0] += 1
@@ -100,7 +143,41 @@ def register(q, p_index, c_index, nbrs, types, mipi, mapi, mici):
 
 
 @NumbaChecker("boolean(int32, int32, int32, int32, int32[:], int32[:,:], int32[:,:], int32, int32, int32, int32)")
-def propagate(q, p_index, c_index, edge, types, fillers, counters, lc, delta, starttype, fillerstarttype):
+def propagate(q: int, p_index: int, c_index: int, edge: int, types: np.array, fillers: np.array, counters: np.array,
+              lc: int, delta: int, starttype: int, fillerstarttype: int) -> bool:
+    """
+    Function performing the cell propagation (including the cell types)
+
+    Parameters
+    ----------
+    q : int
+        Number of cells per vertex
+    p_index : int
+        Index of the parent polygon
+    c_index : int
+        Index of the child to be created
+    edge : int
+        Edge index the reflection is performed on
+    types : np.array[int]
+       Array yielding the type of each cell
+    fillers : np.array[int, int]
+        Array yielding the expected fillers for the first and last edge for each cell
+    counters : np.array[int, int]
+        Array yielding the counters for first and last edge for each cell
+    lc : int
+        Last child = Number indicating the number of childs the cell can have maximally
+    delta : int
+        Number of layers involved in closing a vertex once it was opened (q - 1) // 2
+    starttype : int
+        Type newly created cells will have by default
+    fillerstarttype : int
+        Type a newly opened vertex will have by default
+
+    Returns
+    -------
+    bool
+        Indicates if a child was created or if the edge was blocked
+    """
     fc = 0
 
     # handle q == 3
@@ -158,20 +235,66 @@ def propagate(q, p_index, c_index, edge, types, fillers, counters, lc, delta, st
 
 
 @NumbaChecker("void(int32, int32, int32, int32, complex128[:,:])")
-def propagate_coords(p, p_index, c_index, edge, coords):
+def propagate_coords(p: int, p_index: int, c_index: int, edge: int, coords: np.array):
+    """
+    Function performing the propagation of coordinates (tiling=True)
+
+    Parameters
+    ----------
+    p : int
+        Number of edges per polygon
+    p_index : int
+        Index of the parent polygon
+    c_index : int
+        Index of the child to be created
+    edge : int
+        Edge index the reflection is performed on
+    coords : np.array[int, int]
+        Array yielding the coordinates of all triangles
+    """
     coords[c_index] = coords[p_index]
     z0 = coords[c_index, edge]
-    tf(coords[c_index], z0)
+
+    # tf(coords[c_index], z0)
+    array_trans.morigin(p, z0, coords[c_index])
+
     phi2 = 2 * np.angle(coords[c_index, (edge + 1) % p])  # phi2 = phi + phi
     coords[c_index] = np.conjugate(coords[c_index])
     coords[c_index] *= complex(np.cos(phi2), np.sin(phi2))
-    tf(coords[c_index], - z0)
+
+    # tf(coords[c_index], - z0)
+    array_trans.morigin(p, -z0, coords[c_index])
 
     coords[c_index] = np.roll(np.flip(coords[c_index]), edge + 1)
 
 
 @NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, boolean, boolean)")
-def construct_sector(p, q, n, tiling, nbrs_):
+def construct_sector(p: int, q: int, n: int, tiling: bool, nbrs_: bool) -> Tuple[np.array, np.array, np.array]:
+    """
+    Construct the tesselation for the fundamental sector
+
+    Parameters
+    ----------
+    p : int
+        Number of edges per cell
+    q : int
+        Number of cells meeting at a single vertex
+    n : int
+        Number of layers
+    tiling : bool
+        Indicates if coordinates should be calculated
+    nbrs_ : bool
+        Indicates if neighbor relations should be tracked
+
+    Returns
+    -------
+    np.array[complex128]
+        Array of coordinates for all polyongs
+    np.array[int]
+        Array of neighbor relations for all cells
+    np.array[int]
+        Array of layer sizes
+    """
     # calculate length of tiling
     lengths = n2polyN(p, q, n)
     lengths //= p
@@ -285,6 +408,31 @@ def construct_sector(p, q, n, tiling, nbrs_):
 
 @NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, boolean, boolean)")
 def construct_full(p, q, n, tiling, nbrs_):
+    """
+    Construct the tesselation (fully)
+
+    Parameters
+    ----------
+    p : int
+        Number of edges per cell
+    q : int
+        Number of cells meeting at a single vertex
+    n : int
+        Number of layers
+    tiling : bool
+        Indicates if coordinates should be calculated
+    nbrs_ : bool
+        Indicates if neighbor relations should be tracked
+
+    Returns
+    -------
+    np.array[complex128]
+        Array of coordinates for all polyongs
+    np.array[int]
+        Array of neighbor relations for all cells
+    np.array[int]
+        Array of layer sizes
+    """
     # calculate length of tiling
     lengths = n2polyN(p, q, n)
     length = np.sum(lengths)

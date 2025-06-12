@@ -165,19 +165,19 @@ def propagate(p_index: int, cp_index: int, c_index: int, epv: int, edges: np.arr
 @NumbaChecker("void(int32, int32, int32, complex128[:,:])")
 def propagate_coords(p_index: int, c_index: int, epv: int, coords: np.array):
     """
-        Function performing the propagation of coordinates (tiling=True)
+    Function performing the propagation of coordinates (tiling=True)
 
-        Parameters
-        ----------
-        p_index : int
-            Index of the parent polygon
-        c_index : int
-            Index of the child to be created
-        epv : int
-            Edge index the reflection is performed on
-        coords : np.array[int, int]
-            Array yielding the coordinates of all triangles
-        """
+    Parameters
+    ----------
+    p_index : int
+        Index of the parent polygon
+    c_index : int
+        Index of the child to be created
+    epv : int
+        Edge index the reflection is performed on
+    coords : np.array[int, int]
+        Array yielding the coordinates of all triangles
+    """
     apv = (epv + 2) % 3
 
     coords[c_index] = coords[p_index]
@@ -204,7 +204,7 @@ def propagate_coords(p_index: int, c_index: int, epv: int, coords: np.array):
 def register(p_index: int, c_index: int, nbrs: np.array, counters: np.array, flags: np.array, p_stop: int,
              block_filler: bool) -> int:
     """
-    Function performing the cell propagation (including the cell types)
+    Function for tracking the neighbor relations
 
     Parameters
     ----------
