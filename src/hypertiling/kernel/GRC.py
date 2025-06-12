@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from hypertiling.kernel_abc import Graph
 import GRC_util as util
 import numpy as np
@@ -11,7 +11,7 @@ class GRC(Graph):
     GR based kernel for generating (p, q, n) tilings
     """
 
-    def __init__(self, p: int, q: int, n: int, sector=True, tiling=True, nbrs=True):
+    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = True, nbrs: bool = True):
         """
         Initialize a tesselation with Schwarian triangles.
 
@@ -103,7 +103,22 @@ class GRC(Graph):
 
     # Helper ###########################################################################################################
 
-    def _map2fundamental(self, index):
+    def _map2fundamental(self, index: int) -> Tuple[int, int]:
+        """
+        Map index to index of corresponding cell in the fundamental sector
+
+        Parameters
+        ----------
+        index : int
+            Index of a cell in the tesselation
+
+        Returns
+        -------
+        int
+            Index of the corresponding cell in the fundamental sector
+        int
+            Number indicating the sector the original cell is in
+        """
         if index == 0:
             return 0, 0
 
@@ -112,7 +127,24 @@ class GRC(Graph):
         index += 1
         return k, index
 
-    def _map2sector(self, index, k):
+    def _map2sector(self, index: int, k: int) -> int:
+        """
+        Calculate index for a corresponding cell in sector {k} when given a cell with index {index} in the fundamental
+        sector
+
+        Parameters
+        ----------
+        int
+            Index of the corresponding cell in the fundamental sector
+        int
+            Number indicating the sector the original cell is in
+
+        Returns
+        -------
+        int
+            Index of the corresponding cell in the k-th sector
+
+        """
         jump = self.lvls[-1] - 1
         index = index + k * jump * np.clip(index, a_min=0, a_max=1)
         ks, index = np.divmod(index, self.length)
@@ -255,7 +287,7 @@ if __name__ == "__main__":
         fig_ax[1].add_patch(patch)
 
         center = np.sum(poly) / p
-        #for nbr in nbrs[i]:
+        # for nbr in nbrs[i]:
         #    center2 = np.sum(graph.get_coords(nbr)) / p
         #    end = (center2 - center) / 2 + center
         #    fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
