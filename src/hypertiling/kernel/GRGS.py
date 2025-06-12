@@ -2,14 +2,14 @@ from typing import List
 import numpy as np
 import hypertiling.kernel.GR_util as util
 import hypertiling.kernel.GRGS_util as graph_util
-from hypertiling.kernel_abc import Graph
+from hypertiling.kernel_abc import GraphExtended
 from hypertiling.ion import htprint
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class GenerativeReflectionGraphStatic(Graph):
+class GenerativeReflectionGraphStatic(GraphExtended):
     """
     A static variant of the GRG kernel. Adjacency relations for all cells are explicitly computed, 
     such that no sector construction and no on-demand generation is required. Hence the memory 

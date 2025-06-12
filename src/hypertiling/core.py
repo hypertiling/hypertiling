@@ -1,6 +1,6 @@
 from typing import Union
 from .ion import htprint
-from .kernel_abc import Tiling, Graph
+from .kernel_abc import Tiling, GraphExtended
 from .kernel.SRG import StaticRotationalGraph
 from .kernel.SRS import StaticRotationalSector
 from .kernel.SRL import StaticRotationalLegacy
@@ -87,7 +87,7 @@ def HyperbolicTiling(p: int, q: int, n: int, kernel: Union[TilingKernels, str] =
 
 
 def HyperbolicGraph(p: int, q: int, n: int, kernel: Union[GraphKernels, str] = GraphKernels.GenerativeReflectionGraph,
-                    **kwargs) -> Graph:
+                    **kwargs) -> GraphExtended:
     """
     The factory pattern  function which invokes a hyperbolic graph
     Select your kernel using the "kernel" attribute
@@ -100,7 +100,7 @@ def HyperbolicGraph(p: int, q: int, n: int, kernel: Union[GraphKernels, str] = G
         number of cells meeting at each vertex
     n : int
         number of layers to be constructed
-    kernel : Graph
+    kernel : GraphExtended
         sets the construction kernel
     **kwargs : dictionary
         further keyword arguments to be passed to the kernel

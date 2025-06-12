@@ -9,12 +9,10 @@ from .util import lattice_spacing_weierstrass, fund_radius
 MAGICANGLE = np.radians(0.12345678910111213141516171819202122232425262728293031)
 
 
-
-
 class Graph(abc.ABC):
     """
     The abstract base class of a hyperbolic graph.
-    
+
     Parameters
     ----------
     p : int
@@ -22,7 +20,62 @@ class Graph(abc.ABC):
     q : int
         The second fundamental lattice parameter.
     n : int
-        A parameter defining the size of the graph. 
+        A parameter defining the size of the graph.
+
+    Raises
+    ------
+    AttributeError
+        If the combination of p and q is invalid: For hyperbolic lattices (p-2)*(q-2) > 4 must hold.
+
+    Attributes
+    ----------
+    p : int
+        The first fundamental lattice parameter.
+    q : int
+        The second fundamental lattice parameter.
+    n : int
+        A parameter defining the size of the graph.
+    """
+
+    def __init__(self, p: int, q: int, n: int):
+        if not ((p - 2) * (q - 2) > 4):
+            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+
+        self.p = p
+        self.q = q
+        self.n = n
+
+    def __repr__(self):
+        """
+        Return a string representation of the GraphExtended object.
+
+        Returns
+        -------
+        str
+            String representation of the GraphExtended object.
+        """
+        return f"GraphExtended {self.p, self.q, self.n}"
+
+    @abc.abstractmethod
+    def __len__(self):
+        """
+        Abstract method to return the length of the GraphExtended object.
+        """
+        pass
+
+
+class GraphExtended(Graph):
+    """
+    Extension to the hyperbolic Graph ABC yielding further information for lattice construction
+
+    Parameters
+    ----------
+    p : int
+        The first fundamental lattice parameter.
+    q : int
+        The second fundamental lattice parameter.
+    n : int
+        A parameter defining the size of the graph.
     mangle : float, optional
         Magic angle required for technical reasons, by default MAGICANGLE
 
@@ -38,7 +91,7 @@ class Graph(abc.ABC):
     q : int
         The second fundamental lattice parameter.
     n : int
-        A parameter defining the size of the graph. 
+        A parameter defining the size of the graph.
     phi : float
         Angle of rotation that leaves the lattice invariant when cell centered.
     qhi : float
@@ -52,20 +105,15 @@ class Graph(abc.ABC):
     mangle : float
         Magic angle required for technical reasons.
     _nbrs : None
-        A placeholder for storing adjacency relations. 
+        A placeholder for storing adjacency relations.
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
 
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
+        super().__init__(p, q, n)
 
-        self.p = p
-        self.q = q
-        self.n = n
-
-        self.phi = 2 * np.pi / self.p  
-        self.qhi = 2 * np.pi / self.q  
+        self.phi = 2 * np.pi / self.p
+        self.qhi = 2 * np.pi / self.q
 
         self.r = fund_radius(self.p, self.q)
         self.h = lattice_spacing_weierstrass(self.p, self.q)
@@ -74,29 +122,8 @@ class Graph(abc.ABC):
         self.mangle = mangle
         self._nbrs = None
 
-    def __repr__(self):
-        """
-        Return a string representation of the Graph object.
 
-        Returns
-        -------
-        str
-            String representation of the Graph object.
-        """
-        return f"Graph {self.p, self.q, self.n}"
-
-    @abc.abstractmethod
-    def __len__(self):
-        """
-        Abstract method to return the length of the Graph object.
-        """
-        pass
-
-
-
-
-
-class Tiling(Graph):
+class Tiling(GraphExtended):
     """
     This is the abstract base class of a hyperbolic tiling.
 
