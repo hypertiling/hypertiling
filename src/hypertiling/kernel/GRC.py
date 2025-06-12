@@ -1,17 +1,36 @@
 from typing import List
-from hypertiling.kernel_abc import GraphExtended
+from hypertiling.kernel_abc import Graph
 import GRC_util as util
 import numpy as np
 import itertools
 
 
-class GRC(GraphExtended):
+class GRC(Graph):
     """
-    GRC
-    A GR based kernel working fully combinatorial
+    Generative Reflection Combinatorial
+    GR based kernel for generating (p, q, n) tilings
     """
 
     def __init__(self, p: int, q: int, n: int, sector=True, tiling=True, nbrs=True):
+        """
+        Initialize a tesselation with Schwarian triangles.
+
+        Parameters
+        ----------
+        p : int
+            Number of edges per cell
+        q : int
+            Number of cells meeting at a vertex
+        n : int
+            Number of layers to be constructed
+        sector : bool
+            If True, a single sector is constructed and stored. All other sectors are provided on-demand by generation.
+            (Not yet implemented)!
+        tiling : bool
+            If True, coordinates are calculated for the triangles
+        nbrs : bool
+            If True, neighbor relations are traced during construction
+        """
         super().__init__(p, q, n)
 
         self.sector = sector
@@ -27,22 +46,23 @@ class GRC(GraphExtended):
 
     def __getitem__(self, item):
         """
-        Get neighbor of the polygon at index.
-
-        Time-complexity (single polygon): O(p)
-
+        If tiling=True, returns the coordinates of the triangle at index {item}
+        If tiling=False, nbrs=True, returns the neighbor array for the triangle at index {item}
+        Requires at least one of tiling or nbrs to be True!
         Parameters
         ----------
         item : int
-            Index of the polygon for whom the neighbors will be searched for.
+            Index of the polygon.
 
         Returns
         -------
         np.array
-            Indices of the neighbors.
+            Either array of shape 3 yielding coordinates
+            OR
+            array of shape 3 yielding neighbor relations
         """
         if self.tiling:
-            return self.get_coords(item)
+            return self.get_vertices(item)
         elif self.nbrs:
             return self.get_nbrs(item)
         else:
@@ -50,23 +70,23 @@ class GRC(GraphExtended):
 
     def __len__(self):
         """
-        Return the number of polygons in the tiling
+        Return the number of polygons in the tiling.
 
         Time-complexity: O(1)
 
         Returns
         -------
         int
-            Number of polygons in the tiling
+            Number of cells in the tiling.
         """
         return self.length
 
     def __iter__(self) -> np.array:
         """
-        Iterates over the whole grid. As only one sector is stored in the memory, the others are generated when needed.
-        Time-complexity (single polygon): O(p)
+        Iterates over the tiling and yields the triangle coordinates.
+        This is not available if tiling=False!
         :yield: np.array
-            Array of shape [center, vertices].
+            Array of shape [center, vertices]
         """
         if not self.tiling:
             raise AttributeError("Iterate is only available for tilings (i.e. tiling=True)")
@@ -100,21 +120,20 @@ class GRC(GraphExtended):
 
     # Helper ###########################################################################################################
 
-    def get_coords(self, index: int) -> np.complex128:
+    def get_vertices(self, index: int) -> np.complex128:
         """
-        Get the coordinates for the center of the node at index.
-
-        Time-complexity: O(1)
+        Returns the p vertices of the polygon at index.
+        Requires tiling=True!
 
         Parameters
         ----------
         index : int
-            Index of the node of consideration.
+            Index of the polygon.
 
         Returns
         -------
-        np.complex128
-            Center of the node in complex coordinates.
+        np.array
+            Array of shape (p,) containing vertices of the polygon.
         """
         if not self.tiling:
             AttributeError("Non tiling does not have coords (tiling=False)!")
@@ -152,7 +171,7 @@ class GRC(GraphExtended):
 
         return [nbrs_[np.where(nbrs_ != -1)].tolist() for nbrs_ in nbrs]
 
-    def get_nbrs(self, index: int) -> List[int]:
+    def get_nbrs(self, index: int) -> np.array:
         """
         Create and return list of all neighbors of index
 
@@ -160,8 +179,8 @@ class GRC(GraphExtended):
 
         Returns
         -------
-        List[int]
-            List of all neighbors for polygon at index.
+        np.array[int]
+            Array of all neighbors for polygon at index.
         """
         if not self.nbrs:
             AttributeError("No neighbors as nbrs=False!")
@@ -180,7 +199,7 @@ class GRC(GraphExtended):
         else:
             return nbrs
 
-    def get_reflection_level(self, index) -> int:
+    def get_reflection_level(self, index: int) -> int:
         """
         Get the neighbors of a polygon at index
 

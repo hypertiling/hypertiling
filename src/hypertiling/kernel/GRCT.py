@@ -143,8 +143,8 @@ class GRCT:
 
         Returns
         -------
-        List[int]
-            List of all neighbors for polygon at index.
+        np.array[int]
+            Array of all neighbors for polygon at index.
         """
         if not self.nbrs:
             AttributeError("No neighbors as nbrs=False!")
