@@ -11,7 +11,7 @@ class GRC(Graph):
     GR based kernel for generating (p, q, n) tilings
     """
 
-    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = True, nbrs: bool = True):
+    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = False):
         """
         Initialize a tesselation with Schwarian triangles.
 
@@ -198,7 +198,7 @@ class GRC(Graph):
             nbrs = [nbrs_[np.where(nbrs_ != -1)] for nbrs_ in nbrs]
             sector_nbrs = [[self._map2sector(nbrs_, k).tolist() for nbrs_ in nbrs[1:]] for k in range(1, self.p)]
             nbrs = [nbrs_.tolist() for nbrs_ in nbrs]
-            nbrs[0] = [(self.lvls[-1] - 1) * i + 1 for i in range(p)]
+            nbrs[0] = [(self.lvls[-1] - 1) * i + 1 for i in range(self.p)]
             return list(itertools.chain(*([nbrs] + sector_nbrs)))
 
         return [nbrs_[np.where(nbrs_ != -1)].tolist() for nbrs_ in nbrs]
@@ -225,7 +225,7 @@ class GRC(Graph):
 
         if self.sector:
             if index == 0:
-                return np.array([(self.lvls[-1] - 1) * i + 1 for i in range(p)])
+                return np.array([(self.lvls[-1] - 1) * i + 1 for i in range(self.p)])
             else:
                 return self._map2sector(nbrs, k)
         else:

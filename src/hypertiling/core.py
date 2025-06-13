@@ -85,15 +85,15 @@ def HyperbolicTiling(*args, kernel: Union[TilingKernels, str] = TilingKernels.St
     # if p > 20 or q > 20 and n > 5:
     #    htprint("Warning", "The lattice might become very large with your parameter choice!")
 
-    if kernel == StaticRotationalLegacy:
+    if kernel == "SRL":
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
-    elif kernel == GenerativeReflection:
+    elif kernel == "GR":
         htprint("Status", "Parameter n is interpreted as number of reflective layers. Compare documentation.")
         htprint("Warning", "This kernel is deprecated! Better use the 'GRC' kernel instead!")
-    elif kernel == GRC:
+    elif kernel == "GRC":
         htprint("Status", "Parameter n is interpreted as number of reflective layers. Compare documentation.")
         kwargs["tiling"] = True
-    elif kernel == GRCT:
+    elif kernel == "GRCT":
         htprint("Status", "Schwarzian triangle with (p, q, r) with n layers selected")
         kwargs["tiling"] = True
     elif kernel in [StaticRotationalSector, StaticRotationalGraph, StaticRotationalLegacy, Dunham, DunhamX,
@@ -135,16 +135,16 @@ def HyperbolicGraph(*args, kernel: Union[GraphKernels, str] = GraphKernels.Gener
     # if p > 20 or q > 20 and n > 5:
     #    htprint("Warning", "The lattice might become very large with your parameter choice!")
 
-    if kernel == GenerativeReflectionGraph:
+    if kernel == "GRG":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "This kernel is deprecated! Better use the 'GRC' kernel instead!")
-    elif kernel == GenerativeReflectionGraphStatic:
+    elif kernel == "GRGS":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
         htprint("Warning", "This kernel is deprecated! Better use the 'GRC' kernel instead!")
-    elif kernel == GRC:
+    elif kernel == "GRC":
         htprint("Status", "Parameter n is interpreted as number of reflective layers. Compare documentation.")
         kwargs["nbrs"] = True
-    elif kernel == GRCT:
+    elif kernel == "GRCT":
         htprint("Status", "Schwarzian triangle with (p, q, r) with n layers selected")
         kwargs["nbrs"] = True
 

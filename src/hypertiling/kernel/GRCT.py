@@ -10,7 +10,7 @@ class GRCT(Graph):
     Kernel for generating (p, q, r, n) tilings of Schwarzian triangles
     """
 
-    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = True, nbrs: bool = True):
+    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False):
         """
         Initialize a tesselation with Schwarian triangles.
 

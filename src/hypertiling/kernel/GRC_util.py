@@ -541,7 +541,7 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
-    p, q, n = 7, 3, 4
+    p, q, n = 3, 7, 4
 
     t1 = time.time()
     coords, nbrs, lvls = construct_full(p, q, n, True, True)
