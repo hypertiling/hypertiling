@@ -43,6 +43,7 @@ class GRCT(Graph):
             raise NotImplementedError("NOT YET IMPLEMENTED")
         else:
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, self.tiling, self.nbrs)
+            print(self.coords.shape)
             self.length = self.lvls[-1]
 
     def __repr__(self):
