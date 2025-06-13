@@ -106,7 +106,7 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         else:
             start = f"\t<path  "
         svg.write(start + "\r")
-        
+
         z0 = np.conj(pgon[1])
         x0, y0 = to_px(z0)
         path = f"       d = 'M {np.round(x0, digits)} {np.round(y0, digits)} "
@@ -140,6 +140,7 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
                 q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
                 r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
                 path += f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 0 {int(orientation)} {np.round(x2, digits)} {np.round(y2, digits)} "
+
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
 
