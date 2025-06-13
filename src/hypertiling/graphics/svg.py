@@ -106,6 +106,7 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
         else:
             start = f"\t<path  "
         svg.write(start + "\r")
+        
         z0 = np.conj(pgon[1])
         x0, y0 = to_px(z0)
         path = f"       d = 'M {np.round(x0, digits)} {np.round(y0, digits)} "
@@ -141,8 +142,11 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
                 path += f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 0 {int(orientation)} {np.round(x2, digits)} {np.round(y2, digits)} "
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
+
+    # write unitcircle
     if unitcircle:
         svg.write('<circle cx="100" cy="100" r="99.9999" fill="none" />')
+
     svg.write("</g>")
     svg.write("\r</svg>")
     return svg.print()
