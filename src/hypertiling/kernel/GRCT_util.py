@@ -181,23 +181,29 @@ def propagate_coords(p_index: int, c_index: int, epv: int, coords: np.array):
     apv = (epv + 2) % 3
 
     coords[c_index] = coords[p_index]
-    z0 = coords[c_index, epv]
+    z0 = coords[c_index, epv + 1]
 
     # coords[c_index] = tf(coords[c_index], z0)
-    array_trans.morigin(3, z0, coords[c_index])
+    array_trans.morigin(4, z0, coords[c_index])
 
-    phi2 = 2 * np.angle(coords[c_index, apv])
+    phi2 = 2 * np.angle(coords[c_index, apv + 1])
     coords[c_index] = np.conjugate(coords[c_index])
     coords[c_index] *= complex(np.cos(phi2), np.sin(phi2))
 
     # coords[c_index] = tf(coords[c_index], - z0)
-    array_trans.morigin(3, -z0, coords[c_index])
+    array_trans.morigin(4, -z0, coords[c_index])
 
-    coords[c_index] = np.flip(coords[c_index])
+    coords[c_index, 1:] = np.flip(coords[c_index, 1:].copy())  # copy necessary for numba
+
+    # substitutes roll for triangles
     if epv == 0:
-        buffer = coords[c_index, 0]
-        coords[c_index, :2] = coords[c_index, 1:]
-        coords[c_index, 2] = buffer
+        # coords = [c, p, q, r]
+        # buffer = p
+        # coords = [c, q, r, r]
+        # coords = [c, q, r, p]
+        buffer = coords[c_index, 1]
+        coords[c_index, 1:3] = coords[c_index, 2:]
+        coords[c_index, 3] = buffer
 
 
 @NumbaChecker(["int32(int32, int32, int32[:,:], int32[:,:], int32[:,:], int32, boolean)"])
@@ -305,7 +311,7 @@ def construct_full(p: int, q: int, r: int, n: int, tiling: bool, nbrs_: bool) ->
         nbrs = np.empty((1, 1), dtype=np.int32)
 
     if tiling:
-        coords = np.empty((length, 3), dtype=np.complex128)
+        coords = np.empty((length, 4), dtype=np.complex128)
     else:
         coords = np.empty((1, 1), dtype=np.complex128)
 
@@ -320,9 +326,10 @@ def construct_full(p: int, q: int, r: int, n: int, tiling: bool, nbrs_: bool) ->
         # create fundamental triangle
         l = distance(p, q, r)
         m = distance(q, p, r)
-        coords[0, 0] = np.sqrt((l - 1) / (l + 1))
-        coords[0, 1] = np.sqrt((m - 1) / (m + 1)) * np.exp(1j * np.pi / r)
-        coords[0, 2] = 0
+        coords[0, 1] = np.sqrt((l - 1) / (l + 1))
+        coords[0, 2] = np.sqrt((m - 1) / (m + 1)) * np.exp(1j * np.pi / r)
+        coords[0, 3] = 0
+        coords[0, 0] = np.sum(coords[0, 1:]) / 3
 
     edges[0, 0] = q
     edges[0, 1] = p
@@ -411,7 +418,7 @@ if __name__ == "__main__":
     import time
 
     # p, q, r, n = 2, 3, 7, 12  # 15
-    p, q, r, n = 5, 4, 2, 15  # 7, 11, 4
+    p, q, r, n = 5, 4, 2, 10  # 7, 11, 4
     # p, q, r, n = 8, 3, 2, 18
 
     # print("Start")
@@ -439,12 +446,13 @@ if __name__ == "__main__":
     for i in range(0, coords.shape[0]):
         if i in highlight:
             facecolor = colors[get_reflection_level(i) % len(colors)]
-            center = np.sum(coords[i]) / 3 - 0.02  # Magic number 0.02
+            center = coords[i, 0]  # np.sum(coords[i]) / 3 - 0.02  # Magic number 0.02
             if not (numbers[i] is False):
                 fig_ax[1].text(np.real(center), np.imag(center), str(numbers[i]))
         else:
             facecolor = "#AAAAAA60"
-        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in coords[i]]), facecolor=facecolor,
+
+        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in coords[i, 1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 

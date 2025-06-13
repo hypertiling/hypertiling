@@ -1,6 +1,6 @@
 from typing import List, Tuple
 from hypertiling.kernel_abc import Graph
-import GRC_util as util
+import hypertiling.kernel.GRC_util as util
 import numpy as np
 import itertools
 

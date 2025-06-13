@@ -38,9 +38,6 @@ class Graph(abc.ABC):
     """
 
     def __init__(self, p: int, q: int, n: int):
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-
         self.p = p
         self.q = q
         self.n = n
@@ -54,7 +51,7 @@ class Graph(abc.ABC):
         str
             String representation of the GraphExtended object.
         """
-        return f"GraphExtended {self.p, self.q, self.n}"
+        return f"Graph {self.p, self.q, self.n}"
 
     @abc.abstractmethod
     def __len__(self):
@@ -109,7 +106,8 @@ class GraphExtended(Graph):
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
-
+        if not ((p - 2) * (q - 2) > 4):
+            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
         super().__init__(p, q, n)
 
         self.phi = 2 * np.pi / self.p
@@ -121,6 +119,17 @@ class GraphExtended(Graph):
 
         self.mangle = mangle
         self._nbrs = None
+
+    def __repr__(self):
+        """
+        Return a string representation of the GraphExtended object.
+
+        Returns
+        -------
+        str
+            String representation of the GraphExtended object.
+        """
+        return f"GraphExtended {self.p, self.q, self.n}"
 
 
 class Tiling(GraphExtended):

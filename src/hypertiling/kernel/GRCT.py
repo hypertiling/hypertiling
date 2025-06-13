@@ -1,9 +1,10 @@
 from typing import List
 import numpy as np
+from hypertiling.kernel_abc import Graph
 import hypertiling.kernel.GRCT_util as util
 
 
-class GRCT:
+class GRCT(Graph):
     """
     Generative Reflection Combinatorial Triangle
     Kernel for generating (p, q, r, n) tilings of Schwarzian triangles
@@ -32,10 +33,7 @@ class GRCT:
             If True, neighbor relations are traced during construction
         """
         super().__init__(p, q, n)
-        self.p = p
-        self.q = q
         self.r = r
-        self.n = n
 
         self.sector = sector
         self.tiling = tiling
@@ -46,6 +44,17 @@ class GRCT:
         else:
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, self.tiling, self.nbrs)
             self.length = self.lvls[-1]
+
+    def __repr__(self):
+        """
+        Return a string representation of the GraphExtended object.
+
+        Returns
+        -------
+        str
+            String representation of the GraphExtended object.
+        """
+        return f"Schwarzian {self.p, self.q, self.r, self.n}"
 
     def __iter__(self) -> np.array:
         """

@@ -15,7 +15,6 @@ R = 3  # right symmetric filler
 #    z -= z0
 #    z /= divi
 
-
 @NumbaChecker("int32[:](int32, int32, int32)")
 def n2polyN(p, q, n):
     """
@@ -253,19 +252,19 @@ def propagate_coords(p: int, p_index: int, c_index: int, edge: int, coords: np.a
         Array yielding the coordinates of all triangles
     """
     coords[c_index] = coords[p_index]
-    z0 = coords[c_index, edge]
+    z0 = coords[c_index, edge + 1]
 
     # tf(coords[c_index], z0)
-    array_trans.morigin(p, z0, coords[c_index])
+    array_trans.morigin(p + 1, z0, coords[c_index])
 
-    phi2 = 2 * np.angle(coords[c_index, (edge + 1) % p])  # phi2 = phi + phi
+    phi2 = 2 * np.angle(coords[c_index, (edge + 1) % p + 1])  # phi2 = phi + phi
     coords[c_index] = np.conjugate(coords[c_index])
     coords[c_index] *= complex(np.cos(phi2), np.sin(phi2))
 
     # tf(coords[c_index], - z0)
-    array_trans.morigin(p, -z0, coords[c_index])
+    array_trans.morigin(p + 1, -z0, coords[c_index])
 
-    coords[c_index] = np.roll(np.flip(coords[c_index]), edge + 1)
+    coords[c_index, 1:] = np.roll(np.flip(coords[c_index, 1:]), edge + 1)
 
 
 @NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, boolean, boolean)")
@@ -312,10 +311,11 @@ def construct_sector(p: int, q: int, n: int, tiling: bool, nbrs_: bool) -> Tuple
         nbrs = np.empty((1, 1), dtype=np.int32)
 
     if tiling:
-        coords = np.empty((length, p), dtype=np.cdouble)
+        coords = np.empty((length, p + 1), dtype=np.cdouble)
         pq = p * q
         r = np.sqrt(np.cos(np.pi * (p + q) / pq) / np.cos(np.pi * (p - q) / pq))
-        coords[0] = r * np.exp(2j * np.pi * np.arange(p) / p)
+        coords[0, 0] = 0
+        coords[0, 1:] = r * np.exp(2j * np.pi * np.arange(p) / p)
     else:
         coords = np.empty((1, 1), dtype=np.cdouble)
 
@@ -448,10 +448,11 @@ def construct_full(p, q, n, tiling, nbrs_):
         nbrs = np.empty((1, 1), dtype=np.int32)
 
     if tiling:
-        coords = np.empty((length, p), dtype=np.cdouble)
+        coords = np.empty((length, p + 1), dtype=np.cdouble)
         pq = p * q
         r = np.sqrt(np.cos(np.pi * (p + q) / pq) / np.cos(np.pi * (p - q) / pq))
-        coords[0] = r * np.exp(2j * np.pi * np.arange(p) / p)
+        coords[0, 0] = 0
+        coords[0, 1:] = r * np.exp(2j * np.pi * np.arange(p) / p)
     else:
         coords = np.empty((1, 1), dtype=np.cdouble)
 
@@ -543,7 +544,7 @@ if __name__ == "__main__":
     p, q, n = 7, 3, 4
 
     t1 = time.time()
-    coords, nbrs, lvls = construct_sector(p, q, n, True, True)
+    coords, nbrs, lvls = construct_full(p, q, n, True, True)
     t2 = time.time()
     print(f"Took {t2 - t1}s with a total of {lvls[-1]} triangles")
     print(lvls)
@@ -565,17 +566,17 @@ if __name__ == "__main__":
 
     for i in range(0, coords.shape[0]):
         facecolor = colors[get_reflection_level(i) % len(colors)]
-        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in coords[i]]), facecolor=facecolor,
+        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in coords[i, 1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        center = np.sum(coords[i]) / p
+        center = coords[i][0]  #  / p
         for nbr in nbrs[i, 1:]:
 
             if nbr == -1 or nbr >= lvls[-1]:
                 continue
 
-            center2 = np.sum(coords[nbr]) / p
+            center2 = coords[nbr][0]
             end = (center2 - center) / 2 + center
             fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
 
