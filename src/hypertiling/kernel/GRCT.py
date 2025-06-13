@@ -92,7 +92,7 @@ class GRCT(Graph):
         elif self.nbrs:
             return self.get_nbrs(item)
         else:
-            TypeError("Neither nbrs nor coordinates were calculated!")
+            raise TypeError("Neither nbrs nor coordinates were calculated!")
 
     def __len__(self) -> int:
         """
@@ -123,7 +123,7 @@ class GRCT(Graph):
             Array of shape (p,) containing vertices of the polygon.
         """
         if not self.tiling:
-            AttributeError("Non tiling does not have coords (tiling=False)!")
+            raise AttributeError("Non tiling does not have coords (tiling=False)!")
         return self.coords[index]
 
     def get_reflection_level(self, index) -> int:
@@ -157,7 +157,7 @@ class GRCT(Graph):
             Array of all neighbors for polygon at index.
         """
         if not self.nbrs:
-            AttributeError("No neighbors as nbrs=False!")
+            raise AttributeError("No neighbors as nbrs=False!")
 
         nbrs = self.nbrs_[index, 1:]
         nbrs = nbrs[np.where(nbrs != -1)]
@@ -176,7 +176,7 @@ class GRCT(Graph):
             List of all neighbors for all polygons.
         """
         if not self.nbrs:
-            AttributeError("No neighbors as nbrs=False!")
+            raise AttributeError("No neighbors as nbrs=False!")
 
         nbrs = self.nbrs_[:, 1:]
         return [nbrs_[np.where(nbrs_ != -1)].tolist() for nbrs_ in nbrs]

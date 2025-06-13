@@ -66,7 +66,7 @@ class GRC(Graph):
         elif self.nbrs:
             return self.get_nbrs(item)
         else:
-            TypeError("Neither nbrs nor coordinates were calculated!")
+            raise TypeError("Neither nbrs nor coordinates were calculated!")
 
     def __len__(self):
         """
@@ -168,7 +168,7 @@ class GRC(Graph):
             Array of shape (p,) containing vertices of the polygon.
         """
         if not self.tiling:
-            AttributeError("Non tiling does not have coords (tiling=False)!")
+            raise AttributeError("Non tiling does not have coords (tiling=False)!")
 
         if self.sector:
             k, index = self._map2fundamental(index)
@@ -191,7 +191,7 @@ class GRC(Graph):
             List of all neighbors for all polygons.
         """
         if not self.nbrs:
-            AttributeError("No neighbors as nbrs=False!")
+            raise AttributeError("No neighbors as nbrs=False!")
 
         nbrs = self.nbrs_[:, 1:]
         if self.sector:
@@ -214,8 +214,8 @@ class GRC(Graph):
         np.array[int]
             Array of all neighbors for polygon at index.
         """
-        if not self.nbrs:
-            AttributeError("No neighbors as nbrs=False!")
+        if self.nbrs is False:
+            raise AttributeError("No neighbors as nbrs=False!")
 
         if self.sector:
             k, index = self._map2fundamental(index)
