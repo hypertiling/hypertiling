@@ -43,7 +43,6 @@ class GRCT(Graph):
             raise NotImplementedError("NOT YET IMPLEMENTED")
         else:
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, self.tiling, self.nbrs)
-            print(self.coords.shape)
             self.length = self.lvls[-1]
 
     def __repr__(self):
@@ -186,6 +185,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     graph = GRCT(3, 7, 4, 10)
+    graph = GRCT(5, 4, 6, 1, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
     nbrs = graph.get_nbrs_list()
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     for i, poly in enumerate(graph):
         # poly_layer = graph.get_reflection_level(i)
         facecolor = "#A0A0A060"  # colors[poly_layer % len(colors)]
-        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly]),
+        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
