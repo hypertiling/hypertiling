@@ -3,7 +3,6 @@ from hypertiling.check_numba import NumbaChecker
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 
-
 #@NumbaChecker("complex128[:](complex128[:], complex128)")
 #def tf(z, z0):
 #   return (z - z0) / (1 - z * np.conjugate(z0))
@@ -119,8 +118,8 @@ def propagate(p_index: int, cp_index: int, c_index: int, epv: int, edges: np.arr
         if counters[cp_index, 1] == 0 and counters[cp_index, 2] == 0:
             counters[c_index, npv] = counters[cp_index, 0]
 
-        # if flags[cp_index, epv] == 1 and flags[cp_index, npv] == 2:
-        #    flags[c_index, npv] = 1
+        if flags[cp_index, epv] == 1 and flags[cp_index, npv] == 2:
+           flags[c_index, npv] = 1
 
     elif flags[c_index, apv] == 1 and counters[c_index, apv] == 0:
         flags[c_index, npv] = 1
@@ -237,6 +236,7 @@ def register(p_index: int, c_index: int, nbrs: np.array, counters: np.array, fla
         completed (Automatically done in construct function)
         If 0, all neighbor relations where established successfully
     """
+
     # parent - child relation
     nbrs[c_index, nbrs[c_index, 0]] = p_index
     nbrs[p_index, nbrs[p_index, 0]] = c_index

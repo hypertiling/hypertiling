@@ -185,8 +185,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     graph = GRCT(4, 4, 7, 10, tiling=True)
-    print(graph.coords[:14])
-    graph = GRCT(5, 4, 6, 1, nbrs=True, tiling=True)
+    graph = GRCT(5, 4, 2, 8, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
     nbrs = graph.get_nbrs_list()
 
@@ -204,9 +203,9 @@ if __name__ == "__main__":
         fig_ax[1].add_patch(patch)
 
         if True:
-            center = np.sum(poly) / 3
+            center = poly[0]
             for nbr in nbrs[i]:
-                center2 = np.sum(graph.get_vertices(nbr)) / 3
+                center2 = graph.get_vertices(nbr)[0]
                 end = (center2 - center) / 2 + center
                 fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
         # fig_ax[1].text(np.real(center), np.imag(center), str(i))
