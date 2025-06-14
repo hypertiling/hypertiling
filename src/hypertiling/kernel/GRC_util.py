@@ -570,7 +570,7 @@ if __name__ == "__main__":
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        center = coords[i][0]  #  / p
+        center = coords[i][0]  # / p
         for nbr in nbrs[i, 1:]:
 
             if nbr == -1 or nbr >= lvls[-1]:

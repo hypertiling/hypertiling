@@ -184,7 +184,8 @@ class GRCT(Graph):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-    graph = GRCT(3, 7, 4, 10)
+    graph = GRCT(4, 4, 7, 10, tiling=True)
+    print(graph.coords[:14])
     graph = GRCT(5, 4, 6, 1, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
     nbrs = graph.get_nbrs_list()

@@ -4,9 +4,9 @@ import numpy as np
 import hypertiling.arraytransformation as array_trans
 
 
-# @NumbaChecker("complex128[:](complex128[:], complex128)")
-# def tf(z, z0):
-#    return (z - z0) / (1 - z * np.conjugate(z0))
+#@NumbaChecker("complex128[:](complex128[:], complex128)")
+#def tf(z, z0):
+#   return (z - z0) / (1 - z * np.conjugate(z0))
 
 
 @NumbaChecker("float64(int32, int32, int32)")
