@@ -32,7 +32,7 @@ def set_verbosity_level(verbosity_depth="Warning"):
     show_verbosity_level()
 
 
-def htprint(verbosity_depth, message):
+def htprint(verbosity_depth, message, **kwargs):
     """
     Use this function for print messages
 
@@ -44,7 +44,7 @@ def htprint(verbosity_depth, message):
     """
     if VERBOSITY_LEVELS[verbosity_depth] <= VERBOSITY_LEVELS[GLOBAL_VERBOSITY]:
         prefix = "[hypertiling] "+verbosity_depth+": "
-        print(prefix+message)
+        print(prefix+message, **kwargs)
 
 
 

@@ -1,6 +1,7 @@
 from typing import List, Tuple
 from hypertiling.kernel_abc import Graph
 import hypertiling.kernel.GRC_util as util
+import hypertiling.ion as ion
 import numpy as np
 import itertools
 
@@ -254,8 +255,70 @@ class GRC(Graph):
         return level + 1 if self.lvls[level] == index else level
 
     def check_integrity(self):
-        raise NotImplementedError(
-            "This function is no longer required (and supported) as the kernel is combinatorial now")
+        """
+        Controls the integrity of the tesselation by
+        1. Controlling the number of neighbors for each cell
+        2. Bidirectional search for dual lattice
+        Time-complexity: O(TODO)
+        :return: void
+        """
+
+        if not self.nbrs:
+            raise AttributeError("Non-Graph (nbrs=False) has no check_integrity implementation")
+
+        n = self.n - ((self.q + 1) // 2 - 1)
+        ion.htprint("Status", f"Integrity can only be ensured for the first n - q // 2 layer and thus layer {n}")
+
+        # check for nbrs
+        ln = self.lvls[self.n - 2] - 1
+        for i in range(self.lvls[self.n - 2]):
+            progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
+            ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {i} / {ln}", end="")
+            n_ = self.get_reflection_level(i)
+            if (nbrs := len(self.get_nbrs(i))) < self.p:
+                raise AttributeError(f"Tesselation is corrupted! Cell {i} in layer {n_} has {nbrs}")
+        print("")
+        # ion.htprint("Status", f"Nbr relations controlled")
+
+        # dual lattice
+        ln = self.lvls[n - 1] - 1
+        for i in range(self.lvls[n - 1]):
+            progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
+            ion.htprint("Status", f"\r|{progbar}| Bidirectional search for cell {i} / {ln}", end="")
+
+            # print(f"Cell {i} has nbrs {self.get_nbrs(i)}")
+            for nbr in self.get_nbrs(i):
+                # print(f"Search {i} - {nbr}")
+                # bidirectional search with depth (q - 1) // 2
+                cells = [i]
+                cell_parents = {i: nbr}
+                nbr_cells = [nbr]
+                nbr_parents = {nbr: i}
+                for s in range((self.q - 1) // 2):
+                    new_cells = []
+
+                    # print("\t", cells, end=">")
+                    for cell in cells:
+                        new_cells += (childs := [nbr for nbr in self.get_nbrs(cell) if nbr != cell_parents[cell]])
+                        cell_parents |= {child: cell for child in childs}
+                    cells = new_cells
+                    # print("\t", cells)
+
+                    # print("\t", nbr_cells, end=" >")
+                    new_nbrs = []
+                    for cell in nbr_cells:
+                        new_nbrs += (childs := [nbr for nbr in self.get_nbrs(cell) if nbr != nbr_parents[cell]])
+                        nbr_parents |= {child: cell for child in childs}
+                    nbr_cells = new_nbrs
+                    # print("\t", nbr_cells)
+
+                    if sum([1 if (cell in nbr_cells) else 0 for cell in cells]) == 2:
+                        break
+                else:
+                    raise ArithmeticError(f"At least one connection between {i} - {nbr} could not be established!")
+        print("")
+        # ion.htprint("Status", f"Dual lattice controlled")
+        ion.htprint("Status", f"Integrity ensured!")
 
 
 if __name__ == "__main__":
@@ -263,11 +326,15 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import matplotlib.pyplot as plt
 
-    p, q, n = 7, 3, 5
+    ion.set_verbosity_level("Status")
+
+    p, q, n = 4, 5, 12
 
     t1 = time.time()
-    graph = GRC(p, q, n, sector=True)
+    graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
+    graph.check_integrity()
+    exit()
     nbrs = graph.get_nbrs_list()
 
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]
@@ -278,19 +345,19 @@ if __name__ == "__main__":
 
     for i, poly in enumerate(graph):
         sector, _ = graph._map2fundamental(i)
-        if sector != 0:
-            continue
+        # if sector != 0:
+        #    continue
 
         facecolor = colors[graph.get_reflection_level(i) % len(colors)]
-        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly]), facecolor=facecolor,
+        patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        center = np.sum(poly) / p
+        center = poly[0]
         # for nbr in nbrs[i]:
-        #    center2 = np.sum(graph.get_coords(nbr)) / p
-        #    end = (center2 - center) / 2 + center
-        #    fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
-        fig_ax[1].text(np.real(center), np.imag(center), str(i + 1))
+        #   center2 = graph.get_vertices(nbr)[0]
+        #   end = (center2 - center) / 2 + center
+        #   fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
+        fig_ax[1].text(np.real(center), np.imag(center), str(i))
 
     plt.show()

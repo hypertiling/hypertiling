@@ -188,7 +188,6 @@ if __name__ == "__main__":
     graph = GRCT(5, 4, 2, 8, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
     nbrs = graph.get_nbrs_list()
-
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
