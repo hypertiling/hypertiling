@@ -222,7 +222,8 @@ class GRC(Graph):
             k, index = self._map2fundamental(index)
 
         nbrs = self.nbrs_[index, 1:]
-        nbrs = nbrs[np.where(nbrs != -1)]
+        nbrs = nbrs[:self.nbrs_[index, 0]]
+        # nbrs = nbrs[np.where(nbrs != -1)]
 
         if self.sector:
             if index == 0:
@@ -266,7 +267,7 @@ class GRC(Graph):
         if not self.nbrs:
             raise AttributeError("Non-Graph (nbrs=False) has no check_integrity implementation")
 
-        n = self.n - ((self.q + 1) // 2 - 1)
+        n = self.n - ((self.q + 1) // 2)
         ion.htprint("Status", f"Integrity can only be ensured for the first n - q // 2 layer and thus layer {n}")
 
         # check for nbrs
@@ -275,8 +276,14 @@ class GRC(Graph):
             progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
             ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {i} / {ln}", end="")
             n_ = self.get_reflection_level(i)
-            if (nbrs := len(self.get_nbrs(i))) < self.p:
-                raise AttributeError(f"Tesselation is corrupted! Cell {i} in layer {n_} has {nbrs}")
+
+            nbrs = self.get_nbrs(i)
+            if len(nbrs) != len(set(nbrs)):
+                raise AttributeError(f"Tesselation is corrupted! At least one nbr is registered at least twice {nbrs}!")
+            elif len(nbrs) < self.p:
+                raise AttributeError(
+                    f"Tesselation is corrupted! Cell {i} in layer {n_} has {len(nbrs)}/{self.p} unique nbrs")
+
         print("")
         # ion.htprint("Status", f"Nbr relations controlled")
 
@@ -316,6 +323,7 @@ class GRC(Graph):
                         break
                 else:
                     raise ArithmeticError(f"At least one connection between {i} - {nbr} could not be established!")
+            # exit()
         print("")
         # ion.htprint("Status", f"Dual lattice controlled")
         ion.htprint("Status", f"Integrity ensured!")
@@ -328,13 +336,13 @@ if __name__ == "__main__":
 
     ion.set_verbosity_level("Status")
 
-    p, q, n = 4, 5, 12
+    p, q, n = 4, 5, 14
 
     t1 = time.time()
     graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
     graph.check_integrity()
-    exit()
+    # exit()
     nbrs = graph.get_nbrs_list()
 
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]
@@ -348,6 +356,7 @@ if __name__ == "__main__":
         # if sector != 0:
         #    continue
 
+        #9612 - 22076
         facecolor = colors[graph.get_reflection_level(i) % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
@@ -358,6 +367,7 @@ if __name__ == "__main__":
         #   center2 = graph.get_vertices(nbr)[0]
         #   end = (center2 - center) / 2 + center
         #   fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
-        fig_ax[1].text(np.real(center), np.imag(center), str(i))
+        if i in [9612, 22076]:
+            fig_ax[1].text(np.real(center), np.imag(center), str(i))
 
     plt.show()
