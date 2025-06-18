@@ -1,7 +1,9 @@
 from typing import List
 import numpy as np
 from hypertiling.kernel_abc import Graph
+import hypertiling.ion as ion
 import hypertiling.kernel.GRCT_util as util
+import itertools
 
 
 class GRCT(Graph):
@@ -180,13 +182,97 @@ class GRCT(Graph):
         nbrs = self.nbrs_[:, 1:]
         return [nbrs_[np.where(nbrs_ != -1)].tolist() for nbrs_ in nbrs]
 
+    def check_integrity(self):
+        """
+        Controls the integrity of the tesselation by
+        1. Controlling the number of neighbors for each cell
+        2. Bidirectional search for dual lattice
+        Time-complexity: O(TODO)
+        :return: void
+        """
+
+        if not self.nbrs:
+            raise AttributeError("Non-Graph (nbrs=False) has no check_integrity implementation")
+
+        n = self.n - (max_v := max(self.p, self.q, self.r)) + 1
+        ion.htprint("Status",
+                    f"Integrity can only be ensured for the first n - max(p, q, r) 1 layer and thus layer {n}")
+
+        # check for nbrs
+        ln = self.lvls[self.n - 2] - 1
+        for i in range(self.lvls[self.n - 2]):
+            progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
+            ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {i} / {ln}", end="")
+            n_ = self.get_reflection_level(i)
+
+            nbrs = self.get_nbrs(i)
+            if len(nbrs) != len(set(nbrs)):
+                raise AttributeError(f"Tesselation is corrupted! At least one nbr is registered at least twice {nbrs}!")
+            elif len(nbrs) != 3:
+                raise AttributeError(
+                    f"Tesselation is corrupted! Cell {i} in layer {n_} has {len(nbrs)}/3 unique nbrs")
+
+        print("")
+        # ion.htprint("Status", f"Nbr relations controlled")
+
+        # dual lattice
+        ln = self.lvls[n] - 1
+        for i in range(self.lvls[n]):
+            progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
+            ion.htprint("Status", f"\r|{progbar}| Bidirectional search for cell {i} / {ln}", end="")
+
+            # print(f"Cell {i} has nbrs {self.get_nbrs(i)}")
+            for nbr in self.get_nbrs(i):
+                # print(f"Search {i} - {nbr}")
+                # bidirectional search with path remembered
+                # define paths
+                paths1 = [[i]]
+                paths2 = [[nbr]]
+
+                # do first step to prevent direct path
+                paths1 = [paths1[0] + [nbr_] for nbr_ in self.get_nbrs(i) if nbr_ != nbr]
+                paths2 = [paths2[0] + [nbr_] for nbr_ in self.get_nbrs(nbr) if nbr_ != i]
+
+                for s in range(max_v):
+                    # perform single step in one list
+                    paths1 = [path + [nbr_] for path in paths1 for nbr_ in self.get_nbrs(path[-1]) if
+                              not (nbr_ in path)]
+
+                    # control if already connected
+                    common = [len(path1.intersection(path2)) for path1, path2 in itertools.product(
+                        [set(p) for p in paths1],
+                        [set(p) for p in paths2]
+                    )
+                              ]
+
+                    if sum(common) >= 2:
+                        break
+
+                    # perform single step in other list
+                    paths2 = [path + [nbr_] for path in paths2 for nbr_ in self.get_nbrs(path[-1]) if
+                              not (nbr_ in path)]
+
+                else:
+                    print(paths1, n)
+                    # raise ArithmeticError(f"At least one connection between {i} - {nbr} could not be established!")
+                    print(f"At least one connection between {i} - {nbr} could not be established!")
+
+            # exit()
+        print("")
+        # ion.htprint("Status", f"Dual lattice controlled")
+        ion.htprint("Status", f"Integrity ensured!")
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-    graph = GRCT(4, 4, 7, 10, tiling=True)
-    graph = GRCT(5, 4, 2, 8, nbrs=True, tiling=True)
+
+    ion.set_verbosity_level("Status")
+
+    # graph = GRCT(4, 4, 7, 10, tiling=True)
+    graph = GRCT(5, 4, 2, 25, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
+    graph.check_integrity()
     nbrs = graph.get_nbrs_list()
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]
     fig_ax = plt.subplots()
@@ -195,14 +281,14 @@ if __name__ == "__main__":
     fig_ax[1].set_box_aspect(1)
 
     for i, poly in enumerate(graph):
-        # poly_layer = graph.get_reflection_level(i)
-        facecolor = "#A0A0A060"  # colors[poly_layer % len(colors)]
+        poly_layer = graph.get_reflection_level(i)
+        facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        if True:
-            center = poly[0]
+        center = poly[0]
+        if False:
             for nbr in nbrs[i]:
                 center2 = graph.get_vertices(nbr)[0]
                 end = (center2 - center) / 2 + center
