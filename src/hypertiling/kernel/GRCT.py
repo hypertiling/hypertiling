@@ -270,7 +270,7 @@ if __name__ == "__main__":
     ion.set_verbosity_level("Status")
 
     # graph = GRCT(4, 4, 7, 10, tiling=True)
-    graph = GRCT(5, 4, 2, 25, nbrs=True, tiling=True)
+    graph = GRCT(5, 4, 2, 22, nbrs=True, tiling=True)
     print(f"Tiling has {len(graph)} nodes")
     graph.check_integrity()
     nbrs = graph.get_nbrs_list()
