@@ -3,14 +3,14 @@ from hypertiling.core import HyperbolicTiling, TilingKernels, HyperbolicGraph, G
 
 pqrns = [
     (5, 4, 2, 25),
-    (5, 5, 2, 25),
+    (5, 5, 2, 23),
     (7, 3, 2, 26),
     (2, 3, 7, 20),
-    (4, 4, 4, 18),
-    (11, 4, 13, 12),
+    (4, 4, 4, 15),
+    (11, 4, 13, 11),
 ]
 
-lengths = [11008, 55452, 3048, 1610, 141632, 38714]
+lengths = [11008, 28232, 3048, 1610, 27728, 38714]
 
 
 class TestOperators(unittest.TestCase):
@@ -19,8 +19,8 @@ class TestOperators(unittest.TestCase):
 
         # test for sectors
         for (p, q, r, n), length in zip(pqrns, lengths):
-            t = HyperbolicTiling(p, q, r, n, kernel=TilingKernels.GRCT, nbrs=True)
-            g = HyperbolicGraph(p, q, r, n, kernel=GraphKernels.GRCT, tiling=False)
+            t = HyperbolicTiling(p, q, r, n, kernel=TilingKernels.GRCT, nbrs=True, size=50_000)
+            g = HyperbolicGraph(p, q, r, n, kernel=GraphKernels.GRCT, tiling=False, size=50_000)
 
             # test basic properties
             self.assertEqual(length, len(t))
@@ -50,7 +50,7 @@ class TestOperators(unittest.TestCase):
 
     def test_raise(self):
         # test for missing neighbors
-        t = HyperbolicTiling(5, 4, 2, 10, kernel=TilingKernels.GRCT)
+        t = HyperbolicTiling(5, 4, 2, 10, kernel=TilingKernels.GRCT, size=50_000)
 
         with self.assertRaises(AttributeError):
             t.get_nbrs(0)
@@ -62,7 +62,7 @@ class TestOperators(unittest.TestCase):
             t.check_integrity()
 
         # test for missing coordinates
-        g = HyperbolicGraph(5, 4, 2, 10, kernel=GraphKernels.GRCT, tiling=False)
+        g = HyperbolicGraph(5, 4, 2, 10, kernel=GraphKernels.GRCT, tiling=False, size=50_000)
 
         with self.assertRaises(AttributeError):
             for i in g:

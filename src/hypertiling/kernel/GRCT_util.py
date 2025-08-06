@@ -3,8 +3,9 @@ from hypertiling.check_numba import NumbaChecker
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 
-#@NumbaChecker("complex128[:](complex128[:], complex128)")
-#def tf(z, z0):
+
+# @NumbaChecker("complex128[:](complex128[:], complex128)")
+# def tf(z, z0):
 #   return (z - z0) / (1 - z * np.conjugate(z0))
 
 
@@ -119,7 +120,7 @@ def propagate(p_index: int, cp_index: int, c_index: int, epv: int, edges: np.arr
             counters[c_index, npv] = counters[cp_index, 0]
 
         if flags[cp_index, epv] == 1 and flags[cp_index, npv] == 2:
-           flags[c_index, npv] = 1
+            flags[c_index, npv] = 1
 
     elif flags[c_index, apv] == 1 and counters[c_index, apv] == 0:
         flags[c_index, npv] = 1
@@ -272,8 +273,9 @@ def register(p_index: int, c_index: int, nbrs: np.array, counters: np.array, fla
     return 0
 
 
-@NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, int32, boolean, boolean)")
-def construct_full(p: int, q: int, r: int, n: int, tiling: bool, nbrs_: bool) -> Tuple[np.array, np.array, np.array]:
+@NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, int32, int32, boolean, boolean)")
+def construct_full(p: int, q: int, r: int, n: int, size: int, tiling: bool, nbrs_: bool) -> Tuple[
+    np.array, np.array, np.array]:
     """
     Construct the full tesselation
 
@@ -287,6 +289,8 @@ def construct_full(p: int, q: int, r: int, n: int, tiling: bool, nbrs_: bool) ->
         Number of cells on the 3rd vertex
     n : int
         Number of layers
+    size : int
+        Number of nodes in the lattice (maximal)
     tiling : bool
         Indicates if coordinates should be calculated
     nbrs_ : bool
@@ -301,23 +305,22 @@ def construct_full(p: int, q: int, r: int, n: int, tiling: bool, nbrs_: bool) ->
     np.array[int]
         Array of layer sizes
     """
-    length = get_n(p, q, r, n)
 
     # graph properties
     if nbrs_:
-        nbrs = np.full((length, 4), -1, dtype=np.int32)  # [#nbrs, first, sec, third]
+        nbrs = np.full((size, 4), -1, dtype=np.int32)  # [#nbrs, first, sec, third]
         nbrs[:, 0] = 1
     else:
         nbrs = np.empty((1, 1), dtype=np.int32)
 
     if tiling:
-        coords = np.empty((length, 4), dtype=np.complex128)
+        coords = np.empty((size, 4), dtype=np.complex128)
     else:
         coords = np.empty((1, 1), dtype=np.complex128)
 
-    edges = np.empty((length, 3), dtype=np.int32)
-    counters = np.empty((length, 3), dtype=np.int32)
-    flags = np.zeros((length, 3), dtype=np.int32)  # 1 = F, 2 = f
+    edges = np.empty((size, 3), dtype=np.int32)
+    counters = np.empty((size, 3), dtype=np.int32)
+    flags = np.zeros((size, 3), dtype=np.int32)  # 1 = F, 2 = f
     lvls = np.empty(n + 1, dtype=np.int32)
     lvls[0] = 0
     lvls[1] = r + r
