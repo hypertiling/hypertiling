@@ -143,8 +143,8 @@ class GRCT(Graph):
         np.array
             Array containing the indices of the neighbors.
         """
-        level = np.searchsorted(self.lvls, index)
-        return level + 1 if self.lvls[level] == index else level
+        level = np.searchsorted(self.lvls[1:], index)
+        return level + 1 if self.lvls[level + 1] == index else level
 
     def get_nbrs(self, index: int) -> np.array:
         """

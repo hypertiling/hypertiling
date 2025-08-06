@@ -497,7 +497,7 @@ def construct_full(p, q, n, tiling, nbrs_):
     if nbrs_ and q == 3:
         nbrs[1, nbrs[1, 0]] = p
         nbrs[1, 0] += 1
-        nbrs[p, nbrs[p, 0]] = p
+        nbrs[p, nbrs[p, 0]] = 1
         nbrs[p, 0] += 1
 
     lvls[1] = polycounter
