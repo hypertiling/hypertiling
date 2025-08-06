@@ -69,7 +69,7 @@ class TestOperators(unittest.TestCase):
                 pass
 
         with self.assertRaises(AttributeError):
-            t.get_vertices(0)
+            g.get_vertices(0)
 
 
 if __name__ == '__main__':
