@@ -289,6 +289,10 @@ class GRC(Graph):
 
         # dual lattice
         ln = self.lvls[n - 1] - 1
+        if ln == 0:
+            ion.htprint("Status", f"Tiling to small for bidirectional search!")
+            return
+
         for i in range(self.lvls[n - 1]):
             progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
             ion.htprint("Status", f"\r|{progbar}| Bidirectional search for cell {i} / {ln}", end="")
@@ -336,7 +340,7 @@ if __name__ == "__main__":
 
     ion.set_verbosity_level("Status")
 
-    p, q, n = 4, 5, 16
+    p, q, n = 3, 7, 5
 
     t1 = time.time()
     graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)

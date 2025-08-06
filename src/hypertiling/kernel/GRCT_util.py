@@ -183,14 +183,14 @@ def propagate_coords(p_index: int, c_index: int, epv: int, coords: np.array):
     z0 = coords[c_index, epv + 1]
 
     # coords[c_index] = tf(coords[c_index], z0)
-    array_trans.morigin(4, z0, coords[c_index])
+    array_trans.morigin(3, z0, coords[c_index])
 
     phi2 = 2 * np.angle(coords[c_index, apv + 1])
     coords[c_index] = np.conjugate(coords[c_index])
     coords[c_index] *= complex(np.cos(phi2), np.sin(phi2))
 
     # coords[c_index] = tf(coords[c_index], - z0)
-    array_trans.morigin(4, -z0, coords[c_index])
+    array_trans.morigin(3, -z0, coords[c_index])
 
     coords[c_index, 1:] = np.flip(coords[c_index, 1:].copy())  # copy necessary for numba
 

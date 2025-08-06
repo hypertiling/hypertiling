@@ -255,14 +255,14 @@ def propagate_coords(p: int, p_index: int, c_index: int, edge: int, coords: np.a
     z0 = coords[c_index, edge + 1]
 
     # tf(coords[c_index], z0)
-    array_trans.morigin(p + 1, z0, coords[c_index])
+    array_trans.morigin(p, z0, coords[c_index])
 
     phi2 = 2 * np.angle(coords[c_index, (edge + 1) % p + 1])  # phi2 = phi + phi
     coords[c_index] = np.conjugate(coords[c_index])
     coords[c_index] *= complex(np.cos(phi2), np.sin(phi2))
 
     # tf(coords[c_index], - z0)
-    array_trans.morigin(p + 1, -z0, coords[c_index])
+    array_trans.morigin(p, -z0, coords[c_index])
 
     coords[c_index, 1:] = np.roll(np.flip(coords[c_index, 1:]), edge + 1)
 
