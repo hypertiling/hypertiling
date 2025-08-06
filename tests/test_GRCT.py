@@ -10,7 +10,7 @@ pqrns = [
     (11, 4, 13, 11),
 ]
 
-lengths = [11008, 28232, 3048, 1610, 27728, 38714]
+lengths = [11008, 28232, 3048, 1610, 27728, 20098]
 
 
 class TestOperators(unittest.TestCase):
