@@ -13,3 +13,5 @@ venv
 /hypertiling
 /hypertiling.egg-info
 test.py
+dummy.py
+dummy.ipynb
