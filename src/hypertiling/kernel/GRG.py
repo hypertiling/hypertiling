@@ -2,14 +2,14 @@ from typing import Callable, Any, List
 import numpy as np
 import hypertiling.kernel.GR_util as util
 import hypertiling.kernel.GRG_util as graph_util
-from hypertiling.kernel_abc import Graph
+from hypertiling.kernel_abc import GraphExtended
 from hypertiling.ion import htprint
 
 # Magic number: real irrational number \Gamma(\frac{1}{4})
 MANGLE = np.radians(3.6256099082219083119306851558676720029951676828800654674333779995)
 
 
-class GenerativeReflectionGraph(Graph):
+class GenerativeReflectionGraph(GraphExtended):
     """
     Following the same algorithmic principles as the GenerativeReflection (GR) kernel, this class constructs 
     neighborhood relations already during the construction of the lattice. Only one symmetry sector 

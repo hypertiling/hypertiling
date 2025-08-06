@@ -13,7 +13,7 @@ PI2 = 2 * np.pi
 
 class StaticRotationalGraph(KernelRotationalCommon):
     '''
-    Static Rotational Graph (SRG) kernel
+    Static Rotational GraphExtended (SRG) kernel
 
     The default kernel of the hypertiling package
 

@@ -189,7 +189,7 @@ def geodesic_angles(z1, z2):
     """
     
     # handle points close to the origin
-    if np.abs(z1) > 1e-15:
+    if np.abs(z1) > 1e-14:
         z3 = unit_circle_inversion(z1)
         zc, radius = circle_through_three_points(z1, z2, z3)
     else:
