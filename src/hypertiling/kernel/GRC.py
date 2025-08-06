@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
     ion.set_verbosity_level("Status")
 
-    p, q, n = 4, 5, 14
+    p, q, n = 4, 5, 16
 
     t1 = time.time()
     graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
