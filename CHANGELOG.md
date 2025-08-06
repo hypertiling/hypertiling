@@ -1,4 +1,23 @@
 
+## v1.4
+Date: 2025-08-06
+
+**Release Notes**
+
+In of the largest feature update since the release of the library we introduce *two major new tiling construction kernel*. For the first time, the library is able to construct *arbitrary Schwarzian triangle tessellations*.
+
+This update introduces a new algorithm for creating arbitrary triangular and polygonal hyperbolic tilings and their associated graphs. Unlike other methods, the new approach is purely combinatorial and does not require explicit coordinate representations. A key benefit of this approach is that it determines cell adjacency relationships as the tiling is generated, with no additional computational cost. The modular design separates the core cell propagation logic from neighbor identification and optional coordinate embeddings, allowing for flexible integration of various coordinate systems and adaptation for flat and spherical tilings.
+
+Here, we provide highly optimized implementations, introducing new kernels: *GRC for polygonal tilings* and *GRC-T for general triangles* together with demonstration notebooks, which can be found in the documentation of the package.
+
+**Further changes**
+
+- flag kernels GR, GRG, GRGS as legacy, as they are fully replaced by the GRC kernel introduced in this version
+- rename class Graph to GraphExtended
+- introduce new abstract base class Graph
+- minor bug fixes
+
+
 ## v1.3.5
 Date: 2025-05-13
 
