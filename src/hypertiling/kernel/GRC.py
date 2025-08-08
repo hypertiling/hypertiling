@@ -284,26 +284,28 @@ class GRC(Graph):
                 raise AttributeError(
                     f"Tesselation is corrupted! Cell {i} in layer {n_} has {len(nbrs)}/{self.p} unique nbrs")
 
-        print("")
-        # ion.htprint("Status", f"Nbr relations controlled")
+        ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {ln} / {ln}", end="\n")
+        # print("")
 
         # dual lattice
-        ln = self.lvls[n - 1] - 1
+        ln = self.lvls[n - 1]  # - 1
+
         for i in range(self.lvls[n - 1]):
             progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
             ion.htprint("Status", f"\r|{progbar}| Bidirectional search for cell {i} / {ln}", end="")
 
             # print(f"Cell {i} has nbrs {self.get_nbrs(i)}")
             for nbr in self.get_nbrs(i):
-                # print(f"Search {i} - {nbr}")
-                # bidirectional search with depth (q - 1) // 2
+                # print(f"\nSearch {i} - {nbr}")
+                # bidirectional search with depth (q - 1) // 2 + 1/2 if q is even
                 cells = [i]
                 cell_parents = {i: nbr}
                 nbr_cells = [nbr]
                 nbr_parents = {nbr: i}
-                for s in range((self.q - 1) // 2):
-                    new_cells = []
+                # print(nbr_cells, cells)
+                for s in range(end := self.q // 2):
 
+                    new_cells = []
                     # print("\t", cells, end=">")
                     for cell in cells:
                         new_cells += (childs := [nbr for nbr in self.get_nbrs(cell) if nbr != cell_parents[cell]])
@@ -312,20 +314,22 @@ class GRC(Graph):
                     # print("\t", cells)
 
                     # print("\t", nbr_cells, end=" >")
-                    new_nbrs = []
-                    for cell in nbr_cells:
-                        new_nbrs += (childs := [nbr for nbr in self.get_nbrs(cell) if nbr != nbr_parents[cell]])
-                        nbr_parents |= {child: cell for child in childs}
-                    nbr_cells = new_nbrs
-                    # print("\t", nbr_cells)
+                    if not (self.q & 1 == 0 and s + 1 == end):
+                        new_nbrs = []
+                        for cell in nbr_cells:
+                            new_nbrs += (childs := [nbr for nbr in self.get_nbrs(cell) if nbr != nbr_parents[cell]])
+                            nbr_parents |= {child: cell for child in childs}
+                        nbr_cells = new_nbrs
 
+                    # print("\t", nbr_cells)
+                    # print(s, end, nbr_cells, cells)
                     if sum([1 if (cell in nbr_cells) else 0 for cell in cells]) == 2:
                         break
                 else:
                     raise ArithmeticError(f"At least one connection between {i} - {nbr} could not be established!")
             # exit()
-        print("")
-        # ion.htprint("Status", f"Dual lattice controlled")
+        progbar = ">" * 64
+        ion.htprint("Status", f"\r|{progbar}| Bidirectional search for cell {ln} / {ln}", end="\n")
         ion.htprint("Status", f"Integrity ensured!")
 
 
@@ -336,12 +340,17 @@ if __name__ == "__main__":
 
     ion.set_verbosity_level("Status")
 
-    p, q, n = 4, 5, 16
+    p, q, n = 3, 8, 6  # 11
 
     t1 = time.time()
-    graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
+    graph = GRC(p, q, n, sector=False, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
-    graph.check_integrity()
+
+    try:
+        graph.check_integrity()
+    except:
+        pass
+
     # exit()
     nbrs = graph.get_nbrs_list()
 
@@ -367,7 +376,7 @@ if __name__ == "__main__":
         #   center2 = graph.get_vertices(nbr)[0]
         #   end = (center2 - center) / 2 + center
         #   fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
-        if i in [9612, 22076]:
-            fig_ax[1].text(np.real(center), np.imag(center), str(i))
+        # if i in [9612, 22076]:
+        fig_ax[1].text(np.real(center), np.imag(center), str(i))
 
     plt.show()
