@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import numpy as np
 from hypertiling.kernel_abc import Graph
 import hypertiling.ion as ion
@@ -12,7 +12,8 @@ class GRCT(Graph):
     Kernel for generating (p, q, r, n) tilings of Schwarzian triangles
     """
 
-    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False):
+    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False,
+                 size: Optional[int] = None):
         """
         Initialize a tesselation with Schwarian triangles.
 
@@ -33,6 +34,9 @@ class GRCT(Graph):
             If True, coordinates are calculated for the triangles
         nbrs : bool
             If True, neighbor relations are traced during construction
+        size : Optional[int]
+            Size of the reserved memory for the arrays.
+            If None, an estimation will be used (usually overestimates a lot)
         """
         super().__init__(p, q, n)
         self.r = r
@@ -44,7 +48,8 @@ class GRCT(Graph):
         if sector:
             raise NotImplementedError("NOT YET IMPLEMENTED")
         else:
-            self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, self.tiling, self.nbrs)
+            size = util.get_n(p, q, r, n) if size is None else size
+            self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, size, self.tiling, self.nbrs)
             self.length = self.lvls[-1]
 
     def __repr__(self):
@@ -143,8 +148,8 @@ class GRCT(Graph):
         np.array
             Array containing the indices of the neighbors.
         """
-        level = np.searchsorted(self.lvls, index)
-        return level + 1 if self.lvls[level] == index else level
+        level = np.searchsorted(self.lvls[1:], index)
+        return level + 1 if self.lvls[level + 1] == index else level
 
     def get_nbrs(self, index: int) -> np.array:
         """
