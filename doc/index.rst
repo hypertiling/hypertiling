@@ -40,6 +40,7 @@ Welcome to the official hypertiling package documentation! This guide provides c
    examples/animations.ipynb
    examples/logo.ipynb
    examples/operators.ipynb
+   examples/conformal-transformations.ipynb
 
 .. toctree::
    :maxdepth: 2

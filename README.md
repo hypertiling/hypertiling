@@ -89,10 +89,11 @@ This project is developed at:
 
 If you use _hypertiling_, we encourage you to cite or reference this work as you would any other scientific research. The package is a result of a huge amount of time and effort invested by the authors. Citing us allows us to measure the impact of the research and encourages others to use the library.
 
-Cite us:
+Codebase:
+> Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson Portela, Dietmar Herdt and Felix Dusel. (2023). The _hypertiling_ project. Zenodo. https://doi.org/10.5281/zenodo.7559393
 
-> Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson S.E. Portela, Dietmar Herdt and Felix Dusel. (2023). The _hypertiling_ project. Zenodo. https://doi.org/10.5281/zenodo.7559393
-
+Release publication:
+> Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson Portela, Dietmar Herdt and Felix Dusel. (2024). HYPERTILING - a high performance python library for the generation and visualization of hyperbolic lattices project. [SciPost Physics Codebases (2024): 034.](https://www.scipost.org/SciPostPhysCodeb.34)
 
 
 ## Examples

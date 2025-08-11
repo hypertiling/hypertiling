@@ -1,3 +1,10 @@
+## v1.4.1
+Date: 2025-08-08
+
+**Minor changes**
+- bug fixes 
+- new unit test
+
 
 ## v1.4
 Date: 2025-08-06
