@@ -40,7 +40,7 @@ Welcome to the official hypertiling package documentation! This guide provides c
    examples/animations.ipynb
    examples/logo.ipynb
    examples/operators.ipynb
-   examples/conformal-transformations.ipynb
+   examples/conformal-transformation.ipynb
 
 .. toctree::
    :maxdepth: 2
@@ -50,7 +50,6 @@ Welcome to the official hypertiling package documentation! This guide provides c
    examples/grc-kernel.ipynb
    examples/grct-kernel.ipynb
    kernel_dun07x
-   kernel_dun07
 
 
 .. toctree::
@@ -59,6 +58,7 @@ Welcome to the official hypertiling package documentation! This guide provides c
 
    examples/gr-kernel.ipynb
    examples/graph-kernels.ipynb
+   kernel_dun07
 
 .. toctree::
    :maxdepth: 1
