@@ -127,19 +127,42 @@ def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn
             if np.imag(z1) * np.imag(z2) < 0 < np.real(z1):
                 orientation = np.invert(orientation)
 
-            # calculate svg data
             x1, y1 = to_px(z1)
             x2, y2 = to_px(z2)
             arc = geodesic_arc(z1, z2)
-            # for technical reasons we need to distinguish between straight geodesic ..
-            if type(arc) == mlines.Line2D:
-                path += f"M {np.round(x1, digits)},{np.round(y1, digits)} {np.round(x2, digits)},{np.round(y2, digits)}"
-            # ... and those which are circle arcs
+
+            if isinstance(arc, mlines.Line2D):
+                # diameter geodesic
+                path += f" L {np.round(x2, digits)} {np.round(y2, digits)} "
             else:
-                r = arc.get_width() / 2  # = height
-                q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
-                r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-                path += f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 0 {int(orientation)} {np.round(x2, digits)} {np.round(y2, digits)} "
+                # --- center in *disk coords* (not pixels) ---
+                try:
+                    cx_d, cy_d = arc.get_center()
+                except AttributeError:
+                    cx_d, cy_d = arc.center  # mpl fallback
+                c = complex(cx_d, cy_d)
+
+                # decide sweep from *disk* angles (uniform geometry)
+                th1 = np.arctan2((z1 - c).imag, (z1 - c).real)
+                th2 = np.arctan2((z2 - c).imag, (z2 - c).real)
+                dth = (th2 - th1) % (2*np.pi)  # in [0, 2π)
+
+                # hyperbolic edge = minor arc ⇒ large-arc-flag = 0 always
+                large_arc_flag = 0
+
+                # dth ≤ π means CCW in math coords; SVG sweep=1 means CW in screen coords.
+                # Because the path points are already conjugated (y flipped), CCW in math
+                # corresponds to sweep=1 in SVG
+                sweep_flag = int(dth <= np.pi)
+
+                # radius in *pixels*
+                cx_px, cy_px = to_px(c)
+                r_px = np.hypot(x1 - cx_px, y1 - cy_px)
+
+                path += (
+                    f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 "
+                    f"{large_arc_flag} {sweep_flag} {np.round(x2, digits)} {np.round(y2, digits)} "
+                )
 
         path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
         svg.write(path + "\r\n")
