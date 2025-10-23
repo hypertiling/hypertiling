@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from .transformation import moeb_origin_trafo
-from .distance import disk_distance
+from .distance import poincare_distance
 from .ion import htprint
 
 # Helpers to construct geodesic lines
