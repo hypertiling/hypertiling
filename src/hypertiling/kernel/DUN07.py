@@ -14,7 +14,7 @@ class Dunham(Tiling):
     A more or less literal, unoptimized, implementation of the tiling algorithm by Douglas Dunham,
     translated to Python; specifically, this is the improved version published in [Dun07]
 
-    Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
+    Note that this kernel internally uses Weierstrass (hyperboloid) coordinates. 
     """
 
     def __init__(self, p, q, n):
@@ -478,6 +478,18 @@ class DunhamTransformation:
 
 
 def rotationW(phi):
-    # return Weierstrass rotation matrix
+    """
+    Returns a Weierstrass rotation matrix for a given angle phi.
+
+    Parameters
+    ----------
+    phi : float
+        The angle of rotation in radians.
+
+    Returns
+    -------
+    np.array
+        A 3x3 Weierstrass rotation matrix.
+    """
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 

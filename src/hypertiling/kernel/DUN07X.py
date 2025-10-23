@@ -16,7 +16,7 @@ class DunhamX(Tiling):
     It achieves a factor 10-15x speed up compared to the literal, unoptimized implementation,
     which is available as kernel "Dunham" in DUN07.py
 
-    Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
+    Note that this kernel internally uses Weierstrass (hyperboloid) coordinates. 
     """
 
     def __init__(self, p: int, q: int, n: int):
