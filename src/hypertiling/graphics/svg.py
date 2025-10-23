@@ -192,7 +192,7 @@ def make_svg(
         dth = (th2 - th1) % (2 * np.pi)
 
         large_arc_flag = 0                 # always take the minor arc
-        sweep_flag = int(dth <= np.pi)     # CCW in math coords → sweep=1 after our y-flip
+        sweep_flag = int(dth <= np.pi)     # CCW in math coords
 
         # radius in pixels from pixel-center to pixel-endpoint
         cx_px, cy_px = to_px(c)
@@ -206,10 +206,10 @@ def make_svg(
     def _polygon_path(pgon: Sequence[complex], digits: int) -> str:
         """
         Build the 'd' attribute for a polygon path from its vertex list (complex in disk coords).
-        Assumes pgon[1:] are the vertices in order (as in your data structure).
+        Assumes pgon[1:] are the vertices in order
         Applies conjugation to flip y for SVG screen coords.
         """
-        verts = [np.conj(v) for v in pgon[1:]]  # keep your original convention
+        verts = [np.conj(v) for v in pgon[1:]] 
         x0, y0 = to_px(verts[0])
         d = [f"M {np.round(x0, digits)} {np.round(y0, digits)}"]
         for i in range(len(verts)):
