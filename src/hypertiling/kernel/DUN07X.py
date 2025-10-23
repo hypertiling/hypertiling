@@ -1,7 +1,7 @@
 from typing import Tuple
 import numpy as np
 from scipy.stats import circmean
-from hypertiling.util import fundamental_radius
+from hypertiling.util import fundamental_radius, _check_hyperbolic
 from hypertiling.kernel_abc import Tiling
 from hypertiling.util import n_cell_centered
 from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
@@ -34,8 +34,14 @@ class DunhamX(Tiling):
         """
         super().__init__(p, q, n)
 
-        if p == 3 or q == 3:
-            raise ValueError("[hypertiling] Error: p=3 or q=3 is currently not supported!")
+        try:
+            _check_hyperbolic(p,q)
+            _check_dunham_compatibility(p, q)
+        except ValueError as e:
+            print(e)
+            return None
+
+
 
         # prepare list to store polygons
         self.length = n_cell_centered(p, q, n)
@@ -455,3 +461,16 @@ def generate_dun(p: int, q: int, n: int, polygons: np.array, polygon_counter: in
         p_shift = (p_shift + 1) % p
 
     return polygon_counter
+
+
+def _check_dunham_compatibility(p: int, q: int) -> None:
+    """
+    Checks whether the given {p, q} parameters are supported by the Dunham kernel.
+    Currently, kernels with p=3 or q=3 are not implemented.
+    Raises:
+        ValueError: If p=3 or q=3.
+    """
+    if p == 3:
+        raise ValueError("[hypertiling] p=3 is currently not supported by this kernel.")
+    if q == 3:
+        raise ValueError("[hypertiling] q=3 is currently not supported by this kernel.")
