@@ -1,7 +1,7 @@
 from typing import Tuple
 import numpy as np
 from scipy.stats import circmean
-from hypertiling.util import fund_radius
+from hypertiling.util import fundamental_radius
 from hypertiling.kernel_abc import Tiling
 from hypertiling.util import n_cell_centered
 from hypertiling.representations import w2p_xyt, w2p_xyt_vector, p2w_xyt
@@ -68,7 +68,7 @@ class DunhamX(Tiling):
         zs = np.empty((self.p + 1,), dtype=np.complex128)
         phis = np.arange(0, self.p) * self.phi
         zs_ = np.cos(phis) + 1j * np.sin(phis)
-        zs[:self.p] = (zs_ / np.abs(zs_)) * fund_radius(self.p, self.q)
+        zs[:self.p] = (zs_ / np.abs(zs_)) * fundamental_radius(self.p, self.q)
         zs[self.p] = 0
         return p2w_xyt_vector(zs)
 

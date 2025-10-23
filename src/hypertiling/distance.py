@@ -53,23 +53,49 @@ def weierstrass_distance(a, b):
         return math.acosh(arg)
 
 
-def disk_distance(z1, z2):
+def poincare_distance(z1: complex, z2: complex) -> float:
     """
-    Compute distance between two points given in terms of their Poincare disk coordinates.
+    Compute the hyperbolic distance between two points in the Poincaré disk model.
+
+    The Poincaré disk represents the hyperbolic plane as the open unit disk
+    :math:`|z| < 1` with metric:
+        d(z1, z2) = 2 * atanh( |z1 - z2| / |1 - z1 * conj(z2)| )
 
     Parameters
     ----------
     z1 : complex
-        The first point in Poincare disk coordinates.
+        First point in Poincaré disk coordinates (|z1| < 1).
     z2 : complex
-        The second point in Poincare disk coordinates.
+        Second point in Poincaré disk coordinates (|z2| < 1).
 
     Returns
     -------
     float
-        The distance between z1 and z2.
+        Hyperbolic distance :math:`d(z1, z2)` between the two points.
+
+    Raises
+    ------
+    ValueError
+        If either point lies outside or on the boundary of the Poincaré disk (|z| ≥ 1).
+
+    Notes
+    -----
+    - Returns 0 if z1 and z2 coincide.
+    - Numerically clips the argument of atanh to [0, 1-1e-15] to prevent
+      floating-point overshoots for points close to the boundary.
+    - The distance grows unbounded as either point approaches |z| → 1.
     """
-    
-    num = abs(z1-z2)
-    denom = abs(1-z1*z2.conjugate())
-    return 2*math.atanh(num/denom)
+    if z1 == z2:
+        return 0.0
+    num = abs(z1 - z2)
+    denom = abs(1 - z1 * z2.conjugate())
+
+    # both points must be inside the open unit disk
+    if abs(z1) >= 1 or abs(z2) >= 1:
+        raise ValueError("Points must lie strictly inside the Poincaré disk (|z|<1).")
+
+    x = num / denom
+    # numerical safety: clip near-boundary overshoots
+    x = min(max(x, 0.0), 1 - 1e-15)
+    return 2.0 * math.atanh(x)
+
