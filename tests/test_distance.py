@@ -1,5 +1,5 @@
 import unittest
-from hypertiling.distance import lorentzian_distance, weierstrass_distance, disk_distance
+from hypertiling.distance import lorentzian_distance, weierstrass_distance, poincare_distance
 from hypertiling.representations import valid_weierstrass_point
 
 class TestDistance(unittest.TestCase):
@@ -24,19 +24,19 @@ class TestDistance(unittest.TestCase):
         # Test that the distance between a point and itself is zero
         self.assertEqual(lorentzian_distance(sample_point1,sample_point1), 0.75) # Lorentzian distance is actually more a norm
         self.assertEqual(weierstrass_distance(sample_point1,sample_point1), 0)
-        self.assertEqual(disk_distance(0.5, 0.5), 0)
+        self.assertEqual(poincare_distance(0.5, 0.5), 0)
 
         # Test that the distance between two points is positive
         self.assertGreater(lorentzian_distance(sample_point1, sample_point2), 0)
         self.assertGreater(weierstrass_distance(sample_point1, sample_point2), 0)
-        self.assertGreater(disk_distance(0.3, 0.5), 0)
+        self.assertGreater(poincare_distance(0.3, 0.5), 0)
 
         # Test that the distance between two points is symmetric
         self.assertEqual(lorentzian_distance(sample_point1, sample_point2), lorentzian_distance(sample_point2, sample_point1))
         self.assertEqual(weierstrass_distance(sample_point1, sample_point2), weierstrass_distance(sample_point2, sample_point1))
-        self.assertEqual(disk_distance(0.3, 0.5), disk_distance(0.5, 0.3))
+        self.assertEqual(poincare_distance(0.3, 0.5), poincare_distance(0.5, 0.3))
 
         # Test triangle inequality
         self.assertLessEqual(lorentzian_distance(sample_point1, sample_point2), lorentzian_distance(sample_point1, sample_point3)+lorentzian_distance(sample_point3, sample_point2))
         self.assertLessEqual(weierstrass_distance(sample_point1, sample_point2), weierstrass_distance(sample_point1, sample_point3)+weierstrass_distance(sample_point3, sample_point2))
-        self.assertLessEqual(disk_distance(0.3, 0.5), disk_distance(0.3, 0.7)+disk_distance(0.7, 0.5))
+        self.assertLessEqual(poincare_distance(0.3, 0.5), poincare_distance(0.3, 0.7)+poincare_distance(0.7, 0.5))
