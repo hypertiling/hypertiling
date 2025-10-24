@@ -263,11 +263,261 @@ def make_svg(
         svg.write(" ".join(attrs))
 
     # unit circle (optional)
-    if unitcircle:
-        svg.write("<circle cx='100' cy='100' r='99.9999' fill='none' />")
+    #if unitcircle:
+    #    svg.write("<circle cx='100' cy='100' r='99.9999' fill='none' />")
 
-    svg.write("</g>\r</svg>")
+    #svg.write("</g>\r</svg>")
     return svg.print()
+
+
+def svg_close(unitcircle: bool = False) -> str:
+    """
+    Return closing tags for the current SVG document.
+
+    Parameters
+    ----------
+    unitcircle : bool, optional
+        If True, draws the boundary circle of the Poincaré disk before closing.
+
+    Returns
+    -------
+    str
+        Closing SVG markup (including optional unit circle and closing tags).
+    """
+    parts = []
+    if unitcircle:
+        parts.append("<circle cx='100' cy='100' r='99.9999' fill='none' />")
+    parts.append("</g>")
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
+def svg_hyperbolic_circle(
+    z0: complex,
+    R: float,
+    edgecolor: str = "black",
+    fill: str = "none",
+    lw: float = 1.0,
+    digits: int = 5,
+):
+    """
+    Build an SVG <circle> element for a hyperbolic circle in the Poincaré disk.
+
+    The hyperbolic circle with (hyperbolic) center z0 (|z0|<1) and
+    hyperbolic radius R maps to an Euclidean circle with center c_e and radius r_e:
+        ρ = tanh(R / 2)
+        c_e = ((1 - ρ**2) * z0) / (1 - ρ**2 * |z0|**2)
+        r_e = ((1 - |z0|**2) * ρ) / (1 - ρ**2 * |z0|**2)
+
+    This function returns a ready-to-insert SVG <circle> element **in pixel space**,
+    using the existing `to_px` mapping.
+
+    Parameters
+    ----------
+    z0 : complex
+        Hyperbolic center (Euclidean coordinate in the unit disk), |z0| < 1.
+    R : float
+        Hyperbolic radius (geodesic distance in the Poincaré metric).
+    edgecolor : str, optional
+        Stroke color.
+    fill : str, optional
+        Fill color or pattern (e.g., 'none' or 'url(#img1)').
+    lw : float, optional
+        Stroke width in pixels.
+    digits : int, optional
+        Decimal digits for SVG numeric attributes.
+
+    Returns
+    -------
+    str
+        An SVG <circle> element string with cx, cy, r, stroke, fill, and stroke-width.
+    """
+
+    # Euclidean circle parameters for a hyperbolic circle
+    rho = np.tanh(R / 2.0)
+    a2 = abs(z0)**2
+    denom = (1 - (rho**2) * a2)
+
+    # center and radius in Euclidean (disk) coordinates
+    c_e = ((1 - rho**2) * z0) / denom
+    r_e = ((1 - a2) * rho) / denom
+
+    # map to pixel space; follow the same y-flip convention as polygons
+    cx, cy = to_px(np.conj(c_e))
+    # take a point to the +x direction to measure radius in pixels (affine map)
+    px, py = to_px(np.conj(c_e + r_e))
+    r_px = np.hypot(px - cx, py - cy)
+
+    # build SVG element
+    return (
+        f"<circle cx='{np.round(cx, digits)}' "
+        f"cy='{np.round(cy, digits)}' "
+        f"r='{np.round(r_px, digits)}' "
+        f"fill='{fill}' stroke='{edgecolor}' stroke-width='{lw}' />"
+    )
+
+
+def svg_horocycle(
+    z1: complex,
+    R: float,
+    edgecolor: str = "black",
+    fill: str = "none",
+    lw: float = 1.0,
+    digits: int = 5,
+):
+    """
+    Build an SVG <circle> element for a *horocycle* in the Poincaré disk model.
+
+    A horocycle is the limiting case of a hyperbolic circle whose center lies
+    on the boundary (|z1| = 1).  It appears as an Euclidean circle tangent to
+    the unit circle at z1 and entirely contained within it.
+
+    The Euclidean circle parameters are:
+        r_e = 0.5 * sech^2(R / 2)
+        c_e = (1 - r_e) * z1
+
+    where R is the (inward) hyperbolic distance from the boundary point z1 to
+    the horocycle itself.  The direction of z1 determines the point of tangency.
+
+    Parameters
+    ----------
+    z1 : complex
+        Boundary point on the unit circle where the horocycle is tangent (|z1| ≈ 1).
+    R : float
+        Hyperbolic distance of the horocycle from the boundary along its normal.
+    edgecolor : str, optional
+        Stroke color.
+    fill : str, optional
+        Fill color or pattern (e.g., 'none' or 'url(#img1)').
+    lw : float, optional
+        Stroke width in pixels.
+    digits : int, optional
+        Decimal digits for SVG numeric attributes.
+
+    Returns
+    -------
+    str
+        SVG <circle> element string with cx, cy, r, stroke, fill, and stroke-width.
+
+    """
+
+    # Euclidean parameters for the horocycle
+    r_e = 0.5 * (1 / np.cosh(R / 2.0)) ** 2  # = 0.5 * sech^2(R/2)
+    c_e = (1 - r_e) * z1
+
+    # map to pixel space (with y-flip via conjugation)
+    cx, cy = to_px(np.conj(c_e))
+    px, py = to_px(np.conj(c_e + r_e))
+    r_px = np.hypot(px - cx, py - cy)
+
+    # build SVG element
+    return (
+        f"<circle cx='{np.round(cx, digits)}' "
+        f"cy='{np.round(cy, digits)}' "
+        f"r='{np.round(r_px, digits)}' "
+        f"fill='{fill}' stroke='{edgecolor}' stroke-width='{lw}' />"
+    )
+
+
+
+
+
+def svg_hypercycle(
+    phi: float,
+    R: float,
+    side: int = +1,
+    edgecolor: str = "black",
+    fill: str = "none",
+    lw: float = 1.0,
+    digits: int = 5,
+):
+    """
+    Build an SVG <circle> element for a *hypercycle* in the Poincaré disk.
+
+    Definition
+    ----------
+    A hypercycle is the locus of points at signed hyperbolic distance R from a
+    given geodesic (the "axis"). Here the axis is the diameter through angle φ,
+    i.e. the geodesic whose ideal endpoints are e^{iφ} and e^{i(φ+π)}.
+
+    Method
+    ------
+    1) In the UHP model, hypercycles at distance R from the vertical geodesic x=0
+       are the rays: x = ±sinh(R) * y  (sign picks the side).
+    2) Map three such points to the disk via the inverse Cayley transform
+         z = (w - i) / (w + i)   with w = x + i y,
+       then rotate by e^{iφ} to align the chosen axis.
+    3) Fit the unique Euclidean circle through the three disk points.
+    4) Convert that circle to pixel space and return an SVG <circle> element.
+
+    Parameters
+    ----------
+    phi : float
+        Axis direction in radians. The axis geodesic is the diameter through angle φ.
+    R : float
+        Signed hyperbolic offset from the axis geodesic. Positive/negative selects
+        the two branches (together with `side`).
+    side : {+1, -1}, optional
+        Choose which side of the axis (the two hypercycle branches). Default +1.
+    edgecolor : str, optional
+        Stroke color.
+    fill : str, optional
+        Fill color or pattern (e.g. 'none' or 'url(#img1)').
+    lw : float, optional
+        Stroke width in pixels.
+    digits : int, optional
+        Decimal digits for SVG attributes.
+
+    Returns
+    -------
+    str
+        SVG <circle> element string (cx, cy, r, stroke, fill, stroke-width).
+
+    Notes
+    -----
+    - As R → 0, the hypercycle tends to the axis geodesic (a diameter).
+      As |R| grows, the hypercycle approaches a horocycle.
+
+    """
+    # --- helper: inverse Cayley transform (UHP → disk) ---
+    def uhp_to_disk(w: complex) -> complex:
+        return (w - 1j) / (w + 1j)
+
+    # --- sample three UHP points on the canonical hypercycle x = s * y ---
+    s = np.sinh(R) * (1 if side >= 0 else -1)
+    ys = np.array([0.4, 0.8, 1.6])  # any positive values spanning a scale
+    ws = s * ys + 1j * ys
+
+    # map to disk and rotate to set the axis direction φ
+    rot = np.exp(1j * phi)
+    zs = [rot * uhp_to_disk(w) for w in ws]
+
+    # --- fit Euclidean circle through three points in the disk ---
+    (x1, y1), (x2, y2), (x3, y3) = [(z.real, z.imag) for z in zs]
+
+    A = np.array([
+        [2*(x2 - x1), 2*(y2 - y1), x2**2 + y2**2 - x1**2 - y1**2],
+        [2*(x3 - x2), 2*(y3 - y2), x3**2 + y3**2 - x2**2 - y2**2],
+    ], dtype=float)
+
+    # Solve for center (cx, cy) in disk coords: A[:, :2] @ [cx, cy] = A[:, 2]
+    sol = np.linalg.lstsq(A[:, :2], A[:, 2], rcond=None)[0]
+    c_e = complex(sol[0], sol[1])
+    r_e = abs(c_e - zs[0])  # radius in disk coords
+
+    # --- map to SVG pixel space ---
+    cx, cy = to_px(np.conj(c_e))
+    px, py = to_px(np.conj(c_e + r_e))
+    r_px = float(np.hypot(px - cx, py - cy))
+
+    return (
+        f"<circle cx='{np.round(cx, digits)}' "
+        f"cy='{np.round(cy, digits)}' "
+        f"r='{np.round(r_px, digits)}' "
+        f"fill='{fill}' stroke='{edgecolor}' stroke-width='{lw}' />"
+    )
+
+
 
 
 
