@@ -2,7 +2,7 @@ import abc
 import numpy as np
 from .ion import htprint
 from .neighbors import find_radius_optimized, find_radius_optimized_single
-from .util import lattice_spacing_weierstrass, fund_radius
+from .util import edge_length_geodesic, cell_radius_geodesic, fundamental_radius
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction slightly during construction
@@ -96,7 +96,7 @@ class GraphExtended(Graph):
     r : float
         Radius of the fundamental polygon in the Poincare disk.
     h : float
-        Hyperbolic/geodesic lattice spacing, i.e., the edge length of any cell.
+        Hyperbolic/geodesic lattice spacing, i.e., the edge length of any cell in a regular p,q tiling.
     hr : float
         Geodesic radius, i.e., distance between the center and any vertex of cells in a regular p,q tiling.
     mangle : float
@@ -113,9 +113,9 @@ class GraphExtended(Graph):
         self.phi = 2 * np.pi / self.p
         self.qhi = 2 * np.pi / self.q
 
-        self.r = fund_radius(self.p, self.q)
-        self.h = lattice_spacing_weierstrass(self.p, self.q)
-        self.hr = lattice_spacing_weierstrass(self.q, self.p)
+        self.r = fundamental_radius(self.p, self.q)
+        self.h = edge_length_geodesic(self.p, self.q)
+        self.hr = cell_radius_geodesic(self.p, self.q)
 
         self.mangle = mangle
         self._nbrs = None

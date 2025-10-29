@@ -6,7 +6,7 @@ import math
 from .SR_base import KernelRotationalCommon
 from .SRL_util import DuplicateContainerSimple
 from ..arraytransformation import  mrotate, morigin
-from ..distance import disk_distance
+from ..distance import poincare_distance
 
 
 class StaticRotationalLegacy(KernelRotationalCommon):

@@ -3,7 +3,7 @@ import copy
 import math
 from scipy.stats import circmean
 from hypertiling.ion import htprint
-from hypertiling.util import fund_radius
+from hypertiling.util import fundamental_radius
 from hypertiling.representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
 from hypertiling.kernel_abc import Tiling
 from hypertiling.kernel.hyperpolygon import HyperPolygon
@@ -44,7 +44,7 @@ class Dunham(Tiling):
         This function constructs the vertices of the fundamental hyperbolic {p,q} polygon.
         """
 
-        r = fund_radius(self.p, self.q)
+        r = fundamental_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
         verts = []
