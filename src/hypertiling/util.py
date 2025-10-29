@@ -9,9 +9,9 @@ def _check_hyperbolic(p: int, q: int) -> None:
     Raises on invalid parameters to avoid NaN domains
     """
     if not (isinstance(p, int) and isinstance(q, int) and p >= 3 and q >= 3):
-        raise ValueError("p and q must be integers >= 3.")
+        raise ValueError("[hypertiling] Error: p and q must be integers >= 3.")
     if (p - 2) * (q - 2) <= 4:
-        raise ValueError("Regular {p,q} is not hyperbolic when (p-2)(q-2) <= 4.")
+        raise ValueError("[hypertiling] Error: Regular {p,q} is not hyperbolic when (p-2)(q-2) <= 4.")
 
 
 
@@ -38,7 +38,6 @@ def edge_length_geodesic(p: int, q: int) -> float:
     float
         Geodesic edge length :math:`h^{(p,q)}` between adjacent vertices.
     """
-    _check_hyperbolic(p, q)
     num = math.cos(math.pi / q)
     denom = math.sin(math.pi / p)
     val = num / denom
@@ -103,7 +102,6 @@ def cell_radius_geodesic(p: int, q: int) -> float:
         Geodesic circumradius :math:`h_r` (center → vertex).
     """
 
-    _check_hyperbolic(p, q)
     val = (math.cos(math.pi / p) / math.sin(math.pi / p)) * (math.cos(math.pi / q) / math.sin(math.pi / q))
     if val < 1:
         val = 1.0
@@ -156,7 +154,7 @@ def inradius_geodesic(p: int, q: int) -> float:
     float
         Geodesic inradius :math:`r` (center → edge midpoint).
     """
-    _check_hyperbolic(p, q)
+
     val = math.cos(math.pi / p) / math.sin(math.pi / q)
     if val < 1:
         val = 1.0

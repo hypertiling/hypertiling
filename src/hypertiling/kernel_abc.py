@@ -2,7 +2,7 @@ import abc
 import numpy as np
 from .ion import htprint
 from .neighbors import find_radius_optimized, find_radius_optimized_single
-from .util import edge_length_geodesic, cell_radius_geodesic, fundamental_radius
+from .util import edge_length_geodesic, cell_radius_geodesic, fundamental_radius, _check_hyperbolic
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction slightly during construction
@@ -41,6 +41,11 @@ class Graph(abc.ABC):
         self.p = p
         self.q = q
         self.n = n
+
+        try:
+            _check_hyperbolic(p, q)
+        except ValueError as e:
+            print(e)
 
     def __repr__(self):
         """
@@ -106,8 +111,6 @@ class GraphExtended(Graph):
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
         super().__init__(p, q, n)
 
         self.phi = 2 * np.pi / self.p
@@ -119,6 +122,7 @@ class GraphExtended(Graph):
 
         self.mangle = mangle
         self._nbrs = None
+
 
     def __repr__(self):
         """
