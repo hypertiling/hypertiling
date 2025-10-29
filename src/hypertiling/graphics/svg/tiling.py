@@ -1,13 +1,10 @@
-from typing import Iterable, Sequence, Optional, Tuple, Union
+from typing import Iterable, Sequence
 import numpy as np
-import matplotlib.lines as mlines
-import matplotlib.pyplot as plt
 from .svg_base import to_px, build_svg_attrs, SvgElement
 from .geodesic import geodesic_arc
-from .color import _resolve_facecolors
+from .color import _resolve_facecolors, ColorLike
 
 
-ColorLike = Union[str, Sequence[float], Sequence[Tuple[float, float, float]]]
 
 # --- geometry → SVG helpers ---------------------------------------------------
 
