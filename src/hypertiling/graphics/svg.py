@@ -52,105 +52,223 @@ class svgString():
         return self.string
 
 
-def make_svg(tiling, facecolors="white", edgecolor="black", lw=0.3, cmap="RdYlGn", digits=5, unitcircle=False, link=""):
-    """
-    Creates an scalable vector graphic (SVG) plot of the tiling
+from typing import Iterable, Sequence, Optional, Tuple, Union
 
-    Arguments:
-    -----------
-    tiling : HyperbolicTiling object
-        An object containing the tiling.
-    facecolor : str or array-like of length len(tiling)
-        The background color of each polygon as a sequence of numbers
-    edgecolor : string
-        The color the polygon edges
-    lw : float
-        The linewidth the polygon edges
-    cmap : str
-        matplotlib colormap key string
-    digits : int
-        number of digits SVG coordinates are rounded to
-    unitcircle: bool
-        whether or not the unit circle is added to the plot
+ColorLike = Union[str, Sequence[float], Sequence[Tuple[float, float, float]]]
+
+def make_svg(
+    tiling,
+    facecolors: ColorLike = "white",      # str | list of scalars | list of (r,g,b)
+    edgecolor: str = "black",
+    lw: float = 0.3,
+    cmap: str = "RdYlGn",
+    digits: int = 5,
+    unitcircle: bool = False,
+    link: str = "",
+):
+    """
+    Render a hyperbolic tiling (Poincaré disk representation) as an SVG image.
+
+    Each cell of the tiling is drawn as an SVG `<path>` composed of geodesic arcs,
+    which appear as circle segments orthogonal to the unit circle or as diameters.
+    Arcs are oriented correctly for all layers by determining the sweep direction
+    in the undistorted disk coordinates rather than pixel space.
+
+    Parameters
+    ----------
+    tiling : HyperbolicTiling
+        Iterable of polygons representing the tiling. Each polygon must provide
+        its vertices as complex numbers inside the unit disk (pgon[1:] are vertices).
+    facecolors : str | array-like
+        Color specification for polygon interiors.
+        • Single CSS color string → same fill for all polygons.
+        • Sequence of scalar values → normalized and mapped through `cmap`.
+        • Sequence of RGB tuples (in [0,1] or [0,255]) → used directly per cell.
+    edgecolor : str, optional
+        Color of polygon edges (stroke).
+    lw : float, optional
+        Line width in pixels for polygon edges.
+    cmap : str, optional
+        Matplotlib colormap key used when `facecolors` is a sequence of scalars.
+    digits : int, optional
+        Number of decimal digits used when writing SVG coordinates.
+    unitcircle : bool, optional
+        If True, draw a circle marking the Poincaré boundary (radius = 1).
+    link : str, optional
+        Path or URL to an image used as a repeating pattern fill (`url(#img1)`).
+
+    Returns
+    -------
+    str
+        The SVG markup as a string.
+
+    Notes
+    -----
+    - Arc sweep directions are computed geometrically from the circle center of
+    each geodesic, ensuring correct curvature even near the disk boundary.
     """
 
-    # preparations
+
+    # ---- helpers -------------------------------------------------------------
+
+    def _is_scalar_sequence(x) -> bool:
+        try:
+            x = np.asarray(x)
+            return x.ndim == 1 and x.size == len(tiling)
+        except Exception:
+            return False
+
+    def _is_rgb_sequence(x) -> bool:
+        try:
+            a = np.asarray(x, dtype=float)
+            return a.ndim == 2 and a.shape[1] == 3 and a.shape[0] == len(tiling)
+        except Exception:
+            return False
+
+    def _rgb_to_css(rgb: Sequence[float]) -> str:
+        # accept [0..1] or [0..255]
+        arr = np.asarray(rgb, dtype=float)
+        if arr.max() <= 1.0:  # assume [0..1]
+            arr = np.round(arr * 255.0)
+        return f"rgb({int(arr[0])},{int(arr[1])},{int(arr[2])})"
+
+    def _resolve_facecolors(facecolors: ColorLike, cmap: str) -> Tuple[bool, Optional[Sequence[str]]]:
+        """
+        Returns:
+          (individual, colors_css)
+          - individual=False means a single fill color (handled at group level).
+          - individual=True and colors_css is a list of 'rgb(r,g,b)' strings per polygon.
+        """
+        # single CSS color string — group level fill
+        if isinstance(facecolors, str):
+            return False, None
+
+        # list of RGBs
+        if _is_rgb_sequence(facecolors):
+            cols = [_rgb_to_css(rgb) for rgb in facecolors]  # per polygon
+            return True, cols
+
+        # list of scalars -> cmap
+        if _is_scalar_sequence(facecolors):
+            vals = np.asarray(facecolors, dtype=float)
+            # normalize to [0,1] safely
+            vmin, vmax = np.nanmin(vals), np.nanmax(vals)
+            if vmax > vmin:
+                vals = (vals - vmin) / (vmax - vmin)
+            else:
+                vals = np.zeros_like(vals)
+            ccmap = plt.get_cmap(cmap)
+            rgba = ccmap(vals)[:, :3]  # Nx3 in [0,1]
+            cols = [_rgb_to_css(255 * c) for c in rgba]
+            return True, cols
+
+        # fallback: treat as a single color string via str()
+        return False, None
+
+    def _arc_segment(z1: complex, z2: complex, digits: int) -> str:
+        """
+        Build the SVG path segment ('L ...' or 'A ...') for a hyperbolic edge.
+        - Decides CW/CCW in *disk coords* using the geodesic circle center.
+        - Forces the minor arc (large-arc-flag=0) for proper geodesics.
+        """
+        x1, y1 = to_px(z1)
+        x2, y2 = to_px(z2)
+        arc = geodesic_arc(z1, z2)
+
+        if isinstance(arc, mlines.Line2D):
+            # diameter geodesic
+            return f" L {np.round(x2, digits)} {np.round(y2, digits)} "
+
+        # circle arc: center in disk coords
+        try:
+            cx_d, cy_d = arc.get_center()
+        except AttributeError:
+            cx_d, cy_d = arc.center  # mpl fallback
+        c = complex(cx_d, cy_d)
+
+        # angles around the center in disk coords (math y-up)
+        th1 = np.arctan2((z1 - c).imag, (z1 - c).real)
+        th2 = np.arctan2((z2 - c).imag, (z2 - c).real)
+        dth = (th2 - th1) % (2 * np.pi)
+
+        large_arc_flag = 0                 # always take the minor arc
+        sweep_flag = int(dth <= np.pi)     # CCW in math coords
+
+        # radius in pixels from pixel-center to pixel-endpoint
+        cx_px, cy_px = to_px(c)
+        r_px = np.hypot(x1 - cx_px, y1 - cy_px)
+
+        return (
+            f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 "
+            f"{large_arc_flag} {sweep_flag} {np.round(x2, digits)} {np.round(y2, digits)} "
+        )
+
+    def _polygon_path(pgon: Sequence[complex], digits: int) -> str:
+        """
+        Build the 'd' attribute for a polygon path from its vertex list (complex in disk coords).
+        Assumes pgon[1:] are the vertices in order
+        Applies conjugation to flip y for SVG screen coords.
+        """
+        verts = [np.conj(v) for v in pgon[1:]] 
+        x0, y0 = to_px(verts[0])
+        d = [f"M {np.round(x0, digits)} {np.round(y0, digits)}"]
+        for i in range(len(verts)):
+            z1 = verts[i]
+            z2 = verts[(i + 1) % len(verts)]
+            d.append(_arc_segment(z1, z2, digits))
+        return " ".join(d)
+
+    # ---- start building SVG --------------------------------------------------
+
     svg = svgString()
-    pi2 = 2 * np.pi
 
-    # one color vs. colormap
-    individual_colors = True
-    if isinstance(facecolors, str):
-        individual_colors = False
+    individual, colors_css = _resolve_facecolors(facecolors, cmap)
+
+    # group style; put stroke on the group, fill either on group (single) or per-path (individual)
+    if not individual:
+        group_fill = facecolors if isinstance(facecolors, str) else "white"
+        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{group_fill}'>\r"
     else:
-        ccmap = plt.get_cmap(f"{cmap}")
-        colors = array_to_rgb(norm_0_1(facecolors), ccmap)
-
-    # attribute group
-    if individual_colors:
         group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px'>\r"
-    else:
-        group_open = f"<g style='stroke:{edgecolor}; stroke-width:{lw}px; fill:{facecolors}'>\r"
+
     svg.write(group_open)
 
-    if link != '':
-        pattern = f"<defs>\r <pattern id='img1' width='5' height='5'>\r" \
-                  f"  <image href='{link}' x='0' y='0' width='45' height='45'/>\r </pattern>\r</defs>"
-        svg.write(pattern + "\r\n")
-        facecolors = 'transparent'
+    # optional pattern fill (overrides facecolor per path)
+    use_pattern = bool(link)
+    if use_pattern:
+        pattern = (
+            "<defs>\r"
+            "  <pattern id='img1' width='5' height='5'>\r"
+            f"    <image href='{link}' x='0' y='0' width='45' height='45'/>\r"
+            "  </pattern>\r"
+            "</defs>\r"
+        )
+        svg.write(pattern)
 
-    # loop through tiling
+    # draw cells
     for idx, pgon in enumerate(tiling):
-        if individual_colors:
-            start = f"\t<path   style='fill:rgb{colors[idx, 0], colors[idx, 1], colors[idx, 2]}' "
-        else:
-            start = f"\t<path  "
-        svg.write(start + "\r")
+        attrs = ["\t<path"]
 
-        z0 = np.conj(pgon[1])
-        x0, y0 = to_px(z0)
-        path = f"       d = 'M {np.round(x0, digits)} {np.round(y0, digits)} "
+        # per-path fill
+        if use_pattern:
+            attrs.append("fill='url(#img1)'")
+        elif individual and colors_css is not None:
+            attrs.append(f"style='fill:{colors_css[idx]}'")
 
-        verts = pgon[1:]
+        # path data
+        d_attr = _polygon_path(pgon, digits)
+        attrs.append(f"d='{d_attr}'")
+        attrs.append("/>\r")
 
-        for i in range(len(verts)):
-            z1 = np.conj(verts[i])
-            z2 = np.conj(verts[(i + 1) % len(verts)])
-            orientation = False
-            a1 = a + pi2 if (a := np.angle(z1)) < 0 else a
-            a2 = a + pi2 if (a := np.angle(z2)) < 0 else a
+        svg.write(" ".join(attrs))
 
-            # if second point is left of first point: swap values
-            if a2 < a1:
-                orientation = np.invert(orientation)
-            # for edges that intersect the x-axis: swap values
-            if np.imag(z1) * np.imag(z2) < 0 < np.real(z1):
-                orientation = np.invert(orientation)
-
-            # calculate svg data
-            x1, y1 = to_px(z1)
-            x2, y2 = to_px(z2)
-            arc = geodesic_arc(z1, z2)
-            # for technical reasons we need to distinguish between straight geodesic ..
-            if type(arc) == mlines.Line2D:
-                path += f"M {np.round(x1, digits)},{np.round(y1, digits)} {np.round(x2, digits)},{np.round(y2, digits)}"
-            # ... and those which are circle arcs
-            else:
-                r = arc.get_width() / 2  # = height
-                q = r / abs(z2 - z1)  # scale factor between coordinates and pixels
-                r_px = q * np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-                path += f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 0 {int(orientation)} {np.round(x2, digits)} {np.round(y2, digits)} "
-
-        path += "'\r        fill = 'url(#img1)'/>" if link != '' else "'/>\r"
-        svg.write(path + "\r\n")
-
-    # write unitcircle
+    # unit circle (optional)
     if unitcircle:
-        svg.write('<circle cx="100" cy="100" r="99.9999" fill="none" />')
+        svg.write("<circle cx='100' cy='100' r='99.9999' fill='none' />")
 
-    svg.write("</g>")
-    svg.write("\r</svg>")
+    svg.write("</g>\r</svg>")
     return svg.print()
+
 
 
 def draw_svg(content: str):
