@@ -11,7 +11,28 @@ ColorLike = Union[str, Sequence[float], Sequence[Tuple[float, float, float]]]
 # --- geometry → SVG helpers ---------------------------------------------------
 
 def _arc_segment(z1: complex, z2: complex, digits: int) -> str:
-    arc = geodesic_arc(z1, z2)
+    """
+    Build an SVG arc segment from z1 to z2 (already conjugated for y-flip).
+    
+    Parameters
+    ----------
+    z1, z2 : complex
+        Start and end points (already conjugated in SVG coordinate space).
+    digits : int
+        Decimal precision.
+    
+    Returns
+    -------
+    str
+        SVG path segment (e.g., "L x y" or "A rx ry 0 large sweep x y").
+    """
+    # Note: z1 and z2 are ALREADY conjugated when this function is called
+    # We need to un-conjugate them to use geodesic_arc, then re-conjugate
+    z1_disk = np.conj(z1)
+    z2_disk = np.conj(z2)
+    
+    arc = geodesic_arc(z1_disk, z2_disk)
+    
     x1, y1 = to_px(z1)
     x2, y2 = to_px(z2)
 
@@ -20,87 +41,30 @@ def _arc_segment(z1: complex, z2: complex, digits: int) -> str:
 
     c = arc["center"]
     r = arc["radius"]
-    cx_px, cy_px = to_px(c)
+    
+    # Conjugate center for SVG space
+    c_svg = np.conj(c)
+    
+    cx_px, cy_px = to_px(c_svg)
     r_px = np.hypot(x1 - cx_px, y1 - cy_px)
 
-    th1 = np.arctan2((z1 - c).imag, (z1 - c).real)
-    th2 = np.arctan2((z2 - c).imag, (z2 - c).real)
+    # Use conjugated coordinates for angle calculation
+    th1 = np.arctan2((z1 - c_svg).imag, (z1 - c_svg).real)
+    th2 = np.arctan2((z2 - c_svg).imag, (z2 - c_svg).real)
     dth = (th2 - th1) % (2*np.pi)
 
-    large_arc_flag = 0
-    sweep_flag = int(dth > np.pi)  # flipped if your arcs bent the wrong way
+    sweep = 0 if dth <= np.pi else 1
+    
+    # Check if midpoint is inside disk (same logic as Geodesic)
+    th_mid = th1 + (0.5 * dth if sweep == 1 else -0.5 * (2*np.pi - dth))
+    z_mid = c_svg + r * np.exp(1j * th_mid)
+    if abs(np.conj(z_mid)) >= 1 - 1e-12:  # Check in original disk space
+        sweep ^= 1
 
     return (
         f" A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 "
-        f"{large_arc_flag} {sweep_flag} {np.round(x2, digits)} {np.round(y2, digits)} "
+        f"0 {sweep} {np.round(x2, digits)} {np.round(y2, digits)} "
     )
-
-    """
-    A hyperbolic polygon in the Poincaré disk.
-    
-    Parameters
-    ----------
-    vertices : Sequence[complex]
-        Vertices of the polygon in the unit disk.
-    fill : str, optional
-        Fill color.
-    edgecolor : str, optional
-        Edge color.
-    lw : float, optional
-        Line width.
-    digits : int, optional
-        Decimal precision for SVG coordinates.
-    skip_first : bool, optional
-        If True, skip the first vertex (e.g., if it's a center coordinate).
-        Default is False.
-    **svg_attrs
-        Additional SVG attributes.
-    """
-    
-    def __init__(
-        self,
-        vertices: Sequence[complex],
-        fill: str = "white",
-        edgecolor: str = "black",
-        lw: float = 0.3,
-        digits: int = 5,
-        skip_first: bool = False,
-        **svg_attrs,
-    ):
-        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
-        
-        # Handle skip_first
-        verts = list(vertices)
-        if skip_first:
-            if len(verts) < 4:  # Need at least 3 vertices after skipping
-                raise ValueError("Polygon with skip_first=True must have at least 4 elements")
-            self.center = verts[0]  # Store center if needed
-            self.vertices = verts[1:]
-        else:
-            self.center = None
-            self.vertices = verts
-        
-        if len(self.vertices) < 3:
-            raise ValueError("Polygon must have at least 3 vertices")
-    
-    def _build_path(self) -> str:
-        """Build the SVG path 'd' attribute."""
-        verts = [np.conj(v) for v in self.vertices]
-        x0, y0 = to_px(verts[0])
-        parts = [f"M {np.round(x0, self.digits)} {np.round(y0, self.digits)}"]
-        for i in range(len(verts)):
-            z1 = verts[i]
-            z2 = verts[(i + 1) % len(verts)]
-            parts.append(_arc_segment(z1, z2, self.digits))
-        return " ".join(parts)
-    
-    def to_svg(self) -> str:
-        """Generate the SVG <path> element."""
-        d_attr = self._build_path()
-        base_attrs = self._build_base_attrs({"d": d_attr})
-        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
-        return f"<path {attrs_str} />"
-
 
 class Polygon(SvgElement):
     """A hyperbolic polygon in the Poincaré disk."""
@@ -160,6 +124,11 @@ class Polygon(SvgElement):
         base_attrs = self._build_base_attrs({"d": d_attr})
         attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
         return f"<path {attrs_str} />"
+    
+
+
+
+
 # --- color resolution ---------------------------------------------------------
 
 def _is_scalar_sequence(x, n: int) -> bool:

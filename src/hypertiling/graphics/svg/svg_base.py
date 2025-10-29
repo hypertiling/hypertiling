@@ -95,7 +95,7 @@ class SvgElement(ABC):
         return attrs
     
 
-    
+
 
 
 class SvgCanvas:
@@ -119,7 +119,7 @@ class SvgCanvas:
     def __init__(
         self,
         center: tuple[float, float] = (0, 0),
-        radius: float = 1.0,
+        radius: float = 100.0,  # corresponds to scale factor in to_px (improve me!)
         padding: float = 5,
         width: int = 600,
         height: int = 600,
@@ -212,7 +212,7 @@ def build_svg_attrs(base_attrs: dict, **svg_attrs) -> str:
     return " ".join(f"{k}='{v}'" for k, v in base_attrs.items())
 
 
-def to_px(z, factor=100, offset=1):
+def to_px(z, factor=100):
     """
     Transforms complex number to px coordinates
 
@@ -222,13 +222,10 @@ def to_px(z, factor=100, offset=1):
         coordinate in the complex plane
     factor : int
         some large scaling factor to conform to px scale
-    offset : int
-        offset plot region
-        
     """
-    x = np.real(z) + offset
+    x = np.real(z)
     x *= factor
-    y = np.imag(z) + offset
+    y = np.imag(z)
     y *= factor
     return x, y
 
