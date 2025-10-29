@@ -1,5 +1,5 @@
 import numpy as np
-from .svg_base import to_px, build_svg_attrs, SvgElement
+from .svg_base import to_px, build_svg_attrs, SVGElement
 
 def geodesic_arc(z1: complex, z2: complex, tol: float = 1e-14):
     """
@@ -52,7 +52,7 @@ def geodesic_arc(z1: complex, z2: complex, tol: float = 1e-14):
     R2 = max(R2, 0.0)
     return {"type": "circle", "center": complex(cx, cy), "radius": np.sqrt(R2)}
 
-class Geodesic(SvgElement):
+class Geodesic(SVGElement):
     """A geodesic arc in the Poincaré disk."""
     
     def __init__(

@@ -10,13 +10,13 @@ Examples
 >>> from hypertiling import HyperbolicTiling
 >>> 
 >>> T = HyperbolicTiling(5, 4, 5)
->>> canvas = SvgCanvas(width=600, height=600)
->>> canvas.add(UnitCircle())
->>> canvas.add(Tiling(T, skip_first=True))
+>>> canvas = SVGCanvas(width=600, height=600)
+>>> canvas.add(UnitCircle())                    # doctest: +ELLIPSIS
+>>> canvas.add(Tiling(T, skip_first=True))      # doctest: +ELLIPSIS
 >>> display(canvas)
 """
 
-from .svg_base import SvgElement, SvgCanvas, display, build_svg_attrs
+from .svg_base import SVGElement, SVGCanvas, display, build_svg_attrs
 from .tiling import Tiling, Polygon
 from .circle import HyperbolicCircle, UnitCircle
 from .geodesic import Geodesic
@@ -25,8 +25,8 @@ from .hypercycle import Hypercycle
 
 __all__ = [
     # Base classes
-    'SvgElement',
-    'SvgCanvas',
+    'SVGElement',
+    'SVGCanvas',
     'display',
     
     # Geometric elements

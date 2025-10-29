@@ -3,7 +3,7 @@ import numpy as np
 from IPython.display import SVG, display
 from abc import ABC, abstractmethod
 
-class SvgElement(ABC):
+class SVGElement(ABC):
     """
     Abstract base class for SVG elements with common styling.
 
@@ -109,7 +109,7 @@ class SvgElement(ABC):
 
 
 
-class SvgCanvas:
+class SVGCanvas:
     """
     Canvas holding SVG elements that can be modified before rendering.
     
@@ -135,7 +135,7 @@ class SvgCanvas:
         width: int = 600,
         height: int = 600,
     ):
-        self.elements: list[SvgElement] = []
+        self.elements: list[SVGElement] = []
         
         # SVG parameters
         self.center = center
@@ -144,12 +144,12 @@ class SvgCanvas:
         self.width = width
         self.height = height
     
-    def add(self, *elements: SvgElement):
+    def add(self, *elements: SVGElement):
         """Add one or more elements."""
         self.elements.extend(elements)
         return self
     
-    def remove(self, element: SvgElement):
+    def remove(self, element: SVGElement):
         """Remove an element."""
         self.elements.remove(element)
         return self

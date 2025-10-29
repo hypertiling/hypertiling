@@ -1,6 +1,6 @@
 from typing import Iterable, Sequence
 import numpy as np
-from .svg_base import to_px, build_svg_attrs, SvgElement
+from .svg_base import to_px, build_svg_attrs, SVGElement
 from .geodesic import geodesic_arc
 from .color import _resolve_facecolors, ColorLike
 
@@ -64,7 +64,7 @@ def _arc_segment(z1: complex, z2: complex, digits: int) -> str:
         f"0 {sweep} {np.round(x2, digits)} {np.round(y2, digits)} "
     )
 
-class Polygon(SvgElement):
+class Polygon(SVGElement):
     """A hyperbolic polygon in the Poincaré disk."""
     
     def __init__(
@@ -131,7 +131,7 @@ class Polygon(SvgElement):
 
 # --- main element factory -----------------------------------------------------
 
-class Tiling(SvgElement):
+class Tiling(SVGElement):
     """A collection of hyperbolic polygons forming a tiling."""
     
     def __init__(

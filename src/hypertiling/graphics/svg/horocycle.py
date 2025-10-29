@@ -1,6 +1,6 @@
-from .svg_base import to_px, build_svg_attrs, SvgElement
 import numpy as np
-class Horocycle(SvgElement):
+from .svg_base import to_px, build_svg_attrs, SVGElement
+class Horocycle(SVGElement):
     """A horocycle in the Poincaré disk model."""
     
     def __init__(

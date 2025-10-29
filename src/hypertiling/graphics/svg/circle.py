@@ -1,8 +1,8 @@
 import numpy as np
-from .svg_base import to_px, build_svg_attrs, SvgElement
+from .svg_base import to_px, build_svg_attrs, SVGElement
 
 
-class UnitCircle(SvgElement):
+class UnitCircle(SVGElement):
     """The unit circle boundary of the Poincaré disk."""
     
     def __init__(
@@ -54,7 +54,7 @@ class UnitCircle(SvgElement):
         return self
 
 
-class HyperbolicCircle(SvgElement):
+class HyperbolicCircle(SVGElement):
     """A hyperbolic circle in the Poincaré disk."""
     
     def __init__(

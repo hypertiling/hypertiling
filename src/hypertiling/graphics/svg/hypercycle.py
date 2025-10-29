@@ -1,6 +1,6 @@
 import numpy as np
-from .svg_base import to_px, build_svg_attrs, SvgElement
-class Hypercycle(SvgElement):
+from .svg_base import to_px, build_svg_attrs, SVGElement
+class Hypercycle(SVGElement):
     """A hypercycle in the Poincaré disk (NOT YET IMPLEMENTED)."""
     
     def __init__(
