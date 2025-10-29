@@ -11,7 +11,7 @@ class Hypercycle(SVGElement):
         fill: str = "none",
         edgecolor: str = "black",
         lw: float = 1.0,
-        digits: int = 5,
+        digits: int = 7,
         **svg_attrs,
     ):
         super().__init__(fill, edgecolor, lw, digits, **svg_attrs)

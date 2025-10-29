@@ -6,7 +6,7 @@ hyperbolic geometric objects.
 
 Examples
 --------
->>> from hypertiling.graphics.svg import SvgCanvas, Tiling, Geodesic, UnitCircle
+>>> from hypertiling.graphics.svg import SVGCanvas, Tiling, Geodesic, UnitCircle
 >>> from hypertiling import HyperbolicTiling
 >>> 
 >>> T = HyperbolicTiling(5, 4, 5)

@@ -1,7 +1,28 @@
 import numpy as np
 from .svg_base import to_px, build_svg_attrs, SVGElement
+
+
 class Horocycle(SVGElement):
-    """A horocycle in the Poincaré disk model."""
+    """
+    A horocycle in the Poincaré disk model.
+    
+    Parameters
+    ----------
+    z1 : complex
+        The boundary point of the horocycle.
+    R : float
+        The Euclidean distance from the boundary point.
+    fill : str, optional
+        The fill color of the horocycle. Defaults to "none".
+    edgecolor : str, optional
+        The edge color of the horocycle. Defaults to "black".
+    lw : float, optional
+        The line width of the horocycle. Defaults to 1.0.
+    digits : int, optional
+        The number of digits to round coordinates to. Defaults to 7.
+    **svg_attrs
+        Additional SVG attributes.
+    """
     
     def __init__(
         self,
@@ -10,7 +31,7 @@ class Horocycle(SVGElement):
         fill: str = "none",
         edgecolor: str = "black",
         lw: float = 1.0,
-        digits: int = 5,
+        digits: int = 7,
         **svg_attrs,
     ):
         super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
