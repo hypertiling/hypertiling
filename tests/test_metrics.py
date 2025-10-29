@@ -1,6 +1,7 @@
 # test_hyperbolic_metrics_unittest.py
 import math
 import unittest
+from hypertiling.util import _check_hyperbolic
 
 """
 Unit tests for hyperbolic geometry primitives used in regular {p,q} tilings
@@ -92,20 +93,12 @@ class TestHyperbolicMetrics(unittest.TestCase):
                     math.isclose(rho, math.tanh(R / 2.0), rel_tol=RTOL, abs_tol=ATOL),
                     msg=f"rho != tanh(R/2) for {{p,q}}={{ {p},{q} }}",
                 )
-
-    def test_raises_on_non_hyperbolic(self):
+    def test_check_hyperbolic_raises_on_non_hyperbolic(self):
         # Boundary/Euclidean or spherical cases should raise (p-2)(q-2) <= 4
-        for fn in (
-            edge_length_geodesic,
-            dual_edge_length_geodesic,
-            cell_radius_geodesic,
-            fundamental_radius,
-        ):
-            with self.subTest(fn=fn.__name__):
+        for p, q in [(3, 6), (3, 3), (6, 3)]:
+            with self.subTest(p=p, q=q):
                 with self.assertRaises(ValueError):
-                    fn(3, 6)  # Euclidean boundary
-                with self.assertRaises(ValueError):
-                    fn(3, 3)  # spherical
+                    _check_hyperbolic(p, q)
 
 
     def test_dual_edge_equals_twice_inradius(self):

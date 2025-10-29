@@ -75,15 +75,11 @@ def HyperbolicTiling(*args, kernel: Union[TilingKernels, str] = TilingKernels.St
     if isinstance(kernel, TilingKernels):
         kernel = kernel.value
 
-    if not (kernel in TILINGS):
-        raise AttributeError("Provided kernel is not a TilingKernel")
-
-    # if (p - 2) * (q - 2) <= 4:
-    #    raise AttributeError(
-    #        "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-
-    # if p > 20 or q > 20 and n > 5:
-    #    htprint("Warning", "The lattice might become very large with your parameter choice!")
+    if kernel not in TILINGS:
+        try:
+            raise AttributeError("[hypertiling] Error: Provided kernel is not a TilingKernel. You might try HyperbolicGraph instead.")
+        except AttributeError as e:
+            print(e)
 
     if kernel == "SRL":
         htprint("Warning", "This kernel is deprecated! Better use the 'SR' kernel instead!")
@@ -100,8 +96,10 @@ def HyperbolicTiling(*args, kernel: Union[TilingKernels, str] = TilingKernels.St
                     LegacyDunham]:
         htprint("Status", "Parameter n is interpreted as number of layers. Compare documentation.")
 
-    return TILINGS[kernel](*args, **kwargs)
-
+    try:
+        return TILINGS[kernel](*args, **kwargs)
+    except KeyError as e:
+        print(f"[hypertiling] Unknown tiling kernel '{e.args[0]}'. Available kernels: {list(TILINGS.keys())}")
 
 def HyperbolicGraph(*args, kernel: Union[GraphKernels, str] = GraphKernels.GenerativeReflectionGraph,
                     **kwargs) -> GraphExtended:
@@ -125,15 +123,12 @@ def HyperbolicGraph(*args, kernel: Union[GraphKernels, str] = GraphKernels.Gener
     if isinstance(kernel, GraphKernels):
         kernel = kernel.value
 
-    if not (kernel in GRAPHS):
-        raise AttributeError("Provided kernel is not a GraphKernel")
+    if kernel not in GRAPHS:
+        try:
+            raise AttributeError("[hypertiling] Error: Provided kernel is not a GraphKernel. You might try HyperbolicTiling instead.")
+        except AttributeError as e:
+            print(e)
 
-    # if (p - 2) * (q - 2) <= 4:
-    #    raise AttributeError(
-    #        "[hypertiling] Error: Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
-
-    # if p > 20 or q > 20 and n > 5:
-    #    htprint("Warning", "The lattice might become very large with your parameter choice!")
 
     if kernel == "GRG":
         htprint("Status", "Parameter n is interpreted as number of reflective layer. Compare documentation.")
@@ -147,5 +142,8 @@ def HyperbolicGraph(*args, kernel: Union[GraphKernels, str] = GraphKernels.Gener
     elif kernel == "GRCT":
         htprint("Status", "Schwarzian triangle with (p, q, r) with n layers selected")
         kwargs["nbrs"] = True
-
-    return GRAPHS[kernel](*args, **kwargs)
+    try:
+        return GRAPHS[kernel](*args, **kwargs)
+    except KeyError as e:
+        print(f"[hypertiling] Unknown graph kernel '{e.args[0]}'. Available kernels: {list(GRAPHS.keys())}")
+        

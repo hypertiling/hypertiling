@@ -3,7 +3,7 @@ import copy
 import math
 from scipy.stats import circmean
 from hypertiling.ion import htprint
-from hypertiling.util import fundamental_radius
+from hypertiling.util import fundamental_radius, _check_hyperbolic
 from hypertiling.representations import w2p_xyt, p2w_xyt_vector, w2p_xyt_vector
 from hypertiling.kernel_abc import Tiling
 from hypertiling.kernel.hyperpolygon import HyperPolygon
@@ -14,14 +14,18 @@ class Dunham(Tiling):
     A more or less literal, unoptimized, implementation of the tiling algorithm by Douglas Dunham,
     translated to Python; specifically, this is the improved version published in [Dun07]
 
-    Note that this kernel internally uses Weierstrass (hyperboloid) arithmetic. 
+    Note that this kernel internally uses Weierstrass (hyperboloid) coordinates. 
     """
 
     def __init__(self, p, q, n):
         super().__init__(p, q, n)
 
-        if p == 3 or q == 3:
-            raise ValueError("[hypertiling] Error: p=3 or q=3 is currently not supported!")
+        try:
+            _check_hyperbolic(p,q)
+            _check_dunham_compatibility(p, q)
+        except ValueError as e:
+            print(e)
+            return None
 
         # prepare list to store polygons 
         self.polygons = []
@@ -478,6 +482,31 @@ class DunhamTransformation:
 
 
 def rotationW(phi):
-    # return Weierstrass rotation matrix
+    """
+    Returns a Weierstrass rotation matrix for a given angle phi.
+
+    Parameters
+    ----------
+    phi : float
+        The angle of rotation in radians.
+
+    Returns
+    -------
+    np.array
+        A 3x3 Weierstrass rotation matrix.
+    """
     return np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
 
+
+
+def _check_dunham_compatibility(p: int, q: int) -> None:
+    """
+    Checks whether the given {p, q} parameters are supported by the Dunham kernel.
+    Currently, kernels with p=3 or q=3 are not implemented.
+    Raises:
+        ValueError: If p=3 or q=3.
+    """
+    if p == 3:
+        raise ValueError("[hypertiling] p=3 is currently not supported by this kernel.")
+    if q == 3:
+        raise ValueError("[hypertiling] q=3 is currently not supported by this kernel.")
