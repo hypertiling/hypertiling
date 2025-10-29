@@ -1,75 +1,118 @@
 import numpy as np
-from .svg_base import to_px, build_svg_attrs
+from .svg_base import to_px, build_svg_attrs, SvgElement
 
-def svg_hyperbolic_circle(
-    z0: complex,
-    R: float,
-    edgecolor: str = "black",
-    fill: str = "none",
-    lw: float = 1.0,
-    digits: int = 5,
-    **svg_attrs,
-):
-    """
-    Build an SVG <circle> element for a hyperbolic circle in the Poincaré disk.
 
-    The hyperbolic circle with (hyperbolic) center z0 (|z0|<1) and
-    hyperbolic radius R maps to an Euclidean circle with center c_e and radius r_e:
-        ρ = tanh(R / 2)
-        c_e = ((1 - ρ**2) * z0) / (1 - ρ**2 * |z0|**2)
-        r_e = ((1 - |z0|**2) * ρ) / (1 - ρ**2 * |z0|**2)
-
-    This function returns a ready-to-insert SVG <circle> element **in pixel space**,
-    using the existing `to_px` mapping.
-
-    Parameters
-    ----------
-    z0 : complex
-        Hyperbolic center (Euclidean coordinate in the unit disk), |z0| < 1.
-    R : float
-        Hyperbolic radius (geodesic distance in the Poincaré metric).
-    edgecolor : str, optional
-        Stroke color.
-    fill : str, optional
-        Fill color or pattern (e.g., 'none' or 'url(#img1)').
-    lw : float, optional
-        Stroke width in pixels.
-    digits : int, optional
-        Decimal digits for SVG numeric attributes.
-    **svg_attrs
-        Additional SVG attributes (e.g., opacity=0.5, stroke_dasharray="3,3").
-
-    Returns
-    -------
-    str
-        An SVG <circle> element string.
-    """
-    # Euclidean circle parameters for a hyperbolic circle
-    rho = np.tanh(R / 2.0)
-    a2 = abs(z0)**2
-    denom = (1 - (rho**2) * a2)
-
-    # center and radius in Euclidean (disk) coordinates
-    c_e = ((1 - rho**2) * z0) / denom
-    r_e = ((1 - a2) * rho) / denom
-
-    # map to pixel space; follow the same y-flip convention as polygons
-    cx, cy = to_px(np.conj(c_e))
-    # take a point to the +x direction to measure radius in pixels (affine map)
-    px, py = to_px(np.conj(c_e + r_e))
-    r_px = np.hypot(px - cx, py - cy)
-
-    # Basis-Attribute
-    base_attrs = {
-        "cx": np.round(cx, digits),
-        "cy": np.round(cy, digits),
-        "r": np.round(r_px, digits),
-        "fill": fill,
-        "stroke": edgecolor,
-        "stroke-width": lw,
-    }
+class UnitCircle(SvgElement):
+    """The unit circle boundary of the Poincaré disk."""
     
-    # Wrapper nutzen
-    attrs_str = build_svg_attrs(base_attrs, **svg_attrs)
+    def __init__(
+        self,
+        center: tuple[float, float] = (0, 0),
+        radius: float = 1.0,
+        fill: str = "none",
+        edgecolor: str = "black",
+        lw: float = 1.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
+        self.center = center
+        self.radius = radius
     
-    return f"<circle {attrs_str} />"
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "center": self.center,
+            "radius": self.radius,
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"UnitCircle(r={self.radius}, center={self.center})"
+    
+    def to_svg(self) -> str:
+        """Generate the SVG <circle> element."""
+        cx, cy = self.center
+        r_px = to_px(complex(self.radius, 0))[0] - to_px(complex(0, 0))[0]
+        cx_px, cy_px = to_px(complex(cx, cy))
+        
+        base_attrs = self._build_base_attrs({
+            "cx": np.round(cx_px, self.digits),
+            "cy": np.round(cy_px, self.digits),
+            "r": np.round(r_px, self.digits),
+        })
+        
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<circle {attrs_str} />"
+    
+    def set_center(self, center: tuple[float, float]):
+        self.center = center
+        return self
+    
+    def set_radius(self, radius: float):
+        self.radius = radius
+        return self
+
+
+class HyperbolicCircle(SvgElement):
+    """A hyperbolic circle in the Poincaré disk."""
+    
+    def __init__(
+        self,
+        z0: complex,
+        R: float,
+        fill: str = "none",
+        edgecolor: str = "black",
+        lw: float = 1.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
+        self.z0 = z0
+        self.R = R
+    
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "z0": self.z0,
+            "R": self.R,
+            "fill": self.fill,
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"HyperbolicCircle(center={self.z0:.2f}, R={self.R:.2f})"
+    
+    def _compute_euclidean_params(self) -> tuple[complex, float]:
+        rho = np.tanh(self.R / 2.0)
+        a2 = abs(self.z0)**2
+        denom = (1 - (rho**2) * a2)
+        
+        c_e = ((1 - rho**2) * self.z0) / denom
+        r_e = ((1 - a2) * rho) / denom
+        
+        return c_e, r_e
+    
+    def to_svg(self) -> str:
+        c_e, r_e = self._compute_euclidean_params()
+        
+        cx, cy = to_px(np.conj(c_e))
+        px, py = to_px(np.conj(c_e + r_e))
+        r_px = np.hypot(px - cx, py - cy)
+        
+        base_attrs = self._build_base_attrs({
+            "cx": np.round(cx, self.digits),
+            "cy": np.round(cy, self.digits),
+            "r": np.round(r_px, self.digits),
+        })
+        
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<circle {attrs_str} />"
+    
+    def set_center(self, z0: complex):
+        self.z0 = z0
+        return self
+    
+    def set_radius(self, R: float):
+        self.R = R
+        return self

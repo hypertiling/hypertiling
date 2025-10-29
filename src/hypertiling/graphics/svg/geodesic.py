@@ -1,5 +1,5 @@
 import numpy as np
-from .svg_base import to_px, build_svg_attrs
+from .svg_base import to_px, build_svg_attrs, SvgElement
 
 def geodesic_arc(z1: complex, z2: complex, tol: float = 1e-14):
     """
@@ -52,84 +52,92 @@ def geodesic_arc(z1: complex, z2: complex, tol: float = 1e-14):
     R2 = max(R2, 0.0)
     return {"type": "circle", "center": complex(cx, cy), "radius": np.sqrt(R2)}
 
-
-def svg_geodesic(
-    z1: complex,
-    z2: complex,
-    edgecolor: str = "black",
-    lw: float = 1.0,
-    digits: int = 5,
-    **svg_attrs,
-) -> str:
-    """
-    SVG <path> for the hyperbolic geodesic between z1 and z2 in the Poincaré disk.
-    Uses `geodesic_arc(z1, z2)` to get the geometric primitive (line or circle),
-    then emits either an 'L' segment or an 'A' arc. Supports ideal points (|z|≈1).
+class Geodesic(SvgElement):
+    """A geodesic arc in the Poincaré disk."""
     
-    Parameters
-    ----------
-    z1, z2 : complex
-        Points in the Poincaré disk.
-    edgecolor : str, optional
-        Stroke color.
-    lw : float, optional
-        Stroke width.
-    digits : int, optional
-        Decimal digits for SVG numeric attributes.
-    **svg_attrs
-        Additional SVG attributes (e.g., opacity=0.5, stroke_dasharray="3,3").
-    """
-    if abs(z1 - z2) < 1e-12:
-        return ""  # degenerate
-
-    arc = geodesic_arc(z1, z2)
-
-    # Conjugate for y-flip
-    z1_svg = np.conj(z1)
-    z2_svg = np.conj(z2)
+    def __init__(
+        self,
+        z1: complex,
+        z2: complex,
+        edgecolor: str = "black",
+        lw: float = 1.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        super().__init__("none", edgecolor, lw, digits, **svg_attrs)
+        self.z1 = z1
+        self.z2 = z2
     
-    x1, y1 = to_px(z1_svg)
-    x2, y2 = to_px(z2_svg)
-
-    # Basis-Attribute
-    base_attrs = {
-        "fill": "none",
-        "stroke": edgecolor,
-        "stroke-width": lw,
-    }
-    attrs_str = build_svg_attrs(base_attrs, **svg_attrs)
-
-    if arc["type"] == "line":
-        return (
-            f"<path d='M {np.round(x1, digits)} {np.round(y1, digits)} "
-            f"L {np.round(x2, digits)} {np.round(y2, digits)}' "
-            f"{attrs_str} />"
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "z1": self.z1,
+            "z2": self.z2,
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"Geodesic({self.z1:.2f} → {self.z2:.2f})"
+    
+    def to_svg(self) -> str:
+        """Generate the SVG <path> element."""
+        if abs(self.z1 - self.z2) < 1e-12:
+            return ""
+        
+        arc = geodesic_arc(self.z1, self.z2)
+        
+        z1_svg = np.conj(self.z1)
+        z2_svg = np.conj(self.z2)
+        
+        x1, y1 = to_px(z1_svg)
+        x2, y2 = to_px(z2_svg)
+        
+        base_attrs = self._build_base_attrs()
+        
+        if arc["type"] == "line":
+            base_attrs["d"] = (
+                f"M {np.round(x1, self.digits)} {np.round(y1, self.digits)} "
+                f"L {np.round(x2, self.digits)} {np.round(y2, self.digits)}"
+            )
+            attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+            return f"<path {attrs_str} />"
+        
+        c: complex = arc["center"]
+        r: float = arc["radius"]
+        c_svg = np.conj(c)
+        
+        Cx, Cy = to_px(c_svg)
+        r_px = float(np.hypot(x1 - Cx, y1 - Cy))
+        
+        th1 = np.arctan2((z1_svg - c_svg).imag, (z1_svg - c_svg).real)
+        th2 = np.arctan2((z2_svg - c_svg).imag, (z2_svg - c_svg).real)
+        dth = (th2 - th1) % (2*np.pi)
+        
+        sweep = 0 if dth <= np.pi else 1
+        
+        th_mid = th1 + (0.5 * dth if sweep == 1 else -0.5 * (2*np.pi - dth))
+        z_mid = c_svg + r * np.exp(1j * th_mid)
+        if abs(np.conj(z_mid)) >= 1 - 1e-12:
+            sweep ^= 1
+        
+        base_attrs["d"] = (
+            f"M {np.round(x1, self.digits)} {np.round(y1, self.digits)} "
+            f"A {np.round(r_px, self.digits)} {np.round(r_px, self.digits)} 0 "
+            f"0 {sweep} {np.round(x2, self.digits)} {np.round(y2, self.digits)}"
         )
-
-    # Circle case
-    c: complex = arc["center"]
-    r: float = arc["radius"]
-    c_svg = np.conj(c)  # Also conjugate the center!
-
-    Cx, Cy = to_px(c_svg)
-    r_px = float(np.hypot(x1 - Cx, y1 - Cy))
-
-    # Use CONJUGATED coordinates for angle calculations
-    th1 = np.arctan2((z1_svg - c_svg).imag, (z1_svg - c_svg).real)
-    th2 = np.arctan2((z2_svg - c_svg).imag, (z2_svg - c_svg).real)
-    dth = (th2 - th1) % (2*np.pi)
-
-    sweep = 0 if dth <= np.pi else 1
-
-    # Test midpoint with conjugated values
-    th_mid = th1 + (0.5 * dth if sweep == 1 else -0.5 * (2*np.pi - dth))
-    z_mid = c_svg + r * np.exp(1j * th_mid)
-    if abs(np.conj(z_mid)) >= 1 - 1e-12:  # Check in original space
-        sweep ^= 1
-
-    return (
-        f"<path d='M {np.round(x1, digits)} {np.round(y1, digits)} "
-        f"A {np.round(r_px, digits)} {np.round(r_px, digits)} 0 "
-        f"0 {sweep} {np.round(x2, digits)} {np.round(y2, digits)}' "
-        f"{attrs_str} />"
-    )
+        
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<path {attrs_str} />"
+    
+    def set_endpoints(self, z1: complex, z2: complex):
+        self.z1 = z1
+        self.z2 = z2
+        return self
+    
+    def set_start(self, z1: complex):
+        self.z1 = z1
+        return self
+    
+    def set_end(self, z2: complex):
+        self.z2 = z2
+        return self

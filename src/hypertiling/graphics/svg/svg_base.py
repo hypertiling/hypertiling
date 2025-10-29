@@ -9,113 +9,194 @@ from typing import Optional
 
 
 
-class SvgBuilder:
-    """Mutable SVG string builder with a friendly API."""
-    def __init__(self): self.parts = []
-    def write(self, s: str): self.parts.append(s)
-    append = write  # alias
-    def render(self) -> str: return "".join(self.parts)
+from abc import ABC, abstractmethod
+
+from abc import ABC, abstractmethod
+
+class SvgElement(ABC):
+    """Abstract base class for SVG elements with common styling."""
+    
+    def __init__(
+        self,
+        fill: str = "none",
+        edgecolor: str = "black",
+        lw: float = 1.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        self.fill = fill
+        self.edgecolor = edgecolor
+        self.lw = lw
+        self.digits = digits
+        self.svg_attrs = svg_attrs
+    
+    @abstractmethod
+    def to_svg(self) -> str:
+        """Generate the SVG string representation."""
+        pass
+    
+    def __repr__(self):
+        """Developer-friendly representation."""
+        attrs = ", ".join(f"{k}={v!r}" for k, v in self._get_repr_attrs().items())
+        return f"{self.__class__.__name__}({attrs})"
+    
+    def __str__(self):
+        """User-friendly representation."""
+        return self._get_str_repr()
+    
+    def _get_repr_attrs(self) -> dict:
+        """
+        Override in subclasses to specify which attributes to show in repr.
+        Default shows common styling attributes.
+        """
+        return {
+            "fill": self.fill,
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        """
+        Override in subclasses for custom user-friendly string.
+        Default returns class name.
+        """
+        return f"{self.__class__.__name__}"
+    
+    # Common setters
+    def set_fill(self, color: str):
+        """Change fill color."""
+        self.fill = color
+        return self
+    
+    def set_edgecolor(self, color: str):
+        """Change edge color."""
+        self.edgecolor = color
+        return self
+    
+    def set_linewidth(self, lw: float):
+        """Change line width."""
+        self.lw = lw
+        return self
+    
+    def set_attr(self, **attrs):
+        """Set additional SVG attributes."""
+        self.svg_attrs.update(attrs)
+        return self
+    
+    def _build_base_attrs(self, extra: dict = None) -> dict:
+        """Build common attributes dict."""
+        attrs = {
+            "fill": self.fill,
+            "stroke": self.edgecolor,
+            "stroke-width": self.lw,
+        }
+        if extra:
+            attrs.update(extra)
+        return attrs
+    
+
+    
 
 
-
-def svg_open(
-    center: tuple[float, float] = (100.0, 100.0),
-    radius: float = 100.0,
-    padding: float = 0.0,
-    width: Optional[float] = None,
-    height: Optional[float] = None,
-    group_style: str = "",
-) -> str:
+class SvgCanvas:
     """
-    Create an <svg> header with a viewBox centered at `center` and
-    extending to `radius` (plus optional `padding`) on all sides.
-
+    Canvas holding SVG elements that can be modified before rendering.
+    
     Parameters
     ----------
-    center : (float, float)
-        Pixel-space coordinates of the disk center.
-    radius : float
-        Pixel radius of the unit circle (|z|=1).
-    padding : float
-        Extra margin around the drawing in same units.
-    width, height : float, optional
-        Output size in px or other units; purely stylistic.
-    group_style : str, optional
-        CSS style string applied to the root <g> element.
-
-    Returns
-    -------
-    str
-        The opening <svg> and <g> tags.
-    """
-    cx, cy = center
-    half = radius + padding
-    x0, y0 = cx - half, cy - half
-    w = h = 2 * half
-    vb = f"{x0} {y0} {w} {h}"
-
-    size_attr = []
-    if width is not None:
-        size_attr.append(f"width='{width}'")
-    if height is not None:
-        size_attr.append(f"height='{height}'")
-    size_str = " ".join(size_attr)
-
-    gs = f" style='{group_style}'" if group_style else ""
-    return f"<svg xmlns='http://www.w3.org/2000/svg' viewBox='{vb}' {size_str}>\n<g{gs}>\n"
-
-
-def svg_close(
-    unitcircle: bool = False,
-    center: tuple[float, float] = (100.0, 100.0),
-    radius: float = 99.9999,
-    stroke: str = "black",
-    stroke_width: float = 0.5,
-    fill: str = "none",
-    opacity: float = 1.0,
-    dasharray: Optional[str] = None,
-) -> str:
-    """
-    Return closing tags for the SVG document, optionally drawing the boundary
-    (unit) circle with user-specified styling.
-
-    Parameters
-    ----------
-    unitcircle : bool, optional
-        If True, include a boundary circle before closing.
-    center : (float, float), optional
-        Pixel coordinates (cx, cy) of the disk center.
+    center : tuple[float, float], optional
+        Center coordinates (cx, cy) in disk space.
     radius : float, optional
-        Pixel radius of the boundary circle.
-    stroke : str, optional
-        Stroke color of the boundary circle.
-    stroke_width : float, optional
-        Stroke width in pixels.
-    fill : str, optional
-        Fill color (typically "none").
-    opacity : float, optional
-        Overall opacity in [0, 1].
-    dasharray : str, optional
-        SVG stroke-dasharray pattern (e.g., "2,2" for dashed lines).
-
-    Returns
-    -------
-    str
-        Closing SVG markup including optional boundary circle.
+        Disk radius in disk space.
+    padding : float, optional
+        Padding around the viewBox.
+    width : int, optional
+        SVG width in pixels.
+    height : int, optional
+        SVG height in pixels.
     """
-    parts = []
-    if unitcircle:
-        cx, cy = center
-        dash = f" stroke-dasharray='{dasharray}'" if dasharray else ""
-        parts.append(
-            f"<circle cx='{cx}' cy='{cy}' r='{radius}' "
-            f"fill='{fill}' stroke='{stroke}' stroke-width='{stroke_width}' "
-            f"opacity='{opacity}'{dash} />\n"
+    
+    def __init__(
+        self,
+        center: tuple[float, float] = (0, 0),
+        radius: float = 1.0,
+        padding: float = 5,
+        width: int = 600,
+        height: int = 600,
+    ):
+        self.elements: list[SvgElement] = []
+        
+        # SVG parameters
+        self.center = center
+        self.radius = radius
+        self.padding = padding
+        self.width = width
+        self.height = height
+    
+    def add(self, *elements: SvgElement):
+        """Add one or more elements."""
+        self.elements.extend(elements)
+        return self
+    
+    def remove(self, element: SvgElement):
+        """Remove an element."""
+        self.elements.remove(element)
+        return self
+    
+    def clear(self):
+        """Remove all elements."""
+        self.elements.clear()
+        return self
+    
+    def _build_header(self) -> str:
+        """Build SVG opening tag with viewBox."""
+        cx, cy = self.center
+        r = self.radius
+        vb_min_x = cx - r - self.padding
+        vb_min_y = cy - r - self.padding
+        vb_width = 2 * r + 2 * self.padding
+        vb_height = 2 * r + 2 * self.padding
+        
+        return (
+            f"<svg xmlns='http://www.w3.org/2000/svg' "
+            f"width='{self.width}' height='{self.height}' "
+            f"viewBox='{vb_min_x} {vb_min_y} {vb_width} {vb_height}'>\r"
         )
-    parts.append("</g>\n</svg>\n")
-    return "".join(parts)
-
-
+    
+    def _build_footer(self) -> str:
+        """Build SVG closing tag."""
+        return "</svg>\r"
+    
+    def render(self) -> str:
+        """Render complete SVG document."""
+        parts = [self._build_header()]
+        
+        # Add all elements in order
+        for elem in self.elements:
+            parts.append(elem.to_svg())
+            parts.append("\r")
+        
+        parts.append(self._build_footer())
+        return "".join(parts)
+    
+    def save(self, filename: str):
+        """Save SVG to file."""
+        with open(filename, 'w') as f:
+            f.write(self.render())
+        return self
+    
+    # Collection interface
+    def __len__(self): 
+        return len(self.elements)
+    
+    def __getitem__(self, idx): 
+        return self.elements[idx]
+    
+    def __iter__(self): 
+        return iter(self.elements)
+    
+    def __repr__(self):
+        return f"SvgCanvas({len(self.elements)} elements)"
 
 def build_svg_attrs(base_attrs: dict, **svg_attrs) -> str:
     """
@@ -176,32 +257,17 @@ class svgString():
         return self.string
 
 
-
-
-
-# def svg_close(unitcircle: bool = False) -> str:
+# def display(canvas: SvgCanvas):
 #     """
-#     Return closing tags for the current SVG document.
-
+#     Display an SvgCanvas in Jupyter/IPython.
+    
 #     Parameters
 #     ----------
-#     unitcircle : bool, optional
-#         If True, draws the boundary circle of the Poincaré disk before closing.
-
-#     Returns
-#     -------
-#     str
-#         Closing SVG markup (including optional unit circle and closing tags).
+#     canvas : SvgCanvas
+#         The canvas to display.
 #     """
-#     parts = []
-#     if unitcircle:
-#         parts.append("<circle cx='100' cy='100' r='99.9999' fill='none' />")
-#     parts.append("</g>")
-#     parts.append("</svg>")
-#     return "\n".join(parts)
-
-
-
+#     from IPython.display import SVG, display as ipython_display
+#     ipython_display(SVG(canvas.render()))
 
 def draw_svg(content: str):
     """

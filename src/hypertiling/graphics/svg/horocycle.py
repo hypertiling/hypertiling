@@ -1,73 +1,59 @@
-from .svg_base import to_px, build_svg_attrs
+from .svg_base import to_px, build_svg_attrs, SvgElement
 import numpy as np
-
-
-def svg_horocycle(
-    z1: complex,
-    R: float,
-    edgecolor: str = "black",
-    fill: str = "none",
-    lw: float = 1.0,
-    digits: int = 5,
-    **svg_attrs,
-):
-    """
-    Build an SVG <circle> element for a *horocycle* in the Poincaré disk model.
-
-    A horocycle is the limiting case of a hyperbolic circle whose center lies
-    on the boundary (|z1| = 1).  It appears as an Euclidean circle tangent to
-    the unit circle at z1 and entirely contained within it.
-
-    The Euclidean circle parameters are:
-        r_e = 0.5 * sech^2(R / 2)
-        c_e = (1 - r_e) * z1
-
-    where R is the (inward) hyperbolic distance from the boundary point z1 to
-    the horocycle itself.  The direction of z1 determines the point of tangency.
-
-    Parameters
-    ----------
-    z1 : complex
-        Boundary point on the unit circle where the horocycle is tangent (|z1| ≈ 1).
-    R : float
-        Hyperbolic distance of the horocycle from the boundary along its normal.
-    edgecolor : str, optional
-        Stroke color.
-    fill : str, optional
-        Fill color or pattern (e.g., 'none' or 'url(#img1)').
-    lw : float, optional
-        Stroke width in pixels.
-    digits : int, optional
-        Decimal digits for SVG numeric attributes.
-    **svg_attrs
-        Additional SVG attributes (e.g., opacity=0.5, stroke_dasharray="3,3").
-
-    Returns
-    -------
-    str
-        SVG <circle> element string.
-    """
-    # Euclidean parameters for the horocycle
-    r_e = 0.5 * (1 / np.cosh(R / 2.0)) ** 2  # = 0.5 * sech^2(R/2)
-    c_e = (1 - r_e) * z1
-
-    # map to pixel space (with y-flip via conjugation)
-    cx, cy = to_px(np.conj(c_e))
-    px, py = to_px(np.conj(c_e + r_e))
-    r_px = np.hypot(px - cx, py - cy)
-
-    # Basis-Attribute
-    base_attrs = {
-        "cx": np.round(cx, digits),
-        "cy": np.round(cy, digits),
-        "r": np.round(r_px, digits),
-        "fill": fill,
-        "stroke": edgecolor,
-        "stroke-width": lw,
-    }
+class Horocycle(SvgElement):
+    """A horocycle in the Poincaré disk model."""
     
-    # Wrapper nutzen
-    attrs_str = build_svg_attrs(base_attrs, **svg_attrs)
+    def __init__(
+        self,
+        z1: complex,
+        R: float,
+        fill: str = "none",
+        edgecolor: str = "black",
+        lw: float = 1.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
+        self.z1 = z1
+        self.R = R
     
-    return f"<circle {attrs_str} />"
-
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "z1": self.z1,
+            "R": self.R,
+            "fill": self.fill,
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"Horocycle(boundary={self.z1:.2f}, R={self.R:.2f})"
+    
+    def _compute_euclidean_params(self) -> tuple[complex, float]:
+        r_e = 0.5 * (1 / np.cosh(self.R / 2.0)) ** 2
+        c_e = (1 - r_e) * self.z1
+        return c_e, r_e
+    
+    def to_svg(self) -> str:
+        c_e, r_e = self._compute_euclidean_params()
+        
+        cx, cy = to_px(np.conj(c_e))
+        px, py = to_px(np.conj(c_e + r_e))
+        r_px = np.hypot(px - cx, py - cy)
+        
+        base_attrs = self._build_base_attrs({
+            "cx": np.round(cx, self.digits),
+            "cy": np.round(cy, self.digits),
+            "r": np.round(r_px, self.digits),
+        })
+        
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<circle {attrs_str} />"
+    
+    def set_boundary_point(self, z1: complex):
+        self.z1 = z1
+        return self
+    
+    def set_distance(self, R: float):
+        self.R = R
+        return self

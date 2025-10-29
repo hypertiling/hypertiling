@@ -2,7 +2,7 @@ from typing import Iterable, Sequence, Optional, Tuple, Union
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
-from .svg_base import to_px, build_svg_attrs
+from .svg_base import to_px, build_svg_attrs, SvgElement
 from .geodesic import geodesic_arc
 
 
@@ -35,21 +35,131 @@ def _arc_segment(z1: complex, z2: complex, digits: int) -> str:
         f"{large_arc_flag} {sweep_flag} {np.round(x2, digits)} {np.round(y2, digits)} "
     )
 
-
-def svg_cell_path(pgon: Sequence[complex], digits: int) -> str:
     """
-    Build one polygon cell as an SVG <path> 'd' attribute (no styling).
-    Assumes pgon[1:] are the vertices (complex, unit disk). Uses y-flip via conj.
+    A hyperbolic polygon in the Poincaré disk.
+    
+    Parameters
+    ----------
+    vertices : Sequence[complex]
+        Vertices of the polygon in the unit disk.
+    fill : str, optional
+        Fill color.
+    edgecolor : str, optional
+        Edge color.
+    lw : float, optional
+        Line width.
+    digits : int, optional
+        Decimal precision for SVG coordinates.
+    skip_first : bool, optional
+        If True, skip the first vertex (e.g., if it's a center coordinate).
+        Default is False.
+    **svg_attrs
+        Additional SVG attributes.
     """
-    verts = [np.conj(v) for v in pgon[1:]]
-    x0, y0 = to_px(verts[0])
-    parts = [f"M {np.round(x0, digits)} {np.round(y0, digits)}"]
-    for i in range(len(verts)):
-        z1 = verts[i]
-        z2 = verts[(i + 1) % len(verts)]
-        parts.append(_arc_segment(z1, z2, digits))
-    return " ".join(parts)
+    
+    def __init__(
+        self,
+        vertices: Sequence[complex],
+        fill: str = "white",
+        edgecolor: str = "black",
+        lw: float = 0.3,
+        digits: int = 5,
+        skip_first: bool = False,
+        **svg_attrs,
+    ):
+        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
+        
+        # Handle skip_first
+        verts = list(vertices)
+        if skip_first:
+            if len(verts) < 4:  # Need at least 3 vertices after skipping
+                raise ValueError("Polygon with skip_first=True must have at least 4 elements")
+            self.center = verts[0]  # Store center if needed
+            self.vertices = verts[1:]
+        else:
+            self.center = None
+            self.vertices = verts
+        
+        if len(self.vertices) < 3:
+            raise ValueError("Polygon must have at least 3 vertices")
+    
+    def _build_path(self) -> str:
+        """Build the SVG path 'd' attribute."""
+        verts = [np.conj(v) for v in self.vertices]
+        x0, y0 = to_px(verts[0])
+        parts = [f"M {np.round(x0, self.digits)} {np.round(y0, self.digits)}"]
+        for i in range(len(verts)):
+            z1 = verts[i]
+            z2 = verts[(i + 1) % len(verts)]
+            parts.append(_arc_segment(z1, z2, self.digits))
+        return " ".join(parts)
+    
+    def to_svg(self) -> str:
+        """Generate the SVG <path> element."""
+        d_attr = self._build_path()
+        base_attrs = self._build_base_attrs({"d": d_attr})
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<path {attrs_str} />"
 
+
+class Polygon(SvgElement):
+    """A hyperbolic polygon in the Poincaré disk."""
+    
+    def __init__(
+        self,
+        vertices: Sequence[complex],
+        fill: str = "white",
+        edgecolor: str = "black",
+        lw: float = 0.3,
+        digits: int = 5,
+        skip_first: bool = False,
+        **svg_attrs,
+    ):
+        super().__init__(fill, edgecolor, lw, digits, **svg_attrs)
+        
+        verts = list(vertices)
+        if skip_first:
+            if len(verts) < 4:
+                raise ValueError("Polygon with skip_first=True must have at least 4 elements")
+            self.center = verts[0]
+            self.vertices = verts[1:]
+        else:
+            self.center = None
+            self.vertices = verts
+        
+        if len(self.vertices) < 3:
+            raise ValueError("Polygon must have at least 3 vertices")
+    
+    def _get_repr_attrs(self) -> dict:
+        attrs = {
+            "n_vertices": len(self.vertices),
+            "fill": self.fill,
+            "edgecolor": self.edgecolor,
+        }
+        if self.center is not None:
+            attrs["center"] = self.center
+        return attrs
+    
+    def _get_str_repr(self) -> str:
+        return f"Polygon({len(self.vertices)} vertices)"
+    
+    def _build_path(self) -> str:
+        """Build the SVG path 'd' attribute."""
+        verts = [np.conj(v) for v in self.vertices]
+        x0, y0 = to_px(verts[0])
+        parts = [f"M {np.round(x0, self.digits)} {np.round(y0, self.digits)}"]
+        for i in range(len(verts)):
+            z1 = verts[i]
+            z2 = verts[(i + 1) % len(verts)]
+            parts.append(_arc_segment(z1, z2, self.digits))
+        return " ".join(parts)
+    
+    def to_svg(self) -> str:
+        """Generate the SVG <path> element."""
+        d_attr = self._build_path()
+        base_attrs = self._build_base_attrs({"d": d_attr})
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        return f"<path {attrs_str} />"
 # --- color resolution ---------------------------------------------------------
 
 def _is_scalar_sequence(x, n: int) -> bool:
@@ -91,62 +201,108 @@ def _resolve_facecolors(facecolors: ColorLike, n: int, cmap: str) -> Tuple[bool,
 
 # --- main element factory -----------------------------------------------------
 
-
-def svg_tiling(
-    tiling: Iterable[Sequence[complex]],
-    facecolors: ColorLike = "white",
-    edgecolor: str = "black",
-    lw: float = 0.3,
-    cmap: str = "RdYlGn",
-    digits: int = 5,
-    link: str = "",
-    **svg_attrs,
-) -> str:
-    """
-    Return a *single SVG element* (<g>…</g>) containing all tiling cells as <path>s.
-    No <svg> header/footer; ready to append into an SvgBuilder or another group.
-    """
-    tiling = list(tiling)
-    n = len(tiling)
-    individual, colors_css = _resolve_facecolors(facecolors, n, cmap)
-
-    # Basis-Attribute für <g>
-    group_attrs = {
-        "stroke": edgecolor,
-        "stroke-width": lw,
-    }
-    if not individual:
-        group_fill = facecolors if isinstance(facecolors, str) else "white"
-        group_attrs["fill"] = group_fill
+class Tiling(SvgElement):
+    """A collection of hyperbolic polygons forming a tiling."""
     
-    # Wrapper nutzen - vereinheitlicht!
-    group_attrs_str = build_svg_attrs(group_attrs, **svg_attrs)
-    out = [f"<g {group_attrs_str}>\r"]
-
-    # optional pattern fill
-    use_pattern = bool(link)
-    if use_pattern:
-        out.append(
-            "<defs>\r"
-            "  <pattern id='img1' width='5' height='5'>\r"
-            f"    <image href='{link}' x='0' y='0' width='45' height='45'/>\r"
-            "  </pattern>\r"
-            "</defs>\r"
-        )
-
-    # cells
-    for i, pgon in enumerate(tiling):
-        path_attrs = {}
-        if use_pattern:
-            path_attrs["fill"] = "url(#img1)"
-        elif individual and colors_css is not None:
-            path_attrs["fill"] = colors_css[i]
+    def __init__(
+        self,
+        polygons: Iterable[Sequence[complex]],
+        facecolors: ColorLike = "white",
+        edgecolor: str = "black",
+        lw: float = 0.3,
+        cmap: str = "RdYlGn",
+        digits: int = 5,
+        link: str = "",
+        skip_first: bool = False,
+        **svg_attrs,
+    ):
+        super().__init__("none", edgecolor, lw, digits, **svg_attrs)
         
-        d_attr = svg_cell_path(pgon, digits)
-        path_attrs["d"] = d_attr
+        polygons_list = list(polygons)
+        n = len(polygons_list)
         
-        path_attrs_str = build_svg_attrs(path_attrs)
-        out.append(f"<path {path_attrs_str} />\r")
-
-    out.append("</g>\r")
-    return "".join(out)
+        individual, colors_css = _resolve_facecolors(facecolors, n, cmap)
+        
+        self.polygons = []
+        for i, verts in enumerate(polygons_list):
+            if individual and colors_css is not None:
+                fill = colors_css[i]
+            elif isinstance(facecolors, str):
+                fill = facecolors
+            else:
+                fill = "white"
+            
+            poly = Polygon(
+                verts,
+                fill=fill,
+                edgecolor=edgecolor,
+                lw=lw,
+                digits=digits,
+                skip_first=skip_first,
+            )
+            self.polygons.append(poly)
+        
+        self.link = link
+        self.use_pattern = bool(link)
+        self.skip_first = skip_first
+    
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "n_polygons": len(self.polygons),
+            "edgecolor": self.edgecolor,
+            "lw": self.lw,
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"Tiling({len(self.polygons)} polygons)"
+    
+    def to_svg(self) -> str:
+        """Generate SVG <g> element containing all polygons."""
+        group_attrs = {
+            "stroke": self.edgecolor,
+            "stroke-width": self.lw,
+        }
+        
+        if self.polygons and all(p.fill == self.polygons[0].fill for p in self.polygons):
+            group_attrs["fill"] = self.polygons[0].fill
+        
+        group_attrs_str = build_svg_attrs(group_attrs, **self.svg_attrs)
+        out = [f"<g {group_attrs_str}>\r"]
+        
+        if self.use_pattern:
+            out.append(
+                "<defs>\r"
+                "  <pattern id='img1' width='5' height='5'>\r"
+                f"    <image href='{self.link}' x='0' y='0' width='45' height='45'/>\r"
+                "  </pattern>\r"
+                "</defs>\r"
+            )
+        
+        for poly in self.polygons:
+            if self.use_pattern:
+                poly.fill = "url(#img1)"
+            out.append(poly.to_svg() + "\r")
+        
+        out.append("</g>\r")
+        return "".join(out)
+    
+    def __getitem__(self, idx):
+        return self.polygons[idx]
+    
+    def __len__(self):
+        return len(self.polygons)
+    
+    def __iter__(self):
+        return iter(self.polygons)
+    
+    def set_edgecolor(self, color: str):
+        self.edgecolor = color
+        for poly in self.polygons:
+            poly.set_edgecolor(color)
+        return self
+    
+    def set_linewidth(self, lw: float):
+        self.lw = lw
+        for poly in self.polygons:
+            poly.set_linewidth(lw)
+        return self
