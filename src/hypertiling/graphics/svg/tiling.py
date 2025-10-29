@@ -4,6 +4,7 @@ import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 from .svg_base import to_px, build_svg_attrs, SvgElement
 from .geodesic import geodesic_arc
+from .color import _resolve_facecolors
 
 
 ColorLike = Union[str, Sequence[float], Sequence[Tuple[float, float, float]]]
@@ -129,44 +130,7 @@ class Polygon(SvgElement):
 
 
 
-# --- color resolution ---------------------------------------------------------
 
-def _is_scalar_sequence(x, n: int) -> bool:
-    try:
-        a = np.asarray(x)
-        return a.ndim == 1 and a.size == n
-    except Exception:
-        return False
-
-def _is_rgb_sequence(x, n: int) -> bool:
-    try:
-        a = np.asarray(x, dtype=float)
-        return a.ndim == 2 and a.shape == (n, 3)
-    except Exception:
-        return False
-
-def _rgb_to_css(rgb: Sequence[float]) -> str:
-    arr = np.asarray(rgb, dtype=float)
-    if arr.max() <= 1.0:
-        arr = np.round(arr * 255.0)
-    return f"rgb({int(arr[0])},{int(arr[1])},{int(arr[2])})"
-
-def _resolve_facecolors(facecolors: ColorLike, n: int, cmap: str) -> Tuple[bool, Optional[Sequence[str]]]:
-    """
-    Returns (individual, colors_css). If individual=False, fill is group-level.
-    """
-    if isinstance(facecolors, str):
-        return False, None
-    if _is_rgb_sequence(facecolors, n):
-        return True, [_rgb_to_css(rgb) for rgb in facecolors]
-    if _is_scalar_sequence(facecolors, n):
-        vals = np.asarray(facecolors, dtype=float)
-        vmin, vmax = np.nanmin(vals), np.nanmax(vals)
-        vals = (vals - vmin) / (vmax - vmin) if vmax > vmin else np.zeros_like(vals)
-        ccmap = plt.get_cmap(cmap)
-        rgba = ccmap(vals)[:, :3]
-        return True, [_rgb_to_css(255 * c) for c in rgba]
-    return False, None
 
 # --- main element factory -----------------------------------------------------
 
