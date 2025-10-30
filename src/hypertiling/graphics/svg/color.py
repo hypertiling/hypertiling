@@ -1,6 +1,5 @@
 import numpy as np
-
-from typing import Iterable, Sequence, Optional, Tuple, Union
+from typing import Sequence, Optional, Tuple, Union
 ColorLike = Union[str, Sequence[float], Sequence[Tuple[float, float, float]]]
 
 

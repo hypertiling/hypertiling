@@ -207,7 +207,7 @@ class SVGCanvas:
         return iter(self.elements)
     
     def __repr__(self):
-        return f"SvgCanvas({len(self.elements)} elements)"
+        return f"SVGCanvas({len(self.elements)} elements)"
 
 def build_svg_attrs(base_attrs: dict, **svg_attrs) -> str:
     """
