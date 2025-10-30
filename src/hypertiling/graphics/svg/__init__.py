@@ -15,7 +15,7 @@ Examples
 SVGCanvas(1 elements)
 >>> canvas.add(Tiling(T, skip_first=True))
 SVGCanvas(2 elements)
->>> draw_svg(canvas)
+>>> draw_svg(canvas.render())
 """
 
 from .svg_base import SVGElement, SVGCanvas, draw_svg, build_svg_attrs
