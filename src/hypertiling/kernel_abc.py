@@ -42,10 +42,7 @@ class Graph(abc.ABC):
         self.q = q
         self.n = n
 
-        try:
-            _check_hyperbolic(p, q)
-        except ValueError as e:
-            print(e)
+
 
     def __repr__(self):
         """
@@ -112,6 +109,11 @@ class GraphExtended(Graph):
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
         super().__init__(p, q, n)
+
+        try:
+            _check_hyperbolic(p, q)
+        except ValueError as e:
+            print(e)
 
         self.phi = 2 * np.pi / self.p
         self.qhi = 2 * np.pi / self.q

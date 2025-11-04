@@ -39,6 +39,9 @@ install-latest:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-slim:
   stage: install
@@ -48,6 +51,9 @@ install-slim:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-python-3.7:
   stage: install
@@ -57,6 +63,9 @@ install-python-3.7:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-python-3.5:
   stage: install
@@ -66,6 +75,9 @@ install-python-3.5:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -81,6 +93,9 @@ install-bullseye:
   script:
     - pip3 install --upgrade pip
     - pip3 install .
+  only:
+    - dev
+    - master
 
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -104,6 +119,9 @@ install-from-pypi:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install hypertiling
+  only:
+    - dev
+    - master
 
 
 
