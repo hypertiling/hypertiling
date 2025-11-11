@@ -266,7 +266,6 @@ def propagate_coords(p: int, p_index: int, c_index: int, edge: int, coords: np.a
 
     coords[c_index, 1:] = np.roll(np.flip(coords[c_index, 1:]), edge + 1)
 
-
 @NumbaChecker("Tuple((complex128[:,:], int32[:,:], int32[:]))(int32, int32, int32, boolean, boolean)")
 def construct_sector(p: int, q: int, n: int, tiling: bool, nbrs_: bool) -> Tuple[np.array, np.array, np.array]:
     """
