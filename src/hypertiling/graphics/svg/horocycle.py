@@ -76,5 +76,14 @@ class Horocycle(SVGElement):
         return self
     
     def set_distance(self, R: float):
+        """
+        Sets the distance from the origin of the hyperbolic plane to the horocycle.
+        
+        Parameters
+        ----------
+        R : float
+            The Euclidean distance from the origin of the hyperbolic plane to the horocycle.
+        """
+        
         self.R = R
         return self

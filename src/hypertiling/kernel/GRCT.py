@@ -13,7 +13,7 @@ class GRCT(Graph):
     """
 
     def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False,
-                 size: Optional[int] = None):
+                 size: int = 1000):
         """
         Initialize a tesselation with Schwarian triangles.
 
@@ -34,9 +34,10 @@ class GRCT(Graph):
             If True, coordinates are calculated for the triangles
         nbrs : bool
             If True, neighbor relations are traced during construction
-        size : Optional[int]
+        size : int
             Size of the reserved memory for the arrays.
-            If None, an estimation will be used (usually overestimates a lot)
+            Default: 1000
+            Choose as close as possible to realistic number to increase performance
         """
         super().__init__(p, q, n)
         self.r = r
@@ -48,7 +49,7 @@ class GRCT(Graph):
         if sector:
             raise NotImplementedError("NOT YET IMPLEMENTED")
         else:
-            size = util.get_n(p, q, r, n) if size is None else size
+            # util.get_n(p, q, r, n) if size is None else size
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, size, self.tiling, self.nbrs)
             self.length = self.lvls[-1]
 

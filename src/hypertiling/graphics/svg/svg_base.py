@@ -265,3 +265,105 @@ def write_svg(fname: str, content: str):
     svgfile.write(content)
     svgfile.close()
 
+
+
+
+
+class SVGGroup(SVGElement):
+    """
+    A group element that can contain other SVG elements with transformations.
+    
+    Useful for placing, rotating, and scaling arbitrary SVG content at specific
+    locations in the Poincaré disk with proper hyperbolic metric scaling.
+    
+    Parameters
+    ----------
+    svg_content : str
+        Raw SVG markup to be wrapped in a <g> tag.
+    center : complex, optional
+        Position in the Poincaré disk where to place the content. Default is origin.
+    scale : float, optional
+        Scaling factor. For hyperbolic metric scaling, use (1 - |z|²) where z is center.
+    rotation : float, optional
+        Rotation angle in radians (counterclockwise).
+    digits : int, optional
+        Decimal precision for SVG coordinates.
+    **svg_attrs
+        Additional SVG attributes for the group.
+    
+    Examples
+    --------
+    >>> # Place a custom SVG at a specific location
+    >>> svg_content = '<circle cx="0" cy="0" r="10" fill="red"/>'
+    >>> group = SVGGroup(svg_content, center=0.5+0.3j, scale=0.5, rotation=np.pi/4)
+    >>> canvas.add(group)
+    """
+    
+    def __init__(
+        self,
+        svg_content: str,
+        center: complex = 0+0j,
+        scale: float = 1.0,
+        rotation: float = 0.0,
+        digits: int = 5,
+        **svg_attrs,
+    ):
+        super().__init__("none", "none", 0, digits, **svg_attrs)
+        self.svg_content = svg_content
+        self.center = center
+        self.scale = scale
+        self.rotation = rotation
+    
+    def _get_repr_attrs(self) -> dict:
+        return {
+            "center": self.center,
+            "scale": self.scale,
+            "rotation": f"{np.rad2deg(self.rotation):.1f}°",
+        }
+    
+    def _get_str_repr(self) -> str:
+        return f"SvgGroup(center={self.center:.2f}, scale={self.scale:.2f})"
+    
+    def to_svg(self) -> str:
+        """Generate SVG <g> element with transformations."""
+        # Convert center to pixel space (with y-flip)
+        center_svg = np.conj(self.center)
+        cx, cy = to_px(center_svg)
+        
+        # Build transformation string
+        transforms = []
+        
+        # 1. Translate to position
+        transforms.append(f"translate({np.round(cx, self.digits)} {np.round(cy, self.digits)})")
+        
+        # 2. Rotate (convert radians to degrees)
+        if abs(self.rotation) > 1e-10:
+            angle_deg = np.rad2deg(self.rotation)
+            transforms.append(f"rotate({np.round(angle_deg, self.digits)})")
+        
+        # 3. Scale
+        if abs(self.scale - 1.0) > 1e-10:
+            transforms.append(f"scale({np.round(self.scale, self.digits)})")
+        
+        transform_str = " ".join(transforms)
+        
+        # Build group attributes
+        base_attrs = {"transform": transform_str}
+        attrs_str = build_svg_attrs(base_attrs, **self.svg_attrs)
+        
+        return f"<g {attrs_str}>\n{self.svg_content}\n</g>"
+    
+    def set_center(self, center: complex):
+        """Change the center position."""
+        self.center = center
+        return self
+    
+    def set_scale(self, scale: float):
+        """Change the scale factor."""
+        self.scale = scale
+        return self
+    
+    def set_rotation(self, rotation: float):
+        """Change the rotation angle (radians)."""
+        self.rotation = rotation
+        return self

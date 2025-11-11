@@ -38,13 +38,7 @@ def edge_length_geodesic(p: int, q: int) -> float:
     float
         Geodesic edge length :math:`h^{(p,q)}` between adjacent vertices.
     """
-    num = math.cos(math.pi / q)
-    denom = math.sin(math.pi / p)
-    val = num / denom
-    if val < 1:
-        # Shouldn't happen for hyperbolic {p,q}, but guard for numerics.
-        val = 1.0
-    return 2.0 * math.acosh(val)
+    return 2.0 * inradius_regular_polygon(q,p)
 
 
 
@@ -75,13 +69,13 @@ def dual_edge_length_geodesic(p: int, q: int) -> float:
     float
         Geodesic edge length :math:`h^{(q,p)}` of the dual tiling.
     """
-    return edge_length_geodesic(q, p)
+    return edge_length_geodesic(q,p)
 
 
 
 # -------- cell radius for regular polygonal tilings ---------
 
-def cell_radius_geodesic(p: int, q: int) -> float:
+def outradius_regular_polygon(p: int, q: int) -> float:
     """
     Compute the geodesic circumradius :math:`h_r` of a {p,q} cell in the Poincaré disk.
 
@@ -129,12 +123,12 @@ def fundamental_radius(p: int, q: int) -> float:
         Euclidean radius :math:`r_0` in disk coordinates (0 < r0 < 1).
     """ 
 
-    R = cell_radius_geodesic(p, q)
+    R = outradius_regular_polygon(p, q)
     return math.tanh(R / 2.0)
 
 
 
-def inradius_geodesic(p: int, q: int) -> float:
+def inradius_regular_polygon(p: int, q: int) -> float:
     """
     Compute the geodesic inradius :math:`r` of a {p,q} cell in the Poincaré disk.
 
@@ -155,7 +149,7 @@ def inradius_geodesic(p: int, q: int) -> float:
         Geodesic inradius :math:`r` (center → edge midpoint).
     """
 
-    val = math.cos(math.pi / p) / math.sin(math.pi / q)
+    val = math.cos(math.pi / q) / math.sin(math.pi / p)
     if val < 1:
         val = 1.0
     return math.acosh(val)

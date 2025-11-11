@@ -19,7 +19,7 @@ SVGCanvas(2 elements)
 <IPython.core.display.SVG object>
 """
 
-from .svg_base import SVGElement, SVGCanvas, draw_svg, build_svg_attrs
+from .svg_base import SVGElement, SVGCanvas, SVGGroup, draw_svg, build_svg_attrs
 from .tiling import Tiling, Polygon
 from .circle import HyperbolicCircle, UnitCircle
 from .geodesic import Geodesic
@@ -30,6 +30,7 @@ __all__ = [
     # Base classes
     'SVGElement',
     'SVGCanvas',
+    'SVGGroup',
     'draw_svg',
     
     # Geometric elements
