@@ -523,7 +523,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
 # ------------- Neighbours -------------
 
-    def get_nbrs_list(self, method="ROS", **kwargs):
+    def get_nbrs_list(self, method="RO", **kwargs):  # default set to "RO" since "ROS" has some bug currently
 
         methods = { "RBF":  self.get_nbrs_radius_brute_force,
                     "RO":   self.get_nbrs_radius_optimized,
