@@ -23,9 +23,9 @@ and ensure functions correctly raise ValueError for non-hyperbolic {p,q}.
 from hypertiling.util import (
     edge_length_geodesic,
     dual_edge_length_geodesic,
-    cell_radius_geodesic,
+    outradius_regular_polygon,
     fundamental_radius,
-    inradius_geodesic
+    inradius_regular_polygon
 )
 
 # Reference values from the hypertiling release publication
@@ -60,9 +60,9 @@ class TestHyperbolicMetrics(unittest.TestCase):
 
     def test_cell_radius_and_fundamental_radius_match_table(self):
         for p, q, h_pq, h_qp, h_r, r0 in CASES:
-            with self.subTest(p=p, q=q, what="cell_radius_geodesic"):
+            with self.subTest(p=p, q=q, what="outradius_regular_polygon"):
                 self.assertTrue(
-                    math.isclose(cell_radius_geodesic(p, q), h_r, rel_tol=RTOL, abs_tol=ATOL),
+                    math.isclose(outradius_regular_polygon(p, q), h_r, rel_tol=RTOL, abs_tol=ATOL),
                     msg=f"R mismatch for {{p,q}}={{ {p},{q} }}",
                 )
             with self.subTest(p=p, q=q, what="fundamental_radius"):
@@ -87,7 +87,7 @@ class TestHyperbolicMetrics(unittest.TestCase):
     def test_fundamental_radius_consistency(self):
         for p, q, *_ in CASES:
             with self.subTest(p=p, q=q, what="rho=tanh(R/2)"):
-                R = cell_radius_geodesic(p, q)
+                R = outradius_regular_polygon(p, q)
                 rho = fundamental_radius(p, q)
                 self.assertTrue(
                     math.isclose(rho, math.tanh(R / 2.0), rel_tol=RTOL, abs_tol=ATOL),
@@ -105,7 +105,7 @@ class TestHyperbolicMetrics(unittest.TestCase):
         for p, q, *_ in CASES:
             with self.subTest(p=p, q=q, what="dual_edge == 2 * inradius"):
                 dual = dual_edge_length_geodesic(p, q)
-                r = inradius_geodesic(p, q)
+                r = inradius_regular_polygon(p, q)
                 self.assertTrue(
                     math.isclose(dual, 2 * r, rel_tol=RTOL, abs_tol=ATOL),
                     msg=f"h_dual != 2*r for {{p,q}}={{ {p},{q} }}",
