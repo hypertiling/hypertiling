@@ -1,3 +1,48 @@
+
+## v1.5
+Date: 2025-02-15
+
+This release introduces a completely rewritten, object-oriented visualization engine based on Scalable Vector Graphics (SVG). The new system replaces the previous monolithic plotting functions with a composable `SVGCanvas` architecture, offering pixel-perfect rendering, layer management, and extensive styling capabilities.
+
+### The SVG Update - New Features
+
+#### SVG Object Model
+
+* **`SVGCanvas`**: A new container class acts as the central hub for visualization. It manages the coordinate system, viewport, and the rendering of multiple graphical elements .
+
+
+* **Geometric Primitives**: The library now includes specific classes for drawing hyperbolic geometry with geodesic precision, including `Geodesic` (arcs), `HyperbolicCircle` (circles defined by hyperbolic radius), `Horocycle` (limiting circles), and `UnitCircle` (domain boundary) .
+
+
+* **`SVGGroup`**: A new capability allows for the embedding and transformation of arbitrary external SVG paths (e.g., logos or icons) directly into the hyperbolic plane.
+
+
+
+### Fluent Styling API
+
+* **Method Chaining**: Elements now support a fluent interface (e.g., `.set_fill(...).set_linewidth(...)`), allowing for rapid configuration and modification of properties like `stroke_dasharray` or `opacity`.
+
+
+* **Layer Management**: The new architecture supports the manipulation of elements—adding, removing, or reordering them—at any time before the final `render()` call .
+
+
+
+### ⚠️ Breaking Changes
+
+#### Removal of Legacy Visualization Functions
+
+To reduce library bloat and promote the new, more flexible architecture, the legacy functional API has been **removed**. Users must update their scripts to use the object-oriented approach. Warnings will be displayed when attempting to use old syntax. The demo notebook 'advance_visualization.ipynb' may serve as a hands-on example and migration guide.
+
+### Further Changes
+
+* **Refactored Geometric Primitives:** Introduction of standardized and more descriptive function names for geometric helpers (e.g., `edge_length_geodesic`  `outradius_regular_polygon`)
+* **Input Validation:** Added `_check_hyperbolic` to strictly enforce hyperbolic combinations of p and q.
+* **Type Safety:** Added type hints and improved numerical stability in radius calculations.
+
+> **Note:** This refactor introduces **slight breaking changes** due to function renaming and stricter parameter validation. Users relying on legacy function names or invalid geometric parameters will need to update their code.
+
+
+
 ## v1.4.1
 Date: 2025-08-08
 
