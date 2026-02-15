@@ -2,7 +2,7 @@ import abc
 import numpy as np
 from .ion import htprint
 from .neighbors import find_radius_optimized, find_radius_optimized_single
-from .util import edge_length_geodesic, outradius_regular_polygon, fundamental_radius, _check_hyperbolic
+from .util import edge_length_geodesic, outradius_regular_polygon, fundamental_radius, _check_hyperbolic, dual_edge_length_geodesic
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction slightly during construction
@@ -120,6 +120,7 @@ class GraphExtended(Graph):
 
         self.r = fundamental_radius(self.p, self.q)
         self.h = edge_length_geodesic(self.p, self.q)
+        self.hd = dual_edge_length_geodesic(self.p, self.q)
         self.hr = outradius_regular_polygon(self.p, self.q)
 
         self.mangle = mangle

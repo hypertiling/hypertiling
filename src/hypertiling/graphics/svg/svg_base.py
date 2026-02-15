@@ -294,9 +294,13 @@ class SVGGroup(SVGElement):
     Examples
     --------
     >>> # Place a custom SVG at a specific location
+    >>> from hypertiling.graphics.svg import SVGCanvas, SVGGroup
+    >>> import numpy as np
+    >>> canvas = SVGCanvas()
     >>> svg_content = '<circle cx="0" cy="0" r="10" fill="red"/>'
     >>> group = SVGGroup(svg_content, center=0.5+0.3j, scale=0.5, rotation=np.pi/4)
     >>> canvas.add(group)
+    SVGCanvas(1 elements)
     """
     
     def __init__(
