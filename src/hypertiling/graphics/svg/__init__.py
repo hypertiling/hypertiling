@@ -25,6 +25,8 @@ from .circle import HyperbolicCircle, UnitCircle
 from .geodesic import Geodesic
 from .horocycle import Horocycle
 from .hypercycle import Hypercycle
+from .svg import make_svg, write_svg, draw_svg
+
 
 __all__ = [
     # Base classes
@@ -44,4 +46,10 @@ __all__ = [
     
     # Utilities
     'build_svg_attrs',
+
+    # Tombstones
+    'make_svg',
+    'write_svg',
+    'draw_svg',
+
 ]

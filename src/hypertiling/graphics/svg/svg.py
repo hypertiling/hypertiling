@@ -1,4 +1,20 @@
-# In hypertiling.graphics.svg
+import warnings
+
+# Triggers immediately when 'from hypertiling.graphics import svg' is executed
+warnings.warn(
+    "\n\n"
+    "================================================================================\n"
+    "  NOTICE: BREAKING API CHANGES (v1.5)\n"
+    "================================================================================\n"
+    "  The SVG visualization module has been refactored.\n"
+    "  Legacy functions (make_svg, draw_svg, write_svg) have been removed.\n"
+    "  Please update your code to use the new 'SVGCanvas' class.\n"
+    "  See 'advanced_visualization.ipynb' for examples.\n"
+    "================================================================================",
+    UserWarning,
+    stacklevel=2
+)
+
 
 def make_svg(*args, **kwargs):
     """
@@ -10,8 +26,8 @@ def make_svg(*args, **kwargs):
         "  CRITICAL API CHANGE (v1.5)\n"
         "================================================================================\n"
         "  The function 'make_svg' has been removed in favor of a new object-oriented API.\n\n"
-        "  To fix your code, replace 'make_svg' with the 'SVGCanvas' workflow as"
-        "  as demonstrated in the demo notebook advanced_visualization.ipynb.\n\n"
+        "  To fix your code, replace 'make_svg' with the 'SVGCanvas' workflow as \n\n"
+        "  as demonstrated in the demo notebook 'advanced_visualization.ipynb'.\n\n"
         "================================================================================\n"
     )
     raise NotImplementedError(error_msg)
@@ -40,7 +56,7 @@ def draw_svg(*args, **kwargs):
         "  CRITICAL API CHANGE (v1.5)\n"
         "================================================================================\n"
         "  The function 'draw_svg' has been removed in favor of a new object-oriented API.\n\n"
-        "  This is demonstrated in the demo notebook advanced_visualization.ipynb.\n\n"
+        "  This is demonstrated in the demo notebook 'advanced_visualization.ipynb'.\n\n"
         "================================================================================\n"
     )
     raise NotImplementedError(error_msg)
