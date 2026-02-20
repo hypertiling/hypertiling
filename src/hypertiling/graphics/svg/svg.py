@@ -44,19 +44,3 @@ def write_svg(*args, **kwargs):
         "          f.write(svg_content)\n"
     )
     raise NotImplementedError(error_msg)
-
-
-def draw_svg(*args, **kwargs):
-    """
-    Tombstone function for the legacy draw_svg API.
-    """
-    error_msg = (
-        "\n\n"
-        "================================================================================\n"
-        "  CRITICAL API CHANGE (v1.5)\n"
-        "================================================================================\n"
-        "  The function 'draw_svg' has been removed in favor of a new object-oriented API.\n\n"
-        "  This is demonstrated in the demo notebook 'advanced_visualization.ipynb'.\n\n"
-        "================================================================================\n"
-    )
-    raise NotImplementedError(error_msg)
