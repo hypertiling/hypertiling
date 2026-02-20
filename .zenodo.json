@@ -10,7 +10,8 @@
     },
     {
       "affiliation": "University of Würzburg",
-      "name": "Thurn, Yanick"
+      "name": "Thurn, Yanick",
+      "orcid": "0000-0001-8242-3362"
     },
     {
       "affiliation": "University of Würzburg",
@@ -21,7 +22,8 @@
       "name": "Herdt, Dietmar"
     },
     {
-      "name": "S. E. Portela, Jefferson"
+      "name": "S. E. Portela, Jefferson",
+      "orcid": "0000-0002-6138-0305"
     }
   ],
   "description": "hypertiling is a high-performance Python 3 library for the generation of regular hyperbolic tilings embedded in the Poincaré disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with hundreds of millions of vertices can be created in a matter of minutes on a single computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.",

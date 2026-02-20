@@ -35,6 +35,7 @@ Welcome to the official hypertiling package documentation! This guide provides c
    examples/quickstart.ipynb
    examples/edge-reflections.ipynb
    examples/dynamic-manipulation.ipynb
+   examples/advanced-visualization.ipynb
    examples/refinements.ipynb
    examples/geodesics.ipynb
    examples/animations.ipynb
