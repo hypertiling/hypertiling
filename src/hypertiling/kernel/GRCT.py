@@ -12,7 +12,7 @@ class GRCT(Graph):
     Kernel for generating (p, q, r) tilings of Schwarzian triangles
     """
 
-    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = True,
+    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False,
                  size: int = 1000):
         """
         Initialize a tessellation with Schwarian triangles
@@ -52,6 +52,11 @@ class GRCT(Graph):
             # util.get_n(p, q, r, n) if size is None else size
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, size, self.tiling, self.nbrs)
             self.length = self.lvls[-1]
+
+        if not self.nbrs:
+            ion.htprint("Status", "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
+
+
 
     def __repr__(self):
         """

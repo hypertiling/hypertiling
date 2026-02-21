@@ -12,7 +12,7 @@ class GRC(Graph):
     GR based kernel for generating (p, q) tilings
     """
 
-    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = True):
+    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = False):
         """
         Initialize a hyperbolic (p,q) tessellation
 
@@ -45,6 +45,10 @@ class GRC(Graph):
             self.length = self.lvls[-1]
 
         self.orientation = None
+
+        if not self.nbrs:
+            ion.htprint("Status", "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
+
 
     def __getitem__(self, item):
         """
