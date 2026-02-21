@@ -9,13 +9,13 @@ import itertools
 class GRCT(Graph):
     """
     Generative Reflection Combinatorial Triangle
-    Kernel for generating (p, q, r, n) tilings of Schwarzian triangles
+    Kernel for generating (p, q, r) tilings of Schwarzian triangles
     """
 
-    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = False,
+    def __init__(self, p: int, q: int, r: int, n: int, sector: bool = False, tiling: bool = False, nbrs: bool = True,
                  size: int = 1000):
         """
-        Initialize a tesselation with Schwarian triangles.
+        Initialize a tessellation with Schwarian triangles
 
         Parameters
         ----------

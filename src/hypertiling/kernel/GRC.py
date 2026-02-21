@@ -9,12 +9,12 @@ import itertools
 class GRC(Graph):
     """
     Generative Reflection Combinatorial
-    GR based kernel for generating (p, q, n) tilings
+    GR based kernel for generating (p, q) tilings
     """
 
-    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = False):
+    def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = True):
         """
-        Initialize a tesselation with Schwarian triangles.
+        Initialize a hyperbolic (p,q) tessellation
 
         Parameters
         ----------
@@ -26,7 +26,6 @@ class GRC(Graph):
             Number of layers to be constructed
         sector : bool
             If True, a single sector is constructed and stored. All other sectors are provided on-demand by generation.
-            (Not yet implemented)!
         tiling : bool
             If True, coordinates are calculated for the triangles
         nbrs : bool
