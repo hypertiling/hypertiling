@@ -57,8 +57,8 @@ Welcome to the official hypertiling package documentation! This guide provides c
    :maxdepth: 1
    :caption: Legacy
 
-   examples/gr-kernel.ipynb
-   examples/graph-kernels.ipynb
+   examples/old/gr-kernel.ipynb
+   examples/old/graph-kernels.ipynb
    kernel_dun07
 
 .. toctree::
