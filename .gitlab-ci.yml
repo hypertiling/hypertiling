@@ -230,6 +230,22 @@ tests-full-cov:
 
 
 
+# runs all jupyter notebooks in the examples folder to ensure they are functional
+test-examples:
+  image: python:3.10
+  stage: test
+  before_script:
+    - python -m venv env
+    - source env/bin/activate
+    - pip install pytest nbmake
+  script:
+    - pip install .[test]
+    - pytest --nbmake examples/*.ipynb
+  only:
+    - dev
+    - master
+
+
 #### ----------- DOCS ------------ ####
 
 sphinx-doc:
