@@ -1,21 +1,3 @@
-import warnings
-
-# Triggers immediately when 'from hypertiling.graphics import svg' is executed
-warnings.warn(
-    "\n\n"
-    "================================================================================\n"
-    "  NOTICE: BREAKING API CHANGES (v1.5)\n"
-    "================================================================================\n"
-    "  The SVG visualization module has been refactored.\n"
-    "  Legacy functions (make_svg, draw_svg, write_svg) have been removed.\n"
-    "  Please update your code to use the new 'SVGCanvas' class.\n"
-    "  See 'advanced_visualization.ipynb' for examples.\n"
-    "================================================================================",
-    UserWarning,
-    stacklevel=2
-)
-
-
 def make_svg(*args, **kwargs):
     """
     Tombstone function for the legacy make_svg API.

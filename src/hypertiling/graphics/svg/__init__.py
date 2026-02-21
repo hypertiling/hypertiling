@@ -25,7 +25,7 @@ from .circle import HyperbolicCircle, UnitCircle
 from .geodesic import Geodesic
 from .horocycle import Horocycle
 from .hypercycle import Hypercycle
-from .svg import make_svg, write_svg
+#from .svg import make_svg, write_svg
 
 
 __all__ = [
@@ -50,6 +50,5 @@ __all__ = [
     # Tombstones
     'make_svg',
     'write_svg',
-    'draw_svg',
 
 ]
