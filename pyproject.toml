@@ -53,7 +53,3 @@ exclude_lines = [
 
 [tool.coverage.html]
 directory = "build/coverage"
-
-
-[tool.pytest.ini_options]
-nb_max_cell_execution_seconds = 300
