@@ -101,14 +101,14 @@ class TestTwoProduct(unittest.TestCase):
     def test_number_and_array_multiplication(self):
         x = 2.0
         y = np.array([2.0, 3.0, 4.0])
-        result, error = twoproduct(x, y)
+        result, error = twoproduct(np.full_like(y, x), y)
         np.testing.assert_array_almost_equal(result, np.array([4.0, 6.0, 8.0]))
         np.testing.assert_array_almost_equal(error, np.array([0.0, 0.0, 0.0]))
 
     def test_array_and_number_multiplication(self):
         x = np.array([2.0, 3.0, 4.0])
         y = 2.0
-        result, error = twoproduct(x, y)
+        result, error = twoproduct(x, np.full_like(x, y))
         np.testing.assert_array_almost_equal(result, np.array([4.0, 6.0, 8.0]))
         np.testing.assert_array_almost_equal(error, np.array([0.0, 0.0, 0.0]))
 
