@@ -193,7 +193,7 @@ tests-full-cov:
     - pip install .[test]
 
     # COVERAGE BADGE
-    - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
+    - python -m pytest--doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
     - coverage xml
     - pip install anybadge==1.9.0
