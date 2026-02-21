@@ -57,7 +57,7 @@ directory = "build/coverage"
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
-testpaths = ["hypertiling", "tests", "src"]
+testpaths = ["src", "tests"]
 norecursedirs = [
     "hypervenv",
     "src/hypertiling/experimental",
