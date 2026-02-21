@@ -53,3 +53,15 @@ exclude_lines = [
 
 [tool.coverage.html]
 directory = "build/coverage"
+
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["hypertiling", "tests", "src"]
+norecursedirs = [
+    "hypervenv",
+    ".venv",
+    "venv",
+    "build",
+    "dist"
+]
