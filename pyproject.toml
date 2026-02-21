@@ -60,6 +60,7 @@ addopts = "--doctest-modules"
 testpaths = ["hypertiling", "tests", "src"]
 norecursedirs = [
     "hypervenv",
+    "src/hypertiling/experimental",
     ".venv",
     "venv",
     "build",
