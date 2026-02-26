@@ -26,10 +26,22 @@
       "orcid": "0000-0002-6138-0305"
     }
   ],
-  "description": "hypertiling is a high-performance Python 3 library for the generation of regular hyperbolic tilings embedded in the Poincaré disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with hundreds of millions of vertices can be created in a matter of minutes on a single computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.",
+"description": "hypertiling is a high-performance Python 3 library for the generation of regular hyperbolic tilings embedded in the Poincaré disk model. Using efficient algorithms and the CPU/SIMD optimization provided by numpy, hyperbolic tilings with hundreds of millions of vertices can be created in a matter of minutes on a single computer. Facilities including optimized search algorithms for adjacent vertices and powerful plotting and animation capabilities are provided to support scientific and other advanced uses of the graphs.",
   "keywords": [
     "hyperbolic space",
-    "non-euclidean space"
+    "non-euclidean space",
+    "poincare-disk",
+    "tesselation",
+    "hyperbolic-geometry",
+    "regular-tilings",
+    "graph-theory",
+    "complex-networks",
+    "high-performance-computing",
+    "numpy",
+    "visualization",
+    "geodesic",
+    "discrete-geometry",
+    "mathematical-software"
   ],
   "license": {
     "id": "MIT"

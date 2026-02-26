@@ -41,4 +41,14 @@ abstract: >-
 keywords:
   - hyperbolic space
   - non-euclidean space
+  - poincare-disk
+  - hyperbolic-geometry
+  - tessellation
+  - regular-tilings
+  - graph-theory
+  - complex-networks
+  - high-performance-computing
+  - numpy
+  - discrete-geometry
+  - visualization
 license: MIT
