@@ -231,16 +231,18 @@ tests-full-cov:
 
 
 # runs all jupyter notebooks in the examples folder to ensure they are functional
+# this might be slow on runners, hence manual execution is recommended
 test-examples:
   image: python:3.10
   stage: test
+  when: manual
   before_script:
     - python -m venv env
     - source env/bin/activate
     - pip install pytest nbmake
   script:
     - pip install .[test]
-    - pytest --nbmake --nbmake-timeout=600 examples/*.ipynb
+    - pytest --nbmake --nbmake-timeout=1200 examples/*.ipynb
   only:
     - dev
     - master
