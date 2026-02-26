@@ -31,7 +31,7 @@ dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontaine
 [project.optional-dependencies] # Optional
 numba = ["numba"]
 dev = ["black", "radon"]
-test = ["pytest", "pytest-cov", "coverage[toml]"]
+test = ["pytest", "pytest-cov", "coverage[toml]", "nbmake"]
 doc = ["sphinx"]
 
 [build-system]
