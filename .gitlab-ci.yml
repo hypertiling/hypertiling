@@ -240,7 +240,7 @@ test-examples:
     - pip install pytest nbmake
   script:
     - pip install .[test]
-    - pytest --nbmake --timeout=600 examples/*.ipynb
+    - pytest --nbmake --nbmake-timeout=600 examples/*.ipynb
   only:
     - dev
     - master
