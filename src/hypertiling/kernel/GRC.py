@@ -9,12 +9,12 @@ import itertools
 class GRC(Graph):
     """
     Generative Reflection Combinatorial
-    GR based kernel for generating (p, q, n) tilings
+    GR based kernel for generating (p, q) tilings
     """
 
     def __init__(self, p: int, q: int, n: int, sector: bool = True, tiling: bool = False, nbrs: bool = False):
         """
-        Initialize a tesselation with Schwarian triangles.
+        Initialize a hyperbolic (p,q) tessellation
 
         Parameters
         ----------
@@ -26,7 +26,6 @@ class GRC(Graph):
             Number of layers to be constructed
         sector : bool
             If True, a single sector is constructed and stored. All other sectors are provided on-demand by generation.
-            (Not yet implemented)!
         tiling : bool
             If True, coordinates are calculated for the triangles
         nbrs : bool
@@ -44,6 +43,12 @@ class GRC(Graph):
         else:
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, n, self.tiling, self.nbrs)
             self.length = self.lvls[-1]
+
+        self.orientation = None
+
+        if not self.nbrs:
+            ion.htprint("Status", "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
+
 
     def __getitem__(self, item):
         """
@@ -255,6 +260,54 @@ class GRC(Graph):
         level = np.searchsorted(self.lvls, index)
         return level + 1 if self.lvls[level] == index else level
 
+    def _map_orientation(self):
+        self.orientation = np.zeros((self.lvls[-1], p), dtype=int)
+        self.orientation[0] = np.arange(0, p)
+
+        for parent in range(self.lvls[-2]):  # all but the last layer
+            start = 0
+            if parent == 0:
+                children = self.get_nbrs(parent)
+            else:
+                children = self.get_nbrs(parent)[1:]  # exclude own parent
+                print(f"\n{parent} - {children}", end="")
+                # handle asymmetric fillers
+                if self.get_reflection_level(children[0]) < self.get_reflection_level(parent):
+                    print(f"\n{children[0]} asymmetric filler in {parent}", end="")
+                    children = children[1:]
+
+                # handle symmetric fillers
+                if self.get_reflection_level(children[0]) == self.get_reflection_level(parent):
+                    #print(f"\n{children[0]} symmetric filler in {parent}", end="")
+                    if children[0] == parent - 1 or children[0] > parent + 1:
+                        start = 1
+                        #print(f" > start modified", end="")
+                    children = children[1:]
+
+                if q == 3:
+                    # for asymmetric fillers
+                    if self.get_reflection_level(children[0]) < self.get_reflection_level(parent):
+                        children = children[1:]
+
+                    if children[0] > parent + 1:  # boundary
+                        children = children[1:-1]
+                        start += 1
+                    else:
+                        children = children[2:]
+
+                    start += 1
+
+            for edge, child in enumerate(children, start=start):
+                self.orientation[child] = np.roll(np.flip(self.orientation[parent]), edge + 1)
+
+    def get_orientation(self, index):
+        if self.orientation is None:
+            self._map_orientation()
+        coords = self.get_vertices(index)
+        result = coords.copy()
+        result[1:][self.orientation[index]] = coords[1:]
+        return result
+
     def check_integrity(self):
         """
         Controls the integrity of the tesselation by
@@ -337,22 +390,11 @@ if __name__ == "__main__":
     import time
     import matplotlib as mpl
     import matplotlib.pyplot as plt
-
-    ion.set_verbosity_level("Status")
-
-    p, q, n = 3, 8, 6  # 11
+    p, q, n = 7, 3, 4  # 11
 
     t1 = time.time()
     graph = GRC(p, q, n, sector=False, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
-
-    try:
-        graph.check_integrity()
-    except:
-        pass
-
-    # exit()
-    nbrs = graph.get_nbrs_list()
 
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]
     fig_ax = plt.subplots()
@@ -361,22 +403,20 @@ if __name__ == "__main__":
     fig_ax[1].set_box_aspect(1)
 
     for i, poly in enumerate(graph):
-        sector, _ = graph._map2fundamental(i)
-        # if sector != 0:
-        #    continue
-
-        #9612 - 22076
         facecolor = colors[graph.get_reflection_level(i) % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        center = poly[0]
-        # for nbr in nbrs[i]:
-        #   center2 = graph.get_vertices(nbr)[0]
-        #   end = (center2 - center) / 2 + center
-        #   fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
-        # if i in [9612, 22076]:
-        fig_ax[1].text(np.real(center), np.imag(center), str(i))
+        #xc, yc = np.real(poly[0]), np.imag(poly[0])
+        #xf, yf = np.real(poly[1]), np.imag(poly[1])
+        #plt.plot([xc, xf], [yc, yf], color="black")
+
+        poly = graph.get_orientation(i)
+        xc, yc = np.real(poly[0]), np.imag(poly[0])
+        xf, yf = np.real(poly[1]), np.imag(poly[1])
+        plt.plot([xc, xf], [yc, yf], color="black")
+
+        fig_ax[1].text(xc, yc, str(i))
 
     plt.show()

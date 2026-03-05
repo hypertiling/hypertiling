@@ -2,7 +2,7 @@ import abc
 import numpy as np
 from .ion import htprint
 from .neighbors import find_radius_optimized, find_radius_optimized_single
-from .util import lattice_spacing_weierstrass, fund_radius
+from .util import edge_length_geodesic, outradius_regular_polygon, fundamental_radius, _check_hyperbolic, dual_edge_length_geodesic
 
 # Magic number: transcendental number (Champernowne constant)
 # used as an angular offset, rotates the entire construction slightly during construction
@@ -41,6 +41,8 @@ class Graph(abc.ABC):
         self.p = p
         self.q = q
         self.n = n
+
+
 
     def __repr__(self):
         """
@@ -96,7 +98,7 @@ class GraphExtended(Graph):
     r : float
         Radius of the fundamental polygon in the Poincare disk.
     h : float
-        Hyperbolic/geodesic lattice spacing, i.e., the edge length of any cell.
+        Hyperbolic/geodesic lattice spacing, i.e., the edge length of any cell in a regular p,q tiling.
     hr : float
         Geodesic radius, i.e., distance between the center and any vertex of cells in a regular p,q tiling.
     mangle : float
@@ -106,19 +108,24 @@ class GraphExtended(Graph):
     """
 
     def __init__(self, p: int, q: int, n: int, mangle: float = MAGICANGLE):
-        if not ((p - 2) * (q - 2) > 4):
-            raise AttributeError("Invalid combination of p and q: For hyperbolic lattices (p-2)*(q-2) > 4 must hold!")
         super().__init__(p, q, n)
+
+        try:
+            _check_hyperbolic(p, q)
+        except ValueError as e:
+            print(e)
 
         self.phi = 2 * np.pi / self.p
         self.qhi = 2 * np.pi / self.q
 
-        self.r = fund_radius(self.p, self.q)
-        self.h = lattice_spacing_weierstrass(self.p, self.q)
-        self.hr = lattice_spacing_weierstrass(self.q, self.p)
+        self.r = fundamental_radius(self.p, self.q)
+        self.h = edge_length_geodesic(self.p, self.q)
+        self.hd = dual_edge_length_geodesic(self.p, self.q)
+        self.hr = outradius_regular_polygon(self.p, self.q)
 
         self.mangle = mangle
         self._nbrs = None
+
 
     def __repr__(self):
         """

@@ -3,7 +3,7 @@ import math, copy
 from ..kernel_abc import Tiling
 from ..transformation import moeb_rotate_trafo
 from ..arraytransformation import mfull, mrotate, morigin, multi_rotation_around_vertex
-from ..util import fund_radius, lattice_spacing_weierstrass, euclidean_center
+from ..util import fundamental_radius, edge_length_geodesic, euclidean_center
 from ..geodesics import geodesic_midpoint
 from ..ion import htprint
 from ..distance import lorentzian_distance
@@ -47,7 +47,7 @@ class KernelStaticBase(Tiling):
             self.center = "cell"
 
         # half fundamental radius
-        self.fr2 = fund_radius(self.p, self.q) / 2
+        self.fr2 = fundamental_radius(self.p, self.q) / 2
 
         # prepare list to store polygons 
         self.polygons = []
@@ -142,7 +142,7 @@ class KernelStaticBase(Tiling):
         if rotate_by is None:
             rotate_by = self.mangle
 
-        r = fund_radius(self.p, self.q)
+        r = fundamental_radius(self.p, self.q)
         polygon = HyperPolygon(self.p)
 
         for i in range(self.p):
@@ -523,7 +523,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
 # ------------- Neighbours -------------
 
-    def get_nbrs_list(self, method="ROS", **kwargs):
+    def get_nbrs_list(self, method="RO", **kwargs):  # default set to "RO" since "ROS" has some bug currently
 
         methods = { "RBF":  self.get_nbrs_radius_brute_force,
                     "RO":   self.get_nbrs_radius_optimized,
@@ -568,7 +568,7 @@ class KernelRotationalCommon(KernelStaticBase):
 
         if radius is None:
             htprint("Status", "No search radius provided; Assuming lattice spacing of the (p,q) tessellation!")
-            radius = lattice_spacing_weierstrass(self.p, self.q)
+            radius = edge_length_geodesic(self.p, self.q)
             htprint("Status", "Found (p,q) = (%i,%i) and auto-calculated a neighbour distance of %5.4f. Can be changed using the 'radius' argument." % (self.p, self.q, radius))
 
         totalnum = len(self)  # total number of polygons

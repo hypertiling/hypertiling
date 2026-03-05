@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from typing import List
-from .distance import weierstrass_distance, lorentzian_distance
+from .distance import poincare_distance, lorentzian_distance
 from .representations import p2w
 from .ion import htprint
 
@@ -31,7 +31,7 @@ def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
     """
     if radius is None:
         htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
-        radius = tiling.h
+        radius = tiling.hd
 
     retlist = []  # prepare list
 
@@ -40,8 +40,8 @@ def find_radius_brute_force(tiling, radius=None, eps=1e-5) -> List[List[int]]:
         for j in range(len(tiling)):
             c1 = tiling.get_center(i)
             c2 = tiling.get_center(j)
-            dist = weierstrass_distance(p2w(c1), p2w(c2))
-            if tiling.h/2 <dist < radius + eps:
+            dist = poincare_distance(c1, c2)
+            if radius - eps < dist < radius + eps:
                 sublist.append(j)
 
         retlist.append(sublist)
@@ -73,7 +73,7 @@ def find_radius_optimized(tiling, radius=None, eps=1e-5) -> List[List[int]]:
 
     if radius is None:
         htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
-        radius = tiling.h
+        radius = tiling.hd
 
     # prepare array containing all center coordinates
     # in Weierstrass representation
@@ -130,7 +130,7 @@ def find_radius_optimized_single(tiling, index, radius=None, eps=1e-5) -> List[i
 
     if radius is None:
         htprint("Status", "No search radius provided; Assuming lattice spacing of the tessellation!")
-        radius = tiling.h
+        radius = tiling.hd
 
     # prepare array containing all center coordinates
     # in Weierstrass representation

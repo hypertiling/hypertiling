@@ -74,7 +74,7 @@ Further usage examples and a full API reference are available in our [documentat
 
 ## Authors
 * Manuel Schrauth  
-mschrauth@physik.uni-wuerzburg.de
+manuel.schrauth@iis.fraunhofer.de
 * Yanick Thurn
 * Florian Goth
 * Jefferson S. E. Portela
@@ -95,6 +95,8 @@ Codebase:
 Release publication:
 > Manuel Schrauth, Yanick Thurn, Florian Goth, Jefferson Portela, Dietmar Herdt and Felix Dusel. (2024). HYPERTILING - a high performance python library for the generation and visualization of hyperbolic lattices project. [SciPost Physics Codebases (2024): 034.](https://www.scipost.org/SciPostPhysCodeb.34)
 
+Further publications:
+> Yanick Thurn, Manuel Schrauth, Johanna Erdmenger. Hyperbolic tiling neighborhoods in O(1) time. [arXiv preprint](https://arxiv.org/abs/2508.04765)
 
 ## Examples
 

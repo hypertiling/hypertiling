@@ -398,7 +398,26 @@ def construct_full(p: int, q: int, r: int, n: int, size: int, tiling: bool, nbrs
 
                     if nbrs_:
                         skip_connection += register(poly_index, poly_counter, nbrs, counters, flags, p_stop, False)
+
                     poly_counter += 1
+
+                    # check if arrays are long enough
+                    if poly_counter == size:
+                        # create new arrays for the default values
+                        edges = np.vstack((edges, np.empty((size, 3), dtype=np.int32)))
+                        counters = np.vstack((counters, np.empty((size, 3), dtype=np.int32)))
+                        flags = np.vstack((flags, np.zeros((size, 3), dtype=np.int32)))
+
+                        # optional
+                        if nbrs_:
+                            nbrs_add = np.full((size, 4), -1, dtype=np.int32)  # [#nbrs, first, sec, third]
+                            nbrs_add[:, 0] = 1
+                            nbrs = np.vstack((nbrs, nbrs_add))
+
+                        if tiling:
+                            coords = np.vstack((coords, np.empty((size, 4), dtype=np.complex128)))
+
+                        size += size  # double size
 
         if skip_connection == 1:
             pc1 = poly_counter - 1
@@ -420,14 +439,21 @@ if __name__ == "__main__":
     import matplotlib as mpl
     import time
 
-    # p, q, r, n = 2, 3, 7, 12  # 15
-    p, q, r, n = 5, 4, 2, 10  # 7, 11, 4
-    # p, q, r, n = 8, 3, 2, 18
+    p, q, r, n = 7, 3, 2, 29  # 29
 
-    # print("Start")
-    t1 = time.time()
-    coords, nbrs, lvls = construct_full(p, q, r, n, True, True)
-    print(f"Took {time.time() - t1} s with a total of {lvls[-1]} triangles")
+    # size = 100 < tiling size: 0.007169406414031982 0.007202770442284138
+    # size = 1000 < tiling size: 0.007194018363952637 0.001193436252239554
+    # size = 5013 == tiling size: 0.0076259875297546385 0.0040032974763155324
+    # size = 5013 == tiling size + 1: 0.007202239036560059 0.001528095695733264
+    # size = 10000 > tiling size: 0.006991732120513916 0.0020419270620248495
+    # Within their uncertainties pretty similar
+    ts = []
+    for i in range(100):
+        t1 = time.time()
+        coords, nbrs, lvls = construct_full(p, q, r, n, 5013, True, True)
+        ts.append(time.time() - t1)
+        print(f"Took {ts[-1]} s with a total of {lvls[-1]} triangles")
+    print(np.mean(ts), np.std(ts, ddof=1))
 
 
     def get_reflection_level(index: int) -> int:
@@ -443,33 +469,13 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
 
-    highlight = [1, 2, 5, 6, 11, 12, 21, 22, 35, 36] + [0, 4, 8, 9, 17]
-    numbers = {i: e for i, e, in zip(highlight, [4, 4, 3, 3, 2, 2, 1, 1, 0, 0] + [False, 2, 1, 0, 0])}
-
     for i in range(0, coords.shape[0]):
-        if i in highlight:
-            facecolor = colors[get_reflection_level(i) % len(colors)]
-            center = coords[i, 0]  # np.sum(coords[i]) / 3 - 0.02  # Magic number 0.02
-            if not (numbers[i] is False):
-                fig_ax[1].text(np.real(center), np.imag(center), str(numbers[i]))
-        else:
-            facecolor = "#AAAAAA60"
+        facecolor = colors[get_reflection_level(i) % len(colors)]
+        center = coords[i, 0]  # np.sum(coords[i]) / 3 - 0.02  # Magic number 0.02
 
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in coords[i, 1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
-
-        # if False and not (i in []):
-        #    continue
-
-        # fig_ax[1].text(np.real(center), np.imag(center), str(i))
-        # plt.plot((np.real(center), np.real(coords[i, 0])), (np.imag(center), np.imag(coords[i, 0])), "#000000")
-        # for nbr in nbrs[i, 1:]:
-        #    if nbr == -1:
-        #        continue
-        #    center2 = np.sum(coords[nbr]) / 3
-        #    end = (center2 - center) / 2 + center
-        #    fig_ax[1].plot((np.real(center), np.real(end)), (np.imag(center), np.imag(end)), color="#000000")
 
     plt.scatter(0.27545, 0.24072, s=50, marker="*", color="#FF0000")
     plt.scatter(0, -0.3035, s=50, marker=".", color="#FF0000")

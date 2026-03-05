@@ -1,4 +1,4 @@
-cff-version: 1.4.1
+cff-version: 1.5
 title: hypertiling
 message: >-
   If you use this software, please cite it using the
@@ -7,7 +7,7 @@ type: software
 authors:
   - given-names: Manuel
     family-names: Schrauth
-    email: manuel.schrauth@physik.uni-wuerzburg.de
+    email: manuel.schrauth@iis.fraunhofer.de
     affiliation: University of Würzburg
     orcid: 'https://orcid.org/0000-0003-3969-2238'
   - given-names: Yanick
@@ -41,4 +41,14 @@ abstract: >-
 keywords:
   - hyperbolic space
   - non-euclidean space
+  - poincare-disk
+  - hyperbolic-geometry
+  - tessellation
+  - regular-tilings
+  - graph-theory
+  - complex-networks
+  - high-performance-computing
+  - numpy
+  - discrete-geometry
+  - visualization
 license: MIT

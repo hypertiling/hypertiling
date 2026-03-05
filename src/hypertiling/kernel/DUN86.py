@@ -25,7 +25,8 @@ class LegacyDunham(KernelStaticBase):
     def __init__ (self, p, q, n, **kwargs):
         super(LegacyDunham, self).__init__(p, q, n, **kwargs)
 
-        htprint("Warning", "This kernel is only implemented for legacy reasons and may not be fully functional! It is advised to use a different kernel!")
+        htprint("Warning", "This kernel is only implemented for legacy reasons and not fully functional! It will be removed in future release. It is advised to use a different kernel!")
+
 
         # reflection and rotation matrices
         self.b = np.arccosh(np.cos(np.pi / q) / np.sin(np.pi / p))

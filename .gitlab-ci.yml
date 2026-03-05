@@ -39,6 +39,9 @@ install-latest:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-slim:
   stage: install
@@ -48,6 +51,9 @@ install-slim:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-python-3.7:
   stage: install
@@ -57,6 +63,9 @@ install-python-3.7:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-python-3.5:
   stage: install
@@ -66,6 +75,9 @@ install-python-3.5:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install .
+  only:
+    - dev
+    - master
 
 install-bullseye:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -79,8 +91,11 @@ install-bullseye:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
   script:
-    - pip3 install --upgrade pip
-    - pip3 install .
+    - pip install --upgrade pip
+    - pip install .
+  only:
+    - dev
+    - master
 
 install-bookworm:
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bookworm-gfortran-blas-lapack-fftw-hdf5-scipy3
@@ -104,6 +119,9 @@ install-from-pypi:
     - python3 -m venv hypervenv --without-pip --system-site-packages
     - source hypervenv/bin/activate
     - pip install hypertiling
+  only:
+    - dev
+    - master
 
 
 
@@ -175,7 +193,7 @@ tests-full-cov:
     - pip install .[test]
 
     # COVERAGE BADGE
-    - pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
+    - python -m pytest --doctest-modules --cov --cov-config=pyproject.toml --cov-branch --cov-report term --cov-report html:build/coverage --junitxml=report.xml
     - coverage report
     - coverage xml
     - pip install anybadge==1.9.0
@@ -210,6 +228,24 @@ tests-full-cov:
       - build/badges
       #- env/   # too large ...
 
+
+
+# runs all jupyter notebooks in the examples folder to ensure they are functional
+# this might be slow on runners, hence manual execution is recommended
+test-examples:
+  image: python:3.10
+  stage: test
+  when: manual
+  before_script:
+    - python -m venv env
+    - source env/bin/activate
+    - pip install pytest nbmake
+  script:
+    - pip install .[test]
+    - pytest --nbmake --nbmake-timeout=1200 examples/*.ipynb
+  only:
+    - dev
+    - master
 
 
 #### ----------- DOCS ------------ ####
