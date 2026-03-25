@@ -1,7 +1,7 @@
 [project]
 
 name = "hypertiling"
-version = "1.5"
+version = "1.5.1"
 
 
 description = "hypertiling is a high-performance Python library for the generation and visualization of regular hyperbolic lattices"
@@ -33,6 +33,11 @@ numba = ["numba"]
 dev = ["black", "radon"]
 test = ["pytest", "pytest-cov", "coverage[toml]", "nbmake"]
 doc = ["sphinx"]
+nbbuild = [
+    "nbconvert",
+    "jupyter",
+    "ipykernel"
+]
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
@@ -66,3 +71,10 @@ norecursedirs = [
     "build",
     "dist"
 ]
+
+
+[tool.hatch.envs.default]
+features = ["nbbuild"]
+
+[tool.hatch.envs.default.scripts]
+examples = "jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb"
