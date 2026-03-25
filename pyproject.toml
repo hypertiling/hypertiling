@@ -30,14 +30,23 @@ dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontaine
 
 [project.optional-dependencies] # Optional
 numba = ["numba"]
-dev = ["black", "radon"]
-test = ["pytest", "pytest-cov", "coverage[toml]", "nbmake"]
+dev = [
+    "black", 
+    "radon", 
+    "pytest", 
+    "pytest-cov", 
+    "coverage[toml]", 
+    "nbmake",
+    "pre-commit",
+    "nbstripout"
+]
 doc = ["sphinx"]
 nbbuild = [
     "nbconvert",
     "jupyter",
     "ipykernel"
 ]
+
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
@@ -74,7 +83,12 @@ norecursedirs = [
 
 
 [tool.hatch.envs.default]
-features = ["nbbuild"]
+features = ["nbbuild", "dev"]
+
+# This ensures the git hooks are installed the moment a user runs a hatch command
+post-install-commands = [
+  "pre-commit install"
+]
 
 [tool.hatch.envs.default.scripts]
 examples = "jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb"
