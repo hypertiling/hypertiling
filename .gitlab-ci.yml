@@ -274,6 +274,20 @@ sphinx-doc:
     - ls
     - sphinx-build . html
 
+sphinx-doc-new:
+  image: python:3.10
+  stage: docs
+  variables:
+    # Ensure hatch creates the env inside the project dir for caching if needed
+    HATCH_ENV_TYPE_VIRTUAL_PATH: .venv 
+  script:
+    - apt-get update && apt-get install -y pandoc
+    - pip install hatch
+    # This single command installs everything in [doc] and runs sphinx-build
+    - hatch run doc:build
+  artifacts:
+    paths:
+      - doc/_build/html
 
 
 #### ----------- PUBLISH ------------ ####

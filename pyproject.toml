@@ -40,7 +40,15 @@ dev = [
     "pre-commit",
     "nbstripout"
 ]
-doc = ["sphinx"]
+doc = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "nbsphinx",
+    "sphinx-mdinclude",
+    "pypandoc",
+    "ipykernel",
+    "ipython"
+]
 nbbuild = [
     "nbconvert",
     "jupyter",
@@ -92,3 +100,15 @@ post-install-commands = [
 
 [tool.hatch.envs.default.scripts]
 examples = "jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb"
+
+
+[tool.hatch.envs.doc]
+features = ["doc"]
+# Ensures the kernel is named 'python3' so nbsphinx can find it in the CI
+post-install-commands = [
+  "python -m ipykernel install --user --name python3"
+]
+
+[tool.hatch.envs.doc.scripts]
+# Builds the docs into the standard Sphinx location
+build = "sphinx-build -b html doc/ doc/_build/html"
