@@ -1,78 +1,116 @@
 [project]
-
 name = "hypertiling"
 version = "1.5.1"
-
-
 description = "hypertiling is a high-performance Python library for the generation and visualization of regular hyperbolic lattices"
-readme = "README.md" # Optional
+readme = "README.md"
 requires-python = ">=3.5"
-
 authors = [
-  { name = "Manuel Schrauth"}, 
-  { name = "Yanick Thurn"},
-  { name = "Florian Goth"},
-  { name = "Jefferson S. E. Portela"},
-  { name = "Dietmar Herdt"},
-  { name = "Felix Dusel"},
+  { name = "Manuel Schrauth" },
+  { name = "Yanick Thurn" },
+  { name = "Florian Goth" },
+  { name = "Jefferson S. E. Portela" },
+  { name = "Dietmar Herdt" },
+  { name = "Felix Dusel" },
+]
+maintainers = [
+  { name = "Manuel Schrauth" },
+  { name = "Yanick Thurn" },
+  { name = "Florian Goth" },
+  { name = "Jefferson S. E. Portela" },
+  { name = "Dietmar Herdt" },
+  { name = "Felix Dusel" },
+]
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "networkx",
+  "setuptools",
+  "sortedcontainers",
+  "scipy",
+  "ipython",
 ]
 
-maintainers = [
-  { name = "Manuel Schrauth"}, 
-  { name = "Yanick Thurn"},
-  { name = "Florian Goth"},
-  { name = "Jefferson S. E. Portela"},
-  { name = "Dietmar Herdt"},
-  { name = "Felix Dusel"},]
-
-dependencies = ["numpy", "matplotlib", "networkx", "setuptools", "sortedcontainers", "scipy", "ipython"]
-
-
-[project.optional-dependencies] # Optional
+[project.optional-dependencies]
 numba = ["numba"]
+test = [
+  "pytest",
+  "pytest-cov",
+  "coverage[toml]",
+  "nbmake",
+]
 dev = [
-    "black", 
-    "radon", 
-    "pytest", 
-    "pytest-cov", 
-    "coverage[toml]", 
-    "nbmake",
-    "pre-commit",
-    "nbstripout"
+  "black",
+  "radon",
+  "pre-commit",
+  "nbstripout",
+  "hypertiling[test]", # Includes all test deps automatically
 ]
 doc = [
-    "sphinx",
-    "sphinx-rtd-theme",
-    "nbsphinx",
-    "sphinx-mdinclude",
-    "pypandoc",
-    "ipykernel",
-    "ipython",
-    "numba",
+  "sphinx",
+  "sphinx-rtd-theme",
+  "nbsphinx",
+  "sphinx-mdinclude",
+  "pypandoc",
+  "ipykernel",
+  "ipython",
+  "numba",
 ]
 nbbuild = [
-    "nbconvert",
-    "jupyter",
-    "ipykernel"
-]
-test = [
-    "pytest", 
-    "pytest-cov", 
-    "coverage[toml]", 
-    "nbmake"
+  "nbconvert",
+  "jupyter",
+  "ipykernel",
 ]
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# --- Hatch Environments ---
+
+[tool.hatch.envs.default]
+features = ["nbbuild", "dev"]
+post-install-commands = ["pre-commit install"]
+
+[tool.hatch.envs.default.scripts]
+examples = "jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb"
+lint = "black . && radon cc src/ -a"
+
+[tool.hatch.envs.test]
+features = ["test", "numba"]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest"
+nb = "pytest --nbmake examples/"
+cov = "pytest --cov"
+
+[tool.hatch.envs.doc]
+features = ["doc"]
+post-install-commands = ["python -m ipykernel install --user --name python3"]
+
+[tool.hatch.envs.doc.scripts]
+build = "sphinx-build -b html doc/ doc/_build/html"
+clean = "rm -rf doc/_build"
+
+# --- Tool Configurations ---
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["src", "tests"]
+norecursedirs = [
+  "hypervenv",
+  "src/hypertiling/experimental",
+  "*.venv",
+  "venv",
+  "build",
+  "dist",
+]
+
 [tool.coverage.run]
 command_line = "-m pytest --cov --cov-config=pyproject.toml --cov-branch --cov-report term-missing --cov-report html:build/coverage"
-source = ["hypertiling"] 
+source = ["hypertiling"]
 
 [tool.coverage.report]
 omit = ["**/__init__.py", "**/__main__.py"]
-
 exclude_lines = [
   "pragma: no cover",
   "# nocov",
@@ -81,52 +119,3 @@ exclude_lines = [
 
 [tool.coverage.html]
 directory = "build/coverage"
-
-
-[tool.pytest.ini_options]
-addopts = "--doctest-modules"
-testpaths = ["src", "tests"]
-norecursedirs = [
-    "hypervenv",
-    "src/hypertiling/experimental",
-    ".venv",
-    "venv",
-    "build",
-    "dist"
-]
-
-
-[tool.hatch.envs.default]
-features = ["nbbuild", "dev"]
-
-# This ensures the git hooks are installed the moment a user runs a hatch command
-post-install-commands = [
-  "pre-commit install"
-]
-
-[tool.hatch.envs.default.scripts]
-examples = "jupyter nbconvert --to notebook --execute --inplace examples/*.ipynb"
-
-
-[tool.hatch.envs.doc]
-features = ["doc"]
-# Ensures the kernel is named 'python3' so nbsphinx can find it in the CI
-post-install-commands = [
-  "python -m ipykernel install --user --name python3"
-]
-
-[tool.hatch.envs.doc.scripts]
-# Builds the docs into the standard Sphinx location
-build = "sphinx-build -b html doc/ doc/_build/html"
-
-[tool.hatch.envs.test]
-# This line tells Hatch: "Use the dependencies listed in [project.optional-dependencies] -> test"
-features = [
-    "test",
-    "numba"
-]
-
-[tool.hatch.envs.test.scripts]
-run = "pytest"
-nb = "pytest --nbmake examples/"
-cov = "pytest --cov"
