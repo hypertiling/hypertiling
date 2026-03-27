@@ -250,9 +250,10 @@ test-examples:
 
 #### ----------- DOCS ------------ ####
 
-sphinx-doc:
+sphinx-doc: # old, remove me
   image: python:3.10
   stage: docs
+  when: never
   artifacts:
     paths:
       - doc/*
@@ -274,7 +275,7 @@ sphinx-doc:
     - ls
     - sphinx-build . html
 
-sphinx-doc-new:
+sphinx-doc-new: # replaces sphinx-doc
   image: python:3.10
   stage: docs
   variables:
@@ -290,35 +291,47 @@ sphinx-doc-new:
       - doc/_build/html
 
 
-#### ----------- PUBLISH ------------ ####
+#### ----------- PUBLISH & ARCHIVAL ------------ ####
 
-
+# Job: send-snapshot
+# Purpose: Creates a permanent, citable record of the source code on Zenodo.
+# This ensures scientific reproducibility by providing a DOI for each version.
 send-snapshot:
+  # Uses a specialized image 
   image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
   stage: release
+  # Execution Rule: Only runs when a version tag (e.g., v1.0.2) is pushed to the repository.
   rules:
     - if: $CI_COMMIT_TAG =~ /^v?[0-9]+\.[0-9]+/
   script:
-    - apt-get install -y git
+    - apt-get update && apt-get install -y git
+    # Optional setup script for Zenodo metadata/token handling
     - ./assets/zenodo.sh
+    # Creates a clean source distribution (zip) excluding git metadata, named after the tag
     - git archive --format zip --output ${CI_COMMIT_TAG#v}.zip ${CI_COMMIT_TAG}
+    # Pushes the zip and metadata (.zenodo.json) to the Zenodo API
     - g2z-send -p -m .zenodo.json ${CI_COMMIT_TAG#v}.zip
 
+# Job: report-and-badges
+# Purpose: Aggregates visual reports (Coverage, Linter badges) for the GitLab UI.
 report-and-badges:
   stage: publish
   image: python:latest
+  # Only runs if the full test suite passes to ensure metrics are accurate
   needs:
     - tests-full-cov
   before_script:
-    - ''
+    - '' # Overrides any global before_scripts to keep the environment lean
   script:
+    # 'public' is the standard folder GitLab Pages/UI expects for static reports
     - mkdir -p public
+    # Debug: verify that the 'build' folder (generated in previous 'tests' stage) exists
     - ls build
     - ls build/badges
     - ls build/coverage
-    #- source env/bin/activate # activate cached venv
+    # Move test artifacts into the public folder for GitLab to serve
     - mv build/badges public/.
     - mv build/coverage public/.
   artifacts:
     paths:
-      - public
+      - public # Files in this path are kept as downloadable/viewable assets
