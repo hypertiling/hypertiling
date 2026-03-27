@@ -47,7 +47,8 @@ doc = [
     "sphinx-mdinclude",
     "pypandoc",
     "ipykernel",
-    "ipython"
+    "ipython",
+    "numba",
 ]
 nbbuild = [
     "nbconvert",
