@@ -252,7 +252,7 @@ test-examples:
 sphinx-doc: # old, remove me
   image: python:3.10
   stage: docs
-  when: never
+  when: manual
   artifacts:
     paths:
       - doc/*
