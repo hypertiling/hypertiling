@@ -55,7 +55,12 @@ nbbuild = [
     "jupyter",
     "ipykernel"
 ]
-
+test = [
+    "pytest", 
+    "pytest-cov", 
+    "coverage[toml]", 
+    "nbmake"
+]
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
@@ -113,3 +118,15 @@ post-install-commands = [
 [tool.hatch.envs.doc.scripts]
 # Builds the docs into the standard Sphinx location
 build = "sphinx-build -b html doc/ doc/_build/html"
+
+[tool.hatch.envs.test]
+# This line tells Hatch: "Use the dependencies listed in [project.optional-dependencies] -> test"
+features = [
+    "test",
+    "numba"
+]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest"
+nb = "pytest --nbmake examples/"
+cov = "pytest --cov"
