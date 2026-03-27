@@ -80,7 +80,7 @@ features = ["test", "numba"]
 
 [tool.hatch.envs.test.scripts]
 run = "pytest"
-nb = "pytest --nbmake examples/"
+nb = "pytest --nbmake --nbmake-timeout=1200 examples/"
 cov = "pytest --cov"
 
 [tool.hatch.envs.doc]

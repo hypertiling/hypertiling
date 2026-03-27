@@ -231,18 +231,17 @@ tests-full-cov:
 
 
 # runs all jupyter notebooks in the examples folder to ensure they are functional
-# this might be slow on runners, hence manual execution is recommended
 test-examples:
   image: python:3.10
   stage: test
   when: manual
-  before_script:
-    - python -m venv env
-    - source env/bin/activate
-    - pip install pytest nbmake
+  variables:
+    # Optional: Cache the hatch envs to speed up subsequent manual runs
+    HATCH_ENV_TYPE_VIRTUAL_PATH: .venv
   script:
-    - pip install .[test]
-    - pytest --nbmake --nbmake-timeout=1200 examples/*.ipynb
+    - pip install hatch
+    # This single command handles env creation, dependencies, and the nbmake execution
+    - hatch run test:nb
   only:
     - dev
     - master
