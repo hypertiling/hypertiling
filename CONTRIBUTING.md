@@ -45,6 +45,7 @@ We use `nbsphinx` to render our examples into the official documentation. To ens
 hatch run doc:build
 ```
 Open `doc/_build/html/index.html` in your browser to preview the results.
+  
 
 ---
 
