@@ -32,24 +32,24 @@ Welcome to the official hypertiling package documentation! This guide provides c
    :maxdepth: 2
    :caption: Examples
 
-   examples/quickstart.ipynb
-   examples/edge-reflections.ipynb
-   examples/dynamic-manipulation.ipynb
-   examples/advanced-visualization.ipynb
-   examples/refinements.ipynb
-   examples/geodesics.ipynb
-   examples/animations.ipynb
-   examples/logo.ipynb
-   examples/operators.ipynb
-   examples/conformal-transformation.ipynb
+   ../examples/quickstart
+   ../examples/edge-reflections
+   ../examples/dynamic-manipulation
+   ../examples/advanced-visualization
+   ../examples/refinements
+   ../examples/geodesics
+   ../examples/animations
+   ../examples/logo
+   ../examples/operators
+   ../examples/conformal-transformation
 
 .. toctree::
    :maxdepth: 2
    :caption: Kernels
 
-   examples/srg-kernel.ipynb
-   examples/grc-kernel.ipynb
-   examples/grct-kernel.ipynb
+   ../examples/srg-kernel
+   ../examples/grc-kernel
+   ../examples/grct-kernel
    kernel_dun07x
 
 
@@ -57,8 +57,8 @@ Welcome to the official hypertiling package documentation! This guide provides c
    :maxdepth: 1
    :caption: Legacy
 
-   examples/old/gr-kernel.ipynb
-   examples/old/graph-kernels.ipynb
+   ../examples/old/gr-kernel
+   ../examples/old/graph-kernels
    kernel_dun07
 
 .. toctree::

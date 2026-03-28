@@ -1,17 +1,36 @@
-/src/hypertiling/__pycache__
-/src/hypertiling.egg-info
-/dist
-/.ipynb_checkpoints
-/benchmark
-/.idea
-*.pyc
-/src/hypertiling/kernels/__pycache__
-/src/hypertiling/kernel/__pycache__
-/.venv
-venv
-/build
-/hypertiling
-/hypertiling.egg-info
+# --- Python & Build ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual Environments ---
+.venv/
+venv/
+env/
+hypervenv/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints/
+# .ipynb_checkpoints
+
+# --- Documentation ---
+doc/_build/
+doc/examples/
+doc/xml/
+doc/doxygen_output/
+
+# --- IDEs & OS ---
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# --- Project Specific / Temporary ---
+/benchmark/
 test.py
 dummy.py
 dummy.ipynb
