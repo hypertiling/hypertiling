@@ -2,10 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [master, dev]
+    # Removing the specific list allows all branches to trigger a run
+    branches: ["**"] 
     tags: ['v*']
   pull_request:
-    branches: [master, dev]
+    # This triggers when a PR is opened against any branch
+    branches: ["**"]
   workflow_dispatch: # Allows manual triggers like GitLab's "when: manual"
 
 jobs:
