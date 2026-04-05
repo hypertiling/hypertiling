@@ -40,7 +40,7 @@ jobs:
           pip install .
 
 
-  install-loca-numba:
+  install-local-numba:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -92,7 +92,7 @@ jobs:
 
 
   install-from-pypi-with-numba:
-    needs: [install-numba]
+    needs: [install-local-numba]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
     steps:
