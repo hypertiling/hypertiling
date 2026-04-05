@@ -11,7 +11,7 @@ on:
   workflow_dispatch: # Allows manual triggers like GitLab's "when: manual"
 
 jobs:
-  install-and-test:
+  install-local:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false  # Don't cancel other versions if one fails
@@ -38,6 +38,76 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install .
+
+
+  install-loca-numba:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Testing across all currently non-EOL versions
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip' # Automated caching
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgfortran5 libblas-dev liblapack-dev
+
+      - name: Install Project with Numba
+        run: |
+          python -m pip install --upgrade pip
+          # Installs the core package plus the numba optional dependency
+          pip install ".[numba]"
+
+      - name: Verify Numba Acceleration
+        run: |
+          # Confirms that the compiler is actually available and functional
+          python -c "import numba; print(f'Numba {numba.__version__} verified on Python ${{ matrix.python-version }}')"
+
+
+  install-from-pypi:
+      needs: [install-local]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            # This automatically fetches the latest stable version 
+            # available on the runner, so it never needs manual updating.
+            python-version: '3.x' 
+        
+        - name: Install and Verify
+          run: |
+            pip install --no-cache-dir hypertiling
+            python -c "import hypertiling; print(f'Verified {hypertiling.__version__}')"
+
+
+  install-from-pypi-with-numba:
+    needs: [install-numba]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev'
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # Tracks latest stable
+      
+      - name: Install and Verify Numba
+        run: |
+          # Verifies the [numba] extra is correctly published to PyPI
+          pip install --no-cache-dir "hypertiling[numba]"
+          python -c "import hypertiling; import numba; print(f'Verified {hypertiling.__version__} with Numba {numba.__version__}')"
+
+
 
   # --- COVERAGE & BADGES ---
   tests-full-cov:
