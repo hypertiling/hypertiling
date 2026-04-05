@@ -155,7 +155,7 @@ jobs:
           HATCH_ENV_NO_FREEZE: "true"
           HATCH_SKIP_SCRIPTS: "true"        
         run: |
-          pip install hatch
+          pip install hatch pre-commit
           hatch run test:nb
 
   unit-test-plain:
