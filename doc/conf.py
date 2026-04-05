@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'hypertiling'
-copyright = '2022-2024, The HYPERTILING project'
+copyright = '2022-2026, The HYPERTILING project'
 author = 'Manuel Schrauth, Yanick Thurn, Florian Goth, Dietmar Herdt, Jefferson S. E. Portela, Felix Dusel'
 
 
@@ -27,8 +27,8 @@ author = 'Manuel Schrauth, Yanick Thurn, Florian Goth, Dietmar Herdt, Jefferson 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx', 'sphinx.ext.mathjax', 'sphinx_mdinclude', 'IPython.sphinxext.ipython_console_highlighting']
-nbsphinx_execute = 'never'
+extensions = ['nbsphinx', 'sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx', 'sphinx.ext.mathjax', 'sphinx_mdinclude', 'IPython.sphinxext.ipython_console_highlighting']
+nbsphinx_execute = 'always'
 nbsphinx_allow_errors = True
 source_suffix = ['.rst', '.md']
 # note: do not add .ipynb when nbspinx is enabled, otherwise you get the "missing title" error

@@ -85,6 +85,37 @@ This project is developed at:
 [Institute for Theoretical Physics and Astrophysics](https://www.physik.uni-wuerzburg.de/en/tp3/home/)  
 [University of Wuerzburg](https://www.uni-wuerzburg.de/en/home/)
 
+
+
+## Development
+
+This project uses [Hatch](https://hatch.pypa.io/latest/) to manage environments and [pre-commit](https://pre-commit.com/) to keep the repository history clean.
+
+### 1. Environment Setup
+To initialize the development environment and all dependencies:
+```bash
+pip install hatch
+hatch shell
+```
+**Important:** Upon first run, Hatch automatically installs a **git pre-commit hook**. This hook silently strips execution counts and cell outputs (like plots and heavy binary data) from your `.ipynb` files whenever you `git commit`. This ensures the repository remains lightweight and provides clean, readable code diffs.
+
+### 2. Working with Examples
+The notebooks in `examples/` are stored "clean" (without outputs). To populate them with results and plots on your local machine, run:
+```bash
+hatch run examples
+```
+
+
+### 3. Documentation Build
+The documentation includes the rendered notebooks. To build the full Sphinx site locally:
+```bash
+hatch run doc:build
+```
+This command executes the notebooks in a temporary environment and generates the HTML at `doc/_build/html/index.html`.
+
+
+
+
 ## Citation
 
 If you use _hypertiling_, we encourage you to cite or reference this work as you would any other scientific research. The package is a result of a huge amount of time and effort invested by the authors. Citing us allows us to measure the impact of the research and encourages others to use the library.
