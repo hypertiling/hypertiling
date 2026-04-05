@@ -1,4 +1,7 @@
 name: CI/CD Pipeline
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   push:
@@ -111,14 +114,14 @@ jobs:
   # --- COVERAGE & BADGES ---
   tests-full-cov:
     runs-on: ubuntu-latest
-    needs: [unit-test-plain,install-local]
+    needs: [unit-test-plain,unit-test-fancy]
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
           cache: 'pip'
 
       - name: Run Coverage and Generate Badges
@@ -149,7 +152,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Run Hatch Notebook Tests
         env:
           # This prevents Hatch from trying to run 'pre-commit install'
@@ -161,6 +164,7 @@ jobs:
 
   unit-test-plain:
     runs-on: ubuntu-latest
+    needs: [install-local]
     steps:
       - uses: actions/checkout@v4
       
@@ -185,6 +189,7 @@ jobs:
 
   unit-test-fancy:
     runs-on: ubuntu-latest
+    needs: [install-local-numba]
     steps:
       - uses: actions/checkout@v4
       
