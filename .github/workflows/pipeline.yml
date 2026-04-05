@@ -150,6 +150,9 @@ jobs:
         with:
           python-version: '3.10'
       - name: Run Hatch Notebook Tests
+        env:
+          # This prevents Hatch from trying to run 'pre-commit install'
+          HATCH_SKIP_SCRIPTS: "true"
         run: |
           pip install hatch
           hatch run test:nb
