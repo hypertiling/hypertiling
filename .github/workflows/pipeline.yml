@@ -1,0 +1,119 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [master, dev]
+    tags: ['v*']
+  pull_request:
+    branches: [master, dev]
+
+jobs:
+  # --- INSTALL STAGE ---
+  # Replaces multiple install jobs with a matrix for efficiency
+  install:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.5", "3.7", "3.10", "latest"]
+        image-type: [standard, slim]
+        exclude:
+          - python-version: "3.5"
+            image-type: slim
+          - python-version: "3.7"
+            image-type: slim
+    
+    container: 
+      image: ${{ matrix.image-type == 'slim' && format('python:{0}-slim', matrix.python-version) || format('python:{0}', matrix.python-version) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install System Dependencies
+        run: |
+          apt-get update && apt-get install --assume-yes python3 python3-pip python3-venv python3-matplotlib
+          
+      - name: Setup Virtualenv and Install
+        run: |
+          python3 -m venv hypervenv --without-pip --system-site-packages
+          source hypervenv/bin/activate
+          pip install .
+
+  # --- TEST STAGE ---
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Run Fancy Tests
+        run: |
+          pip install numba sortedcontainers .[test]
+          python3 -m tests.test_core
+          python3 -m tests.test_dynamic
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Generate Coverage and Badges
+        run: |
+          pip install pytest pytest-cov anybadge==1.9.0 radon==5.1.0 .[test]
+          python -m pytest --cov --cov-report=xml --junitxml=report.xml
+          mkdir -p build/badges
+          python -m anybadge --label=Maintainability --value="A" -f build/badges/maintainability -o
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            build/badges
+            coverage.xml
+
+  # --- DOCS STAGE ---
+  sphinx-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Sphinx and Deps
+        run: |
+          sudo apt-get update && sudo apt-get install -y pandoc doxygen
+          pip install . sphinx sphinx-rtd-theme nbsphinx pypandoc
+      - name: Build Docs
+        run: |
+          cd doc
+          mkdir -p examples && cp ../examples/*.ipynb examples/
+          sphinx-build . html
+      - name: Upload Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs
+          path: doc/html
+
+  # --- PUBLISH/RELEASE STAGE ---
+  publish:
+    needs: [coverage]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Badges
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: public
+      - name: Release Script
+        run: ./assets/zenodo.sh
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
