@@ -17,7 +17,6 @@
 
 
 [![badge_coverage][]]()
-[![badge_maintainability][]]()
 [![badge_pipeline][]](https://git.physik.uni-wuerzburg.de/hypertiling/hypertiling/-/pipelines)
 
 </div>
