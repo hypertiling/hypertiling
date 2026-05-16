@@ -1,6 +1,8 @@
+import warnings
 from typing import List, Tuple
 from hypertiling.kernel_abc import Graph
 import hypertiling.kernel.GRC_util as util
+from hypertiling.kernel.hyperpolygon import HyperPolygon
 import hypertiling.ion as ion
 import numpy as np
 import itertools
@@ -47,8 +49,8 @@ class GRC(Graph):
         self.orientation = None
 
         if not self.nbrs:
-            ion.htprint("Status", "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
-
+            ion.htprint("Status",
+                        "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
 
     def __getitem__(self, item):
         """
@@ -185,6 +187,24 @@ class GRC(Graph):
         else:
             return coords
 
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
+        """
+        return self.get_vertices(index)[0]
+
     def get_nbrs_list(self) -> List[List[int]]:
         """
         Create and return list of all neighbors
@@ -238,7 +258,28 @@ class GRC(Graph):
         else:
             return nbrs
 
-    def get_reflection_level(self, index: int) -> int:
+    def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
+        """
+        if not self.tiling:
+            raise AttributeError("Non tiling does not have coords (tiling=False)!")
+
+        return np.angle(self[index][0])
+
+    def get_layer(self, index: int) -> int:
         """
         Get the neighbors of a polygon at index
 
@@ -260,6 +301,68 @@ class GRC(Graph):
         level = np.searchsorted(self.lvls, index)
         return level + 1 if self.lvls[level] == index else level
 
+    def get_reflection_level(self, index: int) -> int:
+        warnings.warn(
+            (
+                "get_reflection_level is deprecated and will be removed in a future version. "
+                "Please use get_layer instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_layer(index)
+
+    def get_sector(self, index: int) -> int:
+        """
+        Returns the sector that the polygon at index refers to.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Number of the sector.
+        """
+        if self.sector:
+            if index == 0:
+                return 0
+            else:
+                index -= 1
+                return index // (self._sector_polys.shape[0] - 1)
+        return 0
+
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        HyperPolygon
+            Polygon at index.
+        """
+        if not self.tiling:
+            raise AttributeError("Non tiling does not have coords (tiling=False)!")
+
+        polygon = HyperPolygon(self.p, )
+        polygon.idx = index
+        polygon.layer = self.get_layer(index)
+        polygon.sector = self.get_sector(index)
+        polygon.angle = self.get_angle(index)
+        polygon.orientation = None
+        polygon.set_polygon(self.get_vertices(index))
+
+        return polygon
+
     def _map_orientation(self):
         self.orientation = np.zeros((self.lvls[-1], p), dtype=int)
         self.orientation[0] = np.arange(0, p)
@@ -272,21 +375,21 @@ class GRC(Graph):
                 children = self.get_nbrs(parent)[1:]  # exclude own parent
                 print(f"\n{parent} - {children}", end="")
                 # handle asymmetric fillers
-                if self.get_reflection_level(children[0]) < self.get_reflection_level(parent):
+                if self.get_layer(children[0]) < self.get_layer(parent):
                     print(f"\n{children[0]} asymmetric filler in {parent}", end="")
                     children = children[1:]
 
                 # handle symmetric fillers
-                if self.get_reflection_level(children[0]) == self.get_reflection_level(parent):
-                    #print(f"\n{children[0]} symmetric filler in {parent}", end="")
+                if self.get_layer(children[0]) == self.get_layer(parent):
+                    # print(f"\n{children[0]} symmetric filler in {parent}", end="")
                     if children[0] == parent - 1 or children[0] > parent + 1:
                         start = 1
-                        #print(f" > start modified", end="")
+                        # print(f" > start modified", end="")
                     children = children[1:]
 
                 if q == 3:
                     # for asymmetric fillers
-                    if self.get_reflection_level(children[0]) < self.get_reflection_level(parent):
+                    if self.get_layer(children[0]) < self.get_layer(parent):
                         children = children[1:]
 
                     if children[0] > parent + 1:  # boundary
@@ -328,7 +431,7 @@ class GRC(Graph):
         for i in range(self.lvls[self.n - 2]):
             progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
             ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {i} / {ln}", end="")
-            n_ = self.get_reflection_level(i)
+            n_ = self.get_layer(i)
 
             nbrs = self.get_nbrs(i)
             if len(nbrs) != len(set(nbrs)):
@@ -390,6 +493,7 @@ if __name__ == "__main__":
     import time
     import matplotlib as mpl
     import matplotlib.pyplot as plt
+
     p, q, n = 7, 3, 4  # 11
 
     t1 = time.time()
@@ -403,14 +507,14 @@ if __name__ == "__main__":
     fig_ax[1].set_box_aspect(1)
 
     for i, poly in enumerate(graph):
-        facecolor = colors[graph.get_reflection_level(i) % len(colors)]
+        facecolor = colors[graph.get_layer(i) % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]), facecolor=facecolor,
                                     edgecolor="#FFFFFF")
         fig_ax[1].add_patch(patch)
 
-        #xc, yc = np.real(poly[0]), np.imag(poly[0])
-        #xf, yf = np.real(poly[1]), np.imag(poly[1])
-        #plt.plot([xc, xf], [yc, yf], color="black")
+        # xc, yc = np.real(poly[0]), np.imag(poly[0])
+        # xf, yf = np.real(poly[1]), np.imag(poly[1])
+        # plt.plot([xc, xf], [yc, yf], color="black")
 
         poly = graph.get_orientation(i)
         xc, yc = np.real(poly[0]), np.imag(poly[0])

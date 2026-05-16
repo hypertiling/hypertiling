@@ -52,7 +52,8 @@ class HyperPolygon:
         else:
             self._vertices = np.zeros(shape=self.p + 1, dtype=np.complex128) # vertices + center
 
-
+    def __repr__(self) -> str:
+        return f"{self.p}-gon with\n\t{self.idx=}\n\t{self.layer=}\n\t{self.sector=}\n\t{self._vertices=}"
 
     def get_center(self):
         """
@@ -64,7 +65,6 @@ class HyperPolygon:
             The center of the polygon.
         """
         return self._vertices[self.p]
-    
 
     def get_vertices(self):
         """
@@ -76,7 +76,6 @@ class HyperPolygon:
             An array of the outer vertices of the polygon.
         """
         return self._vertices[:-1]
-    
 
     def get_polygon(self):
         """
@@ -88,7 +87,6 @@ class HyperPolygon:
             An array of the center and outer vertices of the polygon.
         """
         return self._vertices
-    
 
     def set_center(self, center):
         """
@@ -100,7 +98,6 @@ class HyperPolygon:
             The center of the polygon in Poincare coordinates.
         """
         self._vertices[self.p] = center
-
 
     def set_vertices(self, vertices):
         """
@@ -120,7 +117,6 @@ class HyperPolygon:
             raise ValueError(f"[hypertiling] Error: Expected {self.p} vertices, got {len(vertices)}")
         self._vertices[:-1] = vertices
 
-
     def set_polygon(self, polygon):
         """
         Sets the entire polygon: center + outer vertices in Poincare coordinates.
@@ -139,7 +135,6 @@ class HyperPolygon:
             raise ValueError(f"[hypertiling] Error: Expected {self.p + 1} points, got {len(polygon)}")
         self._vertices = polygon
 
-
     def centerW(self):
         """
         Returns the center of the polygon in Weierstrass coordinates.
@@ -150,7 +145,6 @@ class HyperPolygon:
             The Weierstrass coordinate of the polygon center.
         """
         return p2w(self._vertices[self.p])
-
 
     def __eq__(self, other):
         """
@@ -178,7 +172,6 @@ class HyperPolygon:
             else:
                 return False
 
-
     def tf_full(self, ind, phi):
         """
         Transforms the entire polygon: to the origin, rotate it and back again.
@@ -192,7 +185,6 @@ class HyperPolygon:
         """
         mfull(self.p, phi, ind, self._vertices)
 
-
     def moeb_origin(self, z0):
         """
         Transforms the entire polygon such that z0 is mapped to origin.
@@ -203,7 +195,6 @@ class HyperPolygon:
             The point that is to be mapped to the origin.
         """
         morigin(self.p, z0, self._vertices)
-        
 
     def moeb_rotate(self, phi):  
         """
@@ -216,11 +207,9 @@ class HyperPolygon:
         """
         mrotate(self.p, phi, self._vertices)
 
-
     def rotate(self, phi):
         rotation = np.exp(complex(0, phi))
         self._vertices = [z * rotation for z in self._vertices]
-
 
     def find_angle(self):
         """
@@ -229,7 +218,6 @@ class HyperPolygon:
         """
         self.angle = math.atan2(self.get_center().imag, self.get_center().real)
         self.angle += PI2 if self.angle < 0 else 0
-
 
     def find_sector(self, k, offset=0):
         """ 
@@ -245,7 +233,6 @@ class HyperPolygon:
 
         self.sector = math.floor((self.angle - offset) / (PI2 / k))
 
-
     def mirror(self):
         """
         Mirror on the x-axis.
@@ -256,7 +243,6 @@ class HyperPolygon:
             self._vertices[i] = complex(self._vertices[i].real, -self._vertices[i].imag)
         self.find_angle()
 
-
     def find_orientation(self):
         """
         Finds the orientation of the polygon.
@@ -265,4 +251,3 @@ class HyperPolygon:
         and stores the result in the orientation attribute. The returned value is between -pi and pi.
         """
         self.orientation = np.angle(self._vertices[0] - self.get_center())
-
