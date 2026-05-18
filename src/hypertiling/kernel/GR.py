@@ -339,7 +339,7 @@ class GenerativeReflection(Tiling):
 
         dtype = np.min_scalar_type(self.length)
         self._nbrs = np.empty((self._sector_polys.shape[0], self.p), dtype=dtype)
-        self._nbrs.fill(- 1)  # to lazy to figure out what 2 ** dtype - 1 would be  # m / p
+        self._nbrs.fill(np.iinfo(self._nbrs.dtype).max)
         self._nbrs[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)]  # p
 
         # fundamental sector
@@ -1219,7 +1219,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 3)
+    tiling = GenerativeReflection(3, 7, 5)
     t2 = time.time()
     print(tiling.length)
     # print(tiling.get_nbrs_geometrical(3))
@@ -1237,8 +1237,6 @@ if __name__ == "__main__":
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
         s = tiling.get_sector(polygon_index)
-        if s != 0:
-            break
 
         poly_layer = tiling.get_reflection_level(polygon_index)
         facecolor = colors[poly_layer % len(colors)]

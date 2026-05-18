@@ -175,7 +175,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
 
-                if r <= np.abs(z[0]):
+                if r < np.abs(z[0]):
                     next_coords[next_level_counter, 0] = z[0]
                     next_coords[next_level_counter, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 

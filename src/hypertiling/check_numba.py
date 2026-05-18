@@ -3,7 +3,6 @@ import warnings
 
 try:
     from numba import njit
-    raise ImportError("dummy") # manually block numba
 
     AVAILABLE = True
 except Exception as error:
