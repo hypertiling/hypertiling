@@ -261,6 +261,11 @@ class GRC(Graph):
         return level + 1 if self.lvls[level] == index else level
 
     def _map_orientation(self):
+        """
+        Calculates the uncorrected orientations for the polygons in the tesselation
+        Returns:
+            void
+        """
         self.orientation = np.zeros((self.lvls[-1], p), dtype=int)
         self.orientation[0] = np.arange(0, p)
 
@@ -270,10 +275,10 @@ class GRC(Graph):
                 children = self.get_nbrs(parent)
             else:
                 children = self.get_nbrs(parent)[1:]  # exclude own parent
-                print(f"\n{parent} - {children}", end="")
+                # print(f"\n{parent} - {children}", end="")
                 # handle asymmetric fillers
                 if self.get_reflection_level(children[0]) < self.get_reflection_level(parent):
-                    print(f"\n{children[0]} asymmetric filler in {parent}", end="")
+                    # print(f"\n{children[0]} asymmetric filler in {parent}", end="")
                     children = children[1:]
 
                 # handle symmetric fillers
@@ -298,13 +303,27 @@ class GRC(Graph):
                     start += 1
 
             for edge, child in enumerate(children, start=start):
-                self.orientation[child] = np.roll(np.flip(self.orientation[parent]), edge + 1)
+                if child < self.orientation.shape[0]:
+                    # if sector, prevent correction for polys in next sector (the polygons dont exist)
+                    self.orientation[child] = np.roll(np.flip(self.orientation[parent]), edge + 1)
 
-    def get_orientation(self, index):
+    def get_orientation(self, index: int) -> np.complex128:
+        """
+        Returns the uncorrected orientation for polygon at index
+        Args:
+            index: index of the polygon.
+
+        Returns:
+            uncorrected coordinates as complex128
+        """
         if self.orientation is None:
             self._map_orientation()
         coords = self.get_vertices(index)
         result = coords.copy()
+
+        if self.sector:
+            k, index = self._map2fundamental(index)
+
         result[1:][self.orientation[index]] = coords[1:]
         return result
 
@@ -393,7 +412,7 @@ if __name__ == "__main__":
     p, q, n = 7, 3, 4  # 11
 
     t1 = time.time()
-    graph = GRC(p, q, n, sector=False, nbrs=True, tiling=True)
+    graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
 
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]

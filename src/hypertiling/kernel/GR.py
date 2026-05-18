@@ -1219,7 +1219,7 @@ if __name__ == "__main__":
     fig_ax[1].set_ylim(-1, 1)
     fig_ax[1].set_box_aspect(1)
     t1 = time.time()
-    tiling = GenerativeReflection(7, 3, 4)
+    tiling = GenerativeReflection(7, 3, 3)
     t2 = time.time()
     print(tiling.length)
     # print(tiling.get_nbrs_geometrical(3))
@@ -1236,6 +1236,10 @@ if __name__ == "__main__":
         # print(polygon_index)
         # print(polygon_index, pgon)
         # poly_layer = tiling.get_layer(polygon_index)
+        s = tiling.get_sector(polygon_index)
+        if s != 0:
+            break
+
         poly_layer = tiling.get_reflection_level(polygon_index)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in pgon[1:]]),

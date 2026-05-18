@@ -295,6 +295,8 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
     counter_shift = 0
     for layer_index, layer_size in enumerate(sector_lengths[:-1]):
         next_level_counter = 0
+        print("----------------")
+        print(edge_array)
 
         # check for filler on sector boundary (I think it should detect both)
         connection = any_close_matrix(sector_polys[c - 1] * np.exp(- 1j * dphi), sector_polys[counter_shift])
@@ -314,6 +316,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                     edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
                     edge_array[j] ^= 1 << (connection[0, 0] - 1)
 
+            print(edge_array)
             for i, vertex in enumerate(poly[1:]):  # p loop execs
                 """
                 Algorithm:
@@ -341,6 +344,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                     # save level of polygons
                     reflection_levels[c] = reflection_levels[j] + 1  # 1
 
+                    print(edge_array)
                     if i == 0:
                         # shares edge with former polygon -> filler of 2nd Order
                         connection = any_close_matrix(sector_polys[c], sector_polys[c - 1])  # (p+1)^2
@@ -352,6 +356,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                     elif q == 3:
                         # close first edge because of sibling
                         edge_array[c] ^= 1
+
                         # close last edge because of sibling
                         if not (edge_array[c - 1] & 1 << (p - 2)):
                             # if filler polygon of first order the second to last edge will be closed
@@ -362,6 +367,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                             # if polygon is a regular polygon, the sibling will be on the second to last edge (1 << (p - 2))
                             edge_array[c - 1] ^= 1 << (p - 2)
 
+                    print(edge_array)
                     """
                     Theoretically possible to shift before neighbor comparison.
                     However, even if this would avoid some (maybe useless) calculations it can be important if the
