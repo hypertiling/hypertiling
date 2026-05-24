@@ -3,7 +3,9 @@ import numpy as np
 from hypertiling.kernel_abc import Graph
 import hypertiling.ion as ion
 import hypertiling.kernel.GRCT_util as util
+from hypertiling.kernel.hyperpolygon import HyperPolygon
 import itertools
+import warnings
 
 
 class GRCT(Graph):
@@ -47,7 +49,8 @@ class GRCT(Graph):
         self.nbrs = nbrs
 
         if sector:
-            raise NotImplementedError("NOT YET IMPLEMENTED")
+            raise NotImplementedError("Constructions with sector=True with GRCT are not yet implemented. "
+                                      "Please use sector=False")
         else:
             # util.get_n(p, q, r, n) if size is None else size
             self.coords, self.nbrs_, self.lvls = util.construct_full(p, q, r, n, size, self.tiling, self.nbrs)
@@ -55,8 +58,6 @@ class GRCT(Graph):
 
         if not self.nbrs:
             ion.htprint("Status", "By default, no adjacency relations are computed; to have them available, set nbrs=True or use HyperbolicGraph class, where they are activated by default.")
-
-
 
     def __repr__(self):
         """
@@ -138,7 +139,25 @@ class GRCT(Graph):
             raise AttributeError("Non tiling does not have coords (tiling=False)!")
         return self.coords[index]
 
-    def get_reflection_level(self, index) -> int:
+    def get_center(self, index: int) -> np.complex128:
+        """
+        Returns the center of the polygon at index.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
+        """
+        return self.get_vertices(index)[0]
+
+    def get_layer(self, index: int) -> int:
         """
         Get the neighbors of a polygon at index
 
@@ -156,6 +175,62 @@ class GRCT(Graph):
         """
         level = np.searchsorted(self.lvls[1:], index)
         return level + 1 if self.lvls[level + 1] == index else level
+
+    def get_reflection_level(self, index: int) -> int:
+        warnings.warn(
+            (
+                "get_reflection_level is deprecated and will be removed in a future version. "
+                "Please use get_layer instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_layer(index)
+
+    def get_sector(self, index: int) -> int:
+        """
+        Returns the sector that the polygon at index refers to.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        int
+            Number of the sector.
+        """
+        if self.sector:
+            if index == 0:
+                return 0
+            else:
+                index -= 1
+                return index // (self._sector_polys.shape[0] - 1)
+        return 0
+
+    def get_angle(self, index: int) -> float:
+        """
+        Returns the angle to the center of the polygon at index.
+
+        Time-complexity: O(1)
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        np.complex128
+            Center of the polygon.
+        """
+        if not self.tiling:
+            raise AttributeError("Non tiling does not have coords (tiling=False)!")
+
+        return np.angle(self[index][0])
 
     def get_nbrs(self, index: int) -> np.array:
         """
@@ -193,6 +268,31 @@ class GRCT(Graph):
         nbrs = self.nbrs_[:, 1:]
         return [nbrs_[np.where(nbrs_ != -1)].tolist() for nbrs_ in nbrs]
 
+    def get_polygon(self, index: int) -> HyperPolygon:
+        """
+        Returns the polygon at index as HyperPolygon object.
+
+        Parameters
+        ----------
+        index : int
+            Index of the polygon.
+
+        Returns
+        -------
+        HyperPolygon
+            Polygon at index.
+        """
+
+        polygon = HyperPolygon(3,)
+        polygon.idx = index
+        polygon.layer = self.get_layer(index)
+        polygon.sector = self.get_sector(index)
+        polygon.angle = self.get_angle(index)
+        polygon.orientation = None
+        polygon.set_polygon(self.get_vertices(index))
+
+        return polygon
+
     def check_integrity(self):
         """
         Controls the integrity of the tesselation by
@@ -214,7 +314,7 @@ class GRCT(Graph):
         for i in range(self.lvls[self.n - 2]):
             progbar = ">" * (l := int(64 * i / ln)) + " " * (64 - l)
             ion.htprint("Status", f"\r|{progbar}| Controlling nbrs for {i} / {ln}", end="")
-            n_ = self.get_reflection_level(i)
+            n_ = self.get_layer(i)
 
             nbrs = self.get_nbrs(i)
             if len(nbrs) != len(set(nbrs)):
@@ -292,7 +392,7 @@ if __name__ == "__main__":
     fig_ax[1].set_box_aspect(1)
 
     for i, poly in enumerate(graph):
-        poly_layer = graph.get_reflection_level(i)
+        poly_layer = graph.get_layer(i)
         facecolor = colors[poly_layer % len(colors)]
         patch = mpl.patches.Polygon(np.array([(np.real(e), np.imag(e)) for e in poly[1:]]),
                                     facecolor=facecolor, edgecolor="#FFFFFF")

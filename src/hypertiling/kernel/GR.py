@@ -53,6 +53,14 @@ class GenerativeReflection(Tiling):
             (prevents boundaries from being along symmetry axis).
         """
         super().__init__(p, q, n, mangle)
+        warnings.warn(
+            (
+                "GR is deprecated and will be removed in a future version. "
+                "Please use GRC instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         # technical attributes
         fac = np.pi / (p * q)
