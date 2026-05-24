@@ -339,7 +339,7 @@ class GenerativeReflection(Tiling):
 
         dtype = np.min_scalar_type(self.length)
         self._nbrs = np.empty((self._sector_polys.shape[0], self.p), dtype=dtype)
-        self._nbrs.fill(- 1)  # to lazy to figure out what 2 ** dtype - 1 would be  # m / p
+        self._nbrs.fill(np.iinfo(self._nbrs.dtype).max)
         self._nbrs[0] = [1 + i * (self._sector_polys.shape[0] - 1) for i in range(self.p)]  # p
 
         # fundamental sector

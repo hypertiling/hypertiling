@@ -181,19 +181,14 @@ class GenerativeReflectionGraphStatic(GraphExtended):
 
 if __name__ == "__main__":
     import time
-    from hypertiling.kernel.GR import GenerativeReflection
-    import matplotlib as mpl
     import matplotlib.pyplot as plt
-    import hypertiling.core as core
-    import hypertiling.kernel.GRG_util as grg_util
-    from hypertiling.kernel_abc import Tiling
+    from hypertiling.graphics.plot import plot_graph
 
     p, q, n = 8, 3, 4
     n2 = 3
     t1 = time.time()
     graph = GenerativeReflectionGraphStatic(p, q, n)
     print(f"Took: {time.time() - t1}")
-
 
     fig_ax = plt.subplots()
     fig_ax[1].set_xlim(-1, 1)
@@ -202,6 +197,6 @@ if __name__ == "__main__":
     graph.check_integrity()
 
     colors = ["#FF000080", "#00FF0080", "#0000FF80"]
-    grg_util.plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p,
-                        colors=[colors[graph.get_reflection_level(i) % len(colors)] for i in range(graph.length)])
+    plot_graph(graph.get_nbrs_list(), graph.center_coords, graph.p,
+               colors=[colors[graph.get_reflection_level(i) % len(colors)] for i in range(graph.length)])
     plt.show()

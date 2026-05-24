@@ -1,9 +1,9 @@
-from typing import List
 import numpy as np
 import hypertiling.arraytransformation as array_trans
 from hypertiling.check_numba import NumbaChecker
 from hypertiling.kernel.GR_util import PI2, any_close_matrix, f_dist_disc
-import networkx as nx
+import hypertiling.graphics.plot as plot
+import warnings
 
 """
 p: Number of edges/vertices of a polygon
@@ -13,50 +13,16 @@ m: Number of polygons
 """
 
 
-def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int, colors=[]):
-    """
-    Plot a network of the connections
-
-    Parameters
-    ----------
-    adjacent_matrix : List[List[int]]
-        Matrix storing the neighboring relations
-    center_coords : np.array[n]
-        Positions of the node coords as complex
-    p : int, optional
-        Number of edges of a single polygon in the tiling, default is rotational symmetry
-
-    Returns
-    -------
-    void
-    """
-    graph = nx.Graph()
-    for y in range(len(adjacent_matrix)):
-        if y >= center_coords.shape[0]:
-            sector = (y - 1) // (center_coords.shape[0] - 1)
-            index = (y - 1) % (center_coords.shape[0] - 1)
-            index += 1
-            rot = center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
-            x_ = np.real(rot)
-            y_ = np.imag(rot)
-        else:
-            x_ = np.real(center_coords[y])
-            y_ = np.imag(center_coords[y])
-
-        if colors:
-            graph.add_node(y, pos=(x_, y_), node_color=colors[y])
-        else:
-            graph.add_node(y, pos=(x_, y_))
-
-    for y, row in enumerate(adjacent_matrix):
-        for index in row:
-            if index >= len(adjacent_matrix):
-                print(f"Skip: {y} -> {index}")
-                continue
-            graph.add_edge(y, index)
-
-    nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),
-                     node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
+def plot_graph(*args, **kwargs):
+    warnings.warn(
+        (
+            "grg_util.plot_graph is deprecated and will be removed in a future version. "
+            "Please use graphics.plot.plot_graph instead."
+        ),
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    plot.plot_graph(*args, **kwargs)
 
 
 @NumbaChecker("Tuple((uint32[:, :], complex128[:]))(int64, int64, float64, uint32[::1], float64, float64)")
@@ -95,7 +61,7 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
     next_edges = np.empty(sector_lengths[1], dtype=np.uint16)
     # neighbors array
     neighbors = np.empty((np.sum(sector_lengths), p + 1), dtype=np.uint32)
-    neighbors.fill(-1)
+    neighbors.fill(np.iinfo(neighbors.dtype).max)
     neighbors[:, 0] = 1  # +1 for counter in array (skip itself)
     # boundary stuff
     boundary_indices = np.empty((sector_lengths.shape[0] - 1, 2), dtype=np.uint32)
@@ -257,8 +223,9 @@ def generate_nbrs(p: int, q: int, r: float, sector_lengths: np.array, mangle: fl
             if dist <= dist_ref:
                 neighbors[index_right, neighbors[index_right, 0]] = index_left + jump
                 neighbors[index_right, 0] += 1
-                neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
-                neighbors[index_left, 0] += 1
+                if neighbors[index_left, 0] < neighbors.shape[1]:
+                    neighbors[index_left, neighbors[index_left, 0]] = index_right + child_absolut - 1
+                    neighbors[index_left, 0] += 1
 
     for i in range(1, p):
         neighbors[0, 1 + i] = neighbors[0, i] + child_absolut - 1

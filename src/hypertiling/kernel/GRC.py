@@ -393,7 +393,7 @@ if __name__ == "__main__":
     p, q, n = 7, 3, 4  # 11
 
     t1 = time.time()
-    graph = GRC(p, q, n, sector=False, nbrs=True, tiling=True)
+    graph = GRC(p, q, n, sector=True, nbrs=True, tiling=True)
     print(f"Took: {time.time() - t1}")
 
     colors = ["#FF000060", "#00FF0060", "#0000FF60"]

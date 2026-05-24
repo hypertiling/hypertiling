@@ -1,5 +1,5 @@
+from typing import List
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import matplotlib.cm as cmap
 from matplotlib.patches import Polygon
@@ -7,6 +7,11 @@ from matplotlib.collections import PatchCollection
 from ..geodesics import geodesic_arc
 from matplotlib.colors import is_color_like
 
+try:
+    import networkx as nx
+    network_x = True
+except:
+    network_x = False
 
 def quick_plot(tiling, unitcircle=False, dpi=150, **kwargs):
     """
@@ -371,3 +376,52 @@ def plot_geodesic(tiling, color=None, unitcircle=False, cutoff=None, xcrange=(-1
     plt.axis("off")
 
     return ax
+
+
+def plot_graph(adjacent_matrix: List[List[int]], center_coords: np.array, p: int, colors=[]):
+    """
+    Plot a network of the connections
+
+    Parameters
+    ----------
+    adjacent_matrix : List[List[int]]
+        Matrix storing the neighboring relations
+    center_coords : np.array[n]
+        Positions of the node coords as complex
+    p : int, optional
+        Number of edges of a single polygon in the tiling, default is rotational symmetry
+
+    Returns
+    -------
+    void
+    """
+    if network_x:
+        graph = nx.Graph()
+        for y in range(len(adjacent_matrix)):
+            if y >= center_coords.shape[0]:
+                sector = (y - 1) // (center_coords.shape[0] - 1)
+                index = (y - 1) % (center_coords.shape[0] - 1)
+                index += 1
+                rot = center_coords[index] * np.exp(1j * sector * np.pi * 2 / p)
+                x_ = np.real(rot)
+                y_ = np.imag(rot)
+            else:
+                x_ = np.real(center_coords[y])
+                y_ = np.imag(center_coords[y])
+
+            if colors:
+                graph.add_node(y, pos=(x_, y_), node_color=colors[y])
+            else:
+                graph.add_node(y, pos=(x_, y_))
+
+        for y, row in enumerate(adjacent_matrix):
+            for index in row:
+                if index >= len(adjacent_matrix):
+                    print(f"Skip: {y} -> {index}")
+                    continue
+                graph.add_edge(y, index)
+
+        nx.draw_networkx(graph, pos=nx.get_node_attributes(graph, 'pos'),
+                         node_color=list(nx.get_node_attributes(graph, 'node_color').values()))
+    else:
+        raise ImportError("[hypertiling] networkx is required to call this function!")
