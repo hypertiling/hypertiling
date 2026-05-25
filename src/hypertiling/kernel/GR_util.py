@@ -312,6 +312,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                 if connection.shape[0] == 2 and c > 3:
                     # block edges in number-bit-array (see. GRK.__init__ for explanation)
                     edge_array[c - 1] ^= 1 << (connection[1, 1] - 1)
+
                     edge_array[j] ^= 1 << (connection[0, 0] - 1)
 
             for i, vertex in enumerate(poly[1:]):  # p loop execs
@@ -334,7 +335,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                 array_trans.mrotate(p, - phi, z)  # p + 1
                 array_trans.morigin(p, - vertex, z)  # p + 1
 
-                if r <= np.abs(z[0]):
+                if r < np.abs(z[0]):
                     sector_polys[c, 0] = z[0]
                     sector_polys[c, 1:] = np.roll(np.flip(z[1:]), i + 1)  # p
 
@@ -347,11 +348,13 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                         if connection.shape[0] == 2 and c > 2:
                             # block edges in number-bit-array (see. GRK __init__ for explanation)
                             edge_array[c] ^= 1 << (connection[1, 1] - 1)
+
                             edge_array[c - 1] ^= 1 << (connection[0, 0] - 1)
 
                     elif q == 3:
                         # close first edge because of sibling
                         edge_array[c] ^= 1
+
                         # close last edge because of sibling
                         if not (edge_array[c - 1] & 1 << (p - 2)):
                             # if filler polygon of first order the second to last edge will be closed
@@ -371,6 +374,7 @@ def generate(p: int, q: int, r: float, sector_polys: np.array, sector_lengths: n
                     next_level_counter += 1
                     if next_level_counter == sector_lengths[layer_index + 1]:
                         break
+
 
             if next_level_counter == sector_lengths[layer_index + 1]:
                 break
